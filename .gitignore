@@ -22,13 +22,14 @@ swSSOSVC/Debug/
 swSSOSVC/Release/
 swSSOSVCTest/Debug/
 swSSOSVCTest/Release/
-Debug/
-Release/
+Debug/*
+Release/*
 x64/
 build/
 bin/
 obj/
 ipch/
+Output/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/

@@ -1,0 +1,31 @@
+Article 1 : Objet
+Par le présent contrat, L’EDITEUR concède à L’UTILISATEUR le droit non exclusif et non cessible d’utiliser le logiciel « Serveur swSSO » (ci-après dénommé « LE LOGICIEL ») selon les conditions et modalités définies ci-après, moyennant le paiement des redevances de licence correspondantes.
+L’UTILISATEUR est autorisé à installer LE LOGICIEL sur autant de serveurs que nécessaire, pour des raisons de tenue en charge et/ou de redondance, et bénéficie ainsi des fonctionnalités de distribution des configurations vers un nombre limité de postes de travail équipés du logiciel client swSSO. 
+Le nombre de poses de travail autorisés à se connecter au LOGICIEL est fonction de la redevance acquittée par L’UTILISATEUR. 
+Les droits d’utilisation concédés à L’UTILISATEUR incluent le droit de faire un nombre illimité de copies du LOGICIEL à des fins de sauvegarde exclusivement.
+
+Article 2 : Mises à jour
+L’EDITEUR peut créer de nouvelles versions du LOGICIEL et les rendra disponibles à L’UTILISATEUR pendant toute la durée du contrat. Toute nouvelle version du LOGICIEL vient remplacer la précédente et demeure soumise aux principes et conditions du présent contrat de licence.
+Une nouvelle version du LOGICIEL ne constitue pas une concession d’une nouvelle licence : L’UTILISATEUR s’interdit donc d’utiliser la nouvelle version du LOGICIEL en plus du LOGICIEL qu’elle remplace et de céder LE LOGICIEL remplacé à un tiers.
+
+Article 3 : Propriété intellectuelle
+Ce LOGICIEL, ainsi que toute documentation ou information correspondante, reste la propriété exclusive de L’EDITEUR. 
+
+Article 4 : Restrictions
+Il est interdit à L’UTILISATEUR :
+de louer ou prêter le logiciel à un tiers ;
+de céder ou transférer les droits acquis au travers de cette licence à un tiers ;
+de créer un logiciel dérivé de tout ou partie du LOGICIEL.
+
+Article 5 : Garantie et limitation de garantie
+L’EDITEUR ne garantit pas que le LOGICIEL est exempt de défauts ou d'erreurs. Le  LOGICIEL, y compris sa documentation, est fourni à L’UTILISATEUR  « tel quel ». Il relève de la responsabilité de L’UTILISATEUR de contrôler l'adéquation du produit à ses besoins et son bon fonctionnement dans son environnement. A cette fin, une version d'évaluation du LOGICIEL est proposée à L'UTILISATEUR.
+
+Article 6 : Limitation de responsabilité
+L'EDITEUR ne pourra en aucun cas être tenu pour responsable des dommages de toutes sortes, directs ou indirects, y compris (liste non exhaustive) pour des interruptions d’activité, des pertes financières ou des pertes de revenus prévus résultant de l’utilisation ou de l'impossibilité d'utiliser le logiciel.
+En tout état de cause, la responsabilité totale de L'EDITEUR ne pourra excéder le montant de la redevance de licence acquittée par L'UTILISATEUR.
+
+Article 7 : Résiliation
+La présente licence est résiliée automatiquement dans le cas où L’UTILISATEUR ne se conformerait pas aux termes et conditions de cette licence. Tous les exemplaires du LOGICIEL et de sa documentation devraient alors être retournés à L’EDITEUR.
+
+Article 8 : Loi applicable
+La présente licence est régie par la loi française. Les tribunaux français sont seuls compétents en cas de différend. Un arrangement à l'amiable sera néanmoins toujours recherché en priorité.
