@@ -1,0 +1,2487 @@
+//-----------------------------------------------------------------------------
+//
+//                                  swSSO
+//
+//       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
+//
+//                Copyright (C) 2004-2013 - Sylvain WERDEFROY
+//
+//							 http://www.swsso.fr
+//                   
+//                             sylvain@swsso.fr
+//
+//-----------------------------------------------------------------------------
+// 
+//  This file is part of swSSO.
+//  
+//  swSSO is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  swSSO is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
+// 
+//-----------------------------------------------------------------------------
+// swSSOMain.cpp
+//-----------------------------------------------------------------------------
+// Point d'entrée + boucle de recherche de fenêtre à SSOiser
+//-----------------------------------------------------------------------------
+
+#include "stdafx.h"
+#include "ISimpleDOMNode_i.c"
+#include "ISimpleDOMDocument_i.c"
+
+// Un peu de globales...
+const char gcszCurrentVersion[]="096";	// 082 = 0.82
+const char gcszCurrentBeta[]="0962";	// 0851 = 085 beta 1, 0000 pas de beta
+
+static HWND gwMain=NULL;
+
+HINSTANCE ghInstance;
+HRESULT   ghrCoIni=E_FAIL;	 // code retour CoInitialize()
+bool gbSSOActif=TRUE;	 // Etat swSSO : actif / désactivé	
+int giPwdProtection; // Protection des mots de passe : PP_NONE | PP_ENCODED | PP_ENCRYPTED | PP_WINDOWS
+
+T_ACTION *gptActions;  // tableau d'actions
+int giNbActions;		// nb d'actions dans le tableau
+
+int giBadPwdCount;		// nb de saisies erronées de mdp consécutives
+HWND gwAskPwd=NULL ;       // anti ré-entrance fenêtre saisie pwd
+
+HCRYPTKEY ghKey1=NULL;
+HCRYPTKEY ghKey2=NULL;
+
+// Icones et pointeur souris
+HICON ghIconAltTab=NULL;
+HICON ghIconSystrayActive=NULL;
+HICON ghIconSystrayInactive=NULL;
+HICON ghIconLoupe=NULL;
+HANDLE ghLogo=NULL;
+HANDLE ghLogoFondBlanc=NULL;
+HCURSOR ghCursorHand=NULL; 
+HCURSOR ghCursorWait=NULL;
+HIMAGELIST ghImageList=NULL;
+
+HFONT ghBoldFont=NULL;
+
+// Compteurs pour les stats
+UINT guiNbWEBSSO;
+UINT guiNbWINSSO;
+UINT guiNbPOPSSO;
+UINT guiNbWindows;
+UINT guiNbVisibleWindows;
+
+// 0.76
+BOOL gbRememberOnThisComputer=FALSE;
+BOOL gbRecoveryRunning=FALSE;
+
+BOOL gbRegisterSessionNotification=FALSE;
+UINT guiLaunchAppMsg;
+
+int giTimer=0;
+static int giRegisterSessionNotificationTimer=0;
+static int giNbRegisterSessionNotificationTries=0;
+static int giRefreshTimer=10;
+
+int giOSVersion=OS_WINDOWS_OTHER;
+int giOSBits=OS_32;
+
+SID *gpSid=NULL;
+char *gpszRDN=NULL;
+char gszComputerName[MAX_COMPUTERNAME_LENGTH+1]="";
+char gszUserName[UNLEN+1]="";
+
+
+char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
+
+// obligé de changer aussi le mot de passe statique pour l'encodage simple car il était trop long d'un caractère !!!
+static const char gcszStaticPwd092[]="1;*$pmoç_-'-é(-èe+==é&&*/}epaw&²1KijahBv15*µµ%?./§q"; 
+static const char gcszStaticPwd093[]="*éAl43HJj8]_3za;?,!ù¨AHI3le!ma!/sw\aw+==,;/§A6YhPM"; 
+
+// 0.91 : pour choix de config (fenêtre ChooseConfig)
+typedef struct
+{
+	int iNbConfigs;
+	int tabConfigs[NB_MAX_APPLICATIONS];
+	int iConfig;
+} T_CHOOSE_CONFIG;
+
+T_LAST_DETECT gTabLastDetect[MAX_NB_LAST_DETECT]; // 0.93 liste des fenêtres détectées sur cette action
+
+HANDLE ghPwdChangeEvent=NULL; // 0.96
+
+//*****************************************************************************
+//                             FONCTIONS PRIVEES
+//*****************************************************************************
+
+static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp);
+
+//-----------------------------------------------------------------------------
+// TimerProc()
+//-----------------------------------------------------------------------------
+// L'appel à cette fonction est déclenché toutes les 500 ms par le timer.
+// C'est cette fonction qui lance l'énumération des fenêtres
+//-----------------------------------------------------------------------------
+static void CALLBACK TimerProc(HWND w,UINT msg,UINT idEvent,DWORD dwTime)
+{
+	UNREFERENCED_PARAMETER(dwTime);
+	UNREFERENCED_PARAMETER(idEvent);
+	UNREFERENCED_PARAMETER(msg);
+	UNREFERENCED_PARAMETER(w);
+
+	// TODO : à déplacer dans un autre timer pour le faire moins souvent ?
+	DWORD dw=WaitForSingleObject(ghPwdChangeEvent,0);
+	TRACE((TRACE_DEBUG,_F_,"WaitForSingleObject=0x%08lx",dw));
+	if (dw==WAIT_OBJECT_0)
+	{
+		TRACE((TRACE_INFO,_F_,"WaitForSingleObject : swsso-pwdchange event received"));
+		if (ChangeWindowsPwd()==0)
+			MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+		else
+			MessageBox(w,GetString(IDS_CHANGE_PWD_FAILED),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+	}
+
+	if (gbSSOActif) 
+	{
+		guiNbWindows=0;
+		guiNbVisibleWindows=0;
+		// 0.93 : avant de commencer l'énumération, détaggue toutes les fenêtres
+		LastDetect_UntagAllWindows();
+		// enumération des fenêtres
+		EnumWindows(EnumWindowsProc,0);
+		// 0.93 : après l'énumération, efface toutes les fenêtres non taggués
+		//        cela permet de supprimer de la liste des derniers SSO réalisés les fenêtres 
+		//        qui ne sont plus à l'écran
+		LastDetect_RemoveUntaggedWindows();
+		// 0.82 : réarmement du timer (si désarmé) une fois que l'énumération est terminée 
+		//        (plutôt que dans la WindowsProc -> au moins on est sûr que c'est toujours fait)
+		LaunchTimer();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// RegisterSessionNotificationTimerProc()
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+static void CALLBACK RegisterSessionNotificationTimerProc(HWND w,UINT msg,UINT idEvent,DWORD dwTime)
+{
+	UNREFERENCED_PARAMETER(dwTime);
+	UNREFERENCED_PARAMETER(idEvent);
+	UNREFERENCED_PARAMETER(msg);
+	UNREFERENCED_PARAMETER(w);
+	
+	if (!gbRegisterSessionNotification) 
+	{
+		gbRegisterSessionNotification=WTSRegisterSessionNotification(gwMain,NOTIFY_FOR_THIS_SESSION);
+		if (gbRegisterSessionNotification) // c'est bon, enfin !
+		{
+			TRACE((TRACE_ERROR,_F_,"WTSRegisterSessionNotification() -> OK, au bout de %d tentatives !",giNbRegisterSessionNotificationTries));
+			KillTimer(NULL,giRegisterSessionNotificationTimer);
+			giRegisterSessionNotificationTimer=0;
+		}
+		else
+		{
+			TRACE((TRACE_ERROR,_F_,"WTSRegisterSessionNotification()=%ld [REESSAI DANS 15 SECONDES]",GetLastError()));
+			giNbRegisterSessionNotificationTries++;
+			if (giNbRegisterSessionNotificationTries>20) // 20 fois 15 secondes = 5 minutes, on arrête, tant pis !
+			{
+				TRACE((TRACE_ERROR,_F_,"WTSRegisterSessionNotification n'a pas reussi : PLUS DE REESSAI"));
+				KillTimer(NULL,giRegisterSessionNotificationTimer);
+				giRegisterSessionNotificationTimer=0;
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// LauchTimer()
+//-----------------------------------------------------------------------------
+// Lance le timer si pas déjà lancé
+//-----------------------------------------------------------------------------
+int LaunchTimer(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+
+	if (giTimer==0) 
+	{
+		giTimer=SetTimer(NULL,0,500,TimerProc);
+		if (giTimer==0) 
+		{
+#ifdef TRACE_ACTIVEES
+			DWORD err=GetLastError();
+			TRACE((TRACE_ERROR,_F_,"SetTimer() : %ld (0x%08lx)",err,err));
+#endif
+			goto end;
+		}
+	}
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// KBSimSSO()
+//-----------------------------------------------------------------------------
+// Réalisation du SSO de l'action passée en paramètre par simulation de frappe clavier
+//-----------------------------------------------------------------------------
+int KBSimSSO(HWND w, int iAction)
+{
+	TRACE((TRACE_ENTER,_F_, "iAction=%d",iAction));
+	int rc=-1;
+	char szDecryptedPassword[LEN_PWD+1];
+
+	// déchiffrement du champ mot de passe
+	if ((giPwdProtection>=PP_ENCODED) && (*gptActions[iAction].szPwdEncryptedValue!=0))
+	{
+		char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+		if (pszPassword!=NULL) 
+		{
+			strcpy_s(szDecryptedPassword,sizeof(szDecryptedPassword),pszPassword);
+			SecureZeroMemory(pszPassword,strlen(pszPassword));
+			free(pszPassword);
+		}
+	}
+	else
+	{
+		strcpy_s(szDecryptedPassword,sizeof(szDecryptedPassword),gptActions[iAction].szPwdEncryptedValue);
+	}
+
+	// analyse et exécution de la simulation de frappe clavier - on passe tous les paramètres, KBSimEx se débrouille.
+	// nouveau en 0.91 : flag NOFOCUS permet de ne pas mettre le focus systématiquement sur la fenêtre
+	// (nécessaire avec Terminal Server, sinon perte du focus sur les champs login/pwd)
+	if (_strnicmp(gptActions[iAction].szKBSim,"[NOFOCUS]",strlen("[NOFOCUS]"))==0) w=NULL;
+	KBSimEx(w,gptActions[iAction].szKBSim,gptActions[iAction].szId1Value,
+										  gptActions[iAction].szId2Value,
+										  gptActions[iAction].szId3Value,
+										  gptActions[iAction].szId4Value,
+										  szDecryptedPassword);
+
+	SecureZeroMemory(szDecryptedPassword,sizeof(szDecryptedPassword));
+
+	rc=0;
+//end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// ChooseConfigInitDialog()
+//-----------------------------------------------------------------------------
+// InitDialog DialogProc de la fenêtre de choix de config en cas de multi-comptes
+//-----------------------------------------------------------------------------
+void ChooseConfigInitDialog(HWND w,LPARAM lp)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+
+	T_CHOOSE_CONFIG *lpConfigs=(T_CHOOSE_CONFIG*)lp;
+	if (lpConfigs==NULL) goto end;
+	HWND wLV;
+	LVCOLUMN lvc;
+	LVITEM   lvi;
+	int i,pos;
+
+	// conserve le lp pour la suite
+	SetWindowLong(w,DWL_USER,lp);
+
+	// icone ALT-TAB
+	SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
+	SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+
+	// init de la listview
+	// listview
+	wLV=GetDlgItem(w,LV_CONFIGS);
+	// listview - création colonnes 
+	lvc.mask=LVCF_WIDTH | LVCF_TEXT ;
+	lvc.cx=218;
+	lvc.pszText="Application";
+	ListView_InsertColumn(wLV,0,&lvc);
+
+	lvc.mask=LVCF_WIDTH | LVCF_TEXT;
+	lvc.cx=200;
+	lvc.pszText="Identifiant";
+	ListView_InsertColumn(wLV,1,&lvc);
+
+	// listview - styles
+	ListView_SetExtendedListViewStyle(wLV,ListView_GetExtendedListViewStyle(wLV)|LVS_EX_FULLROWSELECT);
+
+	// listview - remplissage
+	for (i=0;i<lpConfigs->iNbConfigs;i++)
+	{
+		lvi.mask=LVIF_TEXT | LVIF_PARAM;
+		lvi.iItem=i;
+		lvi.iSubItem=0;
+		lvi.pszText=gptActions[lpConfigs->tabConfigs[i]].szApplication;
+		lvi.lParam=lpConfigs->tabConfigs[i];		// index de la config dans table générale gptActions
+		pos=ListView_InsertItem(GetDlgItem(w,LV_CONFIGS),&lvi);
+		
+		if (pos!=-1)
+		{
+			lvi.mask=LVIF_TEXT;
+			lvi.iItem=pos;
+			lvi.iSubItem=1;
+			lvi.pszText=GetComputedValue(gptActions[lpConfigs->tabConfigs[i]].szId1Value);
+			ListView_SetItem(GetDlgItem(w,LV_CONFIGS),&lvi);
+		}
+	}
+	// sélection par défaut
+	SendMessage(GetDlgItem(w,CB_TYPE),CB_SETCURSEL,0,0);
+	ListView_SetItemState(GetDlgItem(w,LV_CONFIGS),0,LVIS_SELECTED | LVIS_FOCUSED , LVIS_SELECTED | LVIS_FOCUSED);
+	
+	// titre en gras
+	SetTextBold(w,TX_FRAME);
+	// centrage
+	SetWindowPos(w,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
+	MACRO_SET_SEPARATOR;
+	// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+	// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+	if (giRefreshTimer==giTimer) giRefreshTimer=11;
+	SetTimer(w,giRefreshTimer,200,NULL);
+
+end:
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+//-----------------------------------------------------------------------------
+// ChooseConfigOnOK()
+//-----------------------------------------------------------------------------
+// Appelée lorsque l'utilisateur clique sur OK ou double-clique sur un item de la listview
+//-----------------------------------------------------------------------------
+int ChooseConfigOnOK(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	int iSelectedItem=ListView_GetNextItem(GetDlgItem(w,LV_CONFIGS),-1,LVNI_SELECTED);
+
+	if (iSelectedItem==-1) goto end;
+	// Récupère le lparam de l'item sélectionné. 
+	// Le lparam contient l'index de la config dans la table générale gptActions : lpConfigs->tabConfigs[i]
+	LVITEM lvi;
+	lvi.mask=LVIF_PARAM ;
+	lvi.iItem=iSelectedItem;
+	ListView_GetItem(GetDlgItem(w,LV_CONFIGS),&lvi);
+	// Récupère le lparam de la fenêtre qui contient le pointeur vers la structure configs
+	T_CHOOSE_CONFIG *lpConfigs=(T_CHOOSE_CONFIG *)GetWindowLong(w,DWL_USER);
+	// Stocke l'index de la configuration choisie par l'utilisateur
+	lpConfigs->iConfig=lvi.lParam;
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// ChooseConfigDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la fenêtre de choix de config en cas de multi-comptes
+//-----------------------------------------------------------------------------
+static int CALLBACK ChooseConfigDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			ChooseConfigInitDialog(w,lp);
+			break;
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+			}
+			break;
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+					if (ChooseConfigOnOK(w)==0) EndDialog(w,IDOK);
+					break;
+				case IDCANCEL:
+					EndDialog(w,IDCANCEL);
+					break;
+			}
+			break;
+		case WM_NOTIFY:
+			switch (((NMHDR FAR *)lp)->code) 
+			{
+				case NM_DBLCLK: 
+					if (ChooseConfigOnOK(w)==0) EndDialog(w,IDOK);
+					break;
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME:
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+		case WM_PAINT:
+			DrawLogoBar(w);
+			rc=TRUE;
+			break;
+		case WM_ACTIVATE:
+			InvalidateRect(w,NULL,FALSE);
+			break;
+	}
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// ChooseConfig()
+//-----------------------------------------------------------------------------
+// Propose une fenêtre de choix de la configuration à utiliser si plusieurs
+// matchent (=multi-comptes !)
+//-----------------------------------------------------------------------------
+int ChooseConfig(HWND w,int *piAction)
+{
+	TRACE((TRACE_ENTER,_F_, "iAction=%d",*piAction));
+	int rc=-1;
+	int i,j;
+	T_CHOOSE_CONFIG config;
+	config.iNbConfigs=1;			// nombre de configs qui matchent
+	config.tabConfigs[0]=*piAction;	// première config 
+	config.iConfig=*piAction;		// première config
+
+	// Cherche si d'autres configurations ACTIVES ont les mêmes caractéristiques :
+	// - iType
+	// - szTitle
+	// - szURL
+	// - szId1Name...szId4Name
+	// - id2Type...id4Type
+	// - szPwdName
+	for (i=0;i<giNbActions;i++)
+	{
+		if (i==*piAction) continue;
+		if ((gptActions[i].bActive) &&
+			(gptActions[*piAction].iType==gptActions[i].iType) &&
+			(gptActions[*piAction].id2Type==gptActions[i].id2Type) &&
+			(gptActions[*piAction].id3Type==gptActions[i].id3Type) &&
+			(gptActions[*piAction].id4Type==gptActions[i].id4Type) &&
+			(strcmp(gptActions[*piAction].szTitle,gptActions[i].szTitle)==0) &&
+			(strcmp(gptActions[*piAction].szURL,gptActions[i].szURL)==0) &&
+			(strcmp(gptActions[*piAction].szId1Name,gptActions[i].szId1Name)==0) &&
+			(strcmp(gptActions[*piAction].szId2Name,gptActions[i].szId2Name)==0) &&
+			(strcmp(gptActions[*piAction].szId3Name,gptActions[i].szId3Name)==0) &&
+			(strcmp(gptActions[*piAction].szId4Name,gptActions[i].szId4Name)==0) &&
+			(strcmp(gptActions[*piAction].szPwdName,gptActions[i].szPwdName)==0))
+		{
+			config.tabConfigs[config.iNbConfigs]=i;
+			config.iNbConfigs++;
+		}
+	}
+#ifdef TRACES_ACTIVEES
+	TRACE((TRACE_INFO,_F_,"Liste des configurations possibles :"));
+	for (i=0;i<config.iNbConfigs;i++) 
+	{
+		TRACE((TRACE_INFO,_F_,"%d : %d",i,config.tabConfigs[i]));
+	}
+#endif
+	// si aucune config trouvée autre que celle initiale, on sort et on fait le SSO avec cette config
+	if (config.iNbConfigs==1) { giLaunchedApp=-1; rc=0; goto end; }
+
+	// avant d'afficher la fenêtre de choix des configs, on va regarder si l'une des configs trouvées
+	// correspond à une application qui vient d'être lancée par LaunchSelectedApp(). 
+	// si c'est le cas, inutile de proposer à l'utilisateur de choisir, on choisit pour lui ! (ça c'est vraiment génial)
+	TRACE((TRACE_DEBUG,_F_,"giLaunchedApp=%d",giLaunchedApp));
+	if (giLaunchedApp!=-1)
+	{
+		for (i=0;i<config.iNbConfigs;i++) 
+		{
+			if (config.tabConfigs[i]==giLaunchedApp) // trouvé, on utilisera celle-là, on sort.
+			{
+				TRACE((TRACE_INFO,_F_,"Lancé depuis LaunchPad action %d",config.tabConfigs[i]));
+				*piAction=config.tabConfigs[i];
+				giLaunchedApp=-1;
+				rc=0;
+				// repositionne tLastSSO et wLastSSO des actions qui ne seront pas traitées
+				// l'action traitée sera mise à jour au moment du SSO
+				for (j=0;j<config.iNbConfigs;j++)
+				{
+					if (config.tabConfigs[j]==*piAction) continue; // tout sauf celle choisie par l'utilisateur
+					time(&gptActions[config.tabConfigs[j]].tLastSSO);
+					gptActions[config.tabConfigs[j]].wLastSSO=w;
+				}
+				goto end;
+			}
+		}
+	}
+	// pas trouvé, on oublie, c'était une mauvaise piste
+	giLaunchedApp=-1;
+
+	// affiche la fenêtre de choix des configs
+	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_CHOOSE_CONFIG),w,ChooseConfigDialogProc,LPARAM(&config))!=IDOK) 
+	{
+		// l'utilisateur a annulé, on marque tout le monde en WAIT_ONE_MINUTE comme ça on ne fait pas le SSO tout de suite
+		// repositionne tLastDetect et wLastDetect 
+		for (i=0;i<config.iNbConfigs;i++) 
+		{
+			//gptActions[config.tabConfigs[i]].wLastDetect=w;
+			//time(&gptActions[config.tabConfigs[i]].tLastDetect);
+			time(&gptActions[config.tabConfigs[i]].tLastSSO);
+			gptActions[config.tabConfigs[i]].wLastSSO=w;
+			gptActions[config.tabConfigs[i]].iWaitFor=WAIT_ONE_MINUTE;
+			TRACE((TRACE_DEBUG,_F_,"gptActions(%d).iWaitFor=WAIT_ONE_MINUTE",config.tabConfigs[i]));
+		}
+		goto end;
+	}
+	// retourne l'action qui a été choisie par l'utilisateur
+	TRACE((TRACE_INFO,_F_,"Choix de l'utilisateur : action %d",config.iConfig));
+	*piAction=config.iConfig;
+	// repositionne tLastSSO et wLastSSO des actions qui ne seront pas traitées
+	// l'action traitée sera mise à jour au moment du SSO
+	for (i=0;i<config.iNbConfigs;i++)
+	{
+		if (config.tabConfigs[i]==*piAction) continue; // tout sauf celle choisie par l'utilisateur
+		time(&gptActions[config.tabConfigs[i]].tLastSSO);
+		gptActions[config.tabConfigs[i]].wLastSSO=w;
+	}
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d iAction=%d",rc,*piAction));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// EnumWindowsProc()
+//-----------------------------------------------------------------------------
+// Callback d'énumération de fenêtres présentes sur le bureau et déclenchement
+// du SSO le cas échéant
+//-----------------------------------------------------------------------------
+// [rc] : toujours TRUE (continuer l'énumération)
+//-----------------------------------------------------------------------------
+static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
+{
+	UNREFERENCED_PARAMETER(lp);
+	int i;
+	time_t tNow,tLastSSOOnThisWindow;
+	bool bDoSSO;
+	char *pszURL=NULL;
+	int iPopupType=POPUP_NONE;
+	char szClassName[128+1]; // pour stockage nom de classe de la fenêtre
+	char szTitre[255+1];	  // pour stockage titre de fenêtre
+	int rc;
+	char szMsg[512+1];
+	int lenTitle;
+	int iBrowser=BROWSER_NONE;
+	HWND wChromePopup=NULL;
+	HWND wReal=NULL; // bidouille pour Chrome
+	
+	guiNbWindows++;
+	// 0.93B4 : fenêtres éventuellement exclues 
+	if (IsExcluded(w)) goto end;
+	// lecture du titre de la fenêtre
+	GetWindowText(w,szTitre,sizeof(szTitre));
+	if (*szTitre==0) goto end; // si fenêtre sans titre, on passe ! <optim>
+	if (!IsWindowVisible(w)) goto end; // fenêtre cachée, on passe ! <optim+compteur>
+	guiNbVisibleWindows++;
+
+	// 0.93 : marque la fenêtre comme toujours présente à l'écran dans liste des derniers SSO réalisés
+	LastDetect_TagWindow(w); 
+
+	// lecture de la classe de la fenêtre (pour reconnaitre IE et Firefox ensuite)
+	GetClassName(w,szClassName,sizeof(szClassName));
+	
+	TRACE((TRACE_DEBUG,_F_,"szTitre=%s",szTitre));
+
+	// boucle dans la liste d'action pour voir si la fenêtre correspond à une config connue
+    for (i=0;i<giNbActions;i++)
+    {
+    	if (!gptActions[i].bActive) goto suite; // action désactivée
+		if (!gptActions[i].bSaved) { TRACE((TRACE_INFO,_F_,"action %d non enregistrée => SSO non exécuté",i)); goto suite; } // 0.93B6 ISSUE#55
+		if (gptActions[i].iType==UNK) goto suite; // 0.85 : ne traite pas si type inconnu
+		
+		// ESSAI POPUP AUTHENT CHROME
+		// Avant de comparer le titre, vérifier si ce n'est pas une popup Chrome
+		// En effet, avec Chrome, le titre est soit vide, soit correspond au site visité précedemment, donc non représentatif
+		wChromePopup=NULL;
+		// ISSUE#77 : Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
+		if (gptActions[i].iType==POPSSO && strncmp(szClassName,"Chrome_WidgetWin_",17)==0) wChromePopup=GetChromePopupHandle(w,i);
+		if (wChromePopup!=NULL)
+		{
+			iPopupType=POPUP_CHROME;
+			TRACE((TRACE_DEBUG,_F_,"POPUP_CHROME !"));
+		}
+		else
+		{
+			lenTitle=strlen(gptActions[i].szTitle);
+			if (lenTitle==0) goto suite; // 0.85 : ne traite pas si pas de titre (sauf pour popup chrome)
+    		// 0.80 : on compare sur le début du titre et non plus sur une partie du titre 
+			// if (strstr(szTitre,gptActions[i].szTitle)==NULL) goto suite; // fenêtre inconnue...
+			// 0.92B3 : évolution de la comparaison du titre pour prendre en compte le joker *
+			// if (_strnicmp(szTitre,gptActions[i].szTitle,lenTitle)!=0) goto suite; // fenêtre inconnue...
+			if (!swStringMatch(szTitre,gptActions[i].szTitle)) goto suite;
+		}
+		// A ce stade, on a associé le titre (uniquement le titre, c'est à dire qu'on n'a pas encore vérifié
+		// que l'URL était correcte) à une action.
+		TRACE((TRACE_INFO,_F_,"======= Fenêtre handle 0x%08lx titre connu (%s) classe (%s) action (%d) type (%d) à vérifier maintenant",w,szTitre,szClassName,i,gptActions[i].iType));
+    	if (gptActions[i].iType==POPSSO) 
+    	{
+			if (strcmp(szClassName,gcszMozillaDialogClassName)==0) // POPUP FIREFOX
+			{
+				pszURL=GetFirefoxPopupURL(w);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup firefox non trouvee")); goto suite; }
+				iPopupType=POPUP_FIREFOX;
+			}
+			else if (strcmp(szTitre,"Sécurité de Windows")==0 ||
+					 strcmp(szTitre,"Windows Security")==0) // POPUP IE8 SUR W7 [ISSUE#5] (FR et US uniquement... pas beau)
+			{
+				pszURL=GetW7PopupURL(w);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup W7 non trouvee")); goto suite; }
+				iPopupType=POPUP_W7;
+			}
+			else if (iPopupType==POPUP_CHROME)
+			{
+				pszURL=GetChromeURL(w);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup Chrome non trouvee")); goto suite; }
+			}
+			else
+			{
+				iPopupType=POPUP_XP;
+			}
+			// il faut vérifier que l'URL matche pour FIREFOX, W7 et CHROME car elles ont toutes le meme titre !
+			// Popup IE sous XP, pas la peine, titre distinctif
+			if (iPopupType==POPUP_FIREFOX || iPopupType==POPUP_W7 || iPopupType==POPUP_CHROME)
+			{
+				TRACE((TRACE_INFO,_F_,"URL trouvee  = %s",pszURL));
+				TRACE((TRACE_INFO,_F_,"URL attendue = %s",gptActions[i].szURL));
+				// 0.92B6 : utilise le swStringMatch, permet donc d'utiliser * en début de chaîne
+				if (!swStringMatch(pszURL,gptActions[i].szURL))
+				{
+					TRACE((TRACE_DEBUG,_F_,"Titre connu, mais URL ne matche pas, on passe !"));
+					goto suite;// URL popup authentification inconnue
+				}
+			}
+		}
+		else if (gptActions[i].iType==WINSSO && *(gptActions[i].szURL)!=0) // fenêtre Windows avec URL, il faut vérifier que l'URL matche
+		{
+			if (!CheckURL(w,i))
+			{
+				TRACE((TRACE_DEBUG,_F_,"Titre connu, mais URL ne matche pas, on passe !"));
+				goto suite;// URL popup authentification inconnue
+			}
+		}
+		else if (gptActions[i].iType==WEBSSO || gptActions[i].iType==WEBPWD || gptActions[i].iType==XEBSSO) // action WEB, il faut vérifier que l'URL matche
+		{
+			if (strcmp(szClassName,"IEFrame")==0 || // IE
+				strcmp(szClassName,"#32770")==0 ||  // Network Connect
+				strcmp(szClassName,"rctrl_renwnd32")==0 || // Outlook 97 à 2003 (au moins, à vérifier pour 2007)
+				strcmp(szClassName,"OpusApp")==0 || // Word 97 à 2003 (au moins, à vérifier pour 2007)
+				strcmp(szClassName,"ExploreWClass")==0 || strcmp(szClassName,"CabinetWClass")==0) // Explorateur Windows
+			{
+				iBrowser=BROWSER_IE;
+				pszURL=GetIEURL(w);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto suite; }
+			}
+			else if (strcmp(szClassName,gcszMozillaUIClassName)==0) // FF3
+			{
+				iBrowser=BROWSER_FIREFOX3;
+				pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX3);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 3- non trouvee : on passe !")); goto suite; }
+			}
+			else if (strcmp(szClassName,gcszMozillaClassName)==0) // FF4
+			{
+				iBrowser=BROWSER_FIREFOX4;
+				pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX4);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 4+ non trouvee : on passe !")); goto suite; }
+			}
+			else if (strcmp(szClassName,"Maxthon2_Frame")==0) // Maxthon
+			{
+				iBrowser=BROWSER_MAXTHON;
+				if (gptActions[i].iType==XEBSSO) 
+				{
+					TRACE((TRACE_ERROR,_F_,"Nouvelle methode de configuration non supportee avec Maxthon"));
+					goto suite;
+				}
+				pszURL=GetMaxthonURL();
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Maxthon non trouvee : on passe !")); goto suite; }
+			}
+			else if (strncmp(szClassName,"Chrome_WidgetWin_",17)==0) // ISSUE#77 : Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
+			{
+				iBrowser=BROWSER_CHROME;
+				/*if (gptActions[i].iType!=XEBSSO) 
+				{
+					TRACE((TRACE_ERROR,_F_,"Ancienne methode de configuration non supportee avec Chrome"));
+					goto suite;
+				}*/
+				pszURL=GetChromeURL(w);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto suite; }
+			}
+			else // autre ??
+			{
+				TRACE((TRACE_ERROR,_F_,"Unknown class : %s !",szClassName)); goto suite; 
+			}
+			TRACE((TRACE_INFO,_F_,"URL trouvee  = %s",pszURL));
+			TRACE((TRACE_INFO,_F_,"URL attendue = %s",gptActions[i].szURL));
+
+			// 0.92B6 : utilise le swStringMatch, permet donc d'utiliser * en début de chaîne
+			// if (!swStringMatch(pszURL,gptActions[i].szURL))
+			if (!swURLMatch(pszURL,gptActions[i].szURL))
+			{
+				TRACE((TRACE_DEBUG,_F_,"Titre connu, mais URL ne matche pas, on passe !"));
+				goto suite;// URL popup authentification inconnue
+			}
+		}
+		// ARRIVE ICI, ON SAIT QUE LA FENETRE EST BIEN ASSOCIEE A L'ACTION i ET QU'IL FAUT FAIRE LE SSO...
+		// ... SAUF SI DEJA FAIT RECEMMENT !
+		TRACE((TRACE_INFO,_F_,"======= Fenêtre vérifée OK, on vérifie si elle a été traitée récemment"));
+		TRACE((TRACE_DEBUG,_F_,"Fenetre      ='%s'",szTitre));
+		TRACE((TRACE_DEBUG,_F_,"Application  ='%s'",gptActions[i].szApplication));
+		TRACE((TRACE_DEBUG,_F_,"Type         =%d",gptActions[i].iType));
+
+		// 0.93
+		//TRACE((TRACE_DEBUG,_F_,"now-tLastDetect=%ld",t-gptActions[i].tLastDetect));
+		//TRACE((TRACE_DEBUG,_F_,"wLastDetect    =0x%08lx",gptActions[i].wLastDetect));
+		time(&tNow);
+		TRACE((TRACE_DEBUG,_F_,"tNow-tLastSSO=%ld (nb secondes depuis dernier SSO sur cette action)",tNow-gptActions[i].tLastSSO));
+		TRACE((TRACE_DEBUG,_F_,"wLastSSO     =0x%08lx",gptActions[i].wLastSSO));
+
+		bDoSSO=true;
+
+		// Cas particulier de Chrome : remaplace le w de la fenêtre ppale par le w de la popup
+		// permet de gérer le comportement en cas d'échec d'authent exactement pareil qu'avec les autres
+		// navigateurs où la popup est une vraie fenetre...
+		if (gptActions[i].iType==POPSSO && iPopupType==POPUP_CHROME) { wReal=w; w=wChromePopup; }
+
+		// on n'exécute pas (une action utilisateur est nécessaire)
+		if (gptActions[i].bWaitForUserAction) 
+		{
+			TRACE((TRACE_INFO,_F_,"SSO en attente d'action utilisateur"));
+			goto suite;
+		}
+		
+		// Détection d'un SSO déjà fait récemment sur la fenêtre afin de prévenir les essais multiples 
+		// avec mauvais mots de passe qui pourraient bloquer le compte 
+		tLastSSOOnThisWindow=LastDetect_GetTime(w); // date de dernier SSO sur cette fenêtre (toutes actions confondues)
+		TRACE((TRACE_DEBUG,_F_,"tNow-tLastSSOOnThisWindow	=%ld (nb secondes depuis dernier SSO sur cette fenêtre)",tNow-tLastSSOOnThisWindow));
+
+		if (gptActions[i].iType==WEBSSO || gptActions[i].iType==WEBPWD || gptActions[i].iType==XEBSSO)
+		{
+			// si tLastSSOOnThisWindow==1 => handle inconnu donc jamais traité => on fait le SSO, sinon :
+			if (tLastSSOOnThisWindow!=-1) // on a déjà fait un SSO sur cette même fenetre (cette action ou une autre, peu importe, par exemple une autre action à cause du multi-comptes)
+			{
+				// c'est du Web, rien de choquant (le navigateur a toujours le meme handle quel que soit le site accédé !
+				// Par contre, il faut dans les cas suivants ne pas réessayer immédiatement, mais laisser passer
+				// un délai avant le prochain essai (précisé en face de chaque cas) :
+				// - Eviter de griller un compte avec X saisies de mauvais mots de passe de suite (iWaitFor=WAIT_IF_SSO_OK)
+				// - Ne pas bouffer de CPU en cherchant tous les 500ms des champs qu'on n'a pas trouvé dans la page (iWaitFor=WAIT_IF_SSO_KO)
+				// - Ne pas bouffer de CPU quand l'URL ne correspond pas (alors que le titre correspond) (iWaitFor=WAIT_IF_BAD_URL)
+				if ((tNow-gptActions[i].tLastSSO)<gptActions[i].iWaitFor) 
+				{
+					TRACE((TRACE_INFO,_F_,"(tNow-gptActions[i].tLastSSO)<gptActions[i].iWaitFor"));
+					bDoSSO=false;
+				}
+			}
+		}
+		else // WINSSO ou POPUP
+		{
+			if (tLastSSOOnThisWindow!=-1)
+			{
+ 				// fenêtre traitée précédemment par cette action OU PAR UNE AUTRE (cause multi-comptes)
+				// elle est toujours là, donc c'est l'authentification qui rame, pas la peine de réessayer, 
+				// elle disparaitra d'elle même au  bout d'un moment...
+   				TRACE((TRACE_INFO,_F_,"Fenetre %s handle identique deja traitee il y a %d secondes, on ne fait rien",gptActions[i].szTitle,tNow-tLastSSOOnThisWindow));
+				bDoSSO=false;
+			}	
+			else  
+			{
+				// fenêtre inconnue au bataillon
+				TRACE((TRACE_INFO,_F_,"Fenetre %s handle différent",gptActions[i].szTitle));
+				if (gptActions[i].iWaitFor==WAIT_ONE_MINUTE && (tNow-gptActions[i].tLastSSO)<gptActions[i].iWaitFor)
+				{
+					TRACE((TRACE_DEBUG,_F_,"WAIT_ONE_MINUTE"));
+					bDoSSO=false;
+				}
+				else
+				{
+					if ((tNow-gptActions[i].tLastSSO)<5) // 0.86 : passage de 3 à 5 secondes pour applis qui rament...
+					{
+						TRACE((TRACE_DEBUG,_F_,"Le SSO sur cette action a été réalisé il y a moins de 5 secondes"));
+						// le SSO sur cette action a été réalisé il y a moins de 5 secondes et cette fenêtre est nouvelle
+						// => 2 possibilités :
+						// 1) c'est une réapparition suite à un échec d'authentification
+						// 2) c'est vraiment une nouvelle fenêtre ouverte dans les 5 secondes
+						// pour différencier, il faut voir si la fenêtre sur laquelle le SSO a été fait précedemment
+						// est toujours à l'écran ou pas. Si elle est toujours là, c'est bien une nouvelle fenêtre
+						// Si elle n'est plus là, on est sans doute dans le cas de l'échec d'authent
+						if(gptActions[i].wLastSSO!=NULL && IsWindow(gptActions[i].wLastSSO))
+						{
+							TRACE((TRACE_DEBUG,_F_,"La fenêtre précédemment SSOisée est toujours là, celle-ci est donc nouvelle"));
+							// fenêtre toujours là ==> nouvelle fenêtre, on fait le SSO
+							gptActions[i].iWaitFor=WAIT_IF_SSO_OK;
+    						bDoSSO=true;
+						}
+						else // fenêtre plus là, sans doute un échec d'authentification 
+						{
+							TRACE((TRACE_DEBUG,_F_,"La fenêtre précédemment SSOisée n'est plus là, sans doute un retour cause échec authentification"));
+							// 0.85 : on suggère donc à l'utilisateur de changer son mot de passe.
+							if (gptActions[i].bAutoLock) // 0.66 ne suspend pas si l'utilisateur a mis autoLock=NO (le SSO sera donc fait)
+							{
+								char szSubTitle[256];
+								KillTimer(NULL,giTimer); giTimer=0;
+								TRACE((TRACE_INFO,_F_,"Fenetre %s handle different deja traitee il y a %d secondes !",gptActions[i].szTitle,tNow-gptActions[i].tLastSSO));
+								T_MESSAGEBOX3B_PARAMS params;
+								params.szIcone=IDI_EXCLAMATION;
+								params.iB1String=IDS_DESACTIVATE_B1; // réessayer
+								params.iB2String=IDS_DESACTIVATE_B2; // changer le mdp
+								params.iB3String=IDS_DESACTIVATE_B3; // désactiver
+								params.wParent=w;
+								params.iTitleString=IDS_MESSAGEBOX_TITLE;
+								wsprintf(szSubTitle,GetString(IDS_DESACTIVATE_SUBTITLE),gptActions[i].szApplication);
+								params.szSubTitle=szSubTitle;
+								strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_DESACTIVATE_MESSAGE));
+								params.szMessage=szMsg;
+								//if (MessageBox(w,szMsg,"swSSO", MB_YESNO | MB_ICONQUESTION)==IDYES)
+								int reponse=MessageBox3B(&params);
+								if (reponse==B1) // réessayer
+								{
+									gptActions[i].iWaitFor=0;
+									// rien à faire, ça va repartir tout seul :-)
+								}
+								else if (reponse==B2) // changer le mdp
+								{
+									ChangeApplicationPassword(w,i);
+								}
+								else // B3 : désactiver
+								{
+									bDoSSO=false;
+									// 0.86 sauvegarde la désactivation dans le .INI !
+									// 0.90A2 : on ne sauvegarde plus (risque d'écrire dans une section renommée)
+									// WritePrivateProfileString(gptActions[i].szApplication,"active","NO",gszCfgFile);
+									
+									//gptActions[i].bActive=false;
+									// 0.90B1 : finalement on ne désactive plus, on suspend pendant 1 minute (#107)
+									gptActions[i].iWaitFor=WAIT_ONE_MINUTE;
+								}
+							}
+    					}
+					}
+				}
+			}
+		}
+		//------------------------------------------------------------------------------------------------------
+		if (bDoSSO) // on a déterminé que le SSO doit être tenté
+		//------------------------------------------------------------------------------------------------------
+		{
+			TRACE((TRACE_INFO,_F_,"======= Fenêtre vérifiée OK et pas traitée récemment, on lance le SSO !"));
+			//0.80 : tue le timer le temps de faire le SSO, le réarme ensuite (cas des pages lourdes à parser avec Firefox...)
+			KillTimer(NULL,giTimer); giTimer=0;
+
+			//0.91 : fait choisir l'appli à l'utilisateur si plusieurs matchent (gestion du multicomptes)
+			if (ChooseConfig(w,&i)!=0) goto end;
+			
+			//0.91 : vérifie que chaque champ identifiant et mot de passe déclaré a bien une valeur associée
+			//       sinon demande les valeurs manquantes à l'utilisateur !
+			//0.92 : correction ISSUE#7 : le cas des popup qui ont toujours id et pwd mais pas de chaque champ 
+			//		 identifiant et mot de passe déclaré n'était pas traité !
+			gbDontAskId=TRUE;
+			gbDontAskId2=TRUE;
+			gbDontAskId3=TRUE;
+			gbDontAskId4=TRUE;
+			gbDontAskPwd=TRUE;
+
+			//0.93 : logs
+			swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
+
+			if (gptActions[i].bKBSim && gptActions[i].szKBSim[0]!=0) // simulation de frappe clavier
+			{
+				if (strnistr(gptActions[i].szKBSim,"[ID]",-1)!=NULL &&  *gptActions[i].szId1Value==0) gbDontAskId=FALSE;
+				if (strnistr(gptActions[i].szKBSim,"[ID2]",-1)!=NULL && *gptActions[i].szId2Value==0) gbDontAskId2=FALSE;
+				if (strnistr(gptActions[i].szKBSim,"[ID3]",-1)!=NULL && *gptActions[i].szId3Value==0) gbDontAskId3=FALSE;
+				if (strnistr(gptActions[i].szKBSim,"[ID4]",-1)!=NULL && *gptActions[i].szId4Value==0) gbDontAskId4=FALSE;
+				if (strnistr(gptActions[i].szKBSim,"[PWD]",-1)!=NULL && *gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
+			}
+			else // SSO normal
+			{
+				if (*gptActions[i].szId1Name!=0 && *gptActions[i].szId1Value==0) gbDontAskId=FALSE;
+				if (*gptActions[i].szId2Name!=0 && *gptActions[i].szId2Value==0) gbDontAskId2=FALSE;
+				if (*gptActions[i].szId3Name!=0 && *gptActions[i].szId3Value==0) gbDontAskId3=FALSE;
+				if (*gptActions[i].szId4Name!=0 && *gptActions[i].szId4Value==0) gbDontAskId4=FALSE;
+				if (*gptActions[i].szPwdName!=0 && *gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
+			}
+			// cas des popups (0.92 - ISSUE#7)
+			if (gptActions[i].iType==POPSSO) 
+			{
+				if (*gptActions[i].szId1Value==0) gbDontAskId=FALSE;
+				if (*gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
+			}
+			
+			// s'il y a au moins un champ non renseigné, afficher la fenêtre de saisie
+			//if (!gbDontAskId || !gbDontAskId2 || !gbDontAskId3 || !gbDontAskId4 || !gbDontAskPwd)
+			if ((gptActions[i].iType!=WEBPWD) && (!gbDontAskId || !gbDontAskId2 || !gbDontAskId3 || !gbDontAskId4 || !gbDontAskPwd))
+			{
+				T_IDANDPWDDIALOG params;
+				params.bCenter=TRUE;
+				params.iAction=i;
+				params.iTitle=IDS_IDANDPWDTITLE_MISSING;
+				wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_MISSING),gptActions[i].szApplication);
+					
+				if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),HWND_DESKTOP,IdAndPwdDialogProc,(LPARAM)&params)==IDOK) 
+				{
+					SaveApplications();
+				}
+				else
+				{
+					// l'utilisateur a annulé, on marque la config en WAIT_ONE_MINUTE comme ça on ne fait pas 
+					// le SSO tout de suite -> repositionne tLastDetect et wLastDetect 
+					//time(&gptActions[i].tLastDetect);
+					//gptActions[i].wLastDetect=w;
+					time(&gptActions[i].tLastSSO);
+					gptActions[i].wLastSSO=w;
+					LastDetect_AddOrUpdateWindow(w);
+					gptActions[i].iWaitFor=WAIT_ONE_MINUTE;
+					TRACE((TRACE_DEBUG,_F_,"gptActions(%d).iWaitFor=WAIT_ONE_MINUTE",i));
+					goto end;
+				}
+			}
+			
+			//0.89 : indépendamment du type (WIN, POP ou WEB), si c'est de la simulation de frappe clavier, on y va !
+			//       et ensuite on termine sans uploader la config (comme on n'a aucun moyen de savoir
+			//       si le SSO a fonctionné, c'est préférable de laisser l'utilisateur juger et remonter
+			//		 manuellement la configuration le cas échéant
+			// ISSUE#61 / 0.93 : on ne traite les popup W7 en simulation de frappe, marche pas avec IE9 ou W7 SP1 ?
+			// if (iPopupType==POPUP_W7 || iPopupType==POPUP_CHROME) 
+			if (iPopupType==POPUP_CHROME) // 0.92 : on traite les popup W7 en simulation de frappe ça marche très bien
+			{
+				gptActions[i].bKBSim=TRUE;
+				strcpy_s(gptActions[i].szKBSim,LEN_KBSIM+1,"[40][ID][40][TAB][40][PWD][40][ENTER]");
+			}
+			if (gptActions[i].bKBSim && gptActions[i].szKBSim[0]!=0)
+			{
+				TRACE((TRACE_INFO,_F_,"SSO en mode simulation de frappe clavier"));
+				if (gptActions[i].iType==POPSSO && iPopupType==POPUP_CHROME)
+					KBSimSSO(wReal,i);
+				else
+					KBSimSSO(w,i);
+				// repositionne tLastDetect et wLastDetect
+				//time(&gptActions[i].tLastDetect);
+				//gptActions[i].wLastDetect=w;
+				time(&gptActions[i].tLastSSO);
+				gptActions[i].wLastSSO=w;
+				LastDetect_AddOrUpdateWindow(w);
+				if (_strnicmp(gptActions[i].szKBSim,"[WAIT]",strlen("[WAIT]"))==0) gptActions[i].bWaitForUserAction=TRUE;
+				//goto suite; // 0.90 XXXXXXXXX ICI XXXXXXXXXXXXX
+				// ISSUE#61 / 0.93 : on ne traite les popup W7 en simulation de frappe, marche pas avec IE9 ou W7 SP1 ?
+				// if (iPopupType==POPUP_W7 || iPopupType==POPUP_CHROME) { gptActions[i].bKBSim=FALSE; *(gptActions[i].szKBSim)=0; }
+				if (iPopupType==POPUP_CHROME) { gptActions[i].bKBSim=FALSE; *(gptActions[i].szKBSim)=0; }
+				switch (gptActions[i].iType)
+				{
+					case POPSSO: guiNbPOPSSO++; break;
+					case WINSSO: guiNbWINSSO++; break;
+					case WEBSSO: guiNbWEBSSO++; break;
+					case XEBSSO: guiNbWEBSSO++; break;
+				}
+				goto end;
+			}
+			switch(gptActions[i].iType)
+			{
+				case WINSSO: 
+				case POPSSO: 
+					SSOWindows(w,i,iPopupType);
+					// repositionne tLastDetect et wLastDetect
+					//time(&gptActions[i].tLastDetect);
+					//gptActions[i].wLastDetect=w;
+					time(&gptActions[i].tLastSSO);
+					gptActions[i].wLastSSO=w;
+					LastDetect_AddOrUpdateWindow(w);
+					break;
+				case WEBSSO: 
+					// pas de break, c'est volontaire !
+				case XEBSSO: 
+					// pas de break, c'est volontaire !
+				case WEBPWD:
+					switch (iBrowser)
+					{
+						case BROWSER_IE:
+							if (gptActions[i].iType==XEBSSO)
+								rc=SSOWebAccessible(w,i,BROWSER_IE);
+							else
+								rc=SSOWeb(w,i,w); 
+							break;
+							break;
+						case BROWSER_FIREFOX3:
+						case BROWSER_FIREFOX4:
+							if (gptActions[i].iType==XEBSSO)
+								rc=SSOWebAccessible(w,i,iBrowser);
+							else
+							{
+								// ISSUE#60 : en attendant d'avoir une réponse de Mozilla, on n'exécute pas les anciennes config 
+								//            avec Firefox sous Windows 7 pour éviter le plantage !
+								// ISSUE#60 modifié en 0.94B2 : Vista et 64 bits seulement
+								if (giOSBits==OS_64) 
+								{
+									TRACE((TRACE_INFO,_F_,"Ancienne configuration Firefox + Windows 64 bits : on n'exécute pas !"));
+									rc=0;
+								}
+								else rc=SSOFirefox(w,i,iBrowser); 
+							}
+							break;
+						case BROWSER_MAXTHON:
+							rc=SSOMaxthon(w,i); 
+							break;
+						case BROWSER_CHROME:
+							if (gptActions[i].iType==XEBSSO)
+								rc=SSOWebAccessible(w,i,iBrowser);
+							else
+							{
+								if (giOSBits==OS_64) 
+								{
+									TRACE((TRACE_INFO,_F_,"Ancienne configuration Chrome + Windows 64 bits : on n'exécute pas !"));
+									rc=0;
+								}
+								else rc=SSOFirefox(w,i,iBrowser); // ISSUE#66 0.94 : chrome a implémenté ISimpleDOM comme Firefox !
+							}
+							break;
+						default:
+							rc=-1;
+					}
+
+					// repositionne tLastDetect et wLastDetect (écrasé par la suite dans un cas, cf. plus bas)
+					//time(&gptActions[i].tLastDetect);
+					//gptActions[i].wLastDetect=w;
+					time(&gptActions[i].tLastSSO);
+					gptActions[i].wLastSSO=w;
+					LastDetect_AddOrUpdateWindow(w);
+
+					if (rc==0) // SSO réussi
+					{
+						TRACE((TRACE_INFO,_F_,"SSO réussi, on ne le retente pas avant %d secondes",WAIT_IF_SSO_OK));
+						// on ne réessaie pas si le SSO est réussi mais on ne peut pas cramer définitivement
+						// ce SSO sinon un utilisateur qui se déconnecte ne pourra pas se reconnecter
+						// tant qu'il n'aura pas fermé / réouvert son navigateur (handle différent) !
+						gptActions[i].iNbEssais=0;
+						gptActions[i].iWaitFor=WAIT_IF_SSO_OK; 
+					}
+					else if (rc==-2) // SSO abandonné car l'URL ne correspond pas
+					{
+						// Si l'URL est différente, c'est probablement que le SSO a été fait précédemment
+						// et que l'utilisateur est sur une autre page du site.
+						// Il n'est pas utile de réessayer immédiatement, néanmoins il faut essayer régulièrement
+						// pour que le SSO fonctionne quand la page attendue arrivera (par exemple si la page
+						// visitée était une page précédant celle sur laquelle l'utilisateur va faire le SSO...)
+						// Le ré-essai ne coute presque rien en CPU, on peut le faire toutes les 5 secondes
+						gptActions[i].iNbEssais=0;
+						gptActions[i].iWaitFor=WAIT_IF_BAD_URL;
+						TRACE((TRACE_INFO,_F_,"URL différente de celle attendue, prochain essai dans %d secondes",WAIT_IF_BAD_URL));
+					}
+					else // SSO raté, erreur inattendue ou plus probablement champs non trouvés
+					{
+						// Deux cas de figure... comment les différencier ???
+						// 1) La page n'est pas encore complètement arrivée, il faut donc réessayer un petit peu plus tard
+						// 2) Le titre et l'URL ne permettent pas de distinguer la page courante de la page de login...
+						// Solution : on retente quelques fois relativement rapidement pour traiter le cas 1 et au bout de 
+						// quelques essais on espace les tentatives pour traiter plutôt le cas 2 (car parsing complet gourmant
+						// en CPU, on ne peut pas le faire toutes les 2 secondes indéfiniment)
+						TRACE((TRACE_INFO,_F_,"Echec SSOWeb application %s (essai %d)",gptActions[i].szApplication,gptActions[i].iNbEssais));
+						gptActions[i].iNbEssais++;
+						if (gptActions[i].iNbEssais<21) // les 20 premières fois, on retente immédiatement
+						{
+							//gptActions[i].wLastDetect=NULL;
+							//gptActions[i].tLastDetect=-1;
+							gptActions[i].tLastSSO=-1;
+							gptActions[i].wLastSSO=NULL;
+							TRACE((TRACE_INFO,_F_,"Essai %d immediat",gptActions[i].iNbEssais));
+						}
+						else if (gptActions[i].iNbEssais<121) // puis 100 fois toutes les 2 secondes
+						{
+							gptActions[i].iWaitFor=WAIT_IF_SSO_PAGE_NOT_COMPLETE; 
+							TRACE((TRACE_INFO,_F_,"Essai %d dans %d secondes",gptActions[i].iNbEssais,WAIT_IF_SSO_PAGE_NOT_COMPLETE));
+						}
+						else 
+						{
+							// bon, ça fait un paquet de fois qu'on réessaie... c'est surement un cas 
+							// ou titre+URL ne permettent pas de différencier la page de login des autres
+							// Du coup, inutile de s'acharner, on retente + tard
+							// gptActions[i].iNbEssais=0; // réarme le compteur pour la prochaine tentative
+							// A VOIR : je pense qu'il vaut mieux ne pas réarmer le compteur
+							//         comme ça on continue sur un rythme d'une fois tous les pas souvent
+							gptActions[i].iWaitFor=WAIT_IF_SSO_NOK; 
+							TRACE((TRACE_INFO,_F_,"Prochain essai dans %d secondes",WAIT_IF_SSO_NOK));
+						}
+					}
+					break;
+				default: ;
+			} // switch
+		}
+		// 0.80 : update la config sur le serveur si autorisé par l'utilisateur
+		// 0.82 : le timer doit plutôt être réarmé quand on a fini l'énumération des fenêtres -> voir TimerProc()
+		//        en plus ici c'était dangereux : un goto suite ou end passait outre le réarmement !!!
+		//        et je me demande si ça ne pouvait pas créer des cas de réentrance qui auraient eu pour conséquence
+		//        que le timer ne soit jamais réarmé...
+		// giTimer=SetTimer(NULL,0,500,TimerProc);
+suite:
+		// eh oui, il faut libérer pszURL... Sinon, vous croyez vraiment que 
+		// j'aurais fait ce "goto suite", alors que continue me tendait les bras ?
+		if (pszURL!=NULL) 
+		{ 
+			free(pszURL); 
+			pszURL=NULL;
+		}
+	}
+end:
+	// nouveau en 0.90...
+	if (pszURL!=NULL)
+	{ 
+		free(pszURL); 
+		pszURL=NULL;
+	}
+	return TRUE;
+}
+
+//-----------------------------------------------------------------------------
+// LoadIcons()
+//-----------------------------------------------------------------------------
+// Chargement de toutes les icones et pointeurs de souris pour l'IHM
+//-----------------------------------------------------------------------------
+// [rc] : 0 si OK
+//-----------------------------------------------------------------------------
+static int LoadIcons(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	ghIconAltTab=(HICON)LoadImage(ghInstance, 
+					MAKEINTRESOURCE(IDI_LOGO),
+					IMAGE_ICON,
+					0,
+					0,
+					LR_DEFAULTSIZE);
+	if (ghIconAltTab==NULL) goto end;
+	ghIconSystrayActive=(HICON)LoadImage(ghInstance, 
+					MAKEINTRESOURCE(IDI_SYSTRAY_ACTIVE),
+					IMAGE_ICON,
+					GetSystemMetrics(SM_CXSMICON),
+					GetSystemMetrics(SM_CYSMICON),
+					LR_DEFAULTCOLOR);
+	if (ghIconSystrayActive==NULL) goto end;
+	ghIconSystrayInactive=(HICON)LoadImage(ghInstance, 
+					MAKEINTRESOURCE(IDI_SYSTRAY_INACTIVE), 
+					IMAGE_ICON,
+					GetSystemMetrics(SM_CXSMICON),
+					GetSystemMetrics(SM_CYSMICON),
+					LR_DEFAULTCOLOR);
+	if (ghIconSystrayInactive==NULL) goto end;
+	ghIconLoupe=(HICON)LoadImage(ghInstance, 
+					MAKEINTRESOURCE(IDI_LOUPE), 
+					IMAGE_ICON,
+					GetSystemMetrics(SM_CXSMICON),
+					GetSystemMetrics(SM_CYSMICON),
+					LR_LOADTRANSPARENT);
+	if (ghIconLoupe==NULL) goto end;
+	ghLogo=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
+	if (ghLogo==NULL) goto end;
+	ghLogoFondBlanc=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO_FONDBLANC),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
+	if (ghLogoFondBlanc==NULL) goto end;
+	ghCursorHand=(HCURSOR)LoadImage(ghInstance,
+					MAKEINTRESOURCE(IDC_CURSOR_HAND),
+					IMAGE_CURSOR,
+					0,
+					0,
+					LR_DEFAULTSIZE);
+	if (ghCursorHand==NULL) goto end;
+	ghCursorWait=LoadCursor(NULL, IDC_WAIT); 
+	if (ghCursorWait==NULL) goto end;
+	ghImageList=ImageList_LoadBitmap(ghInstance,MAKEINTRESOURCE(IDB_TVIMAGES),16,4,RGB(255,0,255));
+	if (ghImageList==NULL) goto end;
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// UnloadIcons()
+//-----------------------------------------------------------------------------
+// Déchargement de toutes les icones et pointeurs de souris
+//-----------------------------------------------------------------------------
+static void UnloadIcons(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	if (ghIconAltTab!=NULL) { DestroyIcon(ghIconAltTab); ghIconAltTab=NULL; }
+	if (ghIconSystrayActive!=NULL) { DestroyIcon(ghIconSystrayActive); ghIconSystrayActive=NULL; }
+	if (ghIconSystrayInactive!=NULL) { DestroyIcon(ghIconSystrayInactive); ghIconSystrayInactive=NULL; }
+	if (ghIconLoupe!=NULL) { DestroyIcon(ghIconLoupe); ghIconLoupe=NULL; }
+	if (ghLogo!=NULL) { DeleteObject(ghLogo); ghLogo=NULL; }
+	if (ghLogoFondBlanc!=NULL) { DeleteObject(ghLogoFondBlanc); ghLogoFondBlanc=NULL; }
+	if (ghCursorHand!=NULL) { DestroyCursor(ghCursorHand); ghCursorHand=NULL; }
+	if (ghCursorWait!=NULL) { DestroyCursor(ghCursorWait); ghCursorWait=NULL; }
+	if (ghImageList!=NULL) ImageList_Destroy(ghImageList);
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// PwdChoiceDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la boite de choix de stratégie de mot de passe
+// (fenêtre ouverte lorsqu'aucun fichier de config n'est trouvé)
+//-----------------------------------------------------------------------------
+static int CALLBACK PwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			// icone ALT-TAB
+			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
+			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			// init champs de saisie
+			//SendMessage(GetDlgItem(w,TB_PWD1),EM_SETPASSWORDCHAR,(WPARAM)'*',0);
+			//SendMessage(GetDlgItem(w,TB_PWD2),EM_SETPASSWORDCHAR,(WPARAM)'*',0);
+			SendMessage(GetDlgItem(w,TB_PWD1),EM_LIMITTEXT,LEN_PWD,0);
+			SendMessage(GetDlgItem(w,TB_PWD2),EM_LIMITTEXT,LEN_PWD,0);
+			// titres en gras
+			SetTextBold(w,TX_FRAME);
+			SetTextBold(w,RB_PWD_ENCRYPTED);
+			SetTextBold(w,RB_PWD_ENCODED);
+			SetTextBold(w,RB_PWD_CLEAR);
+			// 0.76
+			if (!gbEnableOption_SavePassword) EnableWindow(GetDlgItem(w,CK_SAVE),FALSE);
+			// premier radio bouton coché par défaut
+			CheckDlgButton(w,RB_PWD_ENCRYPTED,BST_CHECKED);
+			// global policy
+			if (gbPasswordChoiceLevel>PP_NONE) 
+			{
+				EnableWindow(GetDlgItem(w,RB_PWD_CLEAR),FALSE);
+				EnableWindow(GetDlgItem(w,TX_PWD_CLEAR),FALSE);
+			}
+			if (gbPasswordChoiceLevel>PP_ENCODED) 
+			{
+				EnableWindow(GetDlgItem(w,RB_PWD_ENCODED),FALSE);
+				EnableWindow(GetDlgItem(w,TX_PWD_ENCODED),FALSE);
+			}
+			MACRO_SET_SEPARATOR;
+			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+			if (giRefreshTimer==giTimer) giRefreshTimer=11;
+			SetTimer(w,giRefreshTimer,200,NULL);
+			break;
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+			}
+			break;
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+					if (IsDlgButtonChecked(w,RB_PWD_CLEAR)==BST_CHECKED)
+					{
+						giPwdProtection=PP_NONE;
+						SaveConfigHeader();
+						EndDialog(w,IDOK);
+					}
+					else if (IsDlgButtonChecked(w,RB_PWD_ENCODED)==BST_CHECKED)
+					{
+						char szPBKDF2KeySalt[PBKDF2_SALT_LEN*2+1];
+						BYTE AESKeyData[AES256_KEY_LEN];
+						giPwdProtection=PP_ENCODED;
+						// génère le sel qui sera pris en compte pour la dérivation de la clé AES
+						swGenPBKDF2Salt();
+						swCryptDeriveKey(gcszStaticPwd093,&ghKey1,AESKeyData);
+						SaveConfigHeader();
+						// encodage base64 et stockage des sels et du mot de passe dans le fichier .ini
+						swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2KeySalt);
+						WritePrivateProfileString("swSSO","keySalt",szPBKDF2KeySalt,gszCfgFile);
+						EndDialog(w,IDOK);
+					}
+					else if (IsDlgButtonChecked(w,RB_PWD_ENCRYPTED)==BST_CHECKED)
+					{
+						char szPwd1[LEN_PWD+1];
+						GetDlgItemText(w,TB_PWD1,szPwd1,sizeof(szPwd1));
+						// Password Policy
+						if (!IsPasswordPolicyCompliant(szPwd1))
+						{
+							MessageBox(w,gszPwdPolicy_Message,"swSSO",MB_OK | MB_ICONEXCLAMATION);
+						}
+						else
+						{
+							BYTE AESKeyData[AES256_KEY_LEN];
+							giPwdProtection=PP_ENCRYPTED;
+							// génère le sel qui sera pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
+							swGenPBKDF2Salt();
+							swCryptDeriveKey(szPwd1,&ghKey1,AESKeyData);
+							StoreMasterPwd(szPwd1);
+							RecoveryChangeAESKeyData(AESKeyData);
+							// inscrit la date de dernier changement de mot de passe dans le .ini
+							// cette valeur est chiffré par le (nouveau) mot de passe et écrite seulement si politique mdp définie
+							SaveMasterPwdLastChange();
+							if (IsDlgButtonChecked(w,CK_SAVE)==BST_CHECKED)
+							{
+								gbRememberOnThisComputer=TRUE;
+								DPAPIStoreMasterPwd(szPwd1);
+							}
+							// 0.85B9 : remplacement de ZeroMemory(szPwd1,sizeof(szPwd1));
+							SecureZeroMemory(szPwd1,strlen(szPwd1));
+							SaveConfigHeader();
+							EndDialog(w,IDOK);
+						}
+					}
+					break;
+				case IDCANCEL:
+					EndDialog(w,IDCANCEL);
+					break;
+				case RB_PWD_CLEAR:
+				case RB_PWD_ENCODED:
+					EnableWindow(GetDlgItem(w,TB_PWD1),FALSE);
+					EnableWindow(GetDlgItem(w,TB_PWD2),FALSE);
+					EnableWindow(GetDlgItem(w,CK_SAVE),FALSE);
+					EnableWindow(GetDlgItem(w,IDOK),TRUE);
+					break;
+				case RB_PWD_ENCRYPTED:
+				{
+					char szPwd1[LEN_PWD+1];
+					char szPwd2[LEN_PWD+1];
+					int len1,len2;
+					EnableWindow(GetDlgItem(w,TB_PWD1),TRUE);
+					EnableWindow(GetDlgItem(w,TB_PWD2),TRUE);
+					if (gbEnableOption_SavePassword) EnableWindow(GetDlgItem(w,CK_SAVE),TRUE);
+					len1=GetDlgItemText(w,TB_PWD1,szPwd1,sizeof(szPwd1));
+					len2=GetDlgItemText(w,TB_PWD2,szPwd2,sizeof(szPwd2));
+					if (len1==len2 && len1!=0 && strcmp(szPwd1,szPwd2)==0)
+						EnableWindow(GetDlgItem(w,IDOK),TRUE);
+					else
+						EnableWindow(GetDlgItem(w,IDOK),FALSE);
+					break;
+				}
+				case TB_PWD1:
+				case TB_PWD2:
+				{
+					char szPwd1[LEN_PWD+1];
+					char szPwd2[LEN_PWD+1];
+					int len1,len2;
+					if (HIWORD(wp)==EN_CHANGE)
+					{
+						len1=GetDlgItemText(w,TB_PWD1,szPwd1,sizeof(szPwd1));
+						len2=GetDlgItemText(w,TB_PWD2,szPwd2,sizeof(szPwd2));
+						if (len1==len2 && len1!=0 && strcmp(szPwd1,szPwd2)==0)
+							EnableWindow(GetDlgItem(w,IDOK),TRUE);
+						else
+							EnableWindow(GetDlgItem(w,IDOK),FALSE);
+					}
+					break;
+				}
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME:
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+		case WM_PAINT:
+			DrawLogoBar(w);
+			rc=TRUE;
+			break;
+	}
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// SimplePwdChoiceDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la boite de choix simplifiée de stratégie de mot de passe
+// (fenêtre ouverte lorsqu'aucun fichier de config n'est trouvé)
+//-----------------------------------------------------------------------------
+static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			// icone ALT-TAB
+			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab); 
+			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			// init champs de saisie
+			//SendMessage(GetDlgItem(w,TB_PWD1),EM_SETPASSWORDCHAR,(WPARAM)'*',0);
+			//SendMessage(GetDlgItem(w,TB_PWD2),EM_SETPASSWORDCHAR,(WPARAM)'*',0);
+			SendMessage(GetDlgItem(w,TB_PWD1),EM_LIMITTEXT,LEN_PWD,0);
+			SendMessage(GetDlgItem(w,TB_PWD2),EM_LIMITTEXT,LEN_PWD,0);
+			// titres en gras
+			SetTextBold(w,TX_FRAME);
+			// policies
+			if (!gbEnableOption_SavePassword) EnableWindow(GetDlgItem(w,CK_SAVE),FALSE);
+			MACRO_SET_SEPARATOR;
+			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+			if (giRefreshTimer==giTimer) giRefreshTimer=11;
+			SetTimer(w,giRefreshTimer,200,NULL);
+			break;
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+			}
+			break;
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+					char szPwd1[LEN_PWD+1];
+					GetDlgItemText(w,TB_PWD1,szPwd1,sizeof(szPwd1));
+					// Password Policy
+					if (!IsPasswordPolicyCompliant(szPwd1))
+					{
+						MessageBox(w,gszPwdPolicy_Message,"swSSO",MB_OK | MB_ICONEXCLAMATION);
+					}
+					else
+					{
+						BYTE AESKeyData[AES256_KEY_LEN];
+						giPwdProtection=PP_ENCRYPTED;
+						// génère le sel qui sera pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
+						swGenPBKDF2Salt();
+						swCryptDeriveKey(szPwd1,&ghKey1,AESKeyData);
+						StoreMasterPwd(szPwd1);
+						RecoveryChangeAESKeyData(AESKeyData);
+						// inscrit la date de dernier changement de mot de passe dans le .ini
+						// cette valeur est chiffré par le (nouveau) mot de passe et écrite seulement si politique mdp définie
+						SaveMasterPwdLastChange();
+						if (IsDlgButtonChecked(w,CK_SAVE)==BST_CHECKED)
+						{
+							gbRememberOnThisComputer=TRUE;
+							DPAPIStoreMasterPwd(szPwd1);
+						}
+						SecureZeroMemory(szPwd1,strlen(szPwd1));
+						SaveConfigHeader();
+						EndDialog(w,IDOK);
+					}
+					break;
+				case IDCANCEL:
+					EndDialog(w,IDCANCEL);
+					break;
+				case TB_PWD1:
+				case TB_PWD2:
+				{
+					char szPwd1[LEN_PWD+1];
+					char szPwd2[LEN_PWD+1];
+					int len1,len2;
+					if (HIWORD(wp)==EN_CHANGE)
+					{
+						len1=GetDlgItemText(w,TB_PWD1,szPwd1,sizeof(szPwd1));
+						len2=GetDlgItemText(w,TB_PWD2,szPwd2,sizeof(szPwd2));
+						if (len1==len2 && len1!=0 && strcmp(szPwd1,szPwd2)==0)
+							EnableWindow(GetDlgItem(w,IDOK),TRUE);
+						else
+							EnableWindow(GetDlgItem(w,IDOK),FALSE);
+					}
+					break;
+				}
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME:
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+		case WM_PAINT:
+			DrawLogoBar(w);
+			rc=TRUE;
+			break;
+	}
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// PwdDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la boite de saisie du mot de passe maitre
+//-----------------------------------------------------------------------------
+static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			BOOL bUseDPAPI;
+			// Modifie le texte pour demander le mot de passe WIndows
+			if (giPwdProtection==PP_WINDOWS) SetDlgItemText(w,TX_FRAME,GetString(IDS_PLEASE_ENTER_WINDOWS_PASSWORD));
+			// icone ALT-TAB
+			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
+			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			gwAskPwd=w;
+			// init champ de saisie
+			//SendMessage(GetDlgItem(w,TB_PWD),EM_SETPASSWORDCHAR,(WPARAM)'*',0);
+			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,LEN_PWD,0);
+			// titre en gras
+			SetTextBold(w,TX_FRAME);
+			// policies
+			bUseDPAPI=(BOOL)lp;
+			if (!gbEnableOption_SavePassword || !bUseDPAPI || giPwdProtection==PP_WINDOWS) ShowWindow(GetDlgItem(w,CK_SAVE),SW_HIDE);
+			// 0.81 : centrage si parent!=NULL
+			if (GetParent(w)!=NULL)
+			{
+				int cx;
+				int cy;
+				RECT rect,rectParent;
+				cx = GetSystemMetrics( SM_CXSCREEN );
+				cy = GetSystemMetrics( SM_CYSCREEN );
+				GetWindowRect(w,&rect);
+				GetWindowRect(GetParent(w),&rectParent);
+				SetWindowPos(w,NULL,rectParent.left+((rectParent.right-rectParent.left)-(rect.right-rect.left))/2,
+									rectParent.top+ ((rectParent.bottom-rectParent.top)-(rect.bottom-rect.top))/2,
+									0,0,SWP_NOSIZE | SWP_NOZORDER);
+			}
+			else
+			{
+				SetWindowPos(w,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
+			}
+			MACRO_SET_SEPARATOR;
+			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+			if (giRefreshTimer==giTimer) giRefreshTimer=11;
+			SetTimer(w,giRefreshTimer,200,NULL);
+			break;
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+				//SetFocus(w); ATTENTION, REMET LE FOCUS SUR LE MDP ET FOUT LA MERDE SI SAISIE DEJA COMMENCEE !
+			}
+			break;
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+				{
+					char szPwd[LEN_PWD+1];
+					GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
+					if (giPwdProtection==PP_WINDOWS && ghKey1!=NULL) // Cas de la demande de mot de passe "loupe" (TogglePasswordField) ou du déverrouillage
+					{
+						BYTE AESKeyData[AES256_KEY_LEN];
+						swCryptDeriveKey(szPwd,&ghKey2,AESKeyData);
+						SecureZeroMemory(szPwd,strlen(szPwd));
+						if (ReadVerifyCheckSynchroValue(ghKey2)==0)
+						{
+							EndDialog(w,IDOK);
+						}
+						else
+						{
+							MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+							if (giBadPwdCount>5) PostQuitMessage(-1);
+						}
+					}
+					else if (CheckMasterPwd(szPwd)==0)
+					{
+						if (IsDlgButtonChecked(w,CK_SAVE)==BST_CHECKED)
+						{
+							gbRememberOnThisComputer=TRUE;
+							DPAPIStoreMasterPwd(szPwd);
+						}
+						// 0.90 : si une clé de recouvrement existe et les infos de recouvrement n'ont pas encore
+						//        été enregistrées dans le .ini (cas de la première utilisation après déploiement de la clé
+						BYTE AESKeyData[AES256_KEY_LEN];
+						swCryptDeriveKey(szPwd,&ghKey1,AESKeyData);
+						SecureZeroMemory(szPwd,strlen(szPwd));
+						RecoveryFirstUse(w,AESKeyData);
+						EndDialog(w,IDOK);
+					}
+					else
+					{
+						SecureZeroMemory(szPwd,strlen(szPwd));
+						// 0.93B1 : log authentification primaire échouée
+						if (gbSSOActif)
+							swLogEvent(EVENTLOG_WARNING_TYPE,MSG_PRIMARY_LOGIN_ERROR,NULL,NULL,NULL,0);
+						else
+							swLogEvent(EVENTLOG_WARNING_TYPE,MSG_UNLOCK_BAD_PWD,NULL,NULL,NULL,0);
+
+						SendDlgItemMessage(w,TB_PWD,EM_SETSEL,0,-1);
+
+						if (gpRecoveryKeyValue==NULL || *gszRecoveryInfos==0)
+						{
+							MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+						}
+						else // une clé de recouvrement existe et que les recoveryInfos ont déjà été stockées
+							 // on propose de réinitialiser le mot de passe
+						{
+							if (MessageBox(w,GetString(IDS_BADPWD2),"swSSO",MB_RETRYCANCEL | MB_ICONEXCLAMATION)==IDCANCEL)
+							{
+								RecoveryChallenge(w);
+								EndDialog(w,IDCANCEL);
+								PostQuitMessage(-1);
+							}
+						}
+						if (giBadPwdCount>5) PostQuitMessage(-1);
+					}
+					break;
+				}
+				case IDCANCEL:
+					EndDialog(w,IDCANCEL);
+					break;
+				case TB_PWD:
+				{
+					if (HIWORD(wp)==EN_CHANGE)
+					{
+						char szPwd[LEN_PWD+1];
+						int len;
+						len=GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
+						EnableWindow(GetDlgItem(w,IDOK),len==0 ? FALSE : TRUE);
+					}
+					break;
+				}
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME:
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+		case WM_PAINT:
+			DrawLogoBar(w);
+			rc=TRUE;
+			break;
+		case WM_ACTIVATE:
+			InvalidateRect(w,NULL,FALSE);
+			break;
+	}
+	return rc;
+}
+
+
+//*****************************************************************************
+//                             FONCTIONS PUBLIQUES
+//*****************************************************************************
+
+//-----------------------------------------------------------------------------
+// AskPwd()
+//-----------------------------------------------------------------------------
+// Demande et vérifie le mot de passe de l'utilisateur.
+//-----------------------------------------------------------------------------
+// [rc] : 0 si OK
+//-----------------------------------------------------------------------------
+int AskPwd(HWND wParent,BOOL bUseDPAPI)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+
+	int ret=-1;
+	int rc;
+	char szPwd[LEN_PWD+1];
+
+	if (giBadPwdCount>5) 
+	{
+		PostQuitMessage(-1);
+		goto end;
+	}
+
+	// 0.65 : anti ré-entrance
+	if (gwAskPwd!=NULL) 
+	{
+		SetForegroundWindow(gwAskPwd);
+		goto end;
+	}
+
+	//0.76 : DPAPI
+	if (bUseDPAPI)
+	{
+		rc=DPAPIGetMasterPwd(szPwd);
+		if (rc==0)
+		{
+			if (CheckMasterPwd(szPwd)==0)
+			{
+				// 0.90 : si une clé de recouvrement existe et les infos de recouvrement n'ont pas encore
+				//        été enregistrée dans le .ini (cas de la première utilisation après déploiement de la clé
+				BYTE AESKeyData[AES256_KEY_LEN];
+				swCryptDeriveKey(szPwd,&ghKey1,AESKeyData);
+				RecoveryFirstUse(wParent,AESKeyData);
+				// 0.85B9 : remplacement de ZeroMemory(szPwd,sizeof(szPwd));
+				SecureZeroMemory(szPwd,strlen(szPwd));
+				gbRememberOnThisComputer=TRUE;
+				ret=0;
+				goto end;
+			}
+		}
+	}
+	rc=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_PWD),wParent,PwdDialogProc,(LPARAM)bUseDPAPI);
+	gwAskPwd=NULL;
+	if (rc!=IDOK) goto end;
+	
+	giBadPwdCount=0;
+	ret=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "ret=%d",ret));
+	return ret;
+}
+
+typedef struct 
+{
+	int iDomainId;
+	char szDomainLabel[LEN_DOMAIN+1];
+}
+T_DOMAIN;
+
+//-----------------------------------------------------------------------------
+// SelectDomainDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la boite de choix de domaine
+//-----------------------------------------------------------------------------
+static int CALLBACK SelectDomainDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+		{
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			// icone ALT-TAB
+			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
+			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			// titre en gras
+			SetTextBold(w,TX_FRAME);
+			SetWindowPos(w,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
+			MACRO_SET_SEPARATOR;
+			// remplissage combo
+			T_DOMAIN *ptDomains=(T_DOMAIN*)lp;
+			int i=1;
+			while (ptDomains[i].iDomainId!=-1) 
+			{ 
+				int index=SendMessage(GetDlgItem(w,CB_DOMAINS),CB_ADDSTRING,0,(LPARAM)ptDomains[i].szDomainLabel); 
+				SendMessage(GetDlgItem(w,CB_DOMAINS),CB_SETITEMDATA,index,(LPARAM)ptDomains[i].iDomainId); 
+				i++; 
+			}
+			SendMessage(GetDlgItem(w,CB_DOMAINS),CB_SETCURSEL,0,0);
+			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+			if (giRefreshTimer==giTimer) giRefreshTimer=11;
+			SetTimer(w,giRefreshTimer,200,NULL);
+			break;
+		}
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+			}
+			break;
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+				{
+					int index=SendMessage(GetDlgItem(w,CB_DOMAINS),CB_GETCURSEL,0,0);
+					giDomainId=SendMessage(GetDlgItem(w,CB_DOMAINS),CB_GETITEMDATA,index,0);
+					SendMessage(GetDlgItem(w,CB_DOMAINS),CB_GETLBTEXT,index,(LPARAM)gszDomainLabel);
+					EndDialog(w,IDOK);
+					break;
+				}
+				case IDCANCEL:
+					EndDialog(w,IDCANCEL);
+					break;
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME:
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+		case WM_PAINT:
+			DrawLogoBar(w);
+			rc=TRUE;
+			break;
+		case WM_ACTIVATE:
+			InvalidateRect(w,NULL,FALSE);
+			break;
+	}
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// SelectDomain()
+//-----------------------------------------------------------------------------
+// Récupère la liste des domaines disponibles sur le serveur et s'il y en 
+// a plus d'un propose le choix à l'utilisateur
+// rc :  0 - OK, l'utilisateur a choisi, le domaine est renseigné dans giDomainId et gszDomainLabel
+//    :  1 - Il n'y avait qu'un seul domaine, l'utilisateur n'a rien vu mais le domaine est bien renseigné
+//    :  2 - L'utilisateur a annulé
+//    : -1 - Erreur (serveur non disponible, ...)
+//-----------------------------------------------------------------------------
+int SelectDomain(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szRequest[255+1];
+	char *pszResult=NULL;
+	BSTR bstrXML=NULL;
+	HRESULT hr;
+	IXMLDOMDocument *pDoc=NULL;
+	IXMLDOMNode		*pRoot=NULL;
+	IXMLDOMNode		*pNode=NULL;
+	IXMLDOMNode		*pChildApp=NULL;
+	IXMLDOMNode		*pChildElement=NULL;
+	IXMLDOMNode		*pNextChildApp=NULL;
+	IXMLDOMNode		*pNextChildElement=NULL;
+	VARIANT_BOOL	vbXMLLoaded=VARIANT_FALSE;
+	BSTR bstrNodeName=NULL;
+	T_DOMAIN tDomains[50];
+	char tmp[10];
+	int iNbDomains=0;
+	int ret;
+
+	// requete le serveur pour obtenir la liste des domaines
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getdomains",gszWebServiceAddress);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
+	pszResult=HTTPRequest(szRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	bstrXML=GetBSTRFromSZ(pszResult);
+	if (bstrXML==NULL) goto end;
+
+	// analyse le contenu XML retourné
+	hr = CoCreateInstance(CLSID_DOMDocument30, NULL, CLSCTX_INPROC_SERVER, IID_IXMLDOMDocument,(void**)&pDoc);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(IID_IXMLDOMDocument)=0x%08lx",hr)); goto end; }
+	hr = pDoc->loadXML(bstrXML,&vbXMLLoaded);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML()=0x%08lx",hr)); goto end; }
+	if (vbXMLLoaded==VARIANT_FALSE) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML() returned FALSE")); goto end; }
+	hr = pDoc->QueryInterface(IID_IXMLDOMNode, (void **)&pRoot);
+	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"pXMLDoc->QueryInterface(IID_IXMLDOMNode)=0x%08lx",hr)); goto end;	}
+	hr=pRoot->get_firstChild(&pNode);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pRoot->get_firstChild(&pNode)")); goto end; }
+	hr=pNode->get_firstChild(&pChildApp);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildApp)")); goto end; }
+	while (pChildApp!=NULL) 
+	{
+		TRACE((TRACE_DEBUG,_F_,"<domain>"));
+		hr=pChildApp->get_firstChild(&pChildElement);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildElement)")); goto end; }
+		while (pChildElement!=NULL) 
+		{
+			hr=pChildElement->get_nodeName(&bstrNodeName);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeName()")); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"<%S>",bstrNodeName));
+			
+			if (CompareBSTRtoSZ(bstrNodeName,"id")) 
+			{
+				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
+				tDomains[iNbDomains].iDomainId=atoi(tmp);
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"label")) 
+			{
+				StoreNodeValue(tDomains[iNbDomains].szDomainLabel,sizeof(tDomains[iNbDomains].szDomainLabel),pChildElement);
+			}
+			// rechercher ses frères et soeurs
+			pChildElement->get_nextSibling(&pNextChildElement);
+			pChildElement->Release();
+			pChildElement=pNextChildElement;
+		} // while(pChild!=NULL)
+		// rechercher ses frères et soeurs
+		pChildApp->get_nextSibling(&pNextChildApp);
+		pChildApp->Release();
+		pChildApp=pNextChildApp;
+		TRACE((TRACE_DEBUG,_F_,"</domain>"));
+		iNbDomains++;
+	} // while(pNode!=NULL)
+	tDomains[iNbDomains].iDomainId=-1;
+
+#ifdef TRACES_ACTIVEES
+	int trace_i;
+	for (trace_i=0;trace_i<iNbDomains;trace_i++)
+	{
+		TRACE((TRACE_INFO,_F_,"Domaine %d : id=%d label=%s",trace_i,tDomains[trace_i].iDomainId,tDomains[trace_i].szDomainLabel));
+	}
+#endif
+
+	if (iNbDomains==0) // aucun domaine
+	{
+		giDomainId=1; *gszDomainLabel=0;
+		rc=1; goto end;
+	}
+	else if (iNbDomains==1) // domaine commun -> renseigne le domaine commun
+	{
+		giDomainId=tDomains[0].iDomainId;
+		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),tDomains[0].szDomainLabel);
+		rc=1; goto end;
+	}
+	else if (iNbDomains==2) // domaine commun + 1 domaine spécifique -> renseigne le domaine spécifique
+	{
+		giDomainId=tDomains[1].iDomainId;
+		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),tDomains[1].szDomainLabel);
+		rc=1; goto end;
+	}
+	else // plus de 2 domaines, demande à l'utilisateur de choisir
+	{
+		ret=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_SELECT_DOMAIN),NULL,SelectDomainDialogProc,(LPARAM)tDomains);
+		if (ret==IDCANCEL) { rc=2; goto end; }
+	}
+	rc=0;
+end:
+	SaveConfigHeader();
+	if (bstrXML!=NULL) SysFreeString(bstrXML);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// WinMain()
+//-----------------------------------------------------------------------------
+int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
+{
+	UNREFERENCED_PARAMETER(nCmdShow);
+	UNREFERENCED_PARAMETER(hPrevInstance);
+
+	int rc;
+	int iError=0; // v0.88 : message d'erreur au démarrage
+	MSG msg;
+	int len;
+	int rcSystray=-1;
+    HANDLE hMutex=NULL;
+	BOOL bLaunchApp=FALSE;
+	BOOL bAlreadyLaunched=FALSE;
+	OSVERSIONINFO osvi;
+	BOOL b64=false;
+	BOOL bMigrationWindowsSSO=FALSE;
+	
+	// init des traces
+	TRACE_OPEN();
+	TRACE((TRACE_ENTER,_F_, ""));
+	
+	// init de toutes les globales
+	ghInstance=hInstance;
+	gptActions=NULL;
+	giBadPwdCount=0;
+	gbSSOActif=true;
+	ghIconSystrayActive=NULL;
+	ghIconSystrayInactive=NULL; 
+	ghIconLoupe=NULL;
+	ghCursorHand=NULL;
+	ghLogo=NULL;
+	ghImageList=NULL;
+	guiNbWEBSSO=0;
+	guiNbWINSSO=0;
+	guiNbPOPSSO=0;
+	giaccChildCountErrors=0;
+	giaccChildErrors=0;
+	giBadPwdCount=0;
+	gwAskPwd=NULL; // 0.65 anti ré-entrance fenêtre saisie pwd
+	ghKey1=NULL;
+	ghKey2=NULL;
+	time_t tNow,tLastPwdChange;
+	gbRecoveryRunning=FALSE;
+	gpSid=NULL;
+	gpszRDN=NULL;
+
+	
+	gSalts.bPBKDF2PwdSaltReady=FALSE;
+	gSalts.bPBKDF2KeySaltReady=FALSE;
+
+	if (strlen(lpCmdLine)>_MAX_PATH) { iError=-1; goto end; } // j'aime pas les petits malins ;-)
+
+	TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
+
+	guiLaunchAppMsg=RegisterWindowMessage("swsso-launchapp");
+	if (guiLaunchAppMsg==0)
+	{
+		TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-launchapp)=%d",GetLastError()));
+		// peut-être pas la peine d'empêcher swsso de démarrer pour ça...
+	}
+	else
+	{
+		TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-launchapp) OK -> msg=0x%08lx",guiLaunchAppMsg));
+	}
+	// 0.92 : récupération version OS pour traitements spécifiques Vista et/ou Seven
+	// Remarque : pas tout à fait juste, mais convient pour les postes de travail. A revoir pour serveurs.
+	ZeroMemory(&osvi,sizeof(OSVERSIONINFO));
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	if (GetVersionEx(&osvi))
+	{
+		TRACE((TRACE_DEBUG,_F_,"dwMajorVersion=%d dwMinorVersion=%d",osvi.dwMajorVersion,osvi.dwMinorVersion));
+		if (osvi.dwMajorVersion==6 && osvi.dwMinorVersion==2) giOSVersion=OS_WINDOWS_8;
+		else if (osvi.dwMajorVersion==6 && osvi.dwMinorVersion==1) giOSVersion=OS_WINDOWS_7;
+		else if (osvi.dwMajorVersion==6 && osvi.dwMinorVersion==0) giOSVersion=OS_WINDOWS_VISTA;
+		else if (osvi.dwMajorVersion==5 && osvi.dwMinorVersion==1) giOSVersion=OS_WINDOWS_XP;
+	}
+	IsWow64Process(GetCurrentProcess(), &b64) ;
+	giOSBits=b64?OS_64:OS_32;
+	TRACE((TRACE_INFO,_F_,"giOSVersion=%d giOSBits=%d",giOSVersion,giOSBits));
+
+	// 0.91 : si la ligne de commande contient le paramètre -launchapp, ouvre la fenêtre de lancement d'appli
+	//        soit en postant à message à swsso si déjà lancé, soit par appel à ShowAppNsites en fin de WinMain()
+	if (strnistr(lpCmdLine,"-launchapp",-1)!=NULL && guiLaunchAppMsg!=0) 
+	{
+		bLaunchApp=TRUE;
+		// supprime le paramètre -blaunchapp de la ligne de commande 
+		// pour traitement du path éventuellement spécifié pour le .ini
+		lpCmdLine+=strlen("-launchapp");
+		if (*lpCmdLine==' ') lpCmdLine++;
+		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
+	}
+
+	// 0.42 vérif pas déjà lancé
+	hMutex=CreateMutex(NULL,TRUE,"swSSO.exe");
+	bAlreadyLaunched=(GetLastError()==ERROR_ALREADY_EXISTS);
+	if (bAlreadyLaunched)
+	{
+		TRACE((TRACE_INFO,_F_,"Une instance est deja lancee"));
+		if (bLaunchApp)
+		{
+			TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente d'ouvrir la fenetre de lancement d'applications"));
+			PostMessage(HWND_BROADCAST,guiLaunchAppMsg,0,0);
+		}
+		goto end;
+	}
+	
+	// si pas de .ini passé en paramètre, on ch das le rép courant
+	if (*lpCmdLine==0) 
+	{
+		len=GetCurrentDirectory(_MAX_PATH-10,gszCfgFile);
+		if (len==0) { iError=-1; goto end; }
+		if (gszCfgFile[len-1]!='\\')
+		{
+			gszCfgFile[len]='\\';
+			len++;
+		}
+		strcpy_s(gszCfgFile+len,_MAX_PATH+1,"swSSO.ini");
+	}
+	else 
+	{
+		strcpy_s(gszCfgFile,_MAX_PATH+1,lpCmdLine);
+	}
+	// inits Window et COM
+	InitCommonControls();
+	ghrCoIni=CoInitialize(NULL);
+	if (FAILED(ghrCoIni)) 
+	{
+		TRACE((TRACE_ERROR,_F_,"CoInitialize hr=0x%08lx",ghrCoIni));
+		iError=-1;
+		goto end;
+	}
+	// récupère username, computername, SID et domaine
+	if (GetUserDomainAndComputer()!=0) { iError=-1; goto end; }
+
+	// chargement ressources
+	if (LoadIcons()!=0) { iError=-1; goto end; }
+
+	// initialisation du module crypto
+	if (swCryptInit()!=0) { iError=-1; goto end; }
+	
+	// chargement des policies (password, global et enterprise)
+	LoadPolicies();
+
+	// lecture du header de la config (=lecture section swSSO = version et protection)
+	if (GetConfigHeader()!=0) 
+	{
+		iError=-2;
+		goto end;
+	}
+
+	// bienvenue (>0.51)
+	if (*gszCfgVersion==0) // version <0.50 ou premier lancement...
+	{
+		strcpy_s(gszCfgVersion,4,gcszCfgVersion);
+		// affichage boite de choix de protection mots de passe
+		if (gbPasswordChoiceLevel==PP_ENCRYPTED)
+		{
+			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SIMPLE_PWD_CHOICE),NULL,SimplePwdChoiceDialogProc)!=IDOK) goto end;
+		}
+		else if (gbPasswordChoiceLevel==PP_WINDOWS)
+		{
+			if (InitWindowsSSO()) goto end;
+			giPwdProtection=PP_WINDOWS;
+			SaveConfigHeader();
+		}
+		else
+		{
+			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_PWD_CHOICE),NULL,PwdChoiceDialogProc)!=IDOK) goto end;
+		}
+	}
+	else // 
+	{
+		// force la migration en SSO Windows si configuré en base de registre
+		if (gbPasswordChoiceLevel==PP_WINDOWS)
+		{
+			TRACE((TRACE_DEBUG,_F_,"PP_WINDOWS demandé en base de registre, on force la migration"));
+			giPwdProtection=PP_WINDOWS;
+		}
+
+		if (giPwdProtection==PP_ENCRYPTED)
+		{
+			// regarde s'il y a une réinit de mdp en cours
+			int ret=RecoveryResponse(NULL);
+			if (ret==0) // il y a eu une réinit et ça a bien marché :-)
+			{ 
+				// transchiffrement plus tard une fois que les configs sont chargées en mémoire
+				gbRecoveryRunning=TRUE;
+			}
+			else if (ret==-2)  // pas de réinit
+			{
+				if (AskPwd(NULL,TRUE)!=0) goto end;
+			}
+			else // il y a eu une réinit et ça n'a pas marché :-(
+			{
+				goto end;
+			}
+		}
+		else if (giPwdProtection==PP_ENCODED)
+		{
+			BYTE AESKeyData[AES256_KEY_LEN];
+			if (*gszCfgVersion==0 || atoi(gszCfgVersion)<93)
+			{
+				swCryptDeriveKey(gcszStaticPwd092,&ghKey1,AESKeyData);
+				// la migration est faite plus tard une fois que les configs sont chargées en mémoire
+				strcpy_s(szPwdMigration093,LEN_PWD+1,gcszStaticPwd093);
+			}
+			else
+			{
+				char szPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
+				// Lecture du sel dérivation de clé
+				GetPrivateProfileString("swSSO","keySalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
+				if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) { iError=-2; goto end; }
+				swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
+				gSalts.bPBKDF2KeySaltReady=TRUE;
+				TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gbufPBKDF2KeySalt"));
+				swCryptDeriveKey(gcszStaticPwd093,&ghKey1,AESKeyData);
+			}
+		}
+		else if (giPwdProtection==PP_WINDOWS) // couplage mot de passe Windows
+		{
+			char szConfigHashedPwd[SALT_LEN*2+HASH_LEN*2+1];
+			int len;
+			
+			// Regarde si l'utilisateur utilisait un mot de passe avant de demander le couplage Windows
+			GetPrivateProfileString("swSSO","pwdValue","",szConfigHashedPwd,sizeof(szConfigHashedPwd),gszCfgFile);
+			TRACE((TRACE_DEBUG,_F_,"pwdValue=%s",szConfigHashedPwd));
+			len=strlen(szConfigHashedPwd);
+			if (len==PBKDF2_PWD_LEN*2)
+			{
+				char szPwd[LEN_PWD+1];
+				int ret=DPAPIGetMasterPwd(szPwd);
+				SecureZeroMemory(szPwd,LEN_PWD+1); // pas besoin du mdp, c'était juste pour savoir si la clé était présente et valide
+				if (ret!=0)
+				{
+					// N'affiche pas le message qui indique que le mot de passe maitre va être demandé une dernière fois
+					// si jamais l'utilisateur avait enregistré son mot de passe
+					MessageBox(NULL,GetString(IDS_INFO_WINDOWS_SSO_MIGRATION),"swSSO",MB_OK | MB_ICONINFORMATION);
+				}
+				giPwdProtection=PP_ENCRYPTED; // bidouille pour avoir le bon message dans la fenêtre AskPwd...
+				if (AskPwd(NULL,TRUE)!=0) goto end;
+				giPwdProtection=PP_WINDOWS;
+				bMigrationWindowsSSO=TRUE; // On note de faire la migration (se fait plus tard une fois les configs chargées)
+			}
+			else if (len==0) // L'utilisateur est déjà en mode PP_WINDOWS
+			{
+				// regarde s'il y a une réinit de mdp en cours
+				int ret=RecoveryResponse(NULL);
+				if (ret==0) // il y a eu une réinit et ça a bien marché :-)
+				{ 
+					// transchiffrement plus tard une fois que les configs sont chargées en mémoire
+					gbRecoveryRunning=TRUE;
+				}
+				else if (ret==-2) // pas de réinit
+				{
+					if (CheckWindowsPwd(&bMigrationWindowsSSO)!=0) goto end;
+				}
+				else // il y a eu une réinit et ça n'a pas marché :-(
+				{
+					goto end;
+				}
+			}
+			else // L'utilisateur a une vieille version de swSSO ou a un problème avec son .ini...
+			{
+				TRACE((TRACE_ERROR,_F_,"len(pwdValue)=%d",len));
+				MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_VER),"swSSO",MB_OK | MB_ICONSTOP);
+				goto end;
+			}
+		}
+		// 0.93B1 : log authentification primaire réussie
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_PRIMARY_LOGIN_SUCCESS,NULL,NULL,NULL,0);
+	}
+
+	// 0.80B9 : lit la config proxy pour ce poste de travail.
+	// Remarque : n'est pas fait dans GetConfigHeader car on a besoin de la clé
+	//			  dérivée du mot de passe maitre pour déchiffrement le mdp proxy
+	GetProxyConfig(gszComputerName,&gbInternetUseProxy,gszProxyURL,gszProxyUser,gszProxyPwd);
+
+	// allocation du tableau d'actions
+	gptActions=(T_ACTION*)malloc(NB_MAX_APPLICATIONS*sizeof(T_ACTION));
+	TRACE((TRACE_DEBUG,_F_,"malloc (%d)",NB_MAX_APPLICATIONS*sizeof(T_ACTION)));
+	if (gptActions==NULL)
+	{
+		TRACE((TRACE_ERROR,_F_,"malloc (%d)",NB_MAX_APPLICATIONS*sizeof(T_ACTION)));
+		iError=-1;
+		goto end;
+	}
+	// 0.92B5 : pour corriger bug catégories perdues en 0.92B3, LoadApplications passe APRES LoadCategories
+	// lecture des catégories
+	if (LoadCategories()!=0) { iError=-2; goto end; }
+	// lecture des applications configurées
+	if (LoadApplications()==-1) { iError=-2; goto end; }
+	
+	// vérifie la date de dernier changement de mot de passe
+	// attention, comme il y a transchiffrement des id&pwd et des mdp proxy, il 
+	// faut bien que ces infos aient été lues avant un éventuel changement de mot de passe imposé !
+	if (giPwdProtection==PP_ENCRYPTED)
+	{
+		if (giPwdPolicy_MaxAge!=0)
+		{
+			time(&tNow);
+			tLastPwdChange=GetMasterPwdLastChange();
+			TRACE((TRACE_INFO,_F_,"tNow              =%ld",tNow));
+			TRACE((TRACE_INFO,_F_,"tLastPwdChange    =%ld",tLastPwdChange));
+			TRACE((TRACE_INFO,_F_,"diff              =%ld",tNow-tLastPwdChange));
+			TRACE((TRACE_INFO,_F_,"giPwdPolicy_MaxAge=%ld",giPwdPolicy_MaxAge));
+			if ((tNow-tLastPwdChange)>(giPwdPolicy_MaxAge*86400))
+			{
+				// impose le changement de mot de passe
+				if (WindowChangeMasterPwd(TRUE)!=0) goto end;
+			}
+		}
+	}
+	// 0.91 : propose à l'utilisateur de récupérer toutes les configurations disponibles sur le serveur
+	TRACE((TRACE_DEBUG,_F_,"giNbActions=%d gbGetAllConfigsAtFirstStart=%d giDomainId=%d",giNbActions,gbGetAllConfigsAtFirstStart,giDomainId));
+	if (giNbActions==0 && gbGetAllConfigsAtFirstStart) 
+	{
+		// 0.94 : gestion des domaines
+		if (giDomainId==1) // domaine non renseigné dans le .ini 
+		{
+			int ret= SelectDomain();
+			// ret:  0 - OK, l'utilisateur a choisi, le domaine est renseigné dans giDomainId et gszDomainLabel
+			//    :  1 - Il n'y avait qu'un seul domaine, l'utilisateur n'a rien vu mais le domaine est bien renseigné
+			//    :  2 - L'utilisateur a annulé
+			//    : -1 - Erreur (serveur non disponible, ...)
+			if (ret==0 || ret==1) GetAllConfigsFromServer();
+			else if (ret==2) goto end;
+			else if (ret==-1) { MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); }
+		}
+		// 0.92 / ISSUE#26 : n'affiche pas la demande si gbDisplayConfigsNotifications=FALSE
+		else if (!gbDisplayConfigsNotifications || MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS),"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES) 
+		{
+			GetAllConfigsFromServer();
+		}
+	}
+	else
+	{
+		// 0.91 : si demandé, récupère les nouvelles configurations et/ou les configurations modifiées
+		if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
+		{
+			GetNewOrModifiedConfigsFromServer();
+		}
+	}
+	// ISSUE#59 : ce code était avant dans LoadCategories().
+	// Déplacé dans winmain pour ne pas l'exécuter si des catégories ont été récupérées depuis le serveur
+	if (giNbCategories==0) // si aucune catégorie, crée la catégorie "non classé"
+	{
+		strcpy_s(gptCategories[0].szLabel,LEN_CATEGORY_LABEL+1,GetString(IDS_NON_CLASSE));
+		gptCategories[0].id=0;
+		gptCategories[0].bExpanded=TRUE;
+		giNbCategories=1;
+		giNextCategId=1;
+		WritePrivateProfileString("swSSO-Categories","0",gptCategories[0].szLabel,gszCfgFile);
+	}
+
+	// initialisation SSO Web (IE)
+	if (SSOWebInit()!=0) { iError=-1; goto end; }
+	
+	// création fenêtre technique (réception des messages)
+	gwMain=CreateMainWindow();
+	if (gwMain==NULL) { iError=-1; goto end; }
+	
+	// inscription pour réception des notifs de verrouillage de session
+	gbRegisterSessionNotification=WTSRegisterSessionNotification(gwMain,NOTIFY_FOR_THIS_SESSION);
+	TRACE((TRACE_DEBUG,_F_,"WTSRegisterSessionNotification() -> OK"));
+	if (!gbRegisterSessionNotification)
+	{
+		// cause possible de l'échec : "If this function is called before the dependent services 
+		// of Terminal Services have started, an RPC_S_INVALID_BINDING error code may be returned"
+		// Du coup l'idée est de réessayer plus tard (1 minute) avec un timer
+		TRACE((TRACE_ERROR,_F_,"WTSRegisterSessionNotification()=%ld [REESSAI DANS 15 SECONDES]",GetLastError()));
+		giRegisterSessionNotificationTimer=SetTimer(NULL,0,15000,RegisterSessionNotificationTimerProc);
+		giNbRegisterSessionNotificationTries++;
+	}
+
+	// création icone systray
+	rcSystray=CreateSystray(gwMain);
+	// 0.71 - modif pour CMH : on ne sort plus en erreur
+	// si la création du systray échoue.
+	// if (rcSystray!=0) goto end;
+
+	// 0.80 si demandé, vérification des mises à jour sur internet
+	if (gbInternetCheckVersion) InternetCheckVersion();
+
+	// 0.42 premiere utilisation (fichier vide) => affichage fenêtre config
+	// 0.80 -> n'est plus nécessaire... on peut configurer sans ouvrir cette fenêtre ("ajouter cette application")
+	// if (giNbActions==0) ShowConfig(0);
+
+	// 0.93B4 : si gbParseWindowsOnStart=FALSE, ajoute toutes les fenêtres ouvertes et visibles dans la liste des fenêtres
+	if (!gbParseWindowsOnStart) ExcludeOpenWindows();
+
+	if (*szPwdMigration093!=0) 
+	{
+		rc=Migration093(NULL,szPwdMigration093);
+		SecureZeroMemory(szPwdMigration093,sizeof(szPwdMigration093));
+		if (rc!=0) goto end;
+	}
+
+	if (bMigrationWindowsSSO)
+	{
+		rc=MigrationWindowsSSO();
+		if (rc!=0) goto end;
+		MessageBox(NULL,GetString(IDS_SYNCHRO_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+	}
+
+	if (gbRecoveryRunning)
+	{
+		// demande le nouveau mot de passe
+		if (giPwdProtection==PP_ENCRYPTED)
+		{
+			//ChangeMasterPwd("new");
+			//RecoverySetNewMasterPwd();
+			if (WindowChangeMasterPwd(TRUE)!=0) goto end;
+		}
+		else // PP_WINDOWS
+		{
+			if (ChangeWindowsPwd()!=0) goto end;
+		}
+		gbRecoveryRunning=FALSE;
+		// supprime le recovery running
+		WritePrivateProfileString("swSSO","recoveryRunning","",gszCfgFile);
+		// 
+		MessageBox(NULL,GetString(giPwdProtection==PP_ENCRYPTED?IDS_RECOVERY_ENCRYPTED_OK:IDS_RECOVERY_WINDOWS_OK),"swSSO",MB_ICONINFORMATION | MB_OK);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_SUCCESS,NULL,NULL,NULL,0);
+	}
+
+	if (giPwdProtection==PP_WINDOWS)
+	{
+		ghPwdChangeEvent=CreateEvent(NULL,FALSE,FALSE,"Global\\swsso-pwdchange");
+		if (ghPwdChangeEvent==NULL)
+		{
+			TRACE((TRACE_ERROR,_F_,"CreateEvent(swsso-pwdchange)=%d",GetLastError()));
+			iError=-1;
+			goto end;
+		}
+	}
+
+	if (LaunchTimer()!=0)
+	{
+		iError=-1;
+		goto end;
+	}
+
+	// Si -launchapp, ouvre la fenêtre ShowAppNsites
+	if (bLaunchApp) ShowLaunchApp();
+
+	// déclenchement du timer pour enumération de fenêtres toutes les 500ms
+	// boucle de message, dont on ne sortira que par un PostQuitMessage()
+	while((rc=GetMessage(&msg,NULL,0,0))!=0)
+    { 
+		if (rc!=-1)
+	    {
+			if (msg.message==guiLaunchAppMsg) 
+			{
+				TRACE((TRACE_INFO,_F_,"Message recu : swsso-launchapp (0x%08lx)",guiLaunchAppMsg));
+#define MENU_LAUNCH_APP 9
+				PostMessage(gwMain,WM_COMMAND,MAKEWORD(MENU_LAUNCH_APP,0),0);
+			}
+			else
+			{
+		        TranslateMessage(&msg); 
+		        DispatchMessage(&msg); 
+			}
+	    }
+	}
+	iError=0;
+end:
+	if (iError==-1)
+	{
+		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_GENERIC_START_ERROR,NULL,NULL,NULL,0);
+		char szErrMsg[1024+1];
+		strcpy_s(szErrMsg,sizeof(szErrMsg),GetString(IDS_GENERIC_STARTING_ERROR));
+		MessageBox(NULL,szErrMsg,GetString(IDS_MESSAGEBOX_TITLE),MB_OK | MB_ICONSTOP);
+	}
+	else if (iError==-2) 
+	{
+		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SWSSO_INI_CORRUPTED,gszCfgFile,NULL,NULL,0);
+		MessageBox(NULL,gszErrorMessageIniFile,GetString(IDS_MESSAGEBOX_TITLE),MB_OK | MB_ICONSTOP);
+	}
+	else
+	{
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_QUIT,NULL,NULL,NULL,0);
+	}
+
+	// on libère tout avant de terminer
+	swCryptDestroyKey(ghKey1);
+	swCryptDestroyKey(ghKey2);
+	swCryptTerm();
+	SSOWebTerm();
+	UnloadIcons();
+	if (giTimer!=0) KillTimer(NULL,giTimer);
+	if (ghPwdChangeEvent!=NULL) CloseHandle(ghPwdChangeEvent);
+	if (giRegisterSessionNotificationTimer!=0) KillTimer(NULL,giRegisterSessionNotificationTimer);
+	if (gbRegisterSessionNotification) WTSUnRegisterSessionNotification(gwMain);
+	if (rcSystray==0) DestroySystray(gwMain);
+	if (ghBoldFont!=NULL) DeleteObject(ghBoldFont);
+	// 0.65 : suppression : UnregisterClass("swSSOClass",ghInstance);
+	// Inutile (source MSDN) :
+	// "All window classes that an application registers are unregistered when it terminates."
+	if (gwMain!=NULL) DestroyWindow(gwMain); // 0.90 : par contre c'est bien de détruire gwMain (peut-être à l'origine du bug de non verrouillage JMA ?)
+	if (gptActions!=NULL) free(gptActions);
+	if (gptCategories!=NULL) free(gptCategories); 
+	if (ghrCoIni==S_OK) CoUninitialize();
+	if (hMutex!=NULL) ReleaseMutex(hMutex);
+	if (gpRecoveryKeyValue!=NULL) free(gpRecoveryKeyValue);
+	if (gpSid!=NULL) free(gpSid);
+	if (gpszRDN!=NULL) free(gpszRDN);
+
+	TRACE((TRACE_LEAVE,_F_, ""));
+	TRACE_CLOSE();
+	return 0; 
+}

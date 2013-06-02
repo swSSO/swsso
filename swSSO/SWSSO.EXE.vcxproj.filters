@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="barre.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="logo.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="logo.ICO">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="loupe.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="loupe.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="swsso-v5 52x44.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="SystrayActive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="SystrayInactive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="tvImages.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="COPYING.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="swSSOAppNsites.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOChrome.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOCrypt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOFirefox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOFirefoxTools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOIETools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOLaunchApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOLogs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOMain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOPolicies.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSORecovery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOTools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOTrace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOTray.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOWeb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOWin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOXeb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="hand.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="swSSOLogMessages.mc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="isimpledomdocument.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="isimpledomnode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOAppNsites.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOChrome.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOCrypt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOFirefox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOFirefoxTools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOIETools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLaunchApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLogs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOMain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOPolicies.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSORecovery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOTools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOTrace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOTray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOWeb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOWin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOXeb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="manifest.xml">
+      <Filter>Source Files</Filter>
+    </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="swSSOLogMessages.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

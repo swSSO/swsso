@@ -1,0 +1,501 @@
+//-----------------------------------------------------------------------------
+//
+//                                  swSSO
+//
+//       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
+//
+//                Copyright (C) 2004-2013 - Sylvain WERDEFROY
+//
+//							 http://www.swsso.fr
+//                   
+//                             sylvain@swsso.fr
+//
+//-----------------------------------------------------------------------------
+// 
+//  This file is part of swSSO.
+//  
+//  swSSO is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  swSSO is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
+// 
+//-----------------------------------------------------------------------------
+// swSSOXeb.cpp
+//-----------------------------------------------------------------------------
+
+#include "stdafx.h"
+
+#define MAX_TEXT_FIELDS 100
+
+typedef struct 
+{
+	HWND w;
+	int iAction; // id action
+	int iErreur; // le positionner à -1 pour sortir de la récursivité de DoAccessible
+	int iLevel;  // niveau de récursivité
+	IAccessible *pTextFields[MAX_TEXT_FIELDS]; // pour mémoriser les champs textes
+	int iPwdIndex;
+	int iNbPwdFound;
+	int iTextFieldIndex;
+	char szClassName[128+1];
+} T_SUIVI_ACCESSIBLE;
+
+// ----------------------------------------------------------------------------------
+// WebEnumChildProc()
+// ----------------------------------------------------------------------------------
+// enum des fils à la recherche de la fenêtre de rendu du navigateur
+// ----------------------------------------------------------------------------------
+static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
+{
+	int rc=TRUE;
+	char szClassName[50+1];
+
+	GetClassName(w,szClassName,sizeof(szClassName));
+	TRACE((TRACE_DEBUG,_F_,"Fenetre classe=%s w=0x%08lx",szClassName,w));
+	if (strcmp(szClassName,((T_SUIVI_ACCESSIBLE*)lp)->szClassName)==0)
+	{
+		((T_SUIVI_ACCESSIBLE*)lp)->w=w;
+		TRACE((TRACE_INFO,_F_,"Fenetre classe=%s w=0x%08lx",szClassName,w));
+		rc=FALSE;
+	}
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// DoWebAccessible() [attention, fonction récursive]
+// ----------------------------------------------------------------------------------
+// Parcours récursif de la fenêtre et de ses objets "accessibles". On s'arrête sur le 
+// premier champ de saisie protégé : c'est le champ mot de passe à remplir.
+// ----------------------------------------------------------------------------------
+// [in] w 
+// [in] pAccessible 
+// [in] ptSuivi 
+// ----------------------------------------------------------------------------------
+#ifdef TRACES_ACTIVEES
+static void DoWebAccessible(char *paramszTab,HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *ptSuivi)
+#else
+static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *ptSuivi)
+#endif
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+
+	UNREFERENCED_PARAMETER(w);
+	
+	HRESULT hr;
+	IAccessible *pChild=NULL;
+	VARIANT vtChild;
+	VARIANT vtState,vtRole;
+	long l,lCount;
+	long returnCount;
+	VARIANT* pArray = NULL;
+	
+#ifdef TRACES_ACTIVEES
+	char szTab[200];
+	strcpy_s(szTab,sizeof(szTab),paramszTab);
+	if (strlen(szTab)<sizeof(szTab)-5) strcat_s(szTab,sizeof(szTab),"  ");
+#endif
+	
+	// si fini ou erreur, on termine la récursivité
+	if (ptSuivi->iErreur!=0) goto end;
+
+	// parcours de la suite : combien de fils ?
+	hr=pAccessible->get_accChildCount(&lCount);
+	if (FAILED(hr)) goto end;
+	TRACE((TRACE_DEBUG,_F_,"%sget_accChildCount()==%ld",szTab,lCount));
+
+	// plus de fils ou lu assez de champs, on termine !
+	if (lCount==0)
+	{
+		TRACE((TRACE_INFO,_F_,"%sPas de fils",szTab));
+		goto end;
+	}
+	if (ptSuivi->iTextFieldIndex>MAX_TEXT_FIELDS)
+	{
+		TRACE((TRACE_INFO,_F_,"Trop de champs, on arrête la recherche dans la page (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
+		goto end;
+	}
+	if (ptSuivi->iPwdIndex!=-1 && (ptSuivi->iTextFieldIndex - ptSuivi->iPwdIndex)>10) // optimisation : on ne lit pas plus de 10 champs après le mdp
+	{
+		TRACE((TRACE_INFO,_F_,"Fin de la recherche dans la page (ptSuivi->iTextFieldIndex=%d ptSuivi->iPwdIndex=%d)",ptSuivi->iTextFieldIndex,ptSuivi->iPwdIndex));
+		goto end;
+	}
+
+	pArray = new VARIANT[lCount];
+	hr = AccessibleChildren(pAccessible, 0L, lCount, pArray, &returnCount);
+	if (FAILED(hr))
+	{
+		TRACE((TRACE_DEBUG,_F_,"%sAccessibleChildren()=0x%08lx",szTab,hr));
+	}
+	else
+	{
+		TRACE((TRACE_DEBUG,_F_,"%sAccessibleChildren() returnCount=%d",szTab,returnCount));
+		for (l=0;l<lCount;l++)
+		{
+			VARIANT *pVarCurrent = &pArray[l];
+			VariantInit(&vtRole);
+			VariantInit(&vtState);
+			pChild=NULL;
+				
+			TRACE((TRACE_DEBUG,_F_,"%s --------------------------------- l=%ld vt=%d lVal=0x%08lx",szTab,l,pVarCurrent->vt,pVarCurrent->lVal));
+			if (pVarCurrent->vt!=VT_DISPATCH) goto suivant;
+			if (pVarCurrent->lVal==NULL) goto suivant; // ISSUE#80 0.96B2 
+			((IDispatch*)(pVarCurrent->lVal))->QueryInterface(IID_IAccessible, (void**) &pChild);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"%sQueryInterface(IID_IAccessible)=0x%08lx",szTab,hr)); goto suivant; }
+			TRACE((TRACE_DEBUG,_F_,"%sQueryInterface(IID_IAccessible)=0x%08lx -> pChild=0x%08lx",szTab,hr,pChild));
+			
+			vtChild.vt=VT_I4;
+			vtChild.lVal=CHILDID_SELF;
+			hr=pChild->get_accState(vtChild,&vtState);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState()=0x%08lx",hr)); goto suivant; }
+			TRACE((TRACE_DEBUG,_F_,"%sget_accState() vtState.lVal=0x%08lx",szTab,vtState.lVal));
+
+			hr=pChild->get_accRole(vtChild,&vtRole);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
+			TRACE((TRACE_DEBUG,_F_,"%sget_accRole() vtRole.lVal=0x%08lx",szTab,vtRole.lVal));
+			
+			//hr=pChild->get_accName(vtChild,&bstrName);
+			//if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accName()=0x%08lx",hr)); goto suivant; }
+			//TRACE((TRACE_DEBUG,_F_,"%sget_accName() name=%S",szTab,bstrName));
+			
+			// Reconnaissance du champ mot de passe : Nième champ ayant pour role et state les valeurs suivantes :
+			// - Role = ROLE_SYSTEM_TEXT
+			// - State = (STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_FOCUSED) & STATE_SYSTEM_PROTECTED
+
+			// Reconnaissance du champ identifiant : Nième champ précédant le champ mot de passe et ayant pour role et state les valeurs suivantes :
+			// - Role = ROLE_SYSTEM_TEXT
+			// - State = (STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_FOCUSED)
+
+			if ((vtRole.lVal == ROLE_SYSTEM_TEXT) && 
+				((vtState.lVal & STATE_SYSTEM_FOCUSED) || (vtState.lVal & STATE_SYSTEM_FOCUSABLE)))
+			{
+				// c'est un champ de saisie, s'il est protégé c'est le mdp sinon c'est un id
+				if (vtState.lVal & STATE_SYSTEM_PROTECTED)
+				{
+					TRACE((TRACE_INFO,_F_,"Champ mot de passe trouve (ROLE_SYSTEM_TEXT + STATE_SYSTEM_FOCUS* + STATE_SYSTEM_PROTECTED)"));
+					pChild->AddRef();
+					ptSuivi->pTextFields[ptSuivi->iTextFieldIndex]=pChild;
+					ptSuivi->iNbPwdFound++; 
+					TRACE((TRACE_INFO,_F_,"Champ mot de passe trouve : c'est le %dieme, on attendait le %d",ptSuivi->iNbPwdFound,atoi(gptActions[ptSuivi->iAction].szPwdName)));
+					if (ptSuivi->iNbPwdFound==atoi(gptActions[ptSuivi->iAction].szPwdName)) 
+					{
+						ptSuivi->iPwdIndex=ptSuivi->iTextFieldIndex;
+					}
+					ptSuivi->iTextFieldIndex++;
+				}
+				else
+				{
+					TRACE((TRACE_INFO,_F_,"Un champ id trouve (ROLE_SYSTEM_TEXT + STATE_SYSTEM_FOCUS*)"));
+					pChild->AddRef();
+					ptSuivi->pTextFields[ptSuivi->iTextFieldIndex]=pChild;
+					ptSuivi->iTextFieldIndex++;
+				}
+			}
+			else
+			{
+#ifdef TRACES_ACTIVEES
+				DoWebAccessible(szTab,NULL,pChild,ptSuivi);
+#else
+				DoWebAccessible(NULL,pChild,ptSuivi);
+#endif
+			}
+suivant:
+			if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
+		}
+	}
+	
+end:
+	if (pArray!=NULL) delete[] pArray;
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+// ----------------------------------------------------------------------------------
+// GetAbsolutePos()
+// ----------------------------------------------------------------------------------
+// Retourne la position absolue du champ recherché dans la page
+// ----------------------------------------------------------------------------------
+// [out] -1 = champ recherché mais non trouvé => ERREUR
+//       -2 = champ n'était pas recherché => PAS ERREUR
+// ----------------------------------------------------------------------------------
+static int GetAbsolutePos(const char *pszIdName,const char *pszPwdName,int iPwdIndex,T_SUIVI_ACCESSIBLE *ptSuivi)
+{
+	int rc=-1;
+	int iRelativePos,iAbsolutePos;
+
+	TRACE((TRACE_ENTER,_F_, "szIdName=%s szPwdName=%s iPwdIndex=%d",pszIdName,pszPwdName,iPwdIndex));
+	
+	if (*pszIdName==0) { rc=-2; goto end; }
+	
+	if (atoi(pszPwdName)==0) // pas de champ mot de passe recherché, donc position champ id exprimée en valeur absolue
+	{
+		iRelativePos=-1;
+		iAbsolutePos=atoi(pszIdName)+1;
+	}
+	else // position relative par rapport à la position du champ mot de passe
+	{
+		iRelativePos=atoi(pszIdName);
+		iAbsolutePos=iPwdIndex+iRelativePos;
+	}
+	TRACE((TRACE_INFO,_F_,"iPwdIndex=%d iRelativePos=%d iAbsolutePos=%d",ptSuivi->iPwdIndex,iRelativePos,iAbsolutePos));
+	if (iAbsolutePos<0 || iAbsolutePos>MAX_TEXT_FIELDS) 
+	{ 
+		TRACE((TRACE_ERROR,_F_,"Erreur sur champ %s (iAbsolutePos=%d !) -> SSO NOK",pszIdName,iAbsolutePos)); 
+		goto end; 
+	}
+	if (ptSuivi->pTextFields[iAbsolutePos]==NULL)
+	{
+		TRACE((TRACE_ERROR,_F_,"Erreur sur champ %s (pTextFields(iAbsolutePos)=NULL !) -> SSO NOK",pszIdName)); 
+		goto end; 
+	}
+	rc=iAbsolutePos;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// SSOWebAccessible()
+// ----------------------------------------------------------------------------------
+// SSO commun aux navigateurs implémentant l'interface IAccessible
+// Utilise forcément la méthode de configuration simplifiée
+// ----------------------------------------------------------------------------------
+// [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur)
+// ----------------------------------------------------------------------------------
+int SSOWebAccessible(HWND w,int iAction,int iBrowser)
+{
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d iBrowser=%d",w,iAction,iBrowser));
+	int rc=-1;
+	IAccessible *pAccessible=NULL;
+	IAccessible *pTopAccessible=NULL;
+	IDispatch *pIDispatch=NULL;
+	int i;	
+	T_SUIVI_ACCESSIBLE tSuivi,*ptSuivi;
+	HRESULT hr;
+	long lCount;
+	VARIANT vtChild,vtState;
+	int iId1Index;
+	int iId2Index;
+	int iId3Index;
+	int iId4Index;
+	
+	// ISSUE#39 : important, initialisation pour que le pointer iAccessible soit à NULL sinon le release provoque plantage !
+	ZeroMemory(&tSuivi,sizeof(T_SUIVI_ACCESSIBLE));
+
+	// 	BROWSER_MAXTHON: strcpy_s(tSuivi.szClassName,sizeof(tSuivi.szClassName),"Afx:400000:2008:10011:0:0");
+	tSuivi.w=NULL;		
+	if (iBrowser==BROWSER_IE)
+	{
+		// enum des fils à la recherche de la fenêtre de rendu Web
+		// ISSUE#70 0.95 essaie aussi avec contenu flash (à faire en 1er)
+		// pour tester le flash : http://itmj.homelinux.org:9090/workspace/Main.html?ap=1
+		strcpy_s(tSuivi.szClassName,sizeof(tSuivi.szClassName),"MacromediaFlashPlayerActiveX"); 
+		EnumChildWindows(w,WebEnumChildProc,(LPARAM)&tSuivi);
+		if (tSuivi.w!=NULL) { TRACE((TRACE_INFO,_F_,"MacromediaFlashPlayerActiveX. Visible = %d",IsWindowVisible(tSuivi.w))); }
+		if (tSuivi.w==NULL || ((tSuivi.w!=NULL) && (!IsWindowVisible(tSuivi.w)))) // pas trouvé de flash ou trouvé flash mais non visible
+		{
+			strcpy_s(tSuivi.szClassName,sizeof(tSuivi.szClassName),"Internet Explorer_Server");
+			EnumChildWindows(w,WebEnumChildProc,(LPARAM)&tSuivi);
+			if (tSuivi.w!=NULL) { TRACE((TRACE_INFO,_F_,"Internet Explorer_Server = %d",IsWindowVisible(tSuivi.w))); }
+		}
+		if (tSuivi.w==NULL) { TRACE((TRACE_ERROR,_F_,"EnumChildWindows() => pas trouve la fenetre de contenu")); goto end; }
+		// Obtient un IAccessible
+		hr=AccessibleObjectFromWindow(tSuivi.w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	}
+	else if (iBrowser==BROWSER_CHROME)
+	{
+		// enum des fils à la recherche de la fenêtre de rendu Web
+		strcpy_s(tSuivi.szClassName,sizeof(tSuivi.szClassName),"Chrome_RenderWidgetHostHWND");
+		EnumChildWindows(w,WebEnumChildProc,(LPARAM)&tSuivi);
+		if (tSuivi.w==NULL) { TRACE((TRACE_ERROR,_F_,"EnumChildWindows() => pas trouve la fenetre de contenu")); goto end; }
+		// Obtient un IAccessible
+		hr=AccessibleObjectFromWindow(tSuivi.w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+		
+		VARIANT vtMe,vtRole;
+		vtMe.vt=VT_I4;
+		vtMe.lVal=CHILDID_SELF;
+		hr=pAccessible->get_accRole(vtMe,&vtRole);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"get_accRole() vtRole.lVal=0x%08lx",vtRole.lVal));
+	}
+	else if (iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4)
+	{
+		// accNavigate permet de trouver la fenêtre de rendu web
+		hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pTopAccessible);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+		
+		VARIANT vtStart,vtResult;
+		vtStart.vt=VT_I4;
+		vtStart.lVal=CHILDID_SELF;
+		hr=pTopAccessible->accNavigate(0x1009,vtStart,&vtResult); // NAVRELATION_EMBEDS = 0x1009
+		pTopAccessible->Release();pTopAccessible=NULL;
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr)); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS) vtEnd=%ld",vtResult.lVal));
+		if (vtResult.vt!=VT_DISPATCH) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) is not VT_DISPATCH")); goto end; }
+		pIDispatch=(IDispatch*)vtResult.lVal;
+		if (pIDispatch==NULL) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) pIDispatch=NULL")); goto end; }
+		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pAccessible);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }	
+	}
+	// à ce stade, on a un pAccessible pour travailler, quel que soit le navigateur
+	vtChild.vt=VT_I4;
+	vtChild.lVal=CHILDID_SELF;
+	VariantInit(&vtState);
+	
+	hr=pAccessible->get_accState(vtChild,&vtState);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState()=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"get_accState(DOCUMENT PRINCIPAL) vtState.lVal=0x%08lx",vtState.lVal));
+	
+	if (vtState.lVal & STATE_SYSTEM_BUSY) {
+		TRACE((TRACE_DEBUG,_F_,"STATE_SYSTEM_BUSY"));
+		Sleep(5000);
+		VariantInit(&vtState);
+		hr=pAccessible->get_accState(vtChild,&vtState);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState()=0x%08lx",hr)); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"get_accState(DOCUMENT PRINCIPAL) vtState.lVal=0x%08lx",vtState.lVal));
+	}
+	
+	lCount=0;
+	hr=pAccessible->get_accChildCount(&lCount);
+	TRACE((TRACE_DEBUG,_F_,"get_accChildCount() hr=0x%08lx lCount=%ld",hr,lCount));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end; }
+	if (iBrowser==BROWSER_CHROME) // lCount=0 arrive parfois quelque fois après ouverture d'un nouvel onglet
+	{
+		int iNbTry=0;
+		while (lCount==0 && iNbTry<10) // ajouté en 0.93B1 : 10 essais supplémentaires au lieu d'un seul
+		{
+			Sleep(150);
+			pAccessible->Release();
+			pAccessible=NULL;
+			// Obtient un IAccessible
+			hr=AccessibleObjectFromWindow(tSuivi.w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			hr=pAccessible->get_accChildCount(&lCount);
+			TRACE((TRACE_DEBUG,_F_,"get_accChildCount() hr=0x%08lx lCount=%ld",hr,lCount));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end; }
+			iNbTry++;
+		}
+		if (lCount==0) // ça n'a toujours pas marché, on abandonne...
+		{
+			TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end;
+		}
+	}
+
+	ZeroMemory(&tSuivi,sizeof(T_SUIVI_ACCESSIBLE)); // déplacé plus haut, mais laissé ici aussi dans le doute ça coute pas cher.
+	tSuivi.w=w;
+	tSuivi.iAction=iAction;
+	tSuivi.iErreur=0;
+	tSuivi.iLevel=0;
+	tSuivi.iPwdIndex=-1;
+	tSuivi.iNbPwdFound=0;
+
+#ifdef TRACES_ACTIVEES
+	DoWebAccessible("",w,pAccessible,&tSuivi);
+#else
+	DoWebAccessible(w,pAccessible,&tSuivi);
+#endif
+	
+	TRACE((TRACE_INFO,_F_,"tSuivi.iErreur=%d",tSuivi.iErreur));
+	if (tSuivi.iErreur==0) 
+	{
+		ptSuivi=&tSuivi;
+		vtChild.vt=VT_I4;
+		vtChild.lVal=CHILDID_SELF;
+		
+		// 0.93B1 / ISSUE#40 : avant de démarrer les saisies, il faut vérifier qu'on a trouvé tous les champs attendus
+		// En effet, comme on ne cherche plus les champs par leurs noms, on peut provoquer des mises au premier plan intempestives
+		// de la fenêtre du navigateur si le titre et l'URL ne permettent pas de reconnaitre la page de login de manière certaine
+		TRACE((TRACE_INFO,_F_,"Page analysee, verification (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
+		if (*gptActions[ptSuivi->iAction].szPwdName!=0 && ptSuivi->iPwdIndex==-1)
+		{
+			TRACE((TRACE_ERROR,_F_,"Un champ mot de passe etait attendu mais n'a pas ete trouve => le SSO ne sera pas execute"));
+			goto end;
+		}
+		iId1Index=GetAbsolutePos(gptActions[ptSuivi->iAction].szId1Name,gptActions[ptSuivi->iAction].szPwdName,ptSuivi->iPwdIndex,ptSuivi);
+		iId2Index=GetAbsolutePos(gptActions[ptSuivi->iAction].szId2Name,gptActions[ptSuivi->iAction].szPwdName,ptSuivi->iPwdIndex,ptSuivi);
+		iId3Index=GetAbsolutePos(gptActions[ptSuivi->iAction].szId3Name,gptActions[ptSuivi->iAction].szPwdName,ptSuivi->iPwdIndex,ptSuivi);
+		iId4Index=GetAbsolutePos(gptActions[ptSuivi->iAction].szId4Name,gptActions[ptSuivi->iAction].szPwdName,ptSuivi->iPwdIndex,ptSuivi);
+		if (iId1Index==-1 || iId2Index==-1 || iId3Index==-1 || iId4Index==-1)
+		{
+			TRACE((TRACE_ERROR,_F_,"Au moins un des champs n'a pas ete trouve => le SSO ne sera pas execute"));
+			goto end;
+		}
+		
+		// Vérification OK, on peut mettre la fenêtre au premier plan et démarrer les saisies 
+		TRACE((TRACE_INFO,_F_,"Verifications OK, demarrage des saisies (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
+		SetForegroundWindow(ptSuivi->w);
+		if (iId1Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId1Index],vtChild,gptActions[ptSuivi->iAction].szId1Value);
+		if (iId2Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,gptActions[ptSuivi->iAction].szId2Value);
+		if (iId3Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,gptActions[ptSuivi->iAction].szId3Value);
+		if (iId4Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId4Index],vtChild,gptActions[ptSuivi->iAction].szId4Value);
+		
+		// Mdp
+		if (ptSuivi->iPwdIndex!=-1)
+		{
+			// CODE A GARDER POUR BUGS OUVERTS CHEZ CHROME #75908 et #75911
+			/*
+			int iAntiLoop=0;
+			hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accSelect(SELFLAG_TAKEFOCUS)=0x%08lx",hr)); } 
+			TRACE((TRACE_DEBUG,_F_,"accSelect(SELFLAG_TAKEFOCUS)=0x%08lx",hr));
+			VARIANT vtSelf;
+			VARIANT vtState;
+			vtSelf.vt=VT_I4;
+			vtSelf.lVal=CHILDID_SELF;
+			hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->get_accState(vtSelf,&vtState);
+			TRACE((TRACE_DEBUG,_F_,"get_accState() vtState.lVal=0x%08lx",vtState.lVal));
+			while (iAntiLoop <50)
+			//while ((!(vtState.lVal & STATE_SYSTEM_FOCUSED)) && iAntiLoop <10)
+			{
+				Sleep(100);
+				KBSimEx(w,"[TAB]","","","","","");
+				Sleep(100);
+				hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->get_accState(vtSelf,&vtState);
+				if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState(CHILDID_SELF)=0x%08lx",hr)); }
+				TRACE((TRACE_DEBUG,_F_,"get_accState() vtState.lVal=0x%08lx",vtState.lVal));
+				iAntiLoop++;
+			}
+			*/
+			hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accSelect(SELFLAG_TAKEFOCUS)=0x%08lx",hr)); } 
+			if ((giPwdProtection>=PP_ENCODED) && (*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0))
+			{
+				char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
+				if (pszPassword!=NULL) 
+				{
+					KBSim(FALSE,200,pszPassword,TRUE);				
+					SecureZeroMemory(pszPassword,strlen(pszPassword));
+					free(pszPassword);
+				}
+			}
+			else
+			{
+				KBSim(FALSE,200,gptActions[ptSuivi->iAction].szPwdEncryptedValue,TRUE);
+			}
+		}
+		// Validation si demandée
+		if (*gptActions[ptSuivi->iAction].szValidateName!=0)
+		{
+			Sleep(200);
+			KBSimEx(NULL,gptActions[ptSuivi->iAction].szValidateName,"","","","","");
+		}
+		guiNbWEBSSO++;
+	}
+	rc=0;
+end:
+	for (i=0;i<MAX_TEXT_FIELDS;i++)	if (tSuivi.pTextFields[i]!=NULL) tSuivi.pTextFields[i]->Release();
+	if (pAccessible!=NULL) pAccessible->Release();
+	if (pTopAccessible!=NULL) pTopAccessible->Release();
+	if (pIDispatch!=NULL) pIDispatch->Release();
+
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}

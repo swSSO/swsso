@@ -1,0 +1,19 @@
+﻿Build started 08/04/2013 21:29:33.
+     1>Project "E:\swSSO\Dev\swSSOSVC\swSSOSVC.vcxproj" on node 2 (Build target(s)).
+     1>ResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\bin\rc.exe /D TRACES_ACTIVEES /D _USING_V110_SDK71_ /l"0x040b" /nologo /fo"Debug\resource.res" resource.rc 
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\swSSO\Dev\Debug\swSSOSVC.exe" /INCREMENTAL /NOLOGO crypt32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:\swSSO\Dev\Debug\swSSOSVC.pdb" /SUBSYSTEM:CONSOLE,"5.01" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\swSSO\Dev\Debug\swSSOSVC.lib" /MACHINE:X86 Debug\resource.res
+         Debug\stdafx.obj
+         Debug\swSSOCrypt.obj
+         Debug\swSSOProtectMemory.obj
+         Debug\swSSOSVCMain.obj
+         Debug\swSSOSVCData.obj
+         Debug\swSSOSVCInstall.obj
+         Debug\swSSOTrace.obj
+         swSSOSVC.vcxproj -> E:\swSSO\Dev\Debug\swSSOSVC.exe
+     1>Done Building Project "E:\swSSO\Dev\swSSOSVC\swSSOSVC.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.38

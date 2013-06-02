@@ -1,0 +1,6 @@
+LIBRARY   SWSSOCM
+EXPORTS
+   NPGetCaps   @1
+   NPLogonNotify   @2
+   NPPasswordChangeNotify   @3
+ 

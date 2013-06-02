@@ -1,0 +1,8 @@
+#define PRODUCT_NAME "swSSOGenKey"
+#define PRODUCT_NAME_TRACE "swSSOGenKey (traces)"
+#define EXECUTABLE_NAME "swSSOGenKey.exe"
+#define EXECUTABLE_NAME_TRACE "swSSOGenKey.exe"
+#include <windows.h>
+#include <commctrl.h>
+#include <richedit.h>
+#include "..\swssocommonfiles\versioninfo.rc"

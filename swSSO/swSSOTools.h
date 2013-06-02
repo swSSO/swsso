@@ -1,0 +1,103 @@
+//-----------------------------------------------------------------------------
+//
+//                                  swSSO
+//
+//       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
+//
+//                Copyright (C) 2004-2013 - Sylvain WERDEFROY
+//
+//							 http://www.swsso.fr
+//                   
+//                             sylvain@swsso.fr
+//
+//-----------------------------------------------------------------------------
+// 
+//  This file is part of swSSO.
+//  
+//  swSSO is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  swSSO is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
+// 
+//-----------------------------------------------------------------------------
+// swTools.h
+//-----------------------------------------------------------------------------
+
+extern char gszRes[];
+extern char gszComputedValue[];
+char *GetString(UINT uiString);
+BSTR GetBSTRFromSZ(const char *sz);
+BOOL CompareBSTRtoSZ(BSTR bstr,const char *sz);
+char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams);
+char *HTTPEncodeParam(char *pszToEncode);
+char *HTTPDecodeParam(char *pszToDecode);
+int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle);
+BOOL GetConfigBoolValue(char *szSection,char *szItem,BOOL bDefault,BOOL bWriteIfNotFound);
+void Help(void);
+char *strnistr (const char *szStringToBeSearched,
+				const char *szSubstringToSearchFor,
+				const int  nStringLen);
+int GetUserDomainAndComputer(void);
+
+#define B1 1
+#define B2 2
+#define B3 3
+
+typedef struct
+{
+	HWND wParent;
+	int  iTitleString;
+	char *szSubTitle;
+	char *szMessage;
+	char *szIcone;
+	int  iB1String;
+	int  iB2String;
+	int  iB3String;
+} T_MESSAGEBOX3B_PARAMS;
+
+int MessageBox3B(T_MESSAGEBOX3B_PARAMS *pParams);
+
+HFONT GetModifiedFont(HWND w,long lfWeight);
+void SetTextBold(HWND w,int iCtrlId);
+BOOL DrawTransparentBitmap(HANDLE hBitmap,HDC dc,int x,int y,int cx,int cy,COLORREF crColour);
+void DrawBitmap(HANDLE hBitmap,HDC dc,int x,int y,int cx,int cy);
+void DrawLogoBar(HWND w);
+int KBSimEx(HWND w,char *szCmd, char *szId1,char *szId2,char *szId3,char *szId4,char *szPwd);
+int atox4(char *sz);
+BOOL swStringMatch(char *szToBeCompared,char *szPattern);
+BOOL swURLMatch(char *szToBeCompared,char *szPattern);
+char *GetComputedValue(const char *szValue);
+
+// 0.93 : liste des dernières fenêtres détectées et dont la configuration est connue de swSSO
+#define MAX_NB_LAST_DETECT 500
+typedef struct
+{
+	BYTE   tag;         // tag pour repérage présence fenêtre (1=tagguée,0=non tagguée)
+	time_t tLastDetect;	// derniere détection de cette fenetre 
+	HWND   wLastDetect;	// handle de cette fenetre déjà détectée
+}
+T_LAST_DETECT;
+
+int    LastDetect_AddOrUpdateWindow(HWND w);	// ajoute ou met à jour une fenêtre dans la liste des dernières détectées
+int    LastDetect_RemoveWindow(HWND w);			// supprime une fenêtre dans la liste des dernières détectées
+time_t LastDetect_GetTime(HWND w);				// retourne la date de dernière détection d'une fenêtre
+int    LastDetect_TagWindow(HWND w);			// marque la fenêtre comme toujours présente
+void   LastDetect_UntagAllWindows(void);		// détaggue toutes les fenêtres
+void   LastDetect_RemoveUntaggedWindows(void);	// efface toutes les fenêtres non tagguées
+void   ExcludeOpenWindows(void);
+BOOL   IsExcluded(HWND w);
+int swPipeWrite(char *bufRequest,int lenRequest,char *bufResponse,DWORD sizeofBufResponse,DWORD *pdwLenResponse);
+
+// comme RESEDIT est un peu merdique et me change la taille du séparateur quand il a envie
+// cette macro (à positionner dans WM_INITDIALOG) le replace correctement !
+#define MACRO_SET_SEPARATOR { RECT rect; GetClientRect(w,&rect); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,50,rect.right+1,2,FALSE); }
+
+
