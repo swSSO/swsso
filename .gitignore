@@ -7,9 +7,22 @@
 *.sln.docstates
 
 # Build results
-
-[Dd]ebug/
-[Rr]elease/
+swSSO/Debug/
+swSSO/Release/
+swSSOCM/Debug/
+swSSOCM/Release/
+swSSOCommonFiles/Debug/
+swSSOCommonFiles/Release/
+swSSOGenKey/Debug/
+swSSOGenKey/Release/
+swSSORecover/Debug/
+swSSORecover/Release/
+swSSOSVC/Debug/
+swSSOSVC/Release/
+swSSOSVCTest/Debug/
+swSSOSVCTest/Release/
+Debug/
+Release/
 x64/
 build/
 [Bb]in/
