@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "swSSO"
-#define MyAppVersion "0.96 BETA 2"
+#define MyAppVersion "0.96"
 #define MyAppURL "www.swsso.fr"
 #define MyAppExeName "swSSO.exe"
 
@@ -21,7 +21,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile=licence.txt
-OutputBaseFilename=swSSO-setup-0.96B2
+OutputBaseFilename=swSSO-setup-0.96
 Compression=lzma
 SolidCompression=yes
 

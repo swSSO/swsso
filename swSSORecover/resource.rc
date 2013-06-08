@@ -6,11 +6,14 @@
 #define PRODUCT_NAME_TRACE "swSSORecover (traces)"
 #define EXECUTABLE_NAME "swSSORecover.exe"
 #define EXECUTABLE_NAME_TRACE "swSSORecover.exe"
+
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>
-#include "..\swssocommonfiles\versioninfo.rc"
+#include <MsHtmcid.h>
 #include "resource.h"
+#include "..\swssocommonfiles\versioninfo.rc"
+
 
 
 

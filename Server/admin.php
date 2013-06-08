@@ -2,27 +2,38 @@
 include('variables.php');
 include('util.php');
 include('functions.php');
-
-//------------------------------------------------------------------------------
-// ADMIN.PHP
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
-//                      Serveur de configurations swSSO
+//                                  swSSO
 //
-//                 Copyright (C) 2004-2012 - Sylvain WERDEFROY
+//       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                           http://www.swsso.fr
+//                Copyright (C) 2004-2013 - Sylvain WERDEFROY
+//
+//							 http://www.swsso.fr
 //                   
-//                             contact@swsso.fr
+//                             sylvain@swsso.fr
 //
-//------------------------------------------------------------------------------
-// LICENCE : Cette composante serveur de swSSO n'est pas sous licence GNU GPL.
-//           L'utilisation, la modification ou la diffusion de ce code source
-//           sont interdites sauf autorisation écrite préalable.
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // 
-//------------------------------------------------------------------------------
-$title="<title>swSSO - Serveur de configuration v0.95</title>";
+//  This file is part of swSSO.
+//  
+//  swSSO is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  swSSO is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
+// 
+//-----------------------------------------------------------------------------
+
+$title="<title>swSSO - Serveur de configuration v0.96</title>";
 
 // ------------------------------------------------------------
 // showall : génère une page html avec l'ensemble des configs actives
