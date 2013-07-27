@@ -1606,6 +1606,7 @@ static void TVShowContextMenu(HWND w)
 	HTREEITEM hItem,hParentItem;
 	int iAction;
 	int i;
+	BOOL bAddSeparator=FALSE;
 
 	hMenu=CreatePopupMenu(); if (hMenu==NULL) goto end;
 
@@ -1615,20 +1616,25 @@ static void TVShowContextMenu(HWND w)
 	hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),hItem);
 	if (hParentItem==NULL) // c'est une catégorie 
 	{
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_ACTIVER,GetString(IDS_MENU_ACTIVER));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DESACTIVER,GetString(IDS_MENU_DESACTIVER));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_RENOMMER,GetString(IDS_MENU_RENOMMER));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_SUPPRIMER,GetString(IDS_MENU_SUPPRIMER));
+		if (gbShowMenu_EnableDisable)
+		{
+			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_ACTIVER,GetString(IDS_MENU_ACTIVER));
+			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DESACTIVER,GetString(IDS_MENU_DESACTIVER));
+		}
+		if (gbShowMenu_Rename) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_RENOMMER,GetString(IDS_MENU_RENOMMER));
+		if (gbShowMenu_Delete) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_SUPPRIMER,GetString(IDS_MENU_SUPPRIMER));
+		if (gbShowMenu_EnableDisable || gbShowMenu_Rename || gbShowMenu_Delete) bAddSeparator=TRUE;
 		// le menu "Identifiant et mot de passe" n'est affiché que si la config en base de registre l'autorise
 		// et si la catégorie contient au moins une config
 		if (gbShowMenu_ChangeCategIds && TreeView_GetChild(GetDlgItem(w,TV_APPLICATIONS),hItem)!=NULL)
 		{
-			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+			if (bAddSeparator) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_CHANGER_IDS,GetString(IDS_MENU_CHANGER_IDS));
+			bAddSeparator=TRUE;
 		}
 		if (gbEnableOption_ManualPutConfig && gbInternetManualPutConfig && TreeView_GetChild(GetDlgItem(w,TV_APPLICATIONS),hItem)!=NULL)
 		{
-			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+			if (bAddSeparator) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_COMMUN,GetString(IDS_MENU_UPLOADER_COMMUN));
 			if (giDomainId!=1)
 			{
@@ -1636,9 +1642,9 @@ static void TVShowContextMenu(HWND w)
 				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_DOMAINE,buf2048);
 			}
 		}
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
+		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
+		if (gbShowMenu_AddCateg) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
 	}
 	else // c'est une appli
 	{
@@ -1654,17 +1660,23 @@ static void TVShowContextMenu(HWND w)
 		{
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_LANCER_APPLI,GetString(IDS_LAUNCH_APP));
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+			bAddSeparator=TRUE;
 		}
-		if (gptActions[iAction].bActive)
-			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DESACTIVER,GetString(IDS_MENU_DESACTIVER));
-		else
-			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_ACTIVER,GetString(IDS_MENU_ACTIVER));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_RENOMMER,GetString(IDS_MENU_RENOMMER));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION |MF_POPUP,(UINT_PTR)hSubMenu,GetString(IDS_MENU_DEPLACER));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DUPLIQUER,GetString(IDS_MENU_DUPLIQUER));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COMPTE,GetString(IDS_MENU_AJOUTER_COMPTE));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_SUPPRIMER,GetString(IDS_MENU_SUPPRIMER));
+		if (gbShowMenu_EnableDisable)
+		{
+			if (gptActions[iAction].bActive)
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DESACTIVER,GetString(IDS_MENU_DESACTIVER));
+			else
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_ACTIVER,GetString(IDS_MENU_ACTIVER));
+			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+			bAddSeparator=TRUE;
+		}
+		if (gbShowMenu_Rename) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_RENOMMER,GetString(IDS_MENU_RENOMMER));
+		if (gbShowMenu_Move) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION |MF_POPUP,(UINT_PTR)hSubMenu,GetString(IDS_MENU_DEPLACER));
+		if (gbShowMenu_Duplicate) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DUPLIQUER,GetString(IDS_MENU_DUPLIQUER));
+		if (gbShowMenu_AddAccount) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COMPTE,GetString(IDS_MENU_AJOUTER_COMPTE));
+		if (gbShowMenu_Delete) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_SUPPRIMER,GetString(IDS_MENU_SUPPRIMER));
+		if (gbShowMenu_Rename||gbShowMenu_Move||gbShowMenu_Duplicate||gbShowMenu_AddAccount||gbShowMenu_Delete) bAddSeparator=TRUE;
 		if (gbInternetManualPutConfig && gbEnableOption_ManualPutConfig)
 		{
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
@@ -1674,10 +1686,11 @@ static void TVShowContextMenu(HWND w)
 				wsprintf(buf2048,GetString(IDS_MENU_UPLOADER_DOMAINE),gszDomainLabel);
 				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_DOMAINE,buf2048);
 			}
+			bAddSeparator=TRUE;
 		}
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
+		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
+		if (gbShowMenu_AddCateg) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
 	}
 	SetForegroundWindow(w);
 	TrackPopupMenu(hMenu, TPM_TOPALIGN,pt.x, pt.y, 0, w, NULL );
