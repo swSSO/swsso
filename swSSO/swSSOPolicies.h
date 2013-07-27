@@ -52,6 +52,14 @@
 #define REGVALUE_SHOWMENU_CHANGECATEGIDS			"ShowChangeCategIdsMenu"
 #define REGVALUE_SHOWMENU_LAUNCHAPP					"ShowLaunchAppMenu"
 #define REGVALUE_SHOWMENU_ADDAPP					"ShowAddAppMenu"
+// ISSUE#84 : ajout de nouvelles options de restriction de l'IHM (items de menu categorie et appli)
+#define REGVALUE_SHOWMENU_ENABLEDISABLE				"ShowEnableDisableMenu"
+#define REGVALUE_SHOWMENU_RENAME					"ShowRenameMenu"
+#define REGVALUE_SHOWMENU_MOVE						"ShowMoveMenu"
+#define REGVALUE_SHOWMENU_DELETE					"ShowDeleteMenu"
+#define REGVALUE_SHOWMENU_ADDCATEG					"ShowAddCategMenu"
+#define REGVALUE_SHOWMENU_DUPLICATE					"ShowDuplicateMenu"
+#define REGVALUE_SHOWMENU_ADDACCOUNT				"ShowAddAccountMenu"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -71,7 +79,14 @@ extern BOOL gbEnableOption_ModifyAppConfig;
 extern BOOL gbShowMenu_ChangeCategIds;
 extern BOOL gbShowMenu_LaunchApp;
 extern BOOL gbShowMenu_AddApp;
-
+// ISSUE#84 : ajout de nouvelles options de restriction de l'IHM (items de menu categorie et appli)
+extern BOOL gbShowMenu_EnableDisable;
+extern BOOL gbShowMenu_Rename;
+extern BOOL gbShowMenu_Move;
+extern BOOL gbShowMenu_Delete;
+extern BOOL gbShowMenu_AddCateg;
+extern BOOL gbShowMenu_Duplicate;
+extern BOOL gbShowMenu_AddAccount;
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
 //-----------------------------------------------------------------------------

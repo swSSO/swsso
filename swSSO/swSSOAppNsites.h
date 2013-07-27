@@ -105,6 +105,7 @@ typedef struct
 	char szFullPathName[LEN_FULLPATHNAME+1]; // 0.91 : full path name de la commande à lancer
 	char szLastUpload[14+1]; 		//0.91 : date de dernier upload (AAAAMMJJHHMMSS)
 	BOOL bSaved;				// 0.93B6 ISSUE#55 : indique si la config a été "appliquée" depuis son ajout. Une config non bSaved apparait dans la fenêtre mais n'est pas exécutée
+	BOOL bAddAccount;			// 0.97B1 ISSUE#86 : permet de savoir que la config a été créée par ajout de compte
 } T_ACTION;
 
 

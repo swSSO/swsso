@@ -1210,7 +1210,7 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 		iAction=TVItemGetLParam(w,hItem); 
 		if (iAction==-1) goto end;
 		// 0.91 : interdiction de supprimer les configurations managées
-		if (gptActions[iAction].iConfigId!=0 && !gbAllowManagedConfigsDeletion)
+		if (gptActions[iAction].iConfigId!=0 && !gbAllowManagedConfigsDeletion && !gptActions[iAction].bAddAccount)
 		{
 			MessageBox(w,GetString(IDS_DELETION_FORBIDDEN),"swSSO",MB_ICONEXCLAMATION);
 			goto end;
@@ -1281,6 +1281,7 @@ end:
 // TVDuplicateSelectedApp()
 //-----------------------------------------------------------------------------
 // Duplication de l'application sélectionnée
+// bKeepId : TRUE dans le cas d'un ajout de compte, FALSE sinon
 //-----------------------------------------------------------------------------
 int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 {
@@ -1332,6 +1333,9 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 	
 	// ISSUE#57 : 0.93B7
 	gptActions[giNbActions-1].iCategoryId=gptActions[iAction].iCategoryId;
+
+	// ISSUE#96 : 0.97
+	gptActions[giNbActions-1].bAddAccount=bKeepId;
 
 	ShowApplicationDetails(w,giNbActions-1);
 	rc=0;
@@ -2866,7 +2870,7 @@ int LoadApplications(void)
 		gptActions[i].iWaitFor=WAIT_IF_SSO_OK;
 		gptActions[i].bSaved=TRUE; // 0.93B6 ISSUE#55
 		gptActions[i].iNbEssais=0; // 0.93B7
-
+		gptActions[i].bAddAccount=GetConfigBoolValue(p,"addAccount",FALSE,TRUE); // 0.97 ISSUE#86
 		// 0.9X : gestion des changements de mot de passe sur les pages web
 		gptActions[i].bPwdChangeInfos=GetConfigBoolValue(p,"pwdChange",FALSE,FALSE);
 		if (gptActions[i].bPwdChangeInfos)
@@ -3049,7 +3053,7 @@ int SaveApplications(void)
 		}
 		// le plus beau sprintf de ma carrière... en espérant que le buffer soit assez grand ;-(
 		sprintf_s(tmpBuf,sizeof(tmpBuf),
-			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ndomainId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\n", //pwdChange=%s\r\n",
+			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ndomainId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\n", //pwdChange=%s\r\n",
 			gptActions[i].szApplication,
 			gptActions[i].iConfigId,
 			gptActions[i].iCategoryId,
@@ -3069,7 +3073,9 @@ int SaveApplications(void)
 			gptActions[i].bKBSim?"YES":"NO",
 			gptActions[i].szKBSim,
 			gptActions[i].szFullPathName,
-			*(gptActions[i].szLastUpload)==0?"":gptActions[i].szLastUpload); //,	gptActions[i].bPwdChangeInfos?"YES":"NO");
+			*(gptActions[i].szLastUpload)==0?"":gptActions[i].szLastUpload,
+			gptActions[i].bAddAccount?"YES":"NO"); // 0.97 ISSUE#86
+			//,	gptActions[i].bPwdChangeInfos?"YES":"NO");
 		if (!WriteFile(hf,tmpBuf,strlen(tmpBuf),&dw,NULL)) 
 		{ 
 			TRACE((TRACE_ERROR,_F_,"WriteFile(%s), len=%d",gszCfgFile,strlen(tmpBuf))); goto end;

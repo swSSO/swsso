@@ -55,6 +55,14 @@ BOOL gbErrorServerConfigNotFoundDefaultMessage=TRUE;
 BOOL gbShowMenu_ChangeCategIds=TRUE;
 BOOL gbShowMenu_LaunchApp=TRUE;
 BOOL gbShowMenu_AddApp=TRUE;
+// ISSUE#84 : ajout de nouvelles options de restriction de l'IHM (items de menu categorie et appli)
+BOOL gbShowMenu_EnableDisable=TRUE;
+BOOL gbShowMenu_Rename=TRUE;
+BOOL gbShowMenu_Move=TRUE;
+BOOL gbShowMenu_Delete=TRUE;
+BOOL gbShowMenu_AddCateg=TRUE;
+BOOL gbShowMenu_Duplicate=TRUE;
+BOOL gbShowMenu_AddAccount=TRUE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -193,6 +201,35 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowMenu_AddApp=(BOOL)dwValue; 
+
+		// ISSUE#84 : ajout de nouvelles options de restriction de l'IHM (items de menu categorie et appli)
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ENABLEDISABLE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_EnableDisable=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_RENAME,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Rename=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_MOVE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Move=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_DELETE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Delete=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDCATEG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AddCateg=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_DUPLICATE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Duplicate=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDACCOUNT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AddAccount=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -404,6 +441,13 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_ChangeCategIds=%d"	,gbShowMenu_ChangeCategIds));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_LaunchApp=%d"			,gbShowMenu_LaunchApp));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddApp=%d"			,gbShowMenu_AddApp));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_EnableDisable=%d"		,gbShowMenu_EnableDisable));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Rename=%d"			,gbShowMenu_Rename));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Move=%d"				,gbShowMenu_Move));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Delete=%d"			,gbShowMenu_Delete));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddCateg=%d"			,gbShowMenu_AddCateg));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Duplicate=%d"			,gbShowMenu_Duplicate));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddAccount=%d"		,gbShowMenu_AddAccount));
 	TRACE((TRACE_INFO,_F_,"PASSWORD -------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
