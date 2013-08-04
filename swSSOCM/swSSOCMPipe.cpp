@@ -31,6 +31,9 @@
 
 #include "stdafx.h"
 #define PWD_LEN 256
+#define USER_LEN 256	// limite officielle
+#define DOMAIN_LEN 256	// limite à moi...
+
 //-----------------------------------------------------------------------------
 // swBuildAndSendRequest()
 //-----------------------------------------------------------------------------
@@ -42,12 +45,13 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 
 	int rc=-1;
 	int ret;
-	UNICODE_STRING usUserName,usPassword;
-	char szUserName[255+1];
+	UNICODE_STRING usUserName,usPassword,usLogonDomainName;
+	char szUserName[USER_LEN];
 	char bufPassword[PWD_LEN];
 	char bufRequest[1024];
 	int lenRequest=0;
-	
+	char szLogonDomainName[DOMAIN_LEN];
+	int lenUserName,lenLogonDomainName;
 	
 	// Récupération des authentifiants en fonction de la méthode d'authent
 	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
@@ -55,11 +59,13 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	{
 		usUserName=((MSV1_0_INTERACTIVE_LOGON*)lpAuthentInfo)->UserName;
 		usPassword=((MSV1_0_INTERACTIVE_LOGON*)lpAuthentInfo)->Password;
+		usLogonDomainName=((MSV1_0_INTERACTIVE_LOGON*)lpAuthentInfo)->LogonDomainName;
 	}
 	else if (wcscmp(lpAuthentInfoType,L"Kerberos:Interactive")==0)
 	{
 		usUserName=((KERB_INTERACTIVE_LOGON*)lpAuthentInfo)->UserName;
 		usPassword=((KERB_INTERACTIVE_LOGON*)lpAuthentInfo)->Password;
+		usLogonDomainName=((KERB_INTERACTIVE_LOGON*)lpAuthentInfo)->LogonDomainName;
 	}
 	else
 	{
@@ -70,26 +76,36 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	// Conversion de chaînes UNICODE_STRING
 	memset(szUserName,0,sizeof(szUserName));
 	memset(bufPassword,0,sizeof(bufPassword));
+	memset(szLogonDomainName,0,sizeof(szLogonDomainName));
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)usLogonDomainName.Buffer,usLogonDomainName.Length,"usLogonDomainName"));
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)usUserName.Buffer,usUserName.Length,"usUserName"));
 	TRACE_BUFFER((TRACE_PWD,_F_,(unsigned char*)usPassword.Buffer,usPassword.Length,"usPassword"));
+	// domaine
+	ret=WideCharToMultiByte(CP_ACP,0,usLogonDomainName.Buffer,usLogonDomainName.Length/2,szLogonDomainName,sizeof(szLogonDomainName),NULL,NULL);
+	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usLogonDomainName)=%d",GetLastError())); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"szLogonDomainName=%s",szLogonDomainName));
+	lenLogonDomainName=(int)strlen(szLogonDomainName);
+	// utilisateur
+	ret=WideCharToMultiByte(CP_ACP,0,usUserName.Buffer,usUserName.Length/2,szUserName,sizeof(szUserName),NULL,NULL);
+	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usUserName)=%d",GetLastError())); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"szUserName=%s",szUserName));
+	lenUserName=(int)strlen(szUserName);
+	// mot de passe
 	TRACE((TRACE_DEBUG,_F_,"usPassword.MaximumLength=%d",usPassword.MaximumLength));
 	ret=WideCharToMultiByte(CP_ACP,0,usPassword.Buffer,usPassword.Length/2,bufPassword,sizeof(bufPassword),NULL,NULL);
 	SecureZeroMemory(usPassword.Buffer,usPassword.MaximumLength);
 	if (ret==0) { TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usPassword)=%d",GetLastError())); goto end; }
-	ret=WideCharToMultiByte(CP_ACP,0,usUserName.Buffer,usUserName.Length/2,szUserName,sizeof(szUserName),NULL,NULL);
-	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usUserName)=%d",GetLastError())); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"szUserName=%s",szUserName));
 	TRACE((TRACE_PWD,_F_,"bufPassword=%s",bufPassword));
-
 	// Chiffre le mot de passe
 	if (swProtectMemoryInit()!=0) goto end;
 	if (swProtectMemory(bufPassword,sizeof(bufPassword),CRYPTPROTECTMEMORY_SAME_LOGON)!=0) goto end;
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)bufPassword,PWD_LEN,"bufPassword"));
-
-	// Construit la requête à envoyer à swSSOSVC : V01:PUTPASS:password
-	memcpy(bufRequest,"V01:PUTPASS:",12);
-	memcpy(bufRequest+12,bufPassword,PWD_LEN);
-	lenRequest=PWD_LEN+12;
+	// Construit la requête à envoyer à swSSOSVC : V02:PUTPASS:domain(256octets)username(256octets)password(256octets)
+	memcpy(bufRequest,"V02:PUTPASS:",12);
+	memcpy(bufRequest+12,szLogonDomainName,DOMAIN_LEN);
+	memcpy(bufRequest+12+DOMAIN_LEN,szUserName,USER_LEN);
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,bufPassword,PWD_LEN);
+	lenRequest=12+DOMAIN_LEN+USER_LEN+PWD_LEN;
 
 	// Envoie la requête
 	rc=swPipeWrite(bufRequest,lenRequest);
@@ -116,7 +132,7 @@ int swPipeWrite(char *bufRequest,int lenRequest)
     DWORD cbRead,cbWritten;
 	int iNbTry;
 
-	TRACE((TRACE_ENTER,_F_,""));
+	TRACE((TRACE_ENTER,_F_,"lenRequest=%d",lenRequest));
 
 	// Ouverture du pipe créé par le service swssosvc
 	iNbTry=0;

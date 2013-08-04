@@ -2401,12 +2401,14 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 
 	if (giPwdProtection==PP_WINDOWS)
 	{
-		ghPwdChangeEvent=CreateEvent(NULL,FALSE,FALSE,"Global\\swsso-pwdchange");
+		char szEventName[1024];
+		sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gpszRDN,gszUserName);
+		ghPwdChangeEvent=CreateEvent(NULL,FALSE,FALSE,szEventName);
 		if (ghPwdChangeEvent==NULL)
 		{
 			TRACE((TRACE_ERROR,_F_,"CreateEvent(swsso-pwdchange)=%d",GetLastError()));
-			iError=-1;
-			goto end;
+				iError=-1;
+				goto end;
 		}
 	}
 

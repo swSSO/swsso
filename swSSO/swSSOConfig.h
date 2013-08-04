@@ -136,3 +136,6 @@ typedef struct
 } T_SALT;
 
 extern T_SALT gSalts;
+
+#define USER_LEN 256	// limite officielle
+#define DOMAIN_LEN 256	// limite à moi...
