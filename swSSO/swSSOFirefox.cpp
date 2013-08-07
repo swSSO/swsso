@@ -454,7 +454,7 @@ static int CALLBACK FirefoxEnumChildProc(HWND w, LPARAM lp)
 // [rc] pszURL (à libérer par l'appelant) ou NULL si erreur 
 // ----------------------------------------------------------------------------------
 
-char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iBrowser)
+char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iBrowser,BOOL bWaitReady)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -506,10 +506,13 @@ char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iB
 
 	// ISSUE#72 (0.95) : maintenant que Firefox indique bien que le chargement de la page n'est pas terminé,
 	//                   on attend patiemment avant de lancer le SSO.
-	hr=pContent->get_accState(vtStart,&vtResult);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accState()=0x%08lx",hr)); goto end; }
-	if (vtResult.lVal & STATE_SYSTEM_BUSY) { TRACE((TRACE_ERROR,_F_,"get_accState() : STATE_SYSTEM_BUSY, on verra plus tard !")); goto end; }
-
+	// 0.97 : on ne le fait que si bWaitReady (et notamment on ne le fait pas dans le cas des popups cf. ISSUE#87)
+	if (bWaitReady)
+	{
+		hr=pContent->get_accState(vtStart,&vtResult);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accState()=0x%08lx",hr)); goto end; }
+		if (vtResult.lVal & STATE_SYSTEM_BUSY) { TRACE((TRACE_ERROR,_F_,"get_accState() : STATE_SYSTEM_BUSY, on verra plus tard !")); goto end; }
+	}
 	hr=pContent->get_accValue(vtStart,&bstrURL);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accValue()=0x%08lx",hr)); goto end; }
 	TRACE((TRACE_INFO,_F_,"URL=%S",bstrURL));
@@ -588,7 +591,7 @@ int SSOFirefox(HWND w,int iAction,int iBrowser)
 	// On commence par rechercher l'URL, en demandant le pointeur IAccessible vers le DOM au passage
 	if (iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4)
 	{
-		pszURL=GetFirefoxURL(w,TRUE,&pAccessible,iBrowser);
+		pszURL=GetFirefoxURL(w,TRUE,&pAccessible,iBrowser,TRUE);
 		if (pszURL==NULL) { TRACE((TRACE_INFO,_F_,"URL non trouvee")); rc=-2; goto end; }
 		if (pAccessible==NULL) { TRACE((TRACE_ERROR,_F_,"pAccessible=NULL")); goto end; }
 	}

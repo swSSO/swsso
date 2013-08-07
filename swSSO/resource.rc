@@ -329,7 +329,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Configuration file:", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT
     LTEXT           "This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT
     LTEXT           "License", TX_LICENCE, 7, 41, 28, 11, SS_LEFT
-	LTEXT           "0.97 BETA 1 (07/28/2013)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT
+	LTEXT           "0.97 BETA 1 (08/06/2013)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT
     LTEXT           "Portal:", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1
@@ -812,7 +812,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Fichier de configuration :", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT
     LTEXT           "Licence", TX_LICENCE, 7, 41, 28, 11, SS_LEFT
-    LTEXT           "Version 0.97 BETA 1 (28/07/2013)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT
+    LTEXT           "Version 0.97 BETA 1 (06/08/2013)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT
     LTEXT           "Portail :", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1

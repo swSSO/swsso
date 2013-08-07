@@ -3789,7 +3789,7 @@ int AddApplicationFromCurrentWindow(void)
 			 strcmp(szClassName,"CabinetWClass")==0) // Explorateur Windows
 			 // Ne surtout pas ajouter #32770 sinon on embarque les popup IE et c'est raté !
 	{
-		pszURL=GetIEURL(w);
+		pszURL=GetIEURL(w,TRUE);
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee")); goto end; }
 		iType=UNK; // permet de récupérer les configs WEB ou XEB 
 		iBrowser=BROWSER_IE;
@@ -3809,14 +3809,14 @@ int AddApplicationFromCurrentWindow(void)
 	}
 	else if (strcmp(szClassName,gcszMozillaUIClassName)==0) // FIREFOX3
 	{
-		pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX3);
+		pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX3,TRUE);
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox3 non trouvee")); goto end; }
 		iType=UNK; // permet de récupérer les configs WEB ou XEB 
 		iBrowser=BROWSER_FIREFOX3;
 	}
 	else if (strcmp(szClassName,gcszMozillaClassName)==0) // FIREFOX4
 	{
-		pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX4);
+		pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX4,TRUE);
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox4+ non trouvee")); goto end; }
 		iType=UNK; // permet de récupérer les configs WEB ou XEB 
 		iBrowser=BROWSER_FIREFOX4;

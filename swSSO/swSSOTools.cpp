@@ -1040,7 +1040,7 @@ BOOL swURLMatch(char *szToBeCompared,char *szPattern)
 {
 	TRACE((TRACE_ENTER,_F_, "szToBeCompared=%s szPattern=%s",szToBeCompared,szPattern));
 	BOOL rc=FALSE;
-	int lenPattern;
+	int lenPattern,lenToBeCompared;
 
 	if (swStringMatch(szToBeCompared,szPattern)) { rc=TRUE; goto end; }
 	// n'a pas matché direct : peut-être que l'utilisateur a défini http://www.... alors qu'il est 
@@ -1052,6 +1052,15 @@ BOOL swURLMatch(char *szToBeCompared,char *szPattern)
 	if (_strnicmp(szPattern,"http://",7)!=0) { TRACE((TRACE_DEBUG,_F_,"szPattern ne commence pas par http://"));goto end; }
 	TRACE((TRACE_DEBUG,_F_,"szPattern commence par http://, on tente le matching entre %s et %s",szToBeCompared,szPattern+7));
 	if (swStringMatch(szToBeCompared,szPattern+7)) { rc=TRUE; goto end; }
+	// dernier essai :avec ou sans / de fin d'URL
+	lenToBeCompared=strlen(szToBeCompared);
+	if (lenToBeCompared>1 && szToBeCompared[lenToBeCompared-1]=='/')
+	{
+		char szToBeCompared2[256+1];
+		memcpy(szToBeCompared2,szToBeCompared,lenToBeCompared-1);
+		szToBeCompared2[lenToBeCompared-1]=0;
+		if (swStringMatch(szToBeCompared2,szPattern)) { rc=TRUE; goto end; }
+	}
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
@@ -1411,4 +1420,89 @@ end:
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
 	return rc;
 
+}
+
+typedef struct
+{
+	int iPopupType;
+	char *pszCompare;
+	BOOL bFound;
+} T_ENUM_BROWSER;
+
+//-----------------------------------------------------------------------------
+// EnumWindowsProc()
+//-----------------------------------------------------------------------------
+// Callback d'énumération de fenêtres présentes sur le bureau et déclenchement
+// du SSO le cas échéant
+//-----------------------------------------------------------------------------
+// [rc] : toujours TRUE (continuer l'énumération)
+//-----------------------------------------------------------------------------
+static int CALLBACK EnumBrowserProc(HWND w, LPARAM lp)
+{
+	int rc=TRUE; // true=continuer l'énumération
+	char szClassName[128+1]; // pour stockage nom de classe de la fenêtre
+	char *pszURL=NULL;
+	T_ENUM_BROWSER *pEnumBrowser=(T_ENUM_BROWSER*)lp;
+	
+	GetClassName(w,szClassName,sizeof(szClassName));
+	if ((strcmp(szClassName,"IEFrame")==0) && (pEnumBrowser->iPopupType==POPUP_W7 || pEnumBrowser->iPopupType==POPUP_XP)) // IE
+	{
+		pszURL=GetIEURL(w,FALSE);
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto end; }
+	}
+	else if ((strcmp(szClassName,gcszMozillaUIClassName)==0) && (pEnumBrowser->iPopupType==POPUP_FIREFOX)) // FF3
+	{
+		pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX3,FALSE);
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 3- non trouvee : on passe !")); goto end; }
+	}
+	else if ((strcmp(szClassName,gcszMozillaClassName)==0) && (pEnumBrowser->iPopupType==POPUP_FIREFOX)) // FF4
+	{
+		pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX4,FALSE);
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 4+ non trouvee : on passe !")); goto end; }
+	}
+	else if ((strncmp(szClassName,"Chrome_WidgetWin_",17)==0)  && (pEnumBrowser->iPopupType==POPUP_CHROME)) // Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
+	{
+		pszURL=GetChromeURL(w);
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto end; }
+	}
+	if (pszURL!=NULL) // on a trouvé un navigateur du même type que la popup et on a réussi à lire l'URL, on compare avec l'URL recherchée !
+	{
+		TRACE((TRACE_INFO,_F_,"URLBar trouvee  = %s",pszURL));
+		TRACE((TRACE_INFO,_F_,"URLBar attendue = %s",pEnumBrowser->pszCompare));
+		if (swURLMatch(pEnumBrowser->pszCompare,pszURL)) 
+		{
+			rc=FALSE; // on a trouvé, on arrête l'énumération !
+			pEnumBrowser->bFound=TRUE;
+		}
+	}
+end:
+	if (pszURL!=NULL) free(pszURL);
+	return rc;	
+}
+//-----------------------------------------------------------------------------
+// swCheckBrowserURL() 
+//-----------------------------------------------------------------------------
+// Vérifie si on trouve un navigateur ouvert du type de la popup et dont l'URL
+// matche avec l'URL fournie dans pszCompare
+//-----------------------------------------------------------------------------
+int swCheckBrowserURL(int iPopupType,char *pszCompare)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	int rc=-1;
+	T_ENUM_BROWSER tEnumBrowser;
+
+	tEnumBrowser.bFound=FALSE;
+	tEnumBrowser.iPopupType=iPopupType;
+	tEnumBrowser.pszCompare=pszCompare;
+
+	// recherche le navigateur ouvert correspondant au type de popup (pas génial, mais on ne peut pas retrouver la fenêtre du navigateur autrement...)
+	EnumWindows(EnumBrowserProc,(LPARAM)&tEnumBrowser);
+	if (tEnumBrowser.bFound)
+	{
+		rc=0;
+	}
+
+//end:
+	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	return rc;
 }

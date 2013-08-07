@@ -81,18 +81,21 @@ static int CALLBACK IEEnumChildProc(HWND w, LPARAM lp)
 
 	// 0.90 : ne commence pas tant que le document n'est pas chargé
 	//        (uniquement dans le cas d'une simulation de frappe clavier ?)
-	hr=pHTMLDocument2->get_readyState(&bstrState);
-	if (FAILED(hr)) 
-	{ 
-		TRACE((TRACE_ERROR,_F_,"get_readyState=0x%08lx",hr)); 
-		// ca n'a pas marché, pas grave, on continue quand même
-	}
-	else
+	// 0.97 : on ne le fait que si bWaitReady (et notamment on ne le fait pas dans le cas des popups cf. ISSUE#87)
+	if (ptGetURL->bWaitReady)
 	{
-		TRACE((TRACE_INFO,_F_,"readyState=%S",bstrState)); 
-		if (!CompareBSTRtoSZ(bstrState,"complete")) { rc=false; goto end; } // pas fini de charger, on arrête
+		hr=pHTMLDocument2->get_readyState(&bstrState);
+		if (FAILED(hr)) 
+		{ 
+			TRACE((TRACE_ERROR,_F_,"get_readyState=0x%08lx",hr)); 
+			// ca n'a pas marché, pas grave, on continue quand même
+		}
+		else
+		{
+			TRACE((TRACE_INFO,_F_,"readyState=%S",bstrState)); 
+			if (!CompareBSTRtoSZ(bstrState,"complete")) { rc=false; goto end; } // pas fini de charger, on arrête
+		}
 	}
-
 	hr=pHTMLDocument2->get_URL(&bstrURL);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_URL()=0x%08lx",hr)); goto end; }
 	TRACE((TRACE_DEBUG,_F_,"get_URL()=%S",bstrURL));
@@ -122,12 +125,13 @@ end:
 // [out] pszURL (à libérer par l'appelant) ou NULL si erreur 
 // ----------------------------------------------------------------------------------
 
-char *GetIEURL(HWND w)
+char *GetIEURL(HWND w, BOOL bWaitReady)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	
 	T_GETURL tGetURL;
 	tGetURL.pszURL=NULL;
+	tGetURL.bWaitReady=bWaitReady;
 
 	EnumChildWindows(w,IEEnumChildProc,(LPARAM)&tGetURL);
 
@@ -158,7 +162,7 @@ char *GetMaxthonURL(void)
 		TRACE((TRACE_ERROR,_F_,"Fenêtre de classe Maxthon2_View non trouvée"));
 		goto end;
 	}
-	pszURL=GetIEURL(wMaxthonView);
+	pszURL=GetIEURL(wMaxthonView,TRUE);
 end:
 	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
 	return pszURL;

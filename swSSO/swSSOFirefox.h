@@ -32,7 +32,7 @@
 //-----------------------------------------------------------------------------
 
 int SSOFirefox(HWND w,int iAction,int iBrowser);
-char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iBrowser);
+char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iBrowser,BOOL bWaitReady);
 
 extern const char gcszMozillaClassName[];
 extern const char gcszMozillaContentClassName[];

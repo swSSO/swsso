@@ -34,10 +34,11 @@
 typedef struct
 {
 	char *pszURL;
+	BOOL bWaitReady;
 }
 T_GETURL;
 
-char *GetIEURL(HWND w);
+char *GetIEURL(HWND w, BOOL bWaitReady);
 char *GetMaxthonURL(void);
 char *GetIEWindowTitle(void);
 char *GetW7PopupURL(HWND w);

@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="096";	// 082 = 0.82
-const char gcszCurrentBeta[]="0000";	// 0851 = 085 beta 1, 0000 pas de beta
+const char gcszCurrentBeta[]="0971";	// 0851 = 085 beta 1, 0000 pas de beta
 
 static HWND gwMain=NULL;
 
@@ -573,6 +573,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 	time_t tNow,tLastSSOOnThisWindow;
 	bool bDoSSO;
 	char *pszURL=NULL;
+	char *pszURL2=NULL;
+	char *pszURLBar=NULL;
 	int iPopupType=POPUP_NONE;
 	char szClassName[128+1]; // pour stockage nom de classe de la fenêtre
 	char szTitre[255+1];	  // pour stockage titre de fenêtre
@@ -661,8 +663,26 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			{
 				TRACE((TRACE_INFO,_F_,"URL trouvee  = %s",pszURL));
 				TRACE((TRACE_INFO,_F_,"URL attendue = %s",gptActions[i].szURL));
+				// ISSUE#87 : l'URL dans la config peut avoir la forme : le site www demande*|http://www
+				int len=strlen(gptActions[i].szURL);
+				pszURL2=(char*)malloc(len+1);
+				if (*pszURL2==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%ld)",len+1)); goto end; }
+				memcpy(pszURL2,gptActions[i].szURL,len+1);
+				char *p=strchr(pszURL2,'|');
+				if (p!=NULL)
+				{
+					*p=0;
+					p++;
+					if (swCheckBrowserURL(iPopupType,p)!=0)
+					{
+						TRACE((TRACE_INFO,_F_,"Impossible de vérifier l'URL de la barre d'URL... on ne fait pas le SSO !"));
+						goto suite;// URL popup authentification inconnue
+					}
+				}
+				// si p!=null c'est qu'on a trouvé un | et une URL derrière, il faut la vérifier
+				// ce test ne change pas, sauf qu'il porte sur pszURL2 pour couvrir les 2 cas (avec ou sans |)
 				// 0.92B6 : utilise le swStringMatch, permet donc d'utiliser * en début de chaîne
-				if (!swStringMatch(pszURL,gptActions[i].szURL))
+				if (!swStringMatch(pszURL,pszURL2))
 				{
 					TRACE((TRACE_DEBUG,_F_,"Titre connu, mais URL ne matche pas, on passe !"));
 					goto suite;// URL popup authentification inconnue
@@ -686,19 +706,19 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				strcmp(szClassName,"ExploreWClass")==0 || strcmp(szClassName,"CabinetWClass")==0) // Explorateur Windows
 			{
 				iBrowser=BROWSER_IE;
-				pszURL=GetIEURL(w);
+				pszURL=GetIEURL(w,TRUE);
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto suite; }
 			}
 			else if (strcmp(szClassName,gcszMozillaUIClassName)==0) // FF3
 			{
 				iBrowser=BROWSER_FIREFOX3;
-				pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX3);
+				pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX3,TRUE);
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 3- non trouvee : on passe !")); goto suite; }
 			}
 			else if (strcmp(szClassName,gcszMozillaClassName)==0) // FF4
 			{
 				iBrowser=BROWSER_FIREFOX4;
-				pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX4);
+				pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX4,TRUE);
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 4+ non trouvee : on passe !")); goto suite; }
 			}
 			else if (strcmp(szClassName,"Maxthon2_Frame")==0) // Maxthon
@@ -1128,11 +1148,9 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 suite:
 		// eh oui, il faut libérer pszURL... Sinon, vous croyez vraiment que 
 		// j'aurais fait ce "goto suite", alors que continue me tendait les bras ?
-		if (pszURL!=NULL) 
-		{ 
-			free(pszURL); 
-			pszURL=NULL;
-		}
+		if (pszURL!=NULL) { free(pszURL); pszURL=NULL; }
+		if (pszURL2!=NULL) { free(pszURL2); pszURL2=NULL; }
+		if (pszURLBar!=NULL) { free(pszURLBar); pszURLBar=NULL; }
 	}
 end:
 	// nouveau en 0.90...
