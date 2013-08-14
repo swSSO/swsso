@@ -38,8 +38,8 @@
 #include "ISimpleDOMDocument_i.c"
 
 // Un peu de globales...
-const char gcszCurrentVersion[]="096";	// 082 = 0.82
-const char gcszCurrentBeta[]="0971";	// 0851 = 085 beta 1, 0000 pas de beta
+const char gcszCurrentVersion[]="097";	// 082 = 0.82
+const char gcszCurrentBeta[]="0000";	// 0851 = 085 beta 1, 0000 pas de beta
 
 static HWND gwMain=NULL;
 
