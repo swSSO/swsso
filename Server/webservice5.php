@@ -37,7 +37,7 @@ include('util.php');
 // Commandes : isalive, getversion, putconfig, getconfig et getdomains
 //------------------------------------------------------------------------------
 
-$swssoVersion="096:0971";
+$swssoVersion="097:0000";
 
 // ------------------------------------------------------------
 // isalive
