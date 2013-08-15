@@ -4124,6 +4124,9 @@ void InternetCheckVersion()
 	pBetaVersion=pszResult+4;
 	TRACE((TRACE_INFO,_F_,"ReleaseVersion : %s (locale) %s (centrale)",gcszCurrentVersion,pReleaseVersion));
 	TRACE((TRACE_INFO,_F_,"BetaVersion    : %s (locale) %s (centrale)",gcszCurrentBeta,pBetaVersion));
+	
+	if (strcmp(pReleaseVersion,"000")==0) goto end;// ISSUE#90 : dans ce cas on ne vérifie plus la version.
+
 	if (!gbInternetCheckBeta) // ne vérifie pas la présence de version beta
 	{
 		if (strcmp(pReleaseVersion,gcszCurrentVersion)!=0) 
