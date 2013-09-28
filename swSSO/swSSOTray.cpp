@@ -35,15 +35,7 @@
 
 #include "stdafx.h"
 
-#define MENU_ACTIVER    1
-#define MENU_PROPRIETES 2
-#define MENU_QUITTER    3
-#define MENU_MDP		4
-#define MENU_PORTAL		5
-#define MENU_THIS_APPLI	6
-#define MENU_APPNSITES  7
-#define MENU_SSO_NOW	8
-#define MENU_LAUNCH_APP 9
+
 
 unsigned int gMsgTaskbarRestart=0; // message registré pour recevoir les notifs de recréation du systray
 
@@ -72,25 +64,25 @@ static void ShowContextMenu(HWND w)
 	// 0.92B8 : nouveau paramètre dans les policies pour masquer menu "ajouter cette application"
 	 if (gbShowMenu_AddApp) 
 	{
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_THIS_APPLI,GetString(IDS_MENU_THIS_APPLI));
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_THIS_APPLI,GetString(IDS_MENU_THIS_APPLI));
 	}
-	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_SSO_NOW,GetString(IDS_MENU_SSO_NOW));
+	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_SSO_NOW,GetString(IDS_MENU_SSO_NOW));
 	if (gbShowMenu_LaunchApp)
 	{
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_LAUNCH_APP,GetString(IDS_LAUNCH_ONE_APP));
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_LAUNCH_APP,GetString(IDS_LAUNCH_ONE_APP));
 	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_APPNSITES,GetString(IDS_MENU_APPNSITES));
-	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PROPRIETES,GetString(IDS_MENU_PROP));
+	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_APPNSITES,GetString(IDS_MENU_APPNSITES));
+	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PROPRIETES,GetString(IDS_MENU_PROP));
 	if (giPwdProtection==PP_ENCRYPTED || *gszCfgPortal!=0) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-	if (giPwdProtection==PP_ENCRYPTED) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_MDP,GetString(IDS_MENU_MDP));
-	if (*gszCfgPortal!=0) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PORTAL,GetString(IDS_MENU_PORTAL));
+	if (giPwdProtection==PP_ENCRYPTED) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_MDP,GetString(IDS_MENU_MDP));
+	if (*gszCfgPortal!=0) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PORTAL,GetString(IDS_MENU_PORTAL));
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	if (gbSSOActif)
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_ACTIVER,GetString(IDS_MENU_DESACTIVER));
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_ACTIVER,GetString(IDS_MENU_DESACTIVER));
 	else
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_ACTIVER,GetString(IDS_MENU_ACTIVER));
-	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_QUITTER,GetString(IDS_MENU_QUITTER));
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_ACTIVER,GetString(IDS_MENU_ACTIVER));
+	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_QUITTER,GetString(IDS_MENU_QUITTER));
 	SetForegroundWindow(w);
 	TrackPopupMenu(hMenu, TPM_BOTTOMALIGN,pt.x, pt.y, 0, w, NULL );
 end:	
@@ -209,8 +201,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		case WM_COMMAND:
 			switch (LOWORD(wp))
 			{
-				case MENU_LAUNCH_APP:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + MENU_LAUNCH_APP"));
+				case TRAY_MENU_LAUNCH_APP:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_LAUNCH_APP"));
 					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
@@ -218,14 +210,14 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					ShowLaunchApp();
 					break;
-				case MENU_ACTIVER:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + MENU_ACTIVER"));
+				case TRAY_MENU_ACTIVER:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_ACTIVER"));
 					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 					SSOActivate(w);
 					break;
-				case MENU_PROPRIETES:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + MENU_PROPRIETES"));
+				case TRAY_MENU_PROPRIETES:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_PROPRIETES"));
 					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
@@ -233,8 +225,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					ShowConfig();
 					break;
-				case MENU_APPNSITES:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + MENU_APPNSITES"));
+				case TRAY_MENU_APPNSITES:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_APPNSITES"));
 					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
@@ -242,8 +234,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					ShowAppNsites(-1);
 					break;
-				case MENU_MDP:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + MENU_MDP"));
+				case TRAY_MENU_MDP:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_MDP"));
 					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
@@ -251,8 +243,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					WindowChangeMasterPwd(FALSE);
 					break;
-				case MENU_PORTAL:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + MENU_PORTAL"));
+				case TRAY_MENU_PORTAL:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_PORTAL"));
 					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
@@ -260,8 +252,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					ShellExecute(NULL,"open",gszCfgPortal,NULL,"",SW_SHOW );
 					break;
-				case MENU_THIS_APPLI:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + MENU_THIS_APPLI"));
+				case TRAY_MENU_THIS_APPLI:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_THIS_APPLI"));
 					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
@@ -269,8 +261,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					AddApplicationFromCurrentWindow();
 					break;
-				case MENU_SSO_NOW:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + MENU_SSO_NOW"));
+				case TRAY_MENU_SSO_NOW:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_SSO_NOW"));
 					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
@@ -285,8 +277,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						LaunchTimer();
 					}
 					break;
-				case MENU_QUITTER:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + MENU_QUITTER"));
+				case TRAY_MENU_QUITTER:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_QUITTER"));
 					PostQuitMessage(0);
 					break;
 			}

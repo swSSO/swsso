@@ -83,6 +83,7 @@ BOOL gbRecoveryRunning=FALSE;
 
 BOOL gbRegisterSessionNotification=FALSE;
 UINT guiLaunchAppMsg;
+UINT guiConnectAppMsg;
 
 int giTimer=0;
 static int giRegisterSessionNotificationTimer=0;
@@ -2004,6 +2005,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	int rcSystray=-1;
     HANDLE hMutex=NULL;
 	BOOL bLaunchApp=FALSE;
+	BOOL bConnectApp=FALSE;
 	BOOL bAlreadyLaunched=FALSE;
 	OSVERSIONINFO osvi;
 	BOOL b64=false;
@@ -2056,6 +2058,16 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	{
 		TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-launchapp) OK -> msg=0x%08lx",guiLaunchAppMsg));
 	}
+	guiConnectAppMsg=RegisterWindowMessage("swsso-connectapp");
+	if (guiConnectAppMsg==0)
+	{
+		TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-connectapp)=%d",GetLastError()));
+		// peut-être pas la peine d'empêcher swsso de démarrer pour ça...
+	}
+	else
+	{
+		TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-connectapp) OK -> msg=0x%08lx",guiConnectAppMsg));
+	}
 	// 0.92 : récupération version OS pour traitements spécifiques Vista et/ou Seven
 	// Remarque : pas tout à fait juste, mais convient pour les postes de travail. A revoir pour serveurs.
 	ZeroMemory(&osvi,sizeof(OSVERSIONINFO));
@@ -2077,12 +2089,24 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	if (strnistr(lpCmdLine,"-launchapp",-1)!=NULL && guiLaunchAppMsg!=0) 
 	{
 		bLaunchApp=TRUE;
-		// supprime le paramètre -blaunchapp de la ligne de commande 
+		// supprime le paramètre -launchapp de la ligne de commande 
 		// pour traitement du path éventuellement spécifié pour le .ini
 		lpCmdLine+=strlen("-launchapp");
 		if (*lpCmdLine==' ') lpCmdLine++;
 		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
 	}
+	// 0.97 : si la ligne de commande contient le paramètre -connectapp, ouvre la fenêtre de lancement d'appli
+	//        soit en postant à message à swsso si déjà lancé, soit par appel à ShowAppNsites en fin de WinMain()
+	if (strnistr(lpCmdLine,"-connectapp",-1)!=NULL && guiConnectAppMsg!=0) 
+	{
+		bConnectApp=TRUE;
+		// supprime le paramètre -connectapp de la ligne de commande 
+		// pour traitement du path éventuellement spécifié pour le .ini
+		lpCmdLine+=strlen("-connectapp");
+		if (*lpCmdLine==' ') lpCmdLine++;
+		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
+	}
+
 
 	// 0.42 vérif pas déjà lancé
 	hMutex=CreateMutex(NULL,TRUE,"swSSO.exe");
@@ -2095,6 +2119,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente d'ouvrir la fenetre de lancement d'applications"));
 			PostMessage(HWND_BROADCAST,guiLaunchAppMsg,0,0);
 		}
+		if (bConnectApp)
+		{
+			TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente de connecter l'application en avant plan"));
+			PostMessage(HWND_BROADCAST,guiConnectAppMsg,0,0);
+		}
+
 		goto end;
 	}
 	
@@ -2448,9 +2478,13 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			if (msg.message==guiLaunchAppMsg) 
 			{
 				TRACE((TRACE_INFO,_F_,"Message recu : swsso-launchapp (0x%08lx)",guiLaunchAppMsg));
-#define MENU_LAUNCH_APP 9
-				PostMessage(gwMain,WM_COMMAND,MAKEWORD(MENU_LAUNCH_APP,0),0);
+				PostMessage(gwMain,WM_COMMAND,MAKEWORD(TRAY_MENU_LAUNCH_APP,0),0);
 			}
+			else if (msg.message==guiConnectAppMsg) 
+			{
+				TRACE((TRACE_INFO,_F_,"Message recu : swsso-connectapp (0x%08lx)",guiConnectAppMsg));
+				PostMessage(gwMain,WM_COMMAND,MAKEWORD(TRAY_MENU_SSO_NOW,0),0);
+			} 
 			else
 			{
 		        TranslateMessage(&msg); 
