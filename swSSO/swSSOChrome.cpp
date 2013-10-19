@@ -41,12 +41,28 @@
 // [in] w = handle de la fenêtre
 // [rc] pszURL (à libérer par l'appelant) ou NULL si erreur 
 // ----------------------------------------------------------------------------------
+// Gros changement en Chrome 30, il faut maintenant naviguer avec IAccessible... --> ISSUE#93
+// La fenêtre principale a 1 child de niveau 1, il faut prendre le 1er.
+// Le child de niveau 1 a 2 childs, il faut prendre le 2eme.
+// Le child de niveau 2 a 4 childs, il faut prendre le 3eme.
+// Le child de niveau 3 a 3 childs, il faut prendre le 2eme.
+// Le child de niveau 4 a 7 childs, il faut prendre le 5eme.
+// Le child de niveau 5 a 32 childs, il faut prendre le 3eme
+// ----------------------------------------------------------------------------------
 char *GetChromeURL(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	HWND wURL;
+	HWND wURL=NULL;
 	char *pszURL=NULL;
 	int len;
+	BSTR bstrURL=NULL;
+	HRESULT hr;
+	IDispatch *pIDispatch=NULL;
+	IAccessible *pAccessible=NULL;
+	IAccessible *pChildNiveau1=NULL, *pChildNiveau2=NULL, *pChildNiveau3=NULL, *pChildNiveau4=NULL, *pChildNiveau5=NULL, *pChildNiveau6=NULL;
+	VARIANT vtChild;
+	int  bstrLen;
+	//long lCount;
 
 	// recherche la fenêtre fille de classe "Chrome_AutocompleteEditView"
 	// son texte contient l'URL de l'onglet en cours
@@ -57,20 +73,108 @@ char *GetChromeURL(HWND w)
 	{ 
 		TRACE((TRACE_INFO,_F_,"FindWindowEx(Chrome_AutocompleteEditView)=NULL"));
 		wURL=FindWindowEx(w,NULL,"Chrome_OmniboxView",NULL);
-		if (wURL==NULL) { TRACE((TRACE_ERROR,_F_,"FindWindowEx(Chrome_OmniboxView)=NULL")); goto end; }
+		if (wURL==NULL) 
+		{ 
+			TRACE((TRACE_INFO,_F_,"FindWindowEx(Chrome_OmniboxView)=NULL")); 
+			// ISSUE#93 / 0.98 : pour Chome 30+, il faut rechercher l'URL avec des IAccessible car l'URL n'est plus un champ standard Windows...
+			hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			// La fenêtre principale a 1 child de niveau 1, il faut prendre le 1er.
+			vtChild.vt=VT_I4;
+			vtChild.lVal=1;
+			hr=pAccessible->get_accChild(vtChild,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau1);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			pIDispatch->Release(); pIDispatch=NULL;
+			// Le child de niveau 1 a 2 childs, il faut prendre le 2eme.
+			vtChild.vt=VT_I4;
+			vtChild.lVal=2;
+			hr=pChildNiveau1->get_accChild(vtChild,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pChildNiveau1->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau2);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			pIDispatch->Release(); pIDispatch=NULL;
+			// Le child de niveau 2 a 4 childs, il faut prendre le 3eme.
+			vtChild.vt=VT_I4;
+			vtChild.lVal=3;
+			hr=pChildNiveau2->get_accChild(vtChild,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pChildNiveau2->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau3);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			pIDispatch->Release(); pIDispatch=NULL;
+			// Le child de niveau 3 a 3 childs, il faut prendre le 2eme.
+			vtChild.vt=VT_I4;
+			vtChild.lVal=2;
+			hr=pChildNiveau3->get_accChild(vtChild,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pChildNiveau3->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau4);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			pIDispatch->Release(); pIDispatch=NULL;
+			// Le child de niveau 4 a 7 childs, il faut prendre le 5eme.
+			vtChild.vt=VT_I4;
+			vtChild.lVal=5;
+			hr=pChildNiveau4->get_accChild(vtChild,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pChildNiveau4->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau5);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			pIDispatch->Release(); pIDispatch=NULL;
+			// Le child de niveau 5 a 32 childs, il faut prendre le 3eme
+			vtChild.vt=VT_I4;
+			vtChild.lVal=3;
+			hr=pChildNiveau5->get_accChild(vtChild,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pChildNiveau5->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau6);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			pIDispatch->Release(); pIDispatch=NULL;
+			vtChild.vt=VT_I4;
+			vtChild.lVal=0; // cette fois, 0, oui, car c'est le nom de l'objet lui-même que l'on cherche.
+			hr=pChildNiveau6->get_accValue(vtChild,&bstrURL);
+			if (hr!=S_OK) { TRACE((TRACE_ERROR,_F_,"pChildNiveau6->get_accName(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"pChildNiveau6->get_accValue(%ld)='%S'",vtChild.lVal,bstrURL));
+			bstrLen=SysStringLen(bstrURL);
+			pszURL=(char*)malloc(bstrLen+1);
+			if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",bstrLen+1)); goto end; }
+			sprintf_s(pszURL,bstrLen+1,"%S",bstrURL);
+			TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
+		}
 	}
-	TRACE((TRACE_DEBUG,_F_,"wURL=0x%08lx",wURL));
-	// lecture taille URL (=longueur texte de la fenêtre trouvée)
-	len=SendMessage(wURL,WM_GETTEXTLENGTH,0,0);
-	TRACE((TRACE_DEBUG,_F_,"lenURL=%d",len));
-	if (len==0) { TRACE((TRACE_ERROR,_F_,"URL vide")); goto end; }
-	// allocation pszURL
-	pszURL=(char*)malloc(len+1);
-	if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",len+1)); goto end; }
-	// lecture texte fenêtre
-	SendMessage(wURL,WM_GETTEXT,len+1,(LPARAM)pszURL);
-	TRACE((TRACE_DEBUG,_F_,"URL=%s",pszURL));
+	if (wURL!=NULL)
+	{
+		TRACE((TRACE_DEBUG,_F_,"wURL=0x%08lx",wURL));
+		// lecture taille URL (=longueur texte de la fenêtre trouvée)
+		len=SendMessage(wURL,WM_GETTEXTLENGTH,0,0);
+		TRACE((TRACE_DEBUG,_F_,"lenURL=%d",len));
+		if (len==0) { TRACE((TRACE_ERROR,_F_,"URL vide")); goto end; }
+		// allocation pszURL
+		pszURL=(char*)malloc(len+1);
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",len+1)); goto end; }
+		// lecture texte fenêtre
+		SendMessage(wURL,WM_GETTEXT,len+1,(LPARAM)pszURL);
+		TRACE((TRACE_DEBUG,_F_,"URL=%s",pszURL));
+	}
 end:
+	SysFreeString(bstrURL);
+	if (pAccessible!=NULL) pAccessible->Release();
+	if (pIDispatch!=NULL) pIDispatch->Release();
+	if (pChildNiveau1!=NULL) pChildNiveau1->Release();
+	if (pChildNiveau2!=NULL) pChildNiveau2->Release();
+	if (pChildNiveau3!=NULL) pChildNiveau3->Release();
+	if (pChildNiveau4!=NULL) pChildNiveau4->Release();
+	if (pChildNiveau5!=NULL) pChildNiveau5->Release();
+	if (pChildNiveau6!=NULL) pChildNiveau6->Release();
 	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
 	return pszURL;
 }
