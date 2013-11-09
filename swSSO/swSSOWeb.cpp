@@ -698,7 +698,7 @@ int SSOWeb(HWND w,int iAction,HWND w2)
 
 		TRACE((TRACE_DEBUG,_F_,"bstrPwdName=%S",bstrPwdName));
 		
-		if ((giPwdProtection>=PP_ENCODED) && (*gptActions[iAction].szPwdEncryptedValue!=0))
+		if ((*gptActions[iAction].szPwdEncryptedValue!=0)) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 		{
 			char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
 			if (pszPassword!=NULL) 

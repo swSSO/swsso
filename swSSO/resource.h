@@ -30,7 +30,6 @@
 #define IDI_LOUPE                               1004
 #define TX_SERVER2                              1004
 #define IDC_SEP_PROXY                           1005
-#define IDD_PWD_CHOICE                          1005
 #define TX_SERVER                               1005
 #define IDC_SEP_LICENCE                         1006
 #define IDD_PWD                                 1006
@@ -150,7 +149,6 @@
 #define IDS_COMBOTYPE3                          40004
 #define IDS_OLDVERSION                          40005
 #define IDS_PP_ENCRYPTED                        40006
-#define IDS_PP_NONE                             40007
 #define IDS_DELETE                              40008
 #define IDS_MENU_ACTIVER                        40009
 #define IDS_MENU_AJOUTER_APPLI                  40010
@@ -240,7 +238,6 @@
 #define IDS_LAUNCH_APP_ERROR                    40093
 #define IDS_COMBOTYPE4                          40094
 #define IDS_MENU_AJOUTER_COMPTE                 40095
-#define IDS_PP_ENCODED                          40096
 #define IDS_ERROR_INI_SAV                       40097
 #define IDS_ERROR_INI_RESTORED                  40098
 #define IDS_ERROR_INI_NOT_RESTORED              40099

@@ -575,13 +575,9 @@ void TogglePasswordField(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	char szPwd[LEN_PWD+1];
-	//if ((gbShowPwd) || ((giPwdProtection==PP_ENCRYPTED && AskPwd(w,FALSE)==0) || (giPwdProtection!=PP_ENCRYPTED)))
 	if (!gbShowPwd) // 0.96
 	{
-		if (giPwdProtection==PP_ENCRYPTED || giPwdProtection==PP_WINDOWS)
-		{
-			if (AskPwd(w,FALSE)!=0) goto end;
-		}
+		if (AskPwd(w,FALSE)!=0) goto end;
 	}
 	gbShowPwd=!gbShowPwd;
 	ShowWindow(GetDlgItem(w,TB_PWD),gbShowPwd?SW_HIDE:SW_SHOW);
@@ -951,7 +947,7 @@ static int CALLBACK ChangeCategIdsDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp
 						GetDlgItemText(w,TB_ID3,gIds.szId3Value,sizeof(gIds.szId3Value));
 						GetDlgItemText(w,TB_ID4,gIds.szId4Value,sizeof(gIds.szId4Value));
 						GetDlgItemText(w,TB_PWD,gIds.szPwdClearValue,sizeof(gIds.szPwdClearValue));
-						if ((giPwdProtection>=PP_ENCODED) && *(gIds.szPwdClearValue)!=0)
+						if (*(gIds.szPwdClearValue)!=0) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 						{
 							pszEncryptedPassword=swCryptEncryptString(gIds.szPwdClearValue,ghKey1);
 							SecureZeroMemory(gIds.szPwdClearValue,sizeof(gIds.szPwdClearValue));
@@ -1717,24 +1713,17 @@ void ShowApplicationDetails(HWND w,int iAction)
 	
 	if (gbShowGeneratedPwd) { gbShowGeneratedPwd=FALSE; gbShowPwd=FALSE; }
 	// déchiffrement mot de passe
-	if (giPwdProtection>=PP_ENCODED)
+	SetDlgItemText(w,TB_PWD,"");
+	SetDlgItemText(w,TB_PWD_CLEAR,"");
+	if (*gptActions[iAction].szPwdEncryptedValue!=0)
 	{
-		SetDlgItemText(w,TB_PWD,"");
-		SetDlgItemText(w,TB_PWD_CLEAR,"");
-		if (*gptActions[iAction].szPwdEncryptedValue!=0)
+		char *pszDecryptedValue=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+		if (pszDecryptedValue!=NULL) 
 		{
-			char *pszDecryptedValue=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-			if (pszDecryptedValue!=NULL) 
-			{
-				SetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,pszDecryptedValue);
-				SecureZeroMemory(pszDecryptedValue,strlen(pszDecryptedValue));
-				free(pszDecryptedValue);
-			}
+			SetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,pszDecryptedValue);
+			SecureZeroMemory(pszDecryptedValue,strlen(pszDecryptedValue));
+			free(pszDecryptedValue);
 		}
-	}
-	else
-	{
-		SetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,gptActions[iAction].szPwdEncryptedValue);
 	}
 	if (gptActions[iAction].iType==POPSSO)
 	{
@@ -1934,7 +1923,7 @@ static void GetApplicationDetails(HWND w,int iAction)
 
 	GetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,szPassword,sizeof(szPassword));
 
-	if ((giPwdProtection>=PP_ENCODED) && *szPassword!=0)
+	if (*szPassword!=0) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 	{
 		pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
 		SecureZeroMemory(szPassword,strlen(szPassword));
@@ -2682,8 +2671,8 @@ int SaveApplicationIdX(HANDLE hf,int x,const char *szIdName,const char *szIdValu
 	char szIdEncryptedValue[LEN_ENCRYPTED_AES256+1];
 	char szIdType[10+1]; // NONE | EDIT | COMBO
 
-	// chiffrement de l'identifiant sauf si vide ou chiffrement non demandé
-	if (*szIdValue==0 || giPwdProtection==PP_NONE)
+	// chiffrement de l'identifiant sauf si vide
+	if (*szIdValue==0)
 	{
 		strcpy_s(szIdEncryptedValue,sizeof(szIdEncryptedValue),szIdValue);
 	}
@@ -3033,8 +3022,8 @@ int SaveApplications(void)
 		// 0.80 : renommage de <SANSNOM> en [SANSNOM] pour compatibilité XML...
 		if (strcmp(gptActions[i].szValidateName,gcszFormNoName1)==0) strcpy_s(gptActions[i].szValidateName,sizeof(gptActions[i].szValidateName),gcszFormNoName2);
 
-		// chiffrement de l'identifiant sauf si vide ou chiffrement non demandé
-		if (*gptActions[i].szId1Value==0 || giPwdProtection==PP_NONE)
+		// chiffrement de l'identifiant sauf si vide
+		if (*gptActions[i].szId1Value==0)
 		{
 			strcpy_s(szId1EncryptedValue,sizeof(szId1EncryptedValue),gptActions[i].szId1Value);
 		}

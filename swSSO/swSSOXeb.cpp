@@ -284,6 +284,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 	int iId2Index;
 	int iId3Index;
 	int iId4Index;
+	IAccessible *pNiveau0=NULL,*pChildNiveau1=NULL, *pChildNiveau2=NULL;
 	
 	// ISSUE#39 : important, initialisation pour que le pointer iAccessible soit à NULL sinon le release provoque plantage !
 	ZeroMemory(&tSuivi,sizeof(T_SUIVI_ACCESSIBLE));
@@ -314,11 +315,51 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		// enum des fils à la recherche de la fenêtre de rendu Web
 		strcpy_s(tSuivi.szClassName,sizeof(tSuivi.szClassName),"Chrome_RenderWidgetHostHWND");
 		EnumChildWindows(w,WebEnumChildProc,(LPARAM)&tSuivi);
-		if (tSuivi.w==NULL) { TRACE((TRACE_ERROR,_F_,"EnumChildWindows() => pas trouve la fenetre de contenu")); goto end; }
-		// Obtient un IAccessible
-		hr=AccessibleObjectFromWindow(tSuivi.w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
-		
+		if (tSuivi.w==NULL) 
+		{ 
+			// ISSUE#95 / 0.98 : pour Chome 31 ou 32+, impossible de rechercher la fenêtre fille, on est obligé de passer par IAccessible :
+			// La fenêtre principale a 1 child de niveau 1, il faut prendre le 1er.
+			// Le child de niveau 1 a 2 childs, il faut prendre le 2eme.
+			// Le child de niveau 2 a 4 childs, il faut prendre le 2eme --> c'est la fenêtre de contenu web !
+			hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pNiveau0);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			// La fenêtre principale a 1 child de niveau 1, il faut prendre le 1er.
+			vtChild.vt=VT_I4;
+			vtChild.lVal=1;
+			hr=pNiveau0->get_accChild(vtChild,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau1);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			pIDispatch->Release(); pIDispatch=NULL;
+			// Le child de niveau 1 a 2 childs, il faut prendre le 2eme.
+			vtChild.vt=VT_I4;
+			vtChild.lVal=2;
+			hr=pChildNiveau1->get_accChild(vtChild,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pChildNiveau1->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau2);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			pIDispatch->Release(); pIDispatch=NULL;
+			// Le child de niveau 2 a 4 childs, il faut prendre le 2eme.
+			vtChild.vt=VT_I4;
+			vtChild.lVal=2;
+			hr=pChildNiveau2->get_accChild(vtChild,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pChildNiveau2->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pAccessible);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			pIDispatch->Release(); pIDispatch=NULL;
+		}
+		else
+		{
+			// Obtient un IAccessible
+			hr=AccessibleObjectFromWindow(tSuivi.w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+		}
 		VARIANT vtMe,vtRole;
 		vtMe.vt=VT_I4;
 		vtMe.lVal=CHILDID_SELF;
@@ -466,7 +507,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			*/
 			hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accSelect(SELFLAG_TAKEFOCUS)=0x%08lx",hr)); } 
-			if ((giPwdProtection>=PP_ENCODED) && (*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0))
+			if ((*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0))
 			{
 				char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
 				if (pszPassword!=NULL) 
@@ -475,10 +516,6 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 					SecureZeroMemory(pszPassword,strlen(pszPassword));
 					free(pszPassword);
 				}
-			}
-			else
-			{
-				KBSim(FALSE,200,gptActions[ptSuivi->iAction].szPwdEncryptedValue,TRUE);
 			}
 		}
 		// Validation si demandée
@@ -495,6 +532,9 @@ end:
 	if (pAccessible!=NULL) pAccessible->Release();
 	if (pTopAccessible!=NULL) pTopAccessible->Release();
 	if (pIDispatch!=NULL) pIDispatch->Release();
+	if (pNiveau0!=NULL) pNiveau0->Release();
+	if (pChildNiveau1!=NULL) pChildNiveau1->Release();
+	if (pChildNiveau2!=NULL) pChildNiveau2->Release();
 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;

@@ -144,7 +144,7 @@ static int CALLBACK WinEnumChildProc(HWND w, LPARAM lp)
 	if (GetDlgCtrlID(w)==iPwdName) 
 	{
 		TRACE((TRACE_DEBUG,_F_,"Saisie pwd"));
-		if ((giPwdProtection>=PP_ENCODED) && (*gptActions[iAction].szPwdEncryptedValue!=0))
+		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 		{
 			char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
 			if (pszPassword!=NULL) 
@@ -166,20 +166,7 @@ static int CALLBACK WinEnumChildProc(HWND w, LPARAM lp)
 				free(pszPassword);
 			}
 		}
-		else
-		{
-			if (bPwdKBSim) 
-			{
-				SetForegroundWindow(((T_SUIVI_ACTION*)lp)->w);
-				SetFocus(w);
-				KBSim(FALSE,100,(gptActions[iAction].szPwdEncryptedValue),TRUE);
-			}
-			else
-			{
-				TRACE((TRACE_PWD,_F_,"SendMessage(WM_SETTEXT) pwd=%s",gptActions[iAction].szPwdEncryptedValue));
-				SendMessage(w,WM_SETTEXT,0,(LPARAM)gptActions[iAction].szPwdEncryptedValue);
-			}
-		}
+		
 		// 0.80 si l'utilisateur a demandé une simulation de frappe,
 		//      on met le focus sur le champ mot de passe, ça peut aider
 		if (*gptActions[iAction].szValidateName=='[')
@@ -270,7 +257,7 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 			{
 				SetForegroundWindow(w);
 				hr=pChild->accSelect(SELFLAG_TAKEFOCUS,vtSelf);
-				if ((giPwdProtection>=PP_ENCODED) && (*gptActions[iAction].szPwdEncryptedValue!=0))
+				if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 				{
 					char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
 					if (pszPassword!=NULL) 
@@ -281,11 +268,6 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 						SecureZeroMemory(pszPassword,strlen(pszPassword));
 						free(pszPassword);
 					}
-				}
-				else
-				{
-					TRACE((TRACE_PWD,_F_,"Champ %d Saisie pwd : '%s'",l,gptActions[iAction].szPwdEncryptedValue));
-					KBSim(FALSE,100,gptActions[iAction].szPwdEncryptedValue,TRUE);
 				}
 				//((T_SUIVI_ACTION*)lp)->iSuivi++;
 				bPwdFound=TRUE;
@@ -436,7 +418,7 @@ void FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 		
 		// Mot de passe = child de 2nd niveau n°4
 		rc=W7PopupSetTabOnField(w,pLevel1Child,4);
-		if ((giPwdProtection>=PP_ENCODED) && (*gptActions[iAction].szPwdEncryptedValue!=0))
+		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 		{
 			char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
 			if (pszPassword!=NULL) 
@@ -447,11 +429,6 @@ void FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 				SecureZeroMemory(pszPassword,strlen(pszPassword));
 				free(pszPassword);
 			}
-		}
-		else
-		{
-			TRACE((TRACE_PWD,_F_,"Champ Saisie pwd : '%s'",gptActions[iAction].szPwdEncryptedValue));
-			KBSim(FALSE,100,gptActions[iAction].szPwdEncryptedValue,TRUE);
 		}
 	}
 	else // W8 
@@ -486,7 +463,7 @@ void FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 		
 		// Mot de passe = child n°2
 		rc=W7PopupSetTabOnField(w,pLevel2Child,3);
-		if ((giPwdProtection>=PP_ENCODED) && (*gptActions[iAction].szPwdEncryptedValue!=0))
+		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 		{
 			char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
 			if (pszPassword!=NULL) 
@@ -497,11 +474,6 @@ void FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 				SecureZeroMemory(pszPassword,strlen(pszPassword));
 				free(pszPassword);
 			}
-		}
-		else
-		{
-			TRACE((TRACE_PWD,_F_,"Champ Saisie pwd : '%s'",gptActions[iAction].szPwdEncryptedValue));
-			KBSim(FALSE,100,gptActions[iAction].szPwdEncryptedValue,TRUE);
 		}
 	}
 

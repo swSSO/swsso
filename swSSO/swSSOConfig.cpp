@@ -154,11 +154,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			if (giDomainId!=1) SetWindowText(GetDlgItem(w,TX_DOMAIN),gszDomainLabel);
 
 			// remplit avec les valeurs de config (c'était dans PSN_SETACTIVE avant... ???)
-			if (giPwdProtection==PP_NONE)
-				SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_NONE));
-			else if (giPwdProtection==PP_ENCODED)
-				SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_ENCODED));
-			else if (giPwdProtection==PP_ENCRYPTED)
+			if (giPwdProtection==PP_ENCRYPTED)
 				SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_ENCRYPTED));
 			else 
 				SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_WINDOWS));
@@ -674,7 +670,7 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					GetDlgItemText(w,TB_ID3,gptActions[params->iAction].szId3Value,sizeof(gptActions[params->iAction].szId3Value));
 					GetDlgItemText(w,TB_ID4,gptActions[params->iAction].szId4Value,sizeof(gptActions[params->iAction].szId4Value));
 					GetDlgItemText(w,TB_PWD,szPassword,sizeof(szPassword));
-					if ((giPwdProtection>=PP_ENCODED) && *szPassword!=0)
+					if (*szPassword!=0) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 					{
 						pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
 						// 0.85B9 : remplacement de memset(szPassword,0,strlen(szPassword)); 
@@ -888,18 +884,20 @@ int GetConfigHeader()
 	TRACE((TRACE_ENTER,_F_, ""));
 	
 	char szPwdProtection[9+1];
+	int rc=-1;
 	
 	GetPrivateProfileString("swSSO","version","",gszCfgVersion,sizeof(gszCfgVersion),gszCfgFile);
 	TRACE((TRACE_INFO,_F_,"Version du fichier de configuration : %s",gszCfgVersion));
 	GetPrivateProfileString("swSSO","pwdProtection","",szPwdProtection,sizeof(szPwdProtection),gszCfgFile);
 	if (strcmp(szPwdProtection,"ENCRYPTED")==0)
 		giPwdProtection=PP_ENCRYPTED;
-	else if (strcmp(szPwdProtection,"ENCODED")==0)
-		giPwdProtection=PP_ENCODED;
-	else if (strcmp(szPwdProtection,"NONE")==0)
-		giPwdProtection=PP_NONE;
 	else if (strcmp(szPwdProtection,"WINDOWS")==0)
 		giPwdProtection=PP_WINDOWS;
+	else if (*szPwdProtection!=0)
+	{
+		TRACE((TRACE_ERROR,_F_,"pwdProtection=%d : valeur non supportee",giPwdProtection));
+		goto end;
+	}
 
 	gbSessionLock=GetConfigBoolValue("swSSO","sessionLock",FALSE,TRUE);
 
@@ -942,8 +940,10 @@ int GetConfigHeader()
 
 	// REMARQUE : la config proxy est lue plus loin dans le démarrage du main, sinon la clé n'est pas disponible
 	//            pour déchiffrer le mot de passe proxy !
-	TRACE((TRACE_LEAVE,_F_, ""));
-	return 0;
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
 }
 
 // ----------------------------------------------------------------------------------
@@ -1060,10 +1060,6 @@ int SaveConfigHeader()
 	WritePrivateProfileString("swSSO","version",gcszCfgVersion,gszCfgFile);
 	if (giPwdProtection==PP_ENCRYPTED)
 		strcpy_s(szPwdProtection,sizeof(szPwdProtection),"ENCRYPTED");
-	else if (giPwdProtection==PP_ENCODED)
-		strcpy_s(szPwdProtection,sizeof(szPwdProtection),"ENCODED");
-	else if (giPwdProtection==PP_NONE)
-		strcpy_s(szPwdProtection,sizeof(szPwdProtection),"NONE");
 	else if (giPwdProtection==PP_WINDOWS)
 		strcpy_s(szPwdProtection,sizeof(szPwdProtection),"WINDOWS");
 	WritePrivateProfileString("swSSO","pwdProtection",szPwdProtection,gszCfgFile);
@@ -1089,22 +1085,18 @@ int SaveConfigHeader()
 	sprintf_s(szItem,sizeof(szItem),"ProxyUser-%s",gszComputerName);
 	WritePrivateProfileString("swSSO",szItem,gszProxyUser,gszCfgFile);
 	sprintf_s(szItem,sizeof(szItem),"ProxyPwd-%s",gszComputerName);
-	// chiffrement du mot de passe proxy si PP_ENCRYPTED ou PP_ENCODED
+	// chiffrement du mot de passe proxy
 	if (*gszProxyPwd==0) // pas de mot de passe
 	{
 		WritePrivateProfileString("swSSO",szItem,"",gszCfgFile);
 	}
-	else if (giPwdProtection>=PP_ENCODED) 
+	else
 	{
 		char* pszEncryptedPassword=swCryptEncryptString(gszProxyPwd,ghKey1);
 		if (pszEncryptedPassword!=NULL)  // si erreur de chiffrement du mot de passe, on ne le sauvegarde pas...
 		{
 			WritePrivateProfileString("swSSO",szItem,pszEncryptedPassword,gszCfgFile);
 		}
-	}
-	else
-	{
-		WritePrivateProfileString("swSSO",szItem,gszProxyPwd,gszCfgFile);
 	}
 
 	// 0.80B9 : mémorise le nom de l'ordinateur (pour bouton "j'ai de la chance" dans config proxy)
@@ -1490,14 +1482,6 @@ int Migration093(HWND w,const char *szPwd)
 	char szItem[120+1]="";
 	BOOL bBackupOK=FALSE;
 	BYTE AESKeyData[AES256_KEY_LEN];
-
-	if (giPwdProtection==PP_NONE) // mot de passe en clair ==> rien à modifier !
-	{
-		strcpy_s(gszCfgVersion,sizeof(gszCfgVersion),gcszCfgVersion);
-		WritePrivateProfileString("swSSO","version",gcszCfgVersion,gszCfgFile);
-		rc=0;
-		goto end;
-	}
 
 	// recopie le fichier swsso.ini pour retour arrière en cas de problème !
 	strcpy_s(szCfgFileBackup,sizeof(szCfgFileBackup),gszCfgFile);
@@ -2176,16 +2160,9 @@ long GetMasterPwdLastChange(void)
 		// effet de bord : pour les utilisateurs actuels, changement imposé dès activation de la politique.
 		goto end;
 	}
-	if (giPwdProtection==PP_ENCRYPTED || giPwdProtection==PP_ENCODED)
-	{
-		pszDecryptedTime=swCryptDecryptString(szEncryptedTime,ghKey1);
-		if (pszDecryptedTime==NULL) goto end;
-		lrc=atoi(pszDecryptedTime);
-	}
-	else
-	{
-		lrc=atoi(szEncryptedTime);
-	}
+	pszDecryptedTime=swCryptDecryptString(szEncryptedTime,ghKey1);
+	if (pszDecryptedTime==NULL) goto end;
+	lrc=atoi(pszDecryptedTime);
 end:
 	if (pszDecryptedTime!=NULL) free(pszDecryptedTime);
 	TRACE((TRACE_LEAVE,_F_, "lrc=%d",lrc));
@@ -2214,16 +2191,9 @@ int SaveMasterPwdLastChange(void)
 	time(&t);
 	wsprintf(szTime,"%ld",t);
 	TRACE((TRACE_INFO,_F_,"szTime=%s",szTime));
-	if (giPwdProtection==PP_ENCRYPTED || giPwdProtection==PP_ENCODED)
-	{
-		pszEncryptedTime=swCryptEncryptString(szTime,ghKey1);
-		if (pszEncryptedTime==NULL) goto end;
-		WritePrivateProfileString("swSSO","LastPwdChange",pszEncryptedTime,gszCfgFile);
-	}
-	else
-	{
-		WritePrivateProfileString("swSSO","LastPwdChange",szTime,gszCfgFile);
-	}
+	pszEncryptedTime=swCryptEncryptString(szTime,ghKey1);
+	if (pszEncryptedTime==NULL) goto end;
+	WritePrivateProfileString("swSSO","LastPwdChange",pszEncryptedTime,gszCfgFile);
 	rc=0;
 end:
 	if (pszEncryptedTime!=NULL) free(pszEncryptedTime);
@@ -2473,19 +2443,12 @@ static int CALLBACK ChangeApplicationPasswordDialogProc(HWND w,UINT msg,WPARAM w
 					char szNewPwd1[LEN_PWD+1];
 					GetDlgItemText(w,TB_NEW_PWD1,szNewPwd1,sizeof(szNewPwd1));
 					// chiffre le mot de passe
-					if (giPwdProtection>=PP_ENCODED)
+					char *pszEncryptedPassword=swCryptEncryptString(szNewPwd1,ghKey1);
+					SecureZeroMemory(szNewPwd1,strlen(szNewPwd1));
+					if (pszEncryptedPassword!=NULL)
 					{
-						char *pszEncryptedPassword=swCryptEncryptString(szNewPwd1,ghKey1);
-						SecureZeroMemory(szNewPwd1,strlen(szNewPwd1));
-						if (pszEncryptedPassword!=NULL)
-						{
-							strcpy_s(gptActions[iAction].szPwdEncryptedValue,sizeof(gptActions[iAction].szPwdEncryptedValue),pszEncryptedPassword);
-							free(pszEncryptedPassword);
-						}
-					}
-					else
-					{
-						strcpy_s(gptActions[iAction].szPwdEncryptedValue,sizeof(gptActions[iAction].szPwdEncryptedValue),szNewPwd1);
+						strcpy_s(gptActions[iAction].szPwdEncryptedValue,sizeof(gptActions[iAction].szPwdEncryptedValue),pszEncryptedPassword);
+						free(pszEncryptedPassword);
 					}
 					WritePrivateProfileString(gptActions[iAction].szApplication,"pwdValue",gptActions[iAction].szPwdEncryptedValue,gszCfgFile);
 					EndDialog(w,IDOK);

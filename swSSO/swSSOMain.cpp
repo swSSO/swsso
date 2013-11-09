@@ -38,7 +38,7 @@
 #include "ISimpleDOMDocument_i.c"
 
 // Un peu de globales...
-const char gcszCurrentVersion[]="097";	// 082 = 0.82
+const char gcszCurrentVersion[]="098";	// 082 = 0.82
 const char gcszCurrentBeta[]="0000";	// 0851 = 085 beta 1, 0000 pas de beta
 
 static HWND gwMain=NULL;
@@ -46,7 +46,7 @@ static HWND gwMain=NULL;
 HINSTANCE ghInstance;
 HRESULT   ghrCoIni=E_FAIL;	 // code retour CoInitialize()
 bool gbSSOActif=TRUE;	 // Etat swSSO : actif / désactivé	
-int giPwdProtection; // Protection des mots de passe : PP_NONE | PP_ENCODED | PP_ENCRYPTED | PP_WINDOWS
+int giPwdProtection; // Protection des mots de passe : PP_ENCRYPTED | PP_WINDOWS
 
 T_ACTION *gptActions;  // tableau d'actions
 int giNbActions;		// nb d'actions dans le tableau
@@ -240,7 +240,7 @@ int KBSimSSO(HWND w, int iAction)
 	char szDecryptedPassword[LEN_PWD+1];
 
 	// déchiffrement du champ mot de passe
-	if ((giPwdProtection>=PP_ENCODED) && (*gptActions[iAction].szPwdEncryptedValue!=0))
+	if ((*gptActions[iAction].szPwdEncryptedValue!=0)) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 	{
 		char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
 		if (pszPassword!=NULL) 
@@ -1244,186 +1244,6 @@ static void UnloadIcons(void)
 }
 
 //-----------------------------------------------------------------------------
-// PwdChoiceDialogProc()
-//-----------------------------------------------------------------------------
-// DialogProc de la boite de choix de stratégie de mot de passe
-// (fenêtre ouverte lorsqu'aucun fichier de config n'est trouvé)
-//-----------------------------------------------------------------------------
-static int CALLBACK PwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
-{
-	int rc=FALSE;
-	switch (msg)
-	{
-		case WM_INITDIALOG:
-			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
-			// icone ALT-TAB
-			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
-			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
-			// init champs de saisie
-			//SendMessage(GetDlgItem(w,TB_PWD1),EM_SETPASSWORDCHAR,(WPARAM)'*',0);
-			//SendMessage(GetDlgItem(w,TB_PWD2),EM_SETPASSWORDCHAR,(WPARAM)'*',0);
-			SendMessage(GetDlgItem(w,TB_PWD1),EM_LIMITTEXT,LEN_PWD,0);
-			SendMessage(GetDlgItem(w,TB_PWD2),EM_LIMITTEXT,LEN_PWD,0);
-			// titres en gras
-			SetTextBold(w,TX_FRAME);
-			SetTextBold(w,RB_PWD_ENCRYPTED);
-			SetTextBold(w,RB_PWD_ENCODED);
-			SetTextBold(w,RB_PWD_CLEAR);
-			// 0.76
-			if (!gbEnableOption_SavePassword) EnableWindow(GetDlgItem(w,CK_SAVE),FALSE);
-			// premier radio bouton coché par défaut
-			CheckDlgButton(w,RB_PWD_ENCRYPTED,BST_CHECKED);
-			// global policy
-			if (gbPasswordChoiceLevel>PP_NONE) 
-			{
-				EnableWindow(GetDlgItem(w,RB_PWD_CLEAR),FALSE);
-				EnableWindow(GetDlgItem(w,TX_PWD_CLEAR),FALSE);
-			}
-			if (gbPasswordChoiceLevel>PP_ENCODED) 
-			{
-				EnableWindow(GetDlgItem(w,RB_PWD_ENCODED),FALSE);
-				EnableWindow(GetDlgItem(w,TX_PWD_ENCODED),FALSE);
-			}
-			MACRO_SET_SEPARATOR;
-			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
-			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
-			if (giRefreshTimer==giTimer) giRefreshTimer=11;
-			SetTimer(w,giRefreshTimer,200,NULL);
-			break;
-		case WM_TIMER:
-			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
-			if (giRefreshTimer==(int)wp) 
-			{
-				KillTimer(w,giRefreshTimer);
-				InvalidateRect(w,NULL,FALSE);
-				SetForegroundWindow(w); 
-			}
-			break;
-		case WM_COMMAND:
-			switch (LOWORD(wp))
-			{
-				case IDOK:
-					if (IsDlgButtonChecked(w,RB_PWD_CLEAR)==BST_CHECKED)
-					{
-						giPwdProtection=PP_NONE;
-						SaveConfigHeader();
-						EndDialog(w,IDOK);
-					}
-					else if (IsDlgButtonChecked(w,RB_PWD_ENCODED)==BST_CHECKED)
-					{
-						char szPBKDF2KeySalt[PBKDF2_SALT_LEN*2+1];
-						BYTE AESKeyData[AES256_KEY_LEN];
-						giPwdProtection=PP_ENCODED;
-						// génère le sel qui sera pris en compte pour la dérivation de la clé AES
-						swGenPBKDF2Salt();
-						swCryptDeriveKey(gcszStaticPwd093,&ghKey1,AESKeyData);
-						SaveConfigHeader();
-						// encodage base64 et stockage des sels et du mot de passe dans le fichier .ini
-						swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2KeySalt);
-						WritePrivateProfileString("swSSO","keySalt",szPBKDF2KeySalt,gszCfgFile);
-						EndDialog(w,IDOK);
-					}
-					else if (IsDlgButtonChecked(w,RB_PWD_ENCRYPTED)==BST_CHECKED)
-					{
-						char szPwd1[LEN_PWD+1];
-						GetDlgItemText(w,TB_PWD1,szPwd1,sizeof(szPwd1));
-						// Password Policy
-						if (!IsPasswordPolicyCompliant(szPwd1))
-						{
-							MessageBox(w,gszPwdPolicy_Message,"swSSO",MB_OK | MB_ICONEXCLAMATION);
-						}
-						else
-						{
-							BYTE AESKeyData[AES256_KEY_LEN];
-							giPwdProtection=PP_ENCRYPTED;
-							// génère le sel qui sera pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
-							swGenPBKDF2Salt();
-							swCryptDeriveKey(szPwd1,&ghKey1,AESKeyData);
-							StoreMasterPwd(szPwd1);
-							RecoveryChangeAESKeyData(AESKeyData);
-							// inscrit la date de dernier changement de mot de passe dans le .ini
-							// cette valeur est chiffré par le (nouveau) mot de passe et écrite seulement si politique mdp définie
-							SaveMasterPwdLastChange();
-							if (IsDlgButtonChecked(w,CK_SAVE)==BST_CHECKED)
-							{
-								gbRememberOnThisComputer=TRUE;
-								DPAPIStoreMasterPwd(szPwd1);
-							}
-							// 0.85B9 : remplacement de ZeroMemory(szPwd1,sizeof(szPwd1));
-							SecureZeroMemory(szPwd1,strlen(szPwd1));
-							SaveConfigHeader();
-							EndDialog(w,IDOK);
-						}
-					}
-					break;
-				case IDCANCEL:
-					EndDialog(w,IDCANCEL);
-					break;
-				case RB_PWD_CLEAR:
-				case RB_PWD_ENCODED:
-					EnableWindow(GetDlgItem(w,TB_PWD1),FALSE);
-					EnableWindow(GetDlgItem(w,TB_PWD2),FALSE);
-					EnableWindow(GetDlgItem(w,CK_SAVE),FALSE);
-					EnableWindow(GetDlgItem(w,IDOK),TRUE);
-					break;
-				case RB_PWD_ENCRYPTED:
-				{
-					char szPwd1[LEN_PWD+1];
-					char szPwd2[LEN_PWD+1];
-					int len1,len2;
-					EnableWindow(GetDlgItem(w,TB_PWD1),TRUE);
-					EnableWindow(GetDlgItem(w,TB_PWD2),TRUE);
-					if (gbEnableOption_SavePassword) EnableWindow(GetDlgItem(w,CK_SAVE),TRUE);
-					len1=GetDlgItemText(w,TB_PWD1,szPwd1,sizeof(szPwd1));
-					len2=GetDlgItemText(w,TB_PWD2,szPwd2,sizeof(szPwd2));
-					if (len1==len2 && len1!=0 && strcmp(szPwd1,szPwd2)==0)
-						EnableWindow(GetDlgItem(w,IDOK),TRUE);
-					else
-						EnableWindow(GetDlgItem(w,IDOK),FALSE);
-					break;
-				}
-				case TB_PWD1:
-				case TB_PWD2:
-				{
-					char szPwd1[LEN_PWD+1];
-					char szPwd2[LEN_PWD+1];
-					int len1,len2;
-					if (HIWORD(wp)==EN_CHANGE)
-					{
-						len1=GetDlgItemText(w,TB_PWD1,szPwd1,sizeof(szPwd1));
-						len2=GetDlgItemText(w,TB_PWD2,szPwd2,sizeof(szPwd2));
-						if (len1==len2 && len1!=0 && strcmp(szPwd1,szPwd2)==0)
-							EnableWindow(GetDlgItem(w,IDOK),TRUE);
-						else
-							EnableWindow(GetDlgItem(w,IDOK),FALSE);
-					}
-					break;
-				}
-			}
-			break;
-		case WM_CTLCOLORSTATIC:
-			int ctrlID;
-			ctrlID=GetDlgCtrlID((HWND)lp);
-			switch(ctrlID)
-			{
-				case TX_FRAME:
-					SetBkMode((HDC)wp,TRANSPARENT);
-					rc=(int)GetStockObject(HOLLOW_BRUSH);
-					break;
-			}
-			break;
-		case WM_HELP:
-			Help();
-			break;
-		case WM_PAINT:
-			DrawLogoBar(w);
-			rc=TRUE;
-			break;
-	}
-	return rc;
-}
-
-//-----------------------------------------------------------------------------
 // SimplePwdChoiceDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la boite de choix simplifiée de stratégie de mot de passe
@@ -2177,11 +1997,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	{
 		strcpy_s(gszCfgVersion,4,gcszCfgVersion);
 		// affichage boite de choix de protection mots de passe
-		if (gbPasswordChoiceLevel==PP_ENCRYPTED)
-		{
-			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SIMPLE_PWD_CHOICE),NULL,SimplePwdChoiceDialogProc)!=IDOK) goto end;
-		}
-		else if (gbPasswordChoiceLevel==PP_WINDOWS)
+		if (gbPasswordChoiceLevel==PP_WINDOWS)
 		{
 			if (InitWindowsSSO()) goto end;
 			giPwdProtection=PP_WINDOWS;
@@ -2189,7 +2005,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		}
 		else
 		{
-			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_PWD_CHOICE),NULL,PwdChoiceDialogProc)!=IDOK) goto end;
+			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SIMPLE_PWD_CHOICE),NULL,SimplePwdChoiceDialogProc)!=IDOK) goto end;
 		}
 	}
 	else // 
@@ -2217,27 +2033,6 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			else // il y a eu une réinit et ça n'a pas marché :-(
 			{
 				goto end;
-			}
-		}
-		else if (giPwdProtection==PP_ENCODED)
-		{
-			BYTE AESKeyData[AES256_KEY_LEN];
-			if (*gszCfgVersion==0 || atoi(gszCfgVersion)<93)
-			{
-				swCryptDeriveKey(gcszStaticPwd092,&ghKey1,AESKeyData);
-				// la migration est faite plus tard une fois que les configs sont chargées en mémoire
-				strcpy_s(szPwdMigration093,LEN_PWD+1,gcszStaticPwd093);
-			}
-			else
-			{
-				char szPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
-				// Lecture du sel dérivation de clé
-				GetPrivateProfileString("swSSO","keySalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
-				if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) { iError=-2; goto end; }
-				swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
-				gSalts.bPBKDF2KeySaltReady=TRUE;
-				TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gbufPBKDF2KeySalt"));
-				swCryptDeriveKey(gcszStaticPwd093,&ghKey1,AESKeyData);
 			}
 		}
 		else if (giPwdProtection==PP_WINDOWS) // couplage mot de passe Windows

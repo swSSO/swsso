@@ -253,30 +253,6 @@ FONT 8, "Tahoma"
 }
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-IDD_PWD_CHOICE DIALOG 0, 0, 345, 287
-STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
-CAPTION "swSSO - Password Manager"
-FONT 8, "Tahoma"
-{
-    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 327, 1
-    CTEXT           "Thanks for choosing swSSO!", TX_FRAME, 41, 11, 239, 12, SS_CENTER
-    LTEXT           "Please chose your security level below:", IDC_STATIC, 7, 43, 327, 21, NOT WS_GROUP | SS_LEFT
-    AUTORADIOBUTTON "&I want to encrypt my logins and passwords (recommanded)", RB_PWD_ENCRYPTED, 7, 66, 327, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&I want to encrypt my logins and passwords, but I don't want any more password (not recommended!)", RB_PWD_ENCODED, 7, 172, 327, 17, WS_TABSTOP | BS_MULTILINE
-    AUTORADIOBUTTON "&I do not want to encrypt my logins and passwords (not recommended at all!)", RB_PWD_CLEAR, 7, 225, 327, 10, WS_TABSTOP
-    LTEXT           "Password:", TX_PWD1, 19, 112, 50, 8, SS_LEFT
-    EDITTEXT        TB_PWD1, 78, 109, 151, 13, WS_GROUP | ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT           "Confirmation:", TX_PWD2, 19, 126, 50, 8, SS_LEFT
-    EDITTEXT        TB_PWD2, 78, 125, 151, 13, WS_GROUP | ES_AUTOHSCROLL | ES_PASSWORD
-    AUTOCHECKBOX    "&Remember my password (please note you will be prompted for password if you use swSSO on another computer or after Windows reinstallation)", CK_SAVE, 19, 141, 315, 25, BS_MULTILINE
-    DEFPUSHBUTTON   "OK", IDOK, 229, 266, 50, 14, WS_DISABLED
-    PUSHBUTTON      "Cancel", IDCANCEL, 284, 266, 50, 14
-    LTEXT           "You must define a master password that will be used to protect all logins and passwords. Be sure to use a robust password, but do not forget it: there is no way to recover it.", IDC_STATIC, 19, 79, 312, 27, SS_LEFT
-    LTEXT           "Your passwords will be encrypted with a static key: any other swSSO user will be able to decrypt your passwords. Use this option only if you do not store sensible logins and passwords.", TX_PWD_ENCODED, 19, 193, 315, 27, SS_LEFT
-    LTEXT           "Caution: choose this option at your own risk!", TX_PWD_CLEAR, 19, 238, 315, 20, SS_LEFT
-}
-
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDD_SELECT_DOMAIN DIALOG 0, 0, 285, 100
 STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 CAPTION "swSSO - Choose your domain"
@@ -324,12 +300,12 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "0", TX_NBSSO, 101, 182, 230, 8, SS_LEFT
     CTEXT           "http://www.swSSO.com", TX_URL, 206, 16, 95, 10, SS_CENTER, WS_EX_TRANSPARENT
     LTEXT           "Informations", TX_INFORMATIONS, 7, 78, 44, 11, SS_LEFT
-    LTEXT           "Passwords encryted:", -1, 17, 137, 79, 8, SS_LEFT
+    LTEXT           "Encryption algorithm:", -1, 17, 137, 79, 8, SS_LEFT
     LTEXT           "???", TX_PWDENCRYPTED, 101, 137, 171, 8, SS_LEFT
     LTEXT           "Configuration file:", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT
     LTEXT           "This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT
     LTEXT           "License", TX_LICENCE, 7, 41, 28, 11, SS_LEFT
-	LTEXT           "0.98 ALPHA (10/19/2013)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT
+	LTEXT           "0.98 ALPHA (11/09/2013)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT
     LTEXT           "Portal:", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1
@@ -383,8 +359,7 @@ STRINGTABLE
     IDS_COMBOTYPE2                "Browser authentication popup"
     IDS_COMBOTYPE3                "Windows application"
     IDS_OLDVERSION                "0.42 or older"
-    IDS_PP_ENCRYPTED              "Yes (AES-256) - master password"
-    IDS_PP_NONE                   "No"
+    IDS_PP_ENCRYPTED              "AES-256 & PBKDF2 with master password"
     IDS_DELETE                    "Do you really want to delete %s?"
     IDS_MENU_ACTIVER              "Enable"
     IDS_MENU_AJOUTER_APPLI        "Add an application"
@@ -464,7 +439,6 @@ STRINGTABLE
     IDS_LAUNCH_APP_ERROR          "Cannot run application (error %d) :\r\n- Application: %s\r\n- Parameters: %s"
     IDS_COMBOTYPE4                "Web site (smart configuration)"
     IDS_MENU_AJOUTER_COMPTE       "Add account"
-    IDS_PP_ENCODED                "No (encoded)"
     IDS_ERROR_INI_SAV             "Cannot write the backup copy of your configuration file (error %d).\r\nIf this file already exists, please delete it and restart swSSO:\r\n%s"
     IDS_ERROR_INI_RESTORED        "Encryption algorithm migration failed.\r\nYour configuration file has not been modified: you can continue using v0.92.\r\nPlease report this problem to the support."
     IDS_ERROR_INI_NOT_RESTORED    "Encryption algorithm migration failed.\r\nYour configuration file has been backed up here:\r\n%s\r\n. Rename it 'swsso.ini' to continue using v0.92.\r\nPlease report this problem to the support."
@@ -486,7 +460,7 @@ STRINGTABLE
 	IDS_RECOVERY_ERROR_FORMAT		"Incorrect response format."
 	IDS_RECOVERY_NEW_PWD			"Please enter a new master password."
 	IDS_ERROR_BADRESPONSEFILE		"Bad response file."
-	IDS_PP_WINDOWS					"Yes (AES-256) - Windows password"
+	IDS_PP_WINDOWS					"AES-256 & PBKDF2 with Windows password"
 	IDS_PLEASE_ENTER_WINDOWS_PASSWORD	"Please enter your Windows password below:"
 }
 
@@ -736,30 +710,6 @@ FONT 8, "Tahoma"
 }
 
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-IDD_PWD_CHOICE DIALOG 0, 0, 345, 287
-STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
-CAPTION "swSSO - Gestionnaire de mots de passe"
-FONT 8, "Tahoma"
-{
-    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 327, 1
-    CTEXT           "Bienvenue dans swSSO !", TX_FRAME, 41, 11, 239, 12, SS_CENTER
-    LTEXT           "Si vous le souhaitez, swSSO peut chiffrer les mots de passe d'accès à vos applications et sites Web qui sont stockés dans le fichier de configuration swSSO.ini. Entre confort et sécurité, à vous de choisir :", IDC_STATIC, 7, 43, 327, 21, NOT WS_GROUP | SS_LEFT
-    AUTORADIOBUTTON "&Je veux que mes mots de passe soient chiffrés (recommandé)", RB_PWD_ENCRYPTED, 7, 66, 327, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "J&e ne veux pas que mes mots de passe soient stockés en clair dans le fichier swSSO.ini, mais je ne veux pas de nouveau mot de passe (peu recommandable)", RB_PWD_ENCODED, 7, 172, 327, 17, WS_TABSTOP | BS_MULTILINE
-    AUTORADIOBUTTON "Je &ne veux pas chiffrer mes mots de passe (non recommandé)", RB_PWD_CLEAR, 7, 225, 327, 10, WS_TABSTOP
-    LTEXT           "Mot de passe :", TX_PWD1, 19, 112, 50, 8, SS_LEFT
-    EDITTEXT        TB_PWD1, 78, 109, 151, 13, WS_GROUP | ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT           "Confirmation :", TX_PWD2, 19, 126, 50, 8, SS_LEFT
-    EDITTEXT        TB_PWD2, 78, 125, 151, 13, WS_GROUP | ES_AUTOHSCROLL | ES_PASSWORD
-    AUTOCHECKBOX    "&Se souvenir de mon mot de passe sur cet ordinateur (vous devrez néanmoins fournir votre mot de passe si vous utilisez swSSO sur un autre ordinateur... ou si vous réinstallez Windows). En cas de doute, merci de vous référer au manuel d'utilisation.", CK_SAVE, 19, 141, 315, 25, BS_MULTILINE
-    DEFPUSHBUTTON   "OK", IDOK, 229, 266, 50, 14, WS_DISABLED
-    PUSHBUTTON      "Annuler", IDCANCEL, 284, 266, 50, 14
-    LTEXT           "Vous devez définir un mot de passe qui vous sera demandé à chaque lancement de swSSO (sauf si vous cochez la case ci-dessous). Attention, choisissez un mot de passe complexe, mais surtout ne le perdez pas, il n'existe aucun moyen pour le récupérer !", IDC_STATIC, 19, 79, 312, 27, SS_LEFT
-    LTEXT           "Vos mots de passe seront simplement brouillés : n'importe quel autre utilisateur de swSSO pourra utiliser vos mots de passe. Ce niveau de protection permet juste de ne pas avoir les mots de passe directement lisibles dans le fichier de configuration.", TX_PWD_ENCODED, 19, 193, 315, 27, SS_LEFT
-    LTEXT           "Attention : n'utilisez cette option que si vous sécurisez le fichier swSSO par un autre moyen ou si vraiment les applications et sites auxquels vous accédez sont peu sensibles...", TX_PWD_CLEAR, 19, 238, 315, 20, SS_LEFT
-}
-
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 IDD_SELECT_DOMAIN DIALOG 0, 0, 285, 100
 STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 CAPTION "swSSO - Choix du domaine"
@@ -807,12 +757,12 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "0", TX_NBSSO, 101, 182, 230, 8, SS_LEFT
     CTEXT           "http://www.swsso.fr", TX_URL, 206, 16, 95, 10, SS_CENTER, WS_EX_TRANSPARENT
     LTEXT           "Informations", TX_INFORMATIONS, 7, 78, 44, 11, SS_LEFT
-    LTEXT           "Mots de passe chiffrés :", -1, 17, 137, 79, 8, SS_LEFT
+    LTEXT           "Algorithme chiffrement :", -1, 17, 137, 79, 8, SS_LEFT
     LTEXT           "???", TX_PWDENCRYPTED, 101, 137, 171, 8, SS_LEFT
     LTEXT           "Fichier de configuration :", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT
     LTEXT           "Licence", TX_LICENCE, 7, 41, 28, 11, SS_LEFT
-    LTEXT           "Version 0.98 ALPHA (19/10/2013)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT
+    LTEXT           "Version 0.98 ALPHA (09/11/2013)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT
     LTEXT           "Portail :", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1
@@ -861,8 +811,7 @@ STRINGTABLE
     IDS_COMBOTYPE2                "Popup d'authentification du navigateur"
     IDS_COMBOTYPE3                "Fenêtre Windows"
     IDS_OLDVERSION                "0.42 ou inférieure"
-    IDS_PP_ENCRYPTED              "Oui (AES-256) - mot de passe maître"
-    IDS_PP_NONE                   "Non"
+    IDS_PP_ENCRYPTED              "AES-256 et PBKDF2 (mot de passe maître)"
     IDS_DELETE                    "Confirmez-vous la suppression de l'application %s ?"
     IDS_MENU_ACTIVER              "&Activer"
     IDS_MENU_AJOUTER_APPLI        "A&jouter une application"
@@ -942,7 +891,6 @@ STRINGTABLE
     IDS_LAUNCH_APP_ERROR          "L'application n'a pas pu être lancée (erreur %d) :\r\n- Application : %s\r\n- Paramètres : %s"
     IDS_COMBOTYPE4                "Site Web (configuration simplifiée)"
     IDS_MENU_AJOUTER_COMPTE       "Ajouter un co&mpte"
-    IDS_PP_ENCODED                "Non (encodage simple)"
     IDS_ERROR_INI_SAV             "swSSO n'a pas pu sauvegarder votre fichier de configuration (erreur %d).\r\nSi le fichier suivant existe déjà, supprimez-le et relancez swSSO :\r\n%s\r\nEn cas de doute contactez le support."
     IDS_ERROR_INI_RESTORED        "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été restauré, vous pouvez continuer à utiliser la version 0.92 de swSSO.\r\nMerci de signaler ce problème au support."
     IDS_ERROR_INI_NOT_RESTORED    "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été sauvegardé ici :\r\n%s\r\n. Renommez-le en swsso.ini pour continuer à utiliser la version 0.92 de swSSO.\r\nMerci néanmoins de ce problème au support."
@@ -964,7 +912,7 @@ STRINGTABLE
 	IDS_RECOVERY_ERROR_FORMAT		"Le format de la réponse est incorrect."
 	IDS_RECOVERY_NEW_PWD			"Veuillez définir votre nouveau mot de passe."
 	IDS_ERROR_BADRESPONSEFILE		"Ce fichier ne contient pas de réponse valide."
-	IDS_PP_WINDOWS					"Oui (AES-256) - mot de passe Windows"
+	IDS_PP_WINDOWS					"AES-256 et PBKDF2 (mot de passe Windows)"
 	IDS_PLEASE_ENTER_WINDOWS_PASSWORD	"Veuillez saisir ci-dessous votre mot de passe Windows :"
 }
 IDM_PWD_MENU MENU DISCARDABLE

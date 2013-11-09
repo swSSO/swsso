@@ -292,7 +292,7 @@ static void DoDOMAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_FIREFOX *ptS
 			TRACE((TRACE_INFO,_F_,"tag(pwd) trouve = '%s'",szNodeTagName));
 			SetForegroundWindow(ptSuivi->w);
 			hr=pAccessible->accSelect(SELFLAG_TAKEFOCUS,index);
-			if ((giPwdProtection>=PP_ENCODED) && (*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0))
+			if ((*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0)) 
 			{
 				char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
 				if (pszPassword!=NULL) 
@@ -302,10 +302,6 @@ static void DoDOMAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_FIREFOX *ptS
 					SecureZeroMemory(pszPassword,strlen(pszPassword));
 					free(pszPassword);
 				}
-			}
-			else
-			{
-				KBSim(FALSE,200,gptActions[ptSuivi->iAction].szPwdEncryptedValue,TRUE);
 			}
 			// mémorise les infos permettant de faire la simulation de frappe clavier sur le
 			// champ mot de passe quand tout aura été rempli.
