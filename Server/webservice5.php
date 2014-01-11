@@ -7,7 +7,7 @@ include('util.php');
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2013 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -37,7 +37,7 @@ include('util.php');
 // Commandes : isalive, getversion, putconfig, getconfig et getdomains
 //------------------------------------------------------------------------------
 
-$swssoVersion="098:0000";
+$swssoVersion="098:0991";
 
 // ------------------------------------------------------------
 // isalive

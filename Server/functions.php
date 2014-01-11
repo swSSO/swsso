@@ -6,7 +6,7 @@ include('variables.php');
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2013 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   

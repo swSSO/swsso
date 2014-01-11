@@ -62,7 +62,9 @@ static void ShowContextMenu(HWND w)
 	
 	// 0.92B6 : on laisse le menu même si case décochée, mais on fait config en local
 	// 0.92B8 : nouveau paramètre dans les policies pour masquer menu "ajouter cette application"
-	 if (gbShowMenu_AddApp) 
+	// ISSUE#99 / 0.99B1 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
+	// if (gbShowMenu_AddApp) 
+	if (gbShowMenu_AddThisApp)
 	{
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_THIS_APPLI,GetString(IDS_MENU_THIS_APPLI));
 	}

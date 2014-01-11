@@ -8,7 +8,7 @@ include('functions.php');
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2013 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -33,7 +33,7 @@ include('functions.php');
 // 
 //-----------------------------------------------------------------------------
 
-$title="<title>swSSO - Serveur de configuration v0.97</title>";
+$title="<title>swSSO - Serveur de configuration v0.99</title>";
 
 // ------------------------------------------------------------
 // showall : génère une page html avec l'ensemble des configs actives

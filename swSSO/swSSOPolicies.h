@@ -60,6 +60,8 @@
 #define REGVALUE_SHOWMENU_ADDCATEG					"ShowAddCategMenu"
 #define REGVALUE_SHOWMENU_DUPLICATE					"ShowDuplicateMenu"
 #define REGVALUE_SHOWMENU_ADDACCOUNT				"ShowAddAccountMenu"
+// ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
+#define REGVALUE_SHOWMENU_ADDTHISAPP				"ShowAddThisAppMenu"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -87,6 +89,9 @@ extern BOOL gbShowMenu_Delete;
 extern BOOL gbShowMenu_AddCateg;
 extern BOOL gbShowMenu_Duplicate;
 extern BOOL gbShowMenu_AddAccount;
+// ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
+extern BOOL gbShowMenu_AddThisApp;
+
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
 //-----------------------------------------------------------------------------

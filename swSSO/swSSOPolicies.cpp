@@ -63,6 +63,8 @@ BOOL gbShowMenu_Delete=TRUE;
 BOOL gbShowMenu_AddCateg=TRUE;
 BOOL gbShowMenu_Duplicate=TRUE;
 BOOL gbShowMenu_AddAccount=TRUE;
+// ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
+BOOL gbShowMenu_AddThisApp=TRUE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -230,6 +232,11 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDACCOUNT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowMenu_AddAccount=(BOOL)dwValue; 
+
+		// ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDTHISAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AddThisApp=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -448,6 +455,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddCateg=%d"			,gbShowMenu_AddCateg));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_Duplicate=%d"			,gbShowMenu_Duplicate));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddAccount=%d"		,gbShowMenu_AddAccount));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddThisApp=%d"		,gbShowMenu_AddThisApp));
 	TRACE((TRACE_INFO,_F_,"PASSWORD -------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
