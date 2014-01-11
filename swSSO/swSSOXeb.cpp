@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2013 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -45,7 +45,8 @@ typedef struct
 	int iPwdIndex;
 	int iNbPwdFound;
 	int iTextFieldIndex;
-	char szClassName[128+1];
+	char szClassName[128+1]; // classe de fenêtre recherchée
+	char szExclude[128+1]; // classe de fenêtre à exclure : si trouvée, on arrête l'énum avec retour null
 } T_SUIVI_ACCESSIBLE;
 
 // ----------------------------------------------------------------------------------
@@ -60,7 +61,13 @@ static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
 
 	GetClassName(w,szClassName,sizeof(szClassName));
 	TRACE((TRACE_DEBUG,_F_,"Fenetre classe=%s w=0x%08lx",szClassName,w));
-	if (strcmp(szClassName,((T_SUIVI_ACCESSIBLE*)lp)->szClassName)==0)
+	if (strcmp(szClassName,((T_SUIVI_ACCESSIBLE*)lp)->szExclude)==0)
+	{
+		((T_SUIVI_ACCESSIBLE*)lp)->w=NULL;
+		TRACE((TRACE_INFO,_F_,"Fenetre classe=%s w=0x%08lx --> stoppe l'enumeration, retourne NULL",szClassName,w));
+		rc=FALSE;
+	}
+	else if (strcmp(szClassName,((T_SUIVI_ACCESSIBLE*)lp)->szClassName)==0)
 	{
 		((T_SUIVI_ACCESSIBLE*)lp)->w=w;
 		TRACE((TRACE_INFO,_F_,"Fenetre classe=%s w=0x%08lx",szClassName,w));
@@ -314,8 +321,15 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 	{
 		// enum des fils à la recherche de la fenêtre de rendu Web
 		strcpy_s(tSuivi.szClassName,sizeof(tSuivi.szClassName),"Chrome_RenderWidgetHostHWND");
+		// ISSUE #98 . 0.99 : pour chrome 33 ou 34+, l'énumération refonctionne (cf ISSUE#95 plus bas) mais la fenêtre
+		// qu'on récupère ne fonctionne pas. Elle a un vtRole.lVal=0x0000000a au lieu de vtRole.lVal=0x0000000f, et 0 childs !
+		// La version 34 de Chrome se reconnait grace à la fenêtre de classe static qui est remontée juste avant celle 
+		// qu'on cherche, du coup si je trouve fenêtre static, je rebranche sur la recherche sans énumération
+		// 11/01-15:53:58:470 DEBUG WebEnumChildProc Fenetre classe=Static w=0x00030618
+		// 11/01-15:53:58:470 DEBUG WebEnumChildProc Fenetre classe=Chrome_RenderWidgetHostHWND w=0x00080120
+		strcpy_s(tSuivi.szExclude,sizeof(tSuivi.szExclude),"Static");
 		EnumChildWindows(w,WebEnumChildProc,(LPARAM)&tSuivi);
-		if (tSuivi.w==NULL) 
+		if (tSuivi.w==NULL)
 		{ 
 			// ISSUE#95 / 0.98 : pour Chome 31 ou 32+, impossible de rechercher la fenêtre fille, on est obligé de passer par IAccessible :
 			// La fenêtre principale a 1 child de niveau 1, il faut prendre le 1er.

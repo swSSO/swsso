@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `categ` (
   `domainId` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
-INSERT INTO `categ` (label,domainId) VALUES ("Non classé",1);
+INSERT INTO `categ` (id,label,domainId) VALUES (0,"Non classé",1);
 
 CREATE TABLE IF NOT EXISTS `config` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
