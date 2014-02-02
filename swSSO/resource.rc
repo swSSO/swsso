@@ -298,7 +298,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Statistics", TX_STATISTIQUES, 7, 168, 41, 10, SS_LEFT
     LTEXT           "Number of SSO:", -1, 17, 182, 82, 8, SS_LEFT
     LTEXT           "0", TX_NBSSO, 101, 182, 230, 8, SS_LEFT
-    CTEXT           "http://www.swSSO.com", TX_URL, 206, 16, 95, 10, SS_CENTER, WS_EX_TRANSPARENT
+    CTEXT           "http://www.swsso.com", TX_URL, 206, 16, 95, 10, SS_CENTER, WS_EX_TRANSPARENT
     LTEXT           "Informations", TX_INFORMATIONS, 7, 78, 44, 11, SS_LEFT
     LTEXT           "Encryption algorithm:", -1, 17, 137, 79, 8, SS_LEFT
     LTEXT           "???", TX_PWDENCRYPTED, 101, 137, 171, 8, SS_LEFT

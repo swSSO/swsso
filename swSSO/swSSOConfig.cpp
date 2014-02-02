@@ -4124,7 +4124,7 @@ void InternetCheckVersion()
 		if (MessageBox(NULL,szMsg,"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES)
 		{
 			if (bBeta)
-				ShellExecute(NULL,"open","https://code.google.com/p/swsso/downloads/list",NULL,"",SW_SHOW );
+				ShellExecute(NULL,"open","http://www.swsso.fr/download/beta",NULL,"",SW_SHOW );
 			else
 				ShellExecute(NULL,"open","http://www.swsso.fr",NULL,"",SW_SHOW );
 		}

@@ -171,9 +171,10 @@ void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szVal
 	hr=pAccessible->accSelect(SELFLAG_TAKEFOCUS,index);
 
 	// bidouille sur 0.95 pour crédit du nord
-	if (SysStringLen(bstrPreviousValue)==17)
+	if (SysStringLen(bstrPreviousValue)==17) // votre identifiant ou code confidentiel
 	{
 		bErase=FALSE;
+		TRACE((TRACE_INFO,_F_,"bidouille credit du nord"));
 	}
 	/*if (bErase) 
 	{
