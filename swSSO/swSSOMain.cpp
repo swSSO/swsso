@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="098";	// 082 = 0.82
-const char gcszCurrentBeta[]="0991";	// 0851 = 085 beta 1, 0000 pas de beta
+const char gcszCurrentBeta[]="0992";	// 0851 = 085 beta 1, 0000 pas de beta
 
 static HWND gwMain=NULL;
 

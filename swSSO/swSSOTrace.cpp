@@ -62,8 +62,23 @@ void swTraceOpen(void)
 
 	// valeurs par défaut pour les chaines de caractères
 	// les valeurs par défaut pour les DWORD sont initialisées dans la déclaration des variables globales
-	strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\swssotrace.txt");
-
+	
+	// ISSUE#100 : déplacement du fichier de trace car pas de droit d'écriture dans c: si non admin
+	// strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\swssotrace.txt");
+	len=GetCurrentDirectory(_MAX_PATH-20,gszTraceFileName);
+	if (len==0)
+	{
+		strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\swsso\\swssotrace.txt");
+	}
+	else
+	{
+		if (gszTraceFileName[len-1]!='\\')
+		{
+			gszTraceFileName[len]='\\';
+			len++;
+		}
+		strcpy_s(gszTraceFileName+len,_MAX_PATH+1,"swssotrace.txt");
+	}
 	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_TRACE,0,KEY_READ,&hKey);
 	if (rc!=ERROR_SUCCESS) goto end;
 

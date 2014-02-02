@@ -188,6 +188,7 @@ static int CALLBACK WinEnumChildProc(HWND w, LPARAM lp)
 //-----------------------------------------------------------------------------
 // Je fais la saisie dans le premier champ de saisie pour l'id et dans 
 // le champ de saisie suivant pour le pwd
+//
 //-----------------------------------------------------------------------------
 void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 {
@@ -195,6 +196,7 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 
 	HRESULT hr;
 	IAccessible *pChild=NULL;
+	IAccessible *pChildL2=NULL;
 	IDispatch *pIDispatch=NULL;
 	long l,lCount;
 	BOOL bIdFound=FALSE,bPwdFound=FALSE;
@@ -215,25 +217,56 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 		vtChild.lVal=l;
 		vtSelf.vt=VT_I4;
 		vtSelf.lVal=CHILDID_SELF;
-
+		long lChildL2Count;
+		VARIANT vtChildL2;
+		vtChildL2.vt=VT_I4;
+		vtChildL2.lVal=1;
+		
 		hr=pAccessible->get_accChild(vtChild,&pIDispatch);
 		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
 		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
 
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChild);
+		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pChild);
 		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
 		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
 
-		// lecture du role de l'élément
-		hr=pChild->get_accRole(vtSelf,&vtRole);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole(%d)=0x%08lx",vtChild.lVal,hr)); goto end; }
-		TRACE((TRACE_DEBUG,_F_,"get_accRole(%d) vtRole.lVal=0x%08lx",vtChild.lVal,vtRole.lVal));
+		if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
 
-		// lecture du state de l'élément
-		hr=pChild->get_accState(vtSelf,&vtState);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState(%d)=0x%08lx",vtChild.lVal,hr)); goto end; }
-		TRACE((TRACE_DEBUG,_F_,"get_accState(%d) vtState.lVal=0x%08lx",vtChild.lVal,vtState.lVal));
-		
+		// ISSUE#101 : avec Firefox 28+, les champs id et pwd sont des 1ers fils d'éléments qui ont 2 fils
+		hr=pChild->get_accChildCount(&lChildL2Count);
+		if (lChildL2Count==2) // 2 fils, on suppose que l'id ou le mdp est en dessous
+		{
+			hr=pChild->get_accChild(vtChildL2,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pChild->get_accChild(%ld)=0x%08lx",vtChildL2.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChildL2.lVal,hr)); goto end; }
+
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pChildL2);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+
+			// lecture du role de l'élément
+			hr=pChildL2->get_accRole(vtSelf,&vtRole);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole(%d)=0x%08lx",vtChildL2.lVal,hr)); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"get_accRole(%d) vtRole.lVal=0x%08lx",vtChildL2.lVal,vtRole.lVal));
+
+			// lecture du state de l'élément
+			hr=pChildL2->get_accState(vtSelf,&vtState);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState(%d)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"get_accState(%d) vtState.lVal=0x%08lx",vtChild.lVal,vtState.lVal));
+
+		}
+		else // Firefox 26-
+		{
+			// lecture du role de l'élément
+			hr=pChild->get_accRole(vtSelf,&vtRole);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole(%d)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"get_accRole(%d) vtRole.lVal=0x%08lx",vtChild.lVal,vtRole.lVal));
+
+			// lecture du state de l'élément
+			hr=pChild->get_accState(vtSelf,&vtState);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState(%d)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"get_accState(%d) vtState.lVal=0x%08lx",vtChild.lVal,vtState.lVal));
+		}
 		if (!bIdFound) // pas encore trouvé le champ id
 		{
 			if (vtRole.lVal == ROLE_SYSTEM_TEXT && 
@@ -287,10 +320,12 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 		}
 		if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
 		if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
+		if (pChildL2!=NULL) { pChildL2->Release(); pChildL2=NULL; }
    	}
 end:
 	if (pIDispatch!=NULL) pIDispatch->Release(); 
 	if (pChild!=NULL) pChild->Release();
+	if (pChildL2!=NULL) { pChildL2->Release(); pChildL2=NULL; }
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
