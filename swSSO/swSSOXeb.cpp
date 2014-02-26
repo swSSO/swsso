@@ -243,7 +243,7 @@ static int GetAbsolutePos(const char *pszIdName,const char *pszPwdName,int iPwdI
 	if (atoi(pszPwdName)==0) // pas de champ mot de passe recherché, donc position champ id exprimée en valeur absolue
 	{
 		iRelativePos=-1;
-		iAbsolutePos=atoi(pszIdName)+1;
+		iAbsolutePos=atoi(pszIdName)-1;
 	}
 	else // position relative par rapport à la position du champ mot de passe
 	{
@@ -469,7 +469,10 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		// En effet, comme on ne cherche plus les champs par leurs noms, on peut provoquer des mises au premier plan intempestives
 		// de la fenêtre du navigateur si le titre et l'URL ne permettent pas de reconnaitre la page de login de manière certaine
 		TRACE((TRACE_INFO,_F_,"Page analysee, verification (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
-		if (*gptActions[ptSuivi->iAction].szPwdName!=0 && ptSuivi->iPwdIndex==-1)
+		// 0.99B3 / ISSUE#103 : En mode configration simplifiée, la position du champ identifiant est considérée comme absolue 
+		//                      si le champ de mot de passe est configuré à 0
+		// if (*gptActions[ptSuivi->iAction].szPwdName!=0 && ptSuivi->iPwdIndex==-1)
+		if (*gptActions[ptSuivi->iAction].szPwdName!=0 && atoi(gptActions[ptSuivi->iAction].szPwdName)!=0 && ptSuivi->iPwdIndex==-1)
 		{
 			TRACE((TRACE_ERROR,_F_,"Un champ mot de passe etait attendu mais n'a pas ete trouve => le SSO ne sera pas execute"));
 			goto end;
@@ -536,7 +539,29 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		if (*gptActions[ptSuivi->iAction].szValidateName!=0)
 		{
 			Sleep(200);
-			KBSimEx(NULL,gptActions[ptSuivi->iAction].szValidateName,"","","","","");
+
+			// ISSUE#101
+			// KBSimEx(NULL,gptActions[ptSuivi->iAction].szValidateName,"","","","","");
+			// ISSUE#101 suite : on autorise aussi le mot de passe sinon c'est naze...
+			char szDecryptedPassword[LEN_PWD+1];
+			char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
+			if (pszPassword!=NULL) 
+			{
+				strcpy_s(szDecryptedPassword,sizeof(szDecryptedPassword),pszPassword);
+				SecureZeroMemory(pszPassword,strlen(pszPassword));
+				free(pszPassword);
+			}
+			else
+			{
+				*szDecryptedPassword=0;
+			}
+
+			KBSimEx(NULL,gptActions[ptSuivi->iAction].szValidateName,
+						 gptActions[iAction].szId1Value,
+						 gptActions[iAction].szId2Value,
+						 gptActions[iAction].szId3Value,
+						 gptActions[iAction].szId4Value,szDecryptedPassword);
+			SecureZeroMemory(szDecryptedPassword,sizeof(szDecryptedPassword));
 		}
 		guiNbWEBSSO++;
 	}
