@@ -41,7 +41,7 @@
 #define REGVALUE_ENABLEOPTION_SESSIONLOCK			"SessionLockOption"
 #define REGVALUE_ENABLEOPTION_CHECKVERSION			"CheckVersionOption"
 #define REGVALUE_ENABLEOPTION_GETCONFIG				"GetConfigOption"
-//#define REGVALUE_ENABLEOPTION_PUTCONFIG				"PutConfigOption"
+//#define REGVALUE_ENABLEOPTION_PUTCONFIG			"PutConfigOption"
 #define REGVALUE_ENABLEOPTION_MANUALPUTCONFIG		"ManualPutConfigOption"
 #define REGVALUE_ENABLEOPTION_PROXY					"ProxyOption"
 #define REGVALUE_ENABLEOPTION_SAVEPASSWORD			"SavePasswordOption"
@@ -62,6 +62,8 @@
 #define REGVALUE_SHOWMENU_ADDACCOUNT				"ShowAddAccountMenu"
 // ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
 #define REGVALUE_SHOWMENU_ADDTHISAPP				"ShowAddThisAppMenu"
+// ISSUE#107
+#define REGVALUE_SHOWMENU_CHANGEAPPPASSWORD			"ShowChangeAppPasswordMenu"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -75,7 +77,7 @@ extern BOOL gbEnableOption_ManualPutConfig;
 extern BOOL gbEnableOption_Proxy;
 extern BOOL gbEnableOption_SavePassword;
 extern BOOL gbEnableOption_ShowPassword;
-extern int gbPasswordChoiceLevel;
+extern int  gbPasswordChoiceLevel;
 extern BOOL gbEnableOption_ViewAppConfig;
 extern BOOL gbEnableOption_ModifyAppConfig;
 extern BOOL gbShowMenu_ChangeCategIds;
@@ -91,6 +93,8 @@ extern BOOL gbShowMenu_Duplicate;
 extern BOOL gbShowMenu_AddAccount;
 // ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
 extern BOOL gbShowMenu_AddThisApp;
+// ISSUE#107
+extern BOOL gbShowMenu_AppPasswordMenu;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"

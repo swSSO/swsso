@@ -81,6 +81,8 @@ extern int giTimer;
 
 extern char szPwdMigration093[]; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
+extern int giLastApplication;
+
 #define OS_WINDOWS_XP		1
 #define OS_WINDOWS_VISTA	2
 #define OS_WINDOWS_7		3

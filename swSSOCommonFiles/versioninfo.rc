@@ -15,7 +15,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
     {
         BLOCK "040C04B0"
         {
-            VALUE "FileVersion", "0.99"
+            VALUE "FileVersion", "0.991"
             VALUE "ProductVersion", "0.99"
             VALUE "LegalCopyright", "Copyright 2004-2014"
             VALUE "Comments", ""

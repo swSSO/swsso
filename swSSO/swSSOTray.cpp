@@ -69,9 +69,9 @@ static void ShowContextMenu(HWND w)
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_THIS_APPLI,GetString(IDS_MENU_THIS_APPLI));
 	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_SSO_NOW,GetString(IDS_MENU_SSO_NOW));
-	if (gbShowMenu_LaunchApp)
+	if (gbShowMenu_AppPasswordMenu)
 	{
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_LAUNCH_APP,GetString(IDS_LAUNCH_ONE_APP));
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_CHANGEAPPPWD,GetString(IDS_MENU_CHANGEAPPPWD));
 	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_APPNSITES,GetString(IDS_MENU_APPNSITES));
@@ -184,7 +184,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						TRACE((TRACE_INFO,_F_, "WM_APP + WM_LBUTTONDBLCLK"));
 						// 0.63B3 : le double click déverrouille si verrouillé, ouvre la config sinon
 						if (gbSSOActif)
-							ShowAppNsites(-1);
+							// ShowAppNsites(-1); ISSUE#108
+							ShowAppNsites(giLastApplication);
 						else
 							SSOActivate(w);
 					}
@@ -234,7 +235,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
 					}
-					ShowAppNsites(-1);
+					// ShowAppNsites(-1); ISSUE#108
+					ShowAppNsites(giLastApplication);
 					break;
 				case TRAY_MENU_MDP:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_MDP"));
@@ -278,6 +280,10 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						TRACE((TRACE_ERROR,_F_,"*************************************************"));
 						LaunchTimer();
 					}
+					break;
+				case TRAY_MENU_CHANGEAPPPWD: // ISSUE#107
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_CHANGEAPPPWD"));
+					// TODOOOOOOOOOO
 					break;
 				case TRAY_MENU_QUITTER:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_QUITTER"));

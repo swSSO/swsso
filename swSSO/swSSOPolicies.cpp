@@ -65,6 +65,8 @@ BOOL gbShowMenu_Duplicate=TRUE;
 BOOL gbShowMenu_AddAccount=TRUE;
 // ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
 BOOL gbShowMenu_AddThisApp=TRUE;
+// ISSUE#107
+BOOL gbShowMenu_AppPasswordMenu=FALSE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -237,6 +239,11 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDTHISAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowMenu_AddThisApp=(BOOL)dwValue; 
+
+		// ISSUE#107
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_CHANGEAPPPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AppPasswordMenu=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -456,6 +463,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_Duplicate=%d"			,gbShowMenu_Duplicate));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddAccount=%d"		,gbShowMenu_AddAccount));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddThisApp=%d"		,gbShowMenu_AddThisApp));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AppPasswordMenu=%d"	,gbShowMenu_AppPasswordMenu));
 	TRACE((TRACE_INFO,_F_,"PASSWORD -------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
@@ -482,7 +490,6 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gszLogFileName=%s"					,gszLogFileName));
 	TRACE((TRACE_INFO,_F_,"gbWindowsEventLog=%d"				,gbWindowsEventLog));
 
-	
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS ---------"));
 	for (i=0;i<giNbExcludedWindows;i++)

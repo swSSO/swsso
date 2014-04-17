@@ -47,3 +47,4 @@ extern unsigned int gMsgTaskbarRestart;
 #define TRAY_MENU_APPNSITES  7
 #define TRAY_MENU_SSO_NOW	8
 #define TRAY_MENU_LAUNCH_APP 9
+#define TRAY_MENU_CHANGEAPPPWD 10

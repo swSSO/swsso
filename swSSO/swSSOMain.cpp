@@ -117,6 +117,8 @@ T_LAST_DETECT gTabLastDetect[MAX_NB_LAST_DETECT]; // 0.93 liste des fenêtres dét
 
 HANDLE ghPwdChangeEvent=NULL; // 0.96
 
+int giLastApplication=-1;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -765,6 +767,10 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		TRACE((TRACE_DEBUG,_F_,"Fenetre      ='%s'",szTitre));
 		TRACE((TRACE_DEBUG,_F_,"Application  ='%s'",gptActions[i].szApplication));
 		TRACE((TRACE_DEBUG,_F_,"Type         =%d",gptActions[i].iType));
+
+		// ISSUE#107 : conserve l'id de la dernière application reconnue pour l'accompagnement du changement de mot de passe
+		// ISSUE#108 : conserve l'id de la dernière application reconnue pour la sélectionner par défaut dans la fenêtre de gestion des sites
+		giLastApplication=i;
 
 		// 0.93
 		//TRACE((TRACE_DEBUG,_F_,"now-tLastDetect=%ld",t-gptActions[i].tLastDetect));

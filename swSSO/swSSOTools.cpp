@@ -422,7 +422,7 @@ void Help(void){
 	BOOL bFound=FALSE;
 
 	// construit le nom du fichier chm
-	len=GetCurrentDirectory(_MAX_PATH-10,szHelpFile);
+	len=GetCurrentDirectory(_MAX_PATH-50,szHelpFile);
 	if (len==0) goto end;
 	if (szHelpFile[len-1]!='\\')
 	{
