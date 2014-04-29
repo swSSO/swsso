@@ -35,9 +35,12 @@
 
 #include "stdafx.h"
 
-
-
 unsigned int gMsgTaskbarRestart=0; // message registré pour recevoir les notifs de recréation du systray
+int BeginChangeAppPassword(void);
+
+static int giRefreshTimer=10;
+
+char gszNewAppPwd[LEN_PWD+1];
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -69,7 +72,7 @@ static void ShowContextMenu(HWND w)
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_THIS_APPLI,GetString(IDS_MENU_THIS_APPLI));
 	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_SSO_NOW,GetString(IDS_MENU_SSO_NOW));
-	if (gbShowMenu_AppPasswordMenu)
+	if (gbShowMenu_AppPasswordMenu && giLastApplication!=-1) // ISSUE#107
 	{
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_CHANGEAPPPWD,GetString(IDS_MENU_CHANGEAPPPWD));
 	}
@@ -283,7 +286,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_CHANGEAPPPWD: // ISSUE#107
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_CHANGEAPPPWD"));
-					// TODOOOOOOOOOO
+					BeginChangeAppPassword();
 					break;
 				case TRAY_MENU_QUITTER:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_QUITTER"));
@@ -410,3 +413,362 @@ void DestroySystray(HWND wMain)
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
+//-----------------------------------------------------------------------------
+// PopChangeAppPwdDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la popup de début de procédure de changement de mdp d'une appli
+//-----------------------------------------------------------------------------
+static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	UNREFERENCED_PARAMETER(lp);
+
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			int cx;
+			int cy;
+			RECT rect;
+			//gwChangeMasterPwd=w;
+			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
+			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			// titre en gras
+			SetTextBold(w,TX_APP_NAME);
+			SetTextBold(w,TX_ID);
+			SetDlgItemText(w,TX_ID,gptActions[giLastApplication].szId1Value);
+			SetDlgItemText(w,TX_APP_NAME,gptActions[giLastApplication].szApplication);
+			// positionnement en bas à droite de l'écran, près de l'icone swSSO
+			cx = GetSystemMetrics( SM_CXSCREEN );
+			cy = GetSystemMetrics( SM_CYSCREEN );
+			TRACE((TRACE_INFO,_F_,"SM_CXSCREEN=%d SM_CYSCREEN=%d",cx,cy));
+			GetWindowRect(w,&rect);
+			SetWindowPos(w,NULL,cx-(rect.right-rect.left)-100,cy-(rect.bottom-rect.top)-100,0,0,SWP_NOSIZE | SWP_NOZORDER);
+			// case à cocher
+			MACRO_SET_SEPARATOR_90;
+			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+			if (giRefreshTimer==giTimer) giRefreshTimer=11;
+			SetTimer(w,giRefreshTimer,200,NULL);
+			break;
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME1:
+				case TX_FRAME2:
+				case TX_FRAME3:
+				case TX_ID:
+				case TX_APP_NAME:
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDCANCEL:
+				{
+					// L'utilisateur ne veut plus voir le message
+					if (IsDlgButtonChecked(w,CK_VIEW))
+					{
+						gbDisplayChangeAppPwdDialog=FALSE;
+						SaveConfigHeader();
+					}
+					EndDialog(w,IDCANCEL);
+					break;
+				}
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+		case WM_PAINT:
+			DrawLogoBar(w,90,ghLogoFondBlanc90);
+			rc=TRUE;
+			break;
+		case WM_ACTIVATE:
+			InvalidateRect(w,NULL,FALSE);
+			break;
+	}
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// SaveNewAppPwdDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la fenêtre de mise en coffre du nouveau mot de passe d'une appli
+//-----------------------------------------------------------------------------
+static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	UNREFERENCED_PARAMETER(lp);
+
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			int cx;
+			int cy;
+			RECT rect;
+			//gwChangeMasterPwd=w;
+			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
+			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			// limitation chamsp de saisie
+			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,LEN_PWD,0);
+			SendMessage(GetDlgItem(w,TB_PWD_CLEAR),EM_LIMITTEXT,LEN_PWD,0);
+			//SetDlgItemText(w,TX_FRAME2,GetString());
+			// positionnement en bas à droite de l'écran, près de l'icone swSSO
+			cx = GetSystemMetrics( SM_CXSCREEN );
+			cy = GetSystemMetrics( SM_CYSCREEN );
+			TRACE((TRACE_INFO,_F_,"SM_CXSCREEN=%d SM_CYSCREEN=%d",cx,cy));
+			GetWindowRect(w,&rect);
+			SetWindowPos(w,NULL,cx-(rect.right-rect.left)-100,cy-(rect.bottom-rect.top)-100,0,0,SWP_NOSIZE | SWP_NOZORDER);
+			MACRO_SET_SEPARATOR_80;
+			RevealPasswordField(w,FALSE);
+			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+			if (giRefreshTimer==giTimer) giRefreshTimer=11;
+			SetTimer(w,giRefreshTimer,200,NULL);
+			break;
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME1:
+				case TX_FRAME2:
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+				case IDCANCEL:
+				{
+					GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,gszNewAppPwd,LEN_PWD+1);
+					EndDialog(w,LOWORD(wp));
+					break;
+				}
+				case CK_VIEW:
+				{
+					RevealPasswordField(w,IsDlgButtonChecked(w,CK_VIEW));
+					break;
+				}
+				case IDB_COPIER:
+				{
+					char szPwd[LEN_PWD+1];
+					GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,szPwd,LEN_PWD+1);
+					ClipboardCopy(szPwd);
+					SecureZeroMemory(szPwd,LEN_PWD+1);
+					break;
+				}
+				case TB_PWD:
+				case TB_PWD_CLEAR:
+				{
+					if (HIWORD(wp)==EN_CHANGE)
+					{
+						char szPwd[LEN_PWD+1];
+						int len;
+						len=GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,szPwd,LEN_PWD+1);
+						EnableWindow(GetDlgItem(w,IDOK),len==0 ? FALSE : TRUE);
+					}
+					break;
+				}
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+		case WM_PAINT:
+			DrawLogoBar(w,80,ghLogoFondBlanc90);
+			rc=TRUE;
+			break;
+		case WM_ACTIVATE:
+			InvalidateRect(w,NULL,FALSE);
+			break;
+	}
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// ConfirmNewAppPwdDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la popup de confirmation d'enregistrement du nouveau mdp d'une appli
+//-----------------------------------------------------------------------------
+static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	UNREFERENCED_PARAMETER(lp);
+
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			int cx;
+			int cy;
+			RECT rect;
+			//gwChangeMasterPwd=w;
+			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
+			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			// titre en gras
+			SetTextBold(w,TX_FRAME1);
+			// positionnement en bas à droite de l'écran, près de l'icone swSSO
+			cx = GetSystemMetrics( SM_CXSCREEN );
+			cy = GetSystemMetrics( SM_CYSCREEN );
+			TRACE((TRACE_INFO,_F_,"SM_CXSCREEN=%d SM_CYSCREEN=%d",cx,cy));
+			GetWindowRect(w,&rect);
+			SetWindowPos(w,NULL,cx-(rect.right-rect.left)-100,cy-(rect.bottom-rect.top)-100,0,0,SWP_NOSIZE | SWP_NOZORDER);
+			MACRO_SET_SEPARATOR_80;
+			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+			if (giRefreshTimer==giTimer) giRefreshTimer=11;
+			SetTimer(w,giRefreshTimer,200,NULL);
+			break;
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME1:
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+				case IDCANCEL:
+				{
+					EndDialog(w,LOWORD(wp));
+					break;
+				}
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+		case WM_PAINT:
+			DrawLogoBar(w,80,ghLogoFondBlanc90);
+			rc=TRUE;
+			break;
+		case WM_ACTIVATE:
+			InvalidateRect(w,NULL,FALSE);
+			break;
+	}
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// BeginChangeAppPassword()
+//-----------------------------------------------------------------------------
+// Changement du mot de passe d'une application
+//-----------------------------------------------------------------------------
+int BeginChangeAppPassword(void)
+{
+	TRACE((TRACE_ENTER,_F_, "giLastApplication=%d",giLastApplication));
+	int rc=-1;
+	BOOL bDone=FALSE;
+	char *pszEncryptedPassword=NULL;
+	
+	if (giLastApplication==-1) goto end; // ne peut pas se produire en théorie puisque le menu systray n'est affiché que si !=1
+
+	// déchiffre le mot de passe de l'application, essaie de le saisir et le copie dans le presse papier
+	if ((*gptActions[giLastApplication].szPwdEncryptedValue!=0))
+	{
+		char *pszPassword=swCryptDecryptString(gptActions[giLastApplication].szPwdEncryptedValue,ghKey1);
+		if (pszPassword!=NULL) 
+		{
+			// copie le mot de passedans le presse-papier
+			ClipboardCopy(pszPassword);
+			// si remplissage de l'ancien mot de passe demandé et que la fenêtre est toujours présente
+			if (gbOldPwdAutoFill && gptActions[giLastApplication].wLastSSO!=NULL && IsWindow(gptActions[giLastApplication].wLastSSO))
+			{
+				// mise au premier plan de la fenêtre
+				SetForegroundWindow(gptActions[giLastApplication].wLastSSO);
+				// saisie à l'aveugle de l'ancien mot de passe, en espérant que ce soit le champ avec le focus...
+				TRACE((TRACE_INFO,_F_,"Fenetre 0x%08lx tjs presente, saisie de l'ancien mdp",gptActions[giLastApplication].wLastSSO));
+				KBSim(FALSE,200,pszPassword,TRUE);				
+			}
+			SecureZeroMemory(pszPassword,strlen(pszPassword));
+			free(pszPassword);
+		}
+	}
+	
+	// 1ère popup : informe l'utilisateur que son mot de passe a été copié dans le presse papier
+	if (gbDisplayChangeAppPwdDialog) DialogBox(ghInstance,MAKEINTRESOURCE(IDD_POP_CHANGE_APP_PWD),NULL,PopChangeAppPwdDialogProc);
+
+	while (!bDone)
+	{
+		// 2ème popup : demande à l'utilisateur de saisir son nouveau mot de passe et lui permet de le copier dans le presse papier
+		if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SAVE_NEW_APP_PWD),NULL,SaveNewAppPwdDialogProc)==IDOK)
+		{
+			// 3ème popup : demande à l'utilisateur de confirmer l'enregistrement du nouveau mot de passe
+			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_CONFIRM_NEW_APP_PWD),NULL,ConfirmNewAppPwdDialogProc)==IDOK)
+			{
+				// l'utilisateur a confirmé l'enregistrement, on chiffre le mot de passe et on l'enregistre
+				pszEncryptedPassword=swCryptEncryptString(gszNewAppPwd,ghKey1);
+				SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
+				if (pszEncryptedPassword==NULL) goto end;
+				strcpy_s(gptActions[giLastApplication].szPwdEncryptedValue,sizeof(gptActions[giLastApplication].szPwdEncryptedValue),pszEncryptedPassword);
+				// sauvegarde
+				SaveApplications();
+				// log
+				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CHANGE_APP_PWD,gptActions[giLastApplication].szApplication,gptActions[giLastApplication].szId1Value,NULL,0);
+				// fini !
+				bDone=TRUE;
+				rc=0;
+			}
+			else
+			{
+				// l'utilisateur a annulé l'enregistrement, retour à la 2ème popup
+			}
+		}
+		else
+		{
+			// l'utilisateur a annulé dans la fenêtre de saisie du nouveau mot de passe, on sort
+			bDone=TRUE;
+		}
+	}
+	// changement de mot de passe terminé (ou abandonné) : vidage du presse papier
+	ClipboardDelete();
+
+end:
+	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}

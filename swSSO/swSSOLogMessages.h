@@ -228,3 +228,12 @@
 //
 #define MSG_RECOVERY_FAIL                ((DWORD)0xC0000012L)
 
+//
+// MessageId: MSG_CHANGE_APP_PWD
+//
+// MessageText:
+//
+// Changement du mot de passe de l'application %1 pour le compte %2
+//
+#define MSG_CHANGE_APP_PWD               ((DWORD)0x00000013L)
+

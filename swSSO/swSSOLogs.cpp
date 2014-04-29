@@ -154,3 +154,54 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
+
+//-----------------------------------------------------------------------------
+// swStat() 
+//-----------------------------------------------------------------------------
+// Ecrit le fichier de stat swsso.stat (nouveau 0.99 - ISSUE#106)
+// Dans le même répertoire que le fichier swsso.ini
+// Format CSV, une ligne unique :
+// USERNAME;COMPUTERNAME;date dernière connexion réussie AAAAMMJJ;nb d'applications actives;nbsssoréalisés
+//-----------------------------------------------------------------------------
+int swStat(void)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	int rc=-1;
+	HANDLE hfStat=INVALID_HANDLE_VALUE;
+	char buf2048[2048];
+	char szFilename[_MAX_PATH+2]; // pas beau mais comme .stat fait 1 car de plus que .ini, ça ne marchera pas mais au moins le buffer d'explosera pas..
+	DWORD len, dw;
+	char *p;
+	
+	// nom du fichier : swsso.ini -> swsso.stat
+	strcpy_s(szFilename,sizeof(szFilename),gszCfgFile);
+	p=strrchr(szFilename,'.');
+	if (p==NULL) { TRACE((TRACE_ERROR,_F_,"gszCfgFile=%s",gszCfgFile)); goto end; }
+	memcpy(p+1,"stat",5);
+	
+	// ouverture du fichier
+	hfStat=CreateFile(szFilename,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hfStat==INVALID_HANDLE_VALUE)
+	{
+		TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFilename,GetLastError()));
+		goto end;
+	}
+	// USERNAME;COMPUTERNAME;date dernière connexion réussie AAAAMMJJ;nb d'applications actives;nbsssoréalisés
+	len=wsprintf(buf2048,"%s;%s;%04d%02d%02d;%d;%d",
+		gszUserName,gszComputerName,
+		(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
+		GetNbActiveApps(),guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO); 
+	if (!WriteFile(hfStat,buf2048,len,&dw,NULL))
+	{
+		TRACE((TRACE_ERROR,_F_,"WriteFile(%s,%ld)=%d",szFilename,len,GetLastError()));
+		goto end;
+	}
+		
+	rc=0;
+end:
+	
+	if (hfStat!=INVALID_HANDLE_VALUE) CloseHandle(hfStat); 
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+

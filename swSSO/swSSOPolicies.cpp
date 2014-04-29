@@ -67,6 +67,7 @@ BOOL gbShowMenu_AddAccount=TRUE;
 BOOL gbShowMenu_AddThisApp=TRUE;
 // ISSUE#107
 BOOL gbShowMenu_AppPasswordMenu=FALSE;
+BOOL gbOldPwdAutoFill=FALSE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -98,6 +99,7 @@ BOOL gbDisplayConfigsNotifications=TRUE;	// 0.92 : affiche les messages de notif
 BOOL gbWindowsEventLog=FALSE;				// 0.93 : log dans le journal d'événements de Windows
 char gszLogFileName[_MAX_PATH+1];			// 0.93 : chemin complet du fichier de log
 int  giLogLevel=LOG_LEVEL_NONE;				// 0.93 : niveau de log
+BOOL gbStat=FALSE;							// 0.99 : statistiques - ISSUE#106
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -244,6 +246,10 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_CHANGEAPPPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowMenu_AppPasswordMenu=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_OLD_PWD_AUTO_FILL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbOldPwdAutoFill=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -399,11 +405,19 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_WINDOWS_EVENT_LOG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbWindowsEventLog=(BOOL)dwValue; 
 		
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_STAT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbStat=(BOOL)dwValue; 
+		
 		dwValueType=REG_SZ;
 		dwValueSize=sizeof(szValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_LOG_FILE_NAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) 
-			strcpy_s(gszLogFileName,sizeof(gszLogFileName),szValue);
+		{
+			// ISSUE#104 et ISSUE#109
+			// strcpy_s(gszLogFileName,sizeof(gszLogFileName),szValue);
+			ExpandFileName(szValue,gszLogFileName,_MAX_PATH+1);
+		}
 	
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_LOG_LEVEL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
@@ -464,6 +478,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddAccount=%d"		,gbShowMenu_AddAccount));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddThisApp=%d"		,gbShowMenu_AddThisApp));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AppPasswordMenu=%d"	,gbShowMenu_AppPasswordMenu));
+	TRACE((TRACE_INFO,_F_,"gbOldPwdAutoFill=%d"		        ,gbOldPwdAutoFill));
 	TRACE((TRACE_INFO,_F_,"PASSWORD -------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
@@ -489,6 +504,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"giLogLevel=%d"						,giLogLevel));
 	TRACE((TRACE_INFO,_F_,"gszLogFileName=%s"					,gszLogFileName));
 	TRACE((TRACE_INFO,_F_,"gbWindowsEventLog=%d"				,gbWindowsEventLog));
+	TRACE((TRACE_INFO,_F_,"gbStat=%d"							,gbStat));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS ---------"));

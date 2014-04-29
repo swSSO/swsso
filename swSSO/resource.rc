@@ -25,7 +25,11 @@ IDB_LOGO           BITMAP         "swsso-v5 52x44.bmp"
 
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDB_LOGO_FONDBLANC BITMAP         "logo.bmp"
+IDB_LOGO_FONDBLANC50 BITMAP         "logo-50.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDB_LOGO_FONDBLANC90 BITMAP         "logo-90.bmp"
 
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -123,7 +127,7 @@ FONT 8, "Tahoma", 400, 0, 0
     DEFPUSHBUTTON   "OK", IDOK, 7, 253, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "Annuler", IDCANCEL, 62, 253, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "&Appliquer", IDAPPLY, 121, 253, 50, 14, 0, WS_EX_LEFT
-    ICON            "", IMG_LOUPE, 407, 36, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_LOUPE, 407, 36, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
 }
 
 
@@ -203,6 +207,21 @@ FONT 8, "Tahoma"
 
 
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+IDD_CONFIRM_NEW_APP_PWD DIALOG 0, 0, 277, 73
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+EXSTYLE WS_EX_TOPMOST
+CAPTION "swSSO - Mise en coffre du nouveau mot de passe"
+FONT 8, "Tahoma"
+{
+    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 4, 48, 242, 1, WS_EX_LEFT
+    LTEXT           "Attention !\r\nN'enregistrez votre nouveau mot de passe que si le changement de mot de passe a bien été réalisé dans l'application !", TX_FRAME1, 44, 7, 227, 35, SS_LEFT, WS_EX_LEFT
+    DEFPUSHBUTTON   "&Enregistrer", IDOK, 172, 54, 45, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "Annuler", IDCANCEL, 222, 54, 50, 14, 0, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 IDD_FORCE_CHANGE_PWD DIALOG 0, 0, 268, 109
 STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 CAPTION "swSSO - Changement de mot de passe"
@@ -276,6 +295,24 @@ FONT 8, "Tahoma"
 
 
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+IDD_POP_CHANGE_APP_PWD DIALOG 0, 0, 270, 84
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "swSSO - Changement d'un mot de passe"
+FONT 8, "Tahoma"
+{
+    DEFPUSHBUTTON   "&Fermer", IDCANCEL, 217, 64, 45, 14, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "&Ne plus afficher ce message", CK_NPMECA, 10, 67, 110, 8, 0, WS_EX_LEFT
+    LTEXT           "...", TX_APP_NAME, 87, 5, 180, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Application :", TX_FRAME3, 45, 5, 40, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Identifiant :", TX_FRAME1, 45, 15, 39, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "PXXX000", TX_ID, 87, 15, 180, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V", TX_FRAME2, 45, 25, 215, 25, SS_LEFT, WS_EX_LEFT
+    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 5, 60, 242, 1, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 IDD_PWD DIALOG 0, 0, 267, 106
 STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 CAPTION "swSSO - Gestionnaire de mots de passe"
@@ -303,6 +340,27 @@ FONT 8, "Tahoma"
     PUSHBUTTON      "&Ouvrir...", PB_SAVEAS, 191, 127, 70, 14, 0, WS_EX_LEFT
     EDITTEXT        TB_CHALLENGE, 7, 47, 311, 77, ES_MULTILINE, WS_EX_LEFT
     LTEXT           "Copiez ici les informations reçues de votre support ou utilisez le bouton Ouvrir, puis cliquez sur valider.", TX_FRAME, 46, 6, 247, 17, SS_LEFT, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+IDD_SAVE_NEW_APP_PWD DIALOG 0, 0, 277, 94
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+EXSTYLE WS_EX_TOPMOST
+CAPTION "swSSO - Mise en coffre du nouveau mot de passe"
+FONT 8, "Tahoma"
+{
+    LTEXT           "&Nouveau mot de passe :", IDC_STATIC, 7, 58, 84, 8, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        TB_PWD, 92, 56, 146, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    EDITTEXT        TB_PWD_CLEAR, 92, 56, 146, 13, ES_AUTOHSCROLL, WS_EX_LEFT
+    PUSHBUTTON      "&Copier", IDB_COPIER, 241, 55, 30, 14, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "&Afficher en clair", CK_VIEW, 92, 74, 71, 8, 0, WS_EX_LEFT
+    DEFPUSHBUTTON   "&Enregistrer", IDOK, 171, 75, 45, 14, WS_DISABLED, WS_EX_LEFT
+    PUSHBUTTON      "Annuler", IDCANCEL, 221, 75, 50, 14, 0, WS_EX_LEFT
+    LTEXT           "Veuillez saisir ci-dessous votre nouveau mot de passe puis cliquer sur Copier.", TX_FRAME1, 44, 7, 217, 18, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Collez ensuite ce mot de passe dans les champs ""nouveau mot de passe"" de l'application avec CTRL+V", TX_FRAME2, 43, 25, 225, 18, SS_LEFT, WS_EX_LEFT
+    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 4, 48, 242, 1, WS_EX_LEFT
 }
 
 
@@ -364,12 +422,12 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Fichier de configuration :", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT, WS_EX_LEFT
     LTEXT           "Licence", TX_LICENCE, 7, 41, 28, 11, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Version 0.99 BETA 3 (26/02/2014)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Version 0.99 (30/04/2014)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Portail :", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1, WS_EX_LEFT
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1, WS_EX_LEFT
     CONTROL         "", IDC_SEP_STATISTIQUES, WC_STATIC, SS_ETCHEDHORZ, 49, 172, 247, 1, WS_EX_LEFT
-    LTEXT           "Applications configurées :", -1, 17, 197, 82, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Applications actives :", -1, 17, 197, 68, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "0", TX_NBAPP, 101, 197, 230, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Serveur swSSO :", TX_SERVER2, 17, 93, 55, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TX_SERVER, 99, 93, 230, 12, WS_GROUP | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL | ES_READONLY, WS_EX_LEFT
@@ -386,22 +444,23 @@ CAPTION "Options"
 FONT 8, "Tahoma"
 {
     AUTOCHECKBOX    "&Désactiver swSSO lorsque je verrouille ma session Windows", CK_LOCK, 17, 22, 224, 13, BS_MULTILINE, WS_EX_LEFT
-    AUTOCHECKBOX    "&Vérifier les mises à jour au démarrage", CK_CHECK_VERSION, 17, 58, 137, 13, BS_MULTILINE, WS_EX_LEFT
-    AUTOCHECKBOX    "&y compris les versions beta", CK_CHECK_BETA, 156, 58, 137, 13, BS_MULTILINE, WS_EX_LEFT
-    AUTOCHECKBOX    "&Récupérer les informations de configuration (en activant cette option, vous permettez à swSSO de configurer à votre place le SSO pour vos applications, sous réserve de disponibilité de la configuration correspondante)", CK_GET_CONFIG, 17, 75, 313, 26, BS_MULTILINE, WS_EX_LEFT
-    AUTOCHECKBOX    "Sur d&emande, mettre mes informations de configuration à disposition des autres utilisateurs", CK_MANUAL_PUT_CONFIG, 17, 105, 310, 10, BS_MULTILINE, WS_EX_LEFT
+    AUTOCHECKBOX    "Afficher le &message d'information lors du changement de mot de passe d'une application", CK_DISPLAY_MSG, 17, 40, 301, 8, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "&Vérifier les mises à jour au démarrage", CK_CHECK_VERSION, 17, 71, 137, 13, BS_MULTILINE, WS_EX_LEFT
+    AUTOCHECKBOX    "&y compris les versions beta", CK_CHECK_BETA, 156, 71, 137, 13, BS_MULTILINE, WS_EX_LEFT
+    AUTOCHECKBOX    "&Récupérer les informations de configuration (en activant cette option, vous permettez à swSSO de configurer à votre place le SSO pour vos applications)", CK_GET_CONFIG, 17, 88, 309, 17, BS_MULTILINE, WS_EX_LEFT
+    AUTOCHECKBOX    "Sur d&emande, mettre mes informations de configuration à disposition des autres utilisateurs", CK_MANUAL_PUT_CONFIG, 17, 111, 310, 10, BS_MULTILINE, WS_EX_LEFT
     AUTOCHECKBOX    "&Se connecter au serveur swSSO au travers d'un proxy", CK_USE_PROXY, 17, 142, 187, 10, BS_MULTILINE, WS_EX_LEFT
-    LTEXT           "Autorisations d'accès au serveur swSSO", TX_INTERNET, 7, 44, 128, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Autorisations d'accès au serveur swSSO", TX_INTERNET, 7, 57, 128, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Configuration proxy", TX_PROXY, 7, 128, 64, 10, SS_LEFT, WS_EX_LEFT
-    LTEXT           "&Adresse du proxy :", TX_PROXY_URL, 17, 160, 64, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Adresse du pro&xy :", TX_PROXY_URL, 17, 160, 67, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_PROXY_URL, 81, 158, 248, 13, ES_AUTOHSCROLL, WS_EX_LEFT
     LTEXT           "&Utilisateur :", TX_PROXY_USER, 17, 178, 42, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_PROXY_USER, 81, 176, 154, 13, ES_AUTOHSCROLL, WS_EX_LEFT
     LTEXT           "M&ot de passe :", TX_PROXY_PWD, 17, 196, 48, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_PROXY_PWD, 81, 194, 154, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
-    LTEXT           "Sécurité", TX_SECURITE, 7, 10, 32, 11, SS_LEFT, WS_EX_LEFT
-    CONTROL         "", IDC_SEP_SECURITE, WC_STATIC, SS_ETCHEDHORZ, 37, 14, 277, 1, WS_EX_LEFT
-    CONTROL         "", IDC_SEP_AUTORISATIONS, WC_STATIC, SS_ETCHEDHORZ, 139, 48, 175, 1, WS_EX_LEFT
+    LTEXT           "Divers", TX_SECURITE, 7, 10, 21, 8, SS_LEFT, WS_EX_LEFT
+    CONTROL         "", IDC_SEP_SECURITE, WC_STATIC, SS_ETCHEDHORZ, 31, 14, 283, 1, WS_EX_LEFT
+    CONTROL         "", IDC_SEP_AUTORISATIONS, WC_STATIC, SS_ETCHEDHORZ, 139, 61, 175, 1, WS_EX_LEFT
     CONTROL         "", IDC_SEP_PROXY, WC_STATIC, SS_ETCHEDHORZ, 75, 132, 238, 1, WS_EX_LEFT
     PUSHBUTTON      "&Tester la connexion", PB_TEST, 243, 175, 86, 14, 0, WS_EX_LEFT
     DEFPUSHBUTTON   "&J'ai de la chance ;-)", PB_CHANCE, 243, 193, 86, 14, 0, WS_EX_LEFT
@@ -482,7 +541,7 @@ STRINGTABLE
     IDS_ID4                       "4ème identifiant"
     IDS_MENU_DUPLIQUER            "&Dupliquer"
     IDS_RECOVERYSTOREPWDFAILED    "Une erreur est survenue. En cas d'oubli de votre mot de passe,\r\nil ne sera pas possible de le récupérer.\r\n\r\nVeuillez contacter votre support."
-    IDS_BADPWD2                   "Le mot de passe que vous avez saisi est incorrect.\r\nCliquez sur le bouton Recommencer pour réessayer\r\nou sur le bouton Annuler pour lancer la procédure de secours."
+    IDS_BADPWD2                   "Mot de passe incorrect"
     IDS_TITRE_APPNSITES           "swSSO - Gestion des sites et applications"
     IDS_MENU_CHANGER_IDS          "Identifiants et mot de passe..."
     IDS_CHANGER_IDS               "Confirmez-vous la modification des identifiants et/ou du mot de passe des\r\n%d applications de cette catégorie ?"
@@ -525,9 +584,28 @@ STRINGTABLE
     IDS_PP_WINDOWS                "AES-256 et PBKDF2 (mot de passe Windows)"
     IDS_PLEASE_ENTER_WINDOWS_PASSWORD "Veuillez saisir ci-dessous votre mot de passe Windows :"
     IDS_MENU_CHANGEAPPPWD         "Changer le mot de passe de cette application"
+    IDS_MSG_CHANGE_APP_PWD_1      "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V"
+    IDS_MSG_CHANGE_APP_PWD_2      "L'ancien mot de passe a été copié dans le presse-papier. Si nécessaire, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V"
+    IDS_TIP_TB_ID                 "Votre identifiant pour cette application"
+    IDS_TIP_TB_PWD                "Votre mot de passe pour cette application"
+    IDS_TIP_CB_TYPE               "Type de la fenêtre : choisir 'Site Web (configuration simplifiée)' pour configurer un site Internet ou une application Intranet"
+    IDS_TIP_TB_TITRE              "Titre complet ou début du titre de la fenêtre. Les caractères joker type '*' sont acceptés en début et/ou fin de chaîne. Exemples : *titre, titre*, *titre*"
+    IDS_TIP_TB_URL                "URL complète ou partielle de l'application. Le caractère joker '*' est accepté à la fin uniquement et permet d'indiquer que seul le début de l'URL est fourni. Exemple : http://www.google.fr/*"
+    IDS_TIP_TB_ID_ID              "En configuration simplifiée : position relative du champ identifiant par rapport au champ mot de passe. Exemple : -1 si le champ identifiant se trouve juste avant le champ mot de passe."
+    IDS_TIP_TB_PWD_ID             "En configuration simplifiée : position absolue du champ mot de passe. En général, il n'y a qu'un seul champ de mot de passe et la valeur 1 convient."
+    IDS_TIP_TB_VALIDATION         "En configuration simplifiée : séquence de simulation de frappe clavier à exécuter pour valider la saisie. Exemple : [ENTER]"
+    IDS_TIP_TB_LANCEMENT          "(Optionnel) Définit la ligne de commande à exécuter pour lancer l'application si vous utilisez le lanceur d'application swSSO. "
+	IDS_TIP_TB_ID2				  "(Optionnel) Votre identifiant n°2 pour cette application"
+	IDS_TIP_TB_ID3				  "(Optionnel) Votre identifiant n°3 pour cette application"
+	IDS_TIP_TB_ID4				  "(Optionnel) Votre identifiant n°4 pour cette application"
+	IDS_TIP_CB_ID2_TYPE			  "(Optionnel) Type du champ identifiant n°2 : 'champ de saisie' ou 'liste de choix'. En configuration simplifiée, choisir 'champ de saisie'"
+	IDS_TIP_TB_ID2_ID			  "(Optionnel) En configuration simplifiée : position relative du champ identifiant n°2 par rapport au champ mot de passe. Exemple : 1 si ce champ se trouve juste après le champ mot de passe."
+	IDS_TIP_CB_ID3_TYPE			  "(Optionnel) Type du champ identifiant n°3 : 'champ de saisie' ou 'liste de choix'. En configuration simplifiée, choisir 'champ de saisie'"
+	IDS_TIP_TB_ID3_ID			  "(Optionnel) En configuration simplifiée : position relative du champ identifiant n°3 par rapport au champ mot de passe. Exemple : -1 si ce champ se trouve juste avant le champ mot de passe."
+	IDS_TIP_CB_ID4_TYPE			  "(Optionnel) Type du champ identifiant n°4 : 'champ de saisie' ou 'liste de choix'. En configuration simplifiée, choisir 'champ de saisie'"
+	IDS_TIP_TB_ID4_ID			  "(Optionnel) En configuration simplifiée : position relative du champ identifiant n°4 par rapport au champ mot de passe. Exemple : 2 si ce champ est le 2nd champ après le champ mot de passe."
+	IDS_TIP_TB_KBSIM			  "Permet définir un script de saisie automatique. Exemple : [ID] saisit l'identifiant, [PWD] saisit le mot de passe, [TAB] simule un appui sur la touche TAB, [ENTER] simule un appui sur la touche ENTER."
 }
-
-
 
 //
 // Cursor resources

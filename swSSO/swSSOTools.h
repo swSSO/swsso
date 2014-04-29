@@ -69,13 +69,14 @@ HFONT GetModifiedFont(HWND w,long lfWeight);
 void SetTextBold(HWND w,int iCtrlId);
 BOOL DrawTransparentBitmap(HANDLE hBitmap,HDC dc,int x,int y,int cx,int cy,COLORREF crColour);
 void DrawBitmap(HANDLE hBitmap,HDC dc,int x,int y,int cx,int cy);
-void DrawLogoBar(HWND w);
+void DrawLogoBar(HWND w,int height,HANDLE hLogoFondBlanc);
 int KBSimEx(HWND w,char *szCmd, char *szId1,char *szId2,char *szId3,char *szId4,char *szPwd);
 int atox4(char *sz);
 BOOL swStringMatch(char *szToBeCompared,char *szPattern);
 BOOL swURLMatch(char *szToBeCompared,char *szPattern);
 char *GetComputedValue(const char *szValue);
 int swCheckBrowserURL(int iPopupType,char *pszCompare);
+int GetNbActiveApps();
 
 // 0.93 : liste des dernières fenêtres détectées et dont la configuration est connue de swSSO
 #define MAX_NB_LAST_DETECT 500
@@ -96,9 +97,17 @@ void   LastDetect_RemoveUntaggedWindows(void);	// efface toutes les fenêtres non
 void   ExcludeOpenWindows(void);
 BOOL   IsExcluded(HWND w);
 int swPipeWrite(char *bufRequest,int lenRequest,char *bufResponse,DWORD sizeofBufResponse,DWORD *pdwLenResponse);
+void RevealPasswordField(HWND w,BOOL bReveal);
+void ClipboardCopy(char *sz);
+void ClipboardDelete();
+int ExpandFileName(char *szInFileName,char *szOutFileName, int iBufSize);
 
 // comme RESEDIT est un peu merdique et me change la taille du séparateur quand il a envie
 // cette macro (à positionner dans WM_INITDIALOG) le replace correctement !
 #define MACRO_SET_SEPARATOR { RECT rect; GetClientRect(w,&rect); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,50,rect.right+1,2,FALSE); }
+#define MACRO_SET_SEPARATOR_80 { RECT rect; GetClientRect(w,&rect); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,80,rect.right+1,2,FALSE); }
+#define MACRO_SET_SEPARATOR_90 { RECT rect; GetClientRect(w,&rect); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,90,rect.right+1,2,FALSE); }
+
+
 
 

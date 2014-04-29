@@ -41,7 +41,8 @@ extern HICON ghIconSystrayActive;
 extern HICON ghIconSystrayInactive; 
 extern HICON ghIconLoupe; 
 extern HANDLE ghLogo;
-extern HANDLE ghLogoFondBlanc;
+extern HANDLE ghLogoFondBlanc50;
+extern HANDLE ghLogoFondBlanc90;
 extern HCURSOR ghCursorHand;
 extern HCURSOR ghCursorWait;
 extern HIMAGELIST ghImageList;
@@ -82,6 +83,8 @@ extern int giTimer;
 extern char szPwdMigration093[]; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
 extern int giLastApplication;
+
+extern SYSTEMTIME gLastLoginTime; // ISSUE#106
 
 #define OS_WINDOWS_XP		1
 #define OS_WINDOWS_VISTA	2

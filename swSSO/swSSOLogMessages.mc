@@ -177,3 +177,12 @@ SymbolicName=MSG_RECOVERY_FAIL
 Language=French
 Echec de la reinitialisation de mot de passe 
 .
+
+MessageId=0x00000013
+Severity=Success
+Facility=Application
+SymbolicName=MSG_CHANGE_APP_PWD
+Language=French
+Changement du mot de passe de l'application %1 pour le compte %2
+.
+

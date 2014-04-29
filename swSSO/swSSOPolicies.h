@@ -63,7 +63,8 @@
 // ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
 #define REGVALUE_SHOWMENU_ADDTHISAPP				"ShowAddThisAppMenu"
 // ISSUE#107
-#define REGVALUE_SHOWMENU_CHANGEAPPPASSWORD			"ShowChangeAppPasswordMenu"
+#define REGVALUE_SHOWMENU_CHANGEAPPPASSWORD			"ShowChangeAppPwdMenu"
+#define REGVALUE_OLD_PWD_AUTO_FILL					"OldPwdAutoFill"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -95,6 +96,7 @@ extern BOOL gbShowMenu_AddAccount;
 extern BOOL gbShowMenu_AddThisApp;
 // ISSUE#107
 extern BOOL gbShowMenu_AppPasswordMenu;
+extern BOOL gbOldPwdAutoFill;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
@@ -143,7 +145,8 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_DISPLAY_CONFIGS_NOTIFICATIONS		"DisplayConfigsNotifications"
 #define REGVALUE_WINDOWS_EVENT_LOG					"WindowsEventLog"
 #define REGVALUE_LOG_FILE_NAME						"LogFileName"
-#define REGVALUE_LOG_LEVEL							"LogLevel"						
+#define REGVALUE_LOG_LEVEL							"LogLevel"		
+#define REGVALUE_STAT								"Stat"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -168,6 +171,7 @@ extern BOOL gbDisplayConfigsNotifications;	// 0.92 : affiche les messages de not
 extern BOOL gbWindowsEventLog;				// 0.93 : log dans le journal d'événements de Windows
 extern char gszLogFileName[];				// 0.93 : chemin complet du fichier de log
 extern int  giLogLevel;						// 0.93 : niveau de log
+extern BOOL gbStat;						// 0.99 : statistiques - ISSUE#106
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

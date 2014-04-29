@@ -240,7 +240,7 @@ static int CALLBACK ChallengeDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 		case WM_DESTROY:
@@ -407,7 +407,7 @@ static int CALLBACK ResponseDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 		case WM_DESTROY:

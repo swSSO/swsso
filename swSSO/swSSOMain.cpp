@@ -38,8 +38,8 @@
 #include "ISimpleDOMDocument_i.c"
 
 // Un peu de globales...
-const char gcszCurrentVersion[]="098";	// 082 = 0.82
-const char gcszCurrentBeta[]="0992";	// 0851 = 085 beta 1, 0000 pas de beta
+const char gcszCurrentVersion[]="099";	// 082 = 0.82
+const char gcszCurrentBeta[]="0000";	// 0851 = 085 beta 1, 0000 pas de beta
 
 static HWND gwMain=NULL;
 
@@ -63,7 +63,8 @@ HICON ghIconSystrayActive=NULL;
 HICON ghIconSystrayInactive=NULL;
 HICON ghIconLoupe=NULL;
 HANDLE ghLogo=NULL;
-HANDLE ghLogoFondBlanc=NULL;
+HANDLE ghLogoFondBlanc50=NULL;
+HANDLE ghLogoFondBlanc90=NULL;
 HCURSOR ghCursorHand=NULL; 
 HCURSOR ghCursorWait=NULL;
 HIMAGELIST ghImageList=NULL;
@@ -118,6 +119,7 @@ T_LAST_DETECT gTabLastDetect[MAX_NB_LAST_DETECT]; // 0.93 liste des fenêtres dét
 HANDLE ghPwdChangeEvent=NULL; // 0.96
 
 int giLastApplication=-1;
+SYSTEMTIME gLastLoginTime; // ISSUE#106
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -436,7 +438,7 @@ static int CALLBACK ChooseConfigDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 		case WM_ACTIVATE:
@@ -1210,8 +1212,10 @@ static int LoadIcons(void)
 	if (ghIconLoupe==NULL) goto end;
 	ghLogo=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
 	if (ghLogo==NULL) goto end;
-	ghLogoFondBlanc=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO_FONDBLANC),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
-	if (ghLogoFondBlanc==NULL) goto end;
+	ghLogoFondBlanc50=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO_FONDBLANC50),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
+	if (ghLogoFondBlanc50==NULL) goto end;
+	ghLogoFondBlanc90=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO_FONDBLANC90),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
+	if (ghLogoFondBlanc90==NULL) goto end;
 	ghCursorHand=(HCURSOR)LoadImage(ghInstance,
 					MAKEINTRESOURCE(IDC_CURSOR_HAND),
 					IMAGE_CURSOR,
@@ -1242,7 +1246,8 @@ static void UnloadIcons(void)
 	if (ghIconSystrayInactive!=NULL) { DestroyIcon(ghIconSystrayInactive); ghIconSystrayInactive=NULL; }
 	if (ghIconLoupe!=NULL) { DestroyIcon(ghIconLoupe); ghIconLoupe=NULL; }
 	if (ghLogo!=NULL) { DeleteObject(ghLogo); ghLogo=NULL; }
-	if (ghLogoFondBlanc!=NULL) { DeleteObject(ghLogoFondBlanc); ghLogoFondBlanc=NULL; }
+	if (ghLogoFondBlanc50!=NULL) { DeleteObject(ghLogoFondBlanc50); ghLogoFondBlanc50=NULL; }
+	if (ghLogoFondBlanc90!=NULL) { DeleteObject(ghLogoFondBlanc90); ghLogoFondBlanc90=NULL; }
 	if (ghCursorHand!=NULL) { DestroyCursor(ghCursorHand); ghCursorHand=NULL; }
 	if (ghCursorWait!=NULL) { DestroyCursor(ghCursorWait); ghCursorWait=NULL; }
 	if (ghImageList!=NULL) ImageList_Destroy(ghImageList);
@@ -1359,7 +1364,7 @@ static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 	}
@@ -1524,7 +1529,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 		case WM_ACTIVATE:
@@ -1682,7 +1687,7 @@ static int CALLBACK SelectDomainDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 		case WM_ACTIVATE:
@@ -1968,7 +1973,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	}
 	else 
 	{
-		strcpy_s(gszCfgFile,_MAX_PATH+1,lpCmdLine);
+		// ISSUE#104 et ISSUE#109
+		ExpandFileName(lpCmdLine,gszCfgFile,_MAX_PATH+1);
+		//strcpy_s(gszCfgFile,_MAX_PATH+1,lpCmdLine);
 	}
 	// inits Window et COM
 	InitCommonControls();
@@ -2270,6 +2277,10 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	// Si -launchapp, ouvre la fenêtre ShowAppNsites
 	if (bLaunchApp) ShowLaunchApp();
 
+	// Ici on peut considérer que swSSO est bien démarré et que l'utilisateur est connecté
+	// Prise de la date de login pour les stats
+	GetLocalTime(&gLastLoginTime);
+
 	// déclenchement du timer pour enumération de fenêtres toutes les 500ms
 	// boucle de message, dont on ne sortira que par un PostQuitMessage()
 	while((rc=GetMessage(&msg,NULL,0,0))!=0)
@@ -2310,6 +2321,7 @@ end:
 	else
 	{
 		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_QUIT,NULL,NULL,NULL,0);
+		if (gbStat) swStat(); // 0.99 - ISSUE#106
 	}
 
 	// on libère tout avant de terminer

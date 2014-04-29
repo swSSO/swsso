@@ -58,6 +58,7 @@ int  giNbExcludedHandles=0;
 HWND gTabExcludedHandles[MAX_EXCLUDED_HANDLES];
 int  giDomainId=1;						// 0.94B1 : gestion des domaines
 char gszDomainLabel[LEN_DOMAIN+1]="";
+BOOL gbDisplayChangeAppPwdDialog ; // ISSUE#107
 
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
@@ -143,7 +144,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// 0.63BETA5 : détail nb sso popups
 			wsprintf(s,"%d (%d web - %d popups - %d windows)",guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,guiNbWEBSSO,guiNbPOPSSO,guiNbWINSSO);
 			SetDlgItemText(w,TX_NBSSO,s);
-			wsprintf(s,"%d",giNbActions);
+			wsprintf(s,"%d / %d",GetNbActiveApps(),giNbActions);
 			SetDlgItemText(w,TX_NBAPP,s);
 			SetDlgItemText(w,TX_CONFIGFILE,gszCfgFile);
 
@@ -377,6 +378,8 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			}
 			// remplit avec les valeurs de config (c'était dans PSN_SETACTIVE avant... ???
 			CheckDlgButton(w,CK_CHECK_VERSION,gbInternetCheckVersion?BST_CHECKED:BST_UNCHECKED);
+			// ISSUE #107
+			CheckDlgButton(w,CK_DISPLAY_MSG,gbDisplayChangeAppPwdDialog?BST_CHECKED:BST_UNCHECKED);
 			CheckDlgButton(w,CK_CHECK_BETA,gbInternetCheckBeta?BST_CHECKED:BST_UNCHECKED);
 			if (IsDlgButtonChecked(w,CK_CHECK_VERSION)==BST_UNCHECKED)
 			{
@@ -443,6 +446,7 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case PSN_APPLY:
 					gbInternetCheckVersion=IsDlgButtonChecked(w,CK_CHECK_VERSION)==BST_CHECKED?TRUE:FALSE;
+					gbDisplayChangeAppPwdDialog=IsDlgButtonChecked(w,CK_DISPLAY_MSG)==BST_CHECKED?TRUE:FALSE;
 					gbInternetCheckBeta=IsDlgButtonChecked(w,CK_CHECK_BETA)==BST_CHECKED?TRUE:FALSE;
 					gbInternetGetConfig=IsDlgButtonChecked(w,CK_GET_CONFIG)==BST_CHECKED?TRUE:FALSE;
 					//gbInternetPutConfig=IsDlgButtonChecked(w,CK_PUT_CONFIG)==BST_CHECKED?TRUE:FALSE;
@@ -730,7 +734,7 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 	}
@@ -938,6 +942,9 @@ int GetConfigHeader()
 	// 0.93B4 ISSUE#50 (?)
 	gbParseWindowsOnStart=GetConfigBoolValue("swSSO","parseWindowsOnStart",TRUE,TRUE);
 
+	// ISSUE#107
+	gbDisplayChangeAppPwdDialog=GetConfigBoolValue("swSSO","displayChangeAppPwdDialog",TRUE,TRUE);
+
 	// REMARQUE : la config proxy est lue plus loin dans le démarrage du main, sinon la clé n'est pas disponible
 	//            pour déchiffrer le mot de passe proxy !
 	rc=0;
@@ -1104,6 +1111,9 @@ int SaveConfigHeader()
 
 	// 0.93B4 ISSUE#50 (?)
 	WritePrivateProfileString("swSSO","parseWindowsOnStart",gbParseWindowsOnStart?"YES":"NO",gszCfgFile);
+
+	// ISSUE#107
+	WritePrivateProfileString("swSSO","displayChangeAppPwdDialog",gbDisplayChangeAppPwdDialog?"YES":"NO",gszCfgFile);
 
 	rc=0;
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -1947,7 +1957,7 @@ static int CALLBACK ChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM wp,LPA
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 		case WM_ACTIVATE:
@@ -2077,7 +2087,7 @@ static int CALLBACK ForceChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM w
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 	}
@@ -2495,7 +2505,7 @@ static int CALLBACK ChangeApplicationPasswordDialogProc(HWND w,UINT msg,WPARAM w
 			}
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 	}

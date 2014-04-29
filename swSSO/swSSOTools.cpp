@@ -430,7 +430,7 @@ void Help(void){
 		len++;
 	}
 	// 1er essai : swsso.chm
-	strcpy_s(szHelpFile+len,_MAX_PATH+1,"swSSO.chm");
+	strcpy_s(szHelpFile+len,_MAX_PATH-len,"swSSO.chm"); // ISSUE #110 : correction plantage
 	rc=(int)ShellExecute(NULL,"open",szHelpFile,NULL,"",SW_SHOW);
 	TRACE((TRACE_INFO,_F_,"ShellExecute(%s)=%d",szHelpFile,rc)); 
 	if (rc>32) bFound=TRUE;
@@ -449,7 +449,7 @@ end:
 	if (!bFound)
 	{
 		// 3ème essai : swSSO.pdf
-		strcpy_s(szHelpFile+len,_MAX_PATH+1,"swSSO.pdf");
+		strcpy_s(szHelpFile+len,_MAX_PATH-len,"swSSO.pdf"); // ISSUE #110 : correction plantage
 		rc=(int)ShellExecute(NULL,"open",szHelpFile,NULL,"",SW_SHOW);
 		TRACE((TRACE_INFO,_F_,"ShellExecute(%s)=%d",szHelpFile,rc));
 		if (rc>32) bFound=TRUE;
@@ -579,7 +579,7 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 	}
@@ -742,7 +742,7 @@ end:
 //-----------------------------------------------------------------------------
 // Affichage du bandeau blanc avec logo swSSO
 //-----------------------------------------------------------------------------
-void DrawLogoBar(HWND w)
+void DrawLogoBar(HWND w,int iHeight,HANDLE hLogoFondBlanc)
 {
 	TRACE((TRACE_ENTER,_F_, "w=0x%08lx",w));
 
@@ -753,8 +753,8 @@ void DrawLogoBar(HWND w)
 	if (!GetClientRect(w,&rect)) { TRACE((TRACE_ERROR,_F_,"GetClientRect(0x%08lx)=%ld",w,GetLastError()));  goto end; }
 	dc=BeginPaint(w,&ps);
 	if (dc==NULL) { TRACE((TRACE_ERROR,_F_,"BeginPaint()=%ld",GetLastError())); goto end;}
-	DrawBitmap(ghLogoFondBlanc,dc,0,0,60,50);
-	if (!BitBlt(dc,60,0,rect.right-60,50,0,0,0,WHITENESS)) { TRACE((TRACE_ERROR,_F_,"BitBlt(WHITENESS)=%ld",GetLastError())); }
+	DrawBitmap(hLogoFondBlanc,dc,0,0,60,iHeight);
+	if (!BitBlt(dc,60,0,rect.right-60,iHeight,0,0,0,WHITENESS)) { TRACE((TRACE_ERROR,_F_,"BitBlt(WHITENESS)=%ld",GetLastError())); }
 end:
 	if (dc!=NULL) EndPaint(w,&ps);
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -1506,3 +1506,117 @@ int swCheckBrowserURL(int iPopupType,char *pszCompare)
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
 	return rc;
 }
+
+//-----------------------------------------------------------------------------
+// GetNbActiveApps() 
+//-----------------------------------------------------------------------------
+// Retourne le nb de configurations actives
+//-----------------------------------------------------------------------------
+int GetNbActiveApps()
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=0;
+	int i;
+	for (i=0;i<giNbActions;i++)
+	{
+		if (gptActions[i].bActive) rc++;
+	}
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// RevealPasswordField()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void RevealPasswordField(HWND w,BOOL bReveal)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	char szPwd[LEN_PWD+1];
+	
+	ShowWindow(GetDlgItem(w,TB_PWD),bReveal?SW_HIDE:SW_SHOW);
+	ShowWindow(GetDlgItem(w,TB_PWD_CLEAR),bReveal?SW_SHOW:SW_HIDE);
+	GetDlgItemText(w,bReveal?TB_PWD:TB_PWD_CLEAR,szPwd,sizeof(szPwd));
+	SetDlgItemText(w,bReveal?TB_PWD_CLEAR:TB_PWD,szPwd);
+	SecureZeroMemory(szPwd,sizeof(szPwd));
+
+	// un ptit coup de refresh sur les contrôles
+	RECT rect;
+	GetClientRect(GetDlgItem(w,TB_PWD),&rect);
+	InvalidateRect(GetDlgItem(w,TB_PWD),&rect,FALSE);
+	GetClientRect(GetDlgItem(w,TB_PWD_CLEAR),&rect);
+	InvalidateRect(GetDlgItem(w,TB_PWD_CLEAR),&rect,FALSE);
+
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// ClipboardCopy()
+//-----------------------------------------------------------------------------
+// Copie la chaine passée en paramètre dans le presse papier
+//-----------------------------------------------------------------------------
+void ClipboardCopy(char *sz)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int len=strlen(sz)+1;
+	HGLOBAL hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
+	memcpy(GlobalLock(hMem), sz, len);
+	GlobalUnlock(hMem);
+	OpenClipboard(NULL);
+	EmptyClipboard();
+	SetClipboardData(CF_TEXT, hMem);
+	CloseClipboard();
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// ClipboardDelete()
+//-----------------------------------------------------------------------------
+// Vide le presse papier
+//-----------------------------------------------------------------------------
+void ClipboardDelete()
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	OpenClipboard(NULL);
+	EmptyClipboard();
+	CloseClipboard();
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+
+//-----------------------------------------------------------------------------
+// ExpandFileName()
+//-----------------------------------------------------------------------------
+// Expande les variables d'environnement dans les noms de fichier
+//-----------------------------------------------------------------------------
+int ExpandFileName(char *szInFileName,char *szOutFileName, int iBufSize)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szTmpFileName[_MAX_PATH+1];
+	int iPos=0;
+	int len;
+
+	// on commence par enlever les éventuels guillemets de début et fin de chaine
+	if (*szInFileName=='"') iPos=1;
+	strcpy_s(szTmpFileName,_MAX_PATH+1,szInFileName+iPos);
+	len=strlen(szTmpFileName);
+	if (len>1 && szTmpFileName[len-1]=='"') szTmpFileName[len-1]=0;
+
+	// on expande les variables d'environnement
+	if (ExpandEnvironmentStrings(szTmpFileName,szOutFileName,iBufSize)==0)
+	{
+		TRACE((TRACE_ERROR,_F_,"ExpandEnvironmentStrings(%s)=%d",szTmpFileName,GetLastError()));
+		goto end;
+	}
+
+	TRACE((TRACE_DEBUG,_F_,"ExpandEnvironmentStrings(%s)=%s",szTmpFileName,szOutFileName));
+	rc=0;
+	
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+

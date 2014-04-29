@@ -32,3 +32,4 @@
 //-----------------------------------------------------------------------------
 
 int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszParam3,int iAction);
+int swStat(void);

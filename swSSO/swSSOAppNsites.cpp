@@ -149,6 +149,99 @@ static char *gpNextCollapsedCategory=NULL;
 static char *gpCollapsedCategoryContext=NULL;
 static char gszEnumCollapsedCategories[1024];
 
+// ISSUE#111 - tooltips
+static HWND gwTip=NULL;
+typedef struct
+{
+	int iTip;
+	int idString;
+} T_TIP;
+T_TIP gtip[38];
+
+// ----------------------------------------------------------------------------------
+// InitTooltip()
+// ----------------------------------------------------------------------------------
+// ISSUE#111 : le grand retour des tooltips !
+// ----------------------------------------------------------------------------------
+static void InitTooltip(HWND w)
+{
+    TOOLINFO ti;
+	int i;
+
+	gtip[0].iTip=TX_ID;				gtip[0].idString=IDS_TIP_TB_ID;
+	gtip[1].iTip=TB_ID;				gtip[1].idString=IDS_TIP_TB_ID;
+	gtip[2].iTip=TX_PWD;			gtip[2].idString=IDS_TIP_TB_PWD;
+	gtip[3].iTip=TB_PWD;			gtip[3].idString=IDS_TIP_TB_PWD;
+	gtip[4].iTip=TX_ID2;			gtip[4].idString=IDS_TIP_TB_ID2;
+	gtip[5].iTip=TB_ID2;			gtip[5].idString=IDS_TIP_TB_ID2;
+	gtip[6].iTip=TX_ID3;			gtip[6].idString=IDS_TIP_TB_ID3;
+	gtip[7].iTip=TB_ID3;			gtip[7].idString=IDS_TIP_TB_ID3;
+	gtip[8].iTip=TX_ID4;			gtip[8].idString=IDS_TIP_TB_ID4;
+	gtip[9].iTip=TB_ID4;			gtip[9].idString=IDS_TIP_TB_ID4;
+	gtip[10].iTip=TX_TYPE;			gtip[10].idString=IDS_TIP_CB_TYPE;
+	gtip[11].iTip=CB_TYPE;			gtip[11].idString=IDS_TIP_CB_TYPE;
+	gtip[12].iTip=TX_TITRE;			gtip[12].idString=IDS_TIP_TB_TITRE;
+	gtip[13].iTip=TB_TITRE;			gtip[13].idString=IDS_TIP_TB_TITRE;
+	gtip[14].iTip=TX_URL;			gtip[14].idString=IDS_TIP_TB_URL;
+	gtip[15].iTip=TB_URL;			gtip[15].idString=IDS_TIP_TB_URL;
+	gtip[16].iTip=TX_ID_ID;			gtip[16].idString=IDS_TIP_TB_ID_ID;
+	gtip[17].iTip=TB_ID_ID;      	gtip[17].idString=IDS_TIP_TB_ID_ID;
+	gtip[18].iTip=TX_PWD_ID;     	gtip[18].idString=IDS_TIP_TB_PWD_ID;
+	gtip[19].iTip=TB_PWD_ID;     	gtip[19].idString=IDS_TIP_TB_PWD_ID;
+	gtip[20].iTip=TX_VALIDATION; 	gtip[20].idString=IDS_TIP_TB_VALIDATION;
+	gtip[21].iTip=TB_VALIDATION; 	gtip[21].idString=IDS_TIP_TB_VALIDATION;
+	gtip[22].iTip=TX_LANCEMENT;  	gtip[22].idString=IDS_TIP_TB_LANCEMENT;
+	gtip[23].iTip=TB_LANCEMENT;  	gtip[23].idString=IDS_TIP_TB_LANCEMENT;
+	gtip[24].iTip=TX_ID2_TYPE;      gtip[24].idString=IDS_TIP_CB_ID2_TYPE;
+	gtip[25].iTip=CB_ID2_TYPE;      gtip[25].idString=IDS_TIP_CB_ID2_TYPE;
+	gtip[26].iTip=TX_ID2_ID;      	gtip[26].idString=IDS_TIP_TB_ID2_ID;
+	gtip[27].iTip=TB_ID2_ID;      	gtip[27].idString=IDS_TIP_TB_ID2_ID;
+	gtip[28].iTip=TX_ID3_TYPE;      gtip[28].idString=IDS_TIP_CB_ID3_TYPE;
+	gtip[29].iTip=CB_ID3_TYPE;      gtip[29].idString=IDS_TIP_CB_ID3_TYPE;
+	gtip[30].iTip=TX_ID3_ID;      	gtip[30].idString=IDS_TIP_TB_ID3_ID;
+	gtip[31].iTip=TB_ID3_ID;      	gtip[31].idString=IDS_TIP_TB_ID3_ID;
+	gtip[32].iTip=TX_ID4_TYPE;      gtip[32].idString=IDS_TIP_CB_ID4_TYPE;
+	gtip[33].iTip=CB_ID4_TYPE;      gtip[33].idString=IDS_TIP_CB_ID4_TYPE;
+	gtip[34].iTip=TX_ID4_ID;      	gtip[34].idString=IDS_TIP_TB_ID4_ID;
+	gtip[35].iTip=TB_ID4_ID;      	gtip[35].idString=IDS_TIP_TB_ID4_ID;
+	gtip[36].iTip=CK_KBSIM;      	gtip[36].idString=IDS_TIP_TB_KBSIM;
+	gtip[37].iTip=TB_KBSIM;      	gtip[37].idString=IDS_TIP_TB_KBSIM;
+
+    gwTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL,
+							WS_POPUP | TTS_ALWAYSTIP /*| TTS_BALLOON*/,	
+							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
+							w,NULL,ghInstance,NULL);
+    SetWindowPos(gwTip,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	SendMessage(gwTip,TTM_SETMAXTIPWIDTH,0,250);
+	ZeroMemory(&ti,sizeof(ti));
+    ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = TTF_SUBCLASS | TTF_IDISHWND ;
+    ti.hinst = ghInstance;
+
+	for (i=0;i<38;i++)
+	{
+		ti.hwnd = w;
+	    ti.lpszText=GetString(gtip[i].idString);
+	    ti.uId = (UINT_PTR)GetDlgItem(w,gtip[i].iTip);
+	    SendMessage(gwTip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+		SendMessage(gwTip, TTM_SETDELAYTIME, TTDT_AUTOPOP,MAKELPARAM(20000,0)); 
+	}
+} 
+
+// ----------------------------------------------------------------------------------
+// TermTooltip()
+// ----------------------------------------------------------------------------------
+// ISSUE#111 : le grand retour des tooltips !
+// ----------------------------------------------------------------------------------
+static void TermTooltip(void)
+{
+	if (gwTip!=NULL)
+	{
+		DestroyWindow(gwTip);
+		gwTip=NULL;
+	}
+}
+
 //-----------------------------------------------------------------------------
 // BackupAppsNcategs()
 //-----------------------------------------------------------------------------
@@ -1002,7 +1095,7 @@ static int CALLBACK ChangeCategIdsDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w);
+			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
 			break;
 		case WM_ACTIVATE:
@@ -2244,6 +2337,8 @@ void OnInitDialog(HWND w,int iSelected)
 	gbPwdSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)PwdProc,TB_PWD_SUBCLASS_ID,NULL);
 	gbPwdClearSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD_CLEAR),(SUBCLASSPROC)PwdProc,TB_PWD_CLEAR_SUBCLASS_ID,NULL);
 
+	InitTooltip(w); // ISSUE#111
+
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -3137,6 +3232,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			if (gbPwdSubClass) RemoveWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)PwdProc,TB_PWD_SUBCLASS_ID);
 			if (gbPwdClearSubClass) RemoveWindowSubclass(GetDlgItem(w,TB_PWD_CLEAR),(SUBCLASSPROC)PwdProc,TB_PWD_CLEAR_SUBCLASS_ID);
 			if (ghTabBrush!=NULL) { DeleteObject(ghTabBrush); ghTabBrush=NULL; }
+			TermTooltip(); // ISSUE#111
 			break;
 		case WM_HELP:
 			Help();
