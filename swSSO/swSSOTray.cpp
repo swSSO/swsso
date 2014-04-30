@@ -420,8 +420,6 @@ void DestroySystray(HWND wMain)
 //-----------------------------------------------------------------------------
 static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
-	UNREFERENCED_PARAMETER(lp);
-
 	int rc=FALSE;
 	switch (msg)
 	{
@@ -438,6 +436,8 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			SetTextBold(w,TX_ID);
 			SetDlgItemText(w,TX_ID,gptActions[giLastApplication].szId1Value);
 			SetDlgItemText(w,TX_APP_NAME,gptActions[giLastApplication].szApplication);
+			// affiche un message différent si la saisie automatique du mot de passe n'a pas été faite ou n'était pas demandée
+			SetDlgItemText(w,TX_FRAME2,GetString(lp==1?IDS_MSG_CHANGE_APP_PWD_1:IDS_MSG_CHANGE_APP_PWD_2));
 			// positionnement en bas à droite de l'écran, près de l'icone swSSO
 			cx = GetSystemMetrics( SM_CXSCREEN );
 			cy = GetSystemMetrics( SM_CYSCREEN );
@@ -704,6 +704,7 @@ int BeginChangeAppPassword(void)
 	int rc=-1;
 	BOOL bDone=FALSE;
 	char *pszEncryptedPassword=NULL;
+	BOOL bOldPwdFillDone=0;
 	
 	if (giLastApplication==-1) goto end; // ne peut pas se produire en théorie puisque le menu systray n'est affiché que si !=1
 
@@ -722,7 +723,8 @@ int BeginChangeAppPassword(void)
 				SetForegroundWindow(gptActions[giLastApplication].wLastSSO);
 				// saisie à l'aveugle de l'ancien mot de passe, en espérant que ce soit le champ avec le focus...
 				TRACE((TRACE_INFO,_F_,"Fenetre 0x%08lx tjs presente, saisie de l'ancien mdp",gptActions[giLastApplication].wLastSSO));
-				KBSim(FALSE,200,pszPassword,TRUE);				
+				KBSim(FALSE,200,pszPassword,TRUE);	
+				bOldPwdFillDone=1;
 			}
 			SecureZeroMemory(pszPassword,strlen(pszPassword));
 			free(pszPassword);
@@ -730,7 +732,7 @@ int BeginChangeAppPassword(void)
 	}
 	
 	// 1ère popup : informe l'utilisateur que son mot de passe a été copié dans le presse papier
-	if (gbDisplayChangeAppPwdDialog) DialogBox(ghInstance,MAKEINTRESOURCE(IDD_POP_CHANGE_APP_PWD),NULL,PopChangeAppPwdDialogProc);
+	if (gbDisplayChangeAppPwdDialog) DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_POP_CHANGE_APP_PWD),NULL,PopChangeAppPwdDialogProc,bOldPwdFillDone);
 
 	while (!bDone)
 	{

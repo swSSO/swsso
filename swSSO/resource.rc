@@ -306,7 +306,7 @@ FONT 8, "Tahoma"
     LTEXT           "Application :", TX_FRAME3, 45, 5, 40, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Identifiant :", TX_FRAME1, 45, 15, 39, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "PXXX000", TX_ID, 87, 15, 180, 8, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V", TX_FRAME2, 45, 25, 215, 25, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V.", TX_FRAME2, 45, 25, 215, 25, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 5, 60, 242, 1, WS_EX_LEFT
 }
 
@@ -584,8 +584,8 @@ STRINGTABLE
     IDS_PP_WINDOWS                "AES-256 et PBKDF2 (mot de passe Windows)"
     IDS_PLEASE_ENTER_WINDOWS_PASSWORD "Veuillez saisir ci-dessous votre mot de passe Windows :"
     IDS_MENU_CHANGEAPPPWD         "Changer le mot de passe de cette application"
-    IDS_MSG_CHANGE_APP_PWD_1      "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V"
-    IDS_MSG_CHANGE_APP_PWD_2      "L'ancien mot de passe a été copié dans le presse-papier. Si nécessaire, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V"
+    IDS_MSG_CHANGE_APP_PWD_1      "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V."
+    IDS_MSG_CHANGE_APP_PWD_2      "L'ancien mot de passe a été copié dans le presse-papier. Si nécessaire, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V."
     IDS_TIP_TB_ID                 "Votre identifiant pour cette application"
     IDS_TIP_TB_PWD                "Votre mot de passe pour cette application"
     IDS_TIP_CB_TYPE               "Type de la fenêtre : choisir 'Site Web (configuration simplifiée)' pour configurer un site Internet ou une application Intranet"
