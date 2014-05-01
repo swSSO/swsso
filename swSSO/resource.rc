@@ -605,6 +605,8 @@ STRINGTABLE
 	IDS_TIP_CB_ID4_TYPE			  "(Optionnel) Type du champ identifiant n°4 : 'champ de saisie' ou 'liste de choix'. En configuration simplifiée, choisir 'champ de saisie'"
 	IDS_TIP_TB_ID4_ID			  "(Optionnel) En configuration simplifiée : position relative du champ identifiant n°4 par rapport au champ mot de passe. Exemple : 2 si ce champ est le 2nd champ après le champ mot de passe."
 	IDS_TIP_TB_KBSIM			  "Permet définir un script de saisie automatique. Exemple : [ID] saisit l'identifiant, [PWD] saisit le mot de passe, [TAB] simule un appui sur la touche TAB, [ENTER] simule un appui sur la touche ENTER."
+	IDS_BTN_RETRY				  "Réessayer"
+	IDS_BTN_FORGOT				  "Oublié ?"
 }
 
 //

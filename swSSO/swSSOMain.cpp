@@ -1371,6 +1371,43 @@ static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 	return rc;
 }
 
+//-------------------------------------------------------------------------------------
+// Hook pour changer les libellés de la message box d'erreur de mot de passe
+// qui propose de lancer la procédure de recouvrement (boutons : réessayer / oublié ?)
+//-------------------------------------------------------------------------------------
+WNDPROC gOldProc;
+HHOOK  ghHook;
+LRESULT CALLBACK HookWndProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+    LRESULT rc = CallWindowProc(gOldProc,w,msg,wp,lp);
+    if (msg==WM_INITDIALOG)
+    {
+		TRACE((TRACE_DEBUG,_F_,"WM_INITDIALOG"));
+		SetDlgItemText(w,IDCANCEL,GetString(IDS_BTN_FORGOT));
+		SetDlgItemText(w,IDRETRY,GetString(IDS_BTN_RETRY));
+    }
+    if (msg==WM_NCDESTROY) 
+	{
+		TRACE((TRACE_DEBUG,_F_,"WM_NCDESTROY"));
+		UnhookWindowsHookEx(ghHook);
+	}
+	return rc;
+}
+LRESULT CALLBACK SetHook(int nCode,WPARAM wp,LPARAM lp)
+{
+	if (nCode==HC_ACTION)
+	{
+		
+		CWPSTRUCT* pwp = (CWPSTRUCT*)lp;
+		if (pwp->message==WM_INITDIALOG) 
+		{ 
+			TRACE((TRACE_DEBUG,_F_,"WM_INITDIALOG"));
+			gOldProc=(WNDPROC)SetWindowLong(pwp->hwnd,GWL_WNDPROC,(LONG)HookWndProc); 
+		}
+	}
+	return CallNextHookEx(ghHook,nCode,wp,lp);
+}
+
 //-----------------------------------------------------------------------------
 // PwdDialogProc()
 //-----------------------------------------------------------------------------
@@ -1487,6 +1524,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						else // une clé de recouvrement existe et que les recoveryInfos ont déjà été stockées
 							 // on propose de réinitialiser le mot de passe
 						{
+							ghHook=SetWindowsHookEx (WH_CALLWNDPROC,(HOOKPROC)SetHook,NULL,GetCurrentThreadId());
 							if (MessageBox(w,GetString(IDS_BADPWD2),"swSSO",MB_RETRYCANCEL | MB_ICONEXCLAMATION)==IDCANCEL)
 							{
 								RecoveryChallenge(w);

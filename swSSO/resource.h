@@ -291,4 +291,6 @@
 #define IDS_TIP_TB_ID4_ID						40129
 #define IDS_TIP_CK_KBSIM						40130
 #define IDS_TIP_TB_KBSIM						40131
+#define IDS_BTN_RETRY				  			40132
+#define IDS_BTN_FORGOT				  			40133
 
