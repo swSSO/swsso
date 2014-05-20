@@ -691,6 +691,11 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					{
 						strcpy_s(gptActions[params->iAction].szPwdEncryptedValue,sizeof(gptActions[params->iAction].szPwdEncryptedValue),szPassword);
 					}
+					// ISSUE#113 : refresh sur la fenêtre gestion des sites et applications
+					if (gwAppNsites!=NULL && IsWindow(gwAppNsites))
+					{
+						ShowApplicationDetails(gwAppNsites,params->iAction);
+					}
 					EndDialog(w,IDOK);
 				}
 					break;
