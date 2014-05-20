@@ -378,6 +378,9 @@ static int CALLBACK ResponseDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						OpenResponse(w);
 					}
 					break;
+				case PB_RECHALLENGE:
+					EndDialog(w,PB_RECHALLENGE);
+					break;
 				case TB_CHALLENGE:
 					if (HIWORD(wp)==EN_CHANGE)
 					{
@@ -623,6 +626,7 @@ int RecoveryResponse(HWND w)
 
 	// affiche la fenêtre de saisie de la response
 	ret=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_RESPONSE),w,ResponseDialogProc,(LPARAM)0);
+	if (ret==PB_RECHALLENGE) { rc=-5; goto end; } // ISSUE#121
 	if (ret!=IDOK) { rc=-4; goto end; }
 
 	// vérifie le format de la response

@@ -2081,6 +2081,11 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			{
 				if (AskPwd(NULL,TRUE)!=0) goto end;
 			}
+			else if (ret==-5)  // l'utilisateur a demandé de regénérer le challenge (ISSUE#121)
+			{
+				RecoveryChallenge(NULL);
+				goto end;
+			}
 			else // il y a eu une réinit et ça n'a pas marché :-(
 			{
 				goto end;

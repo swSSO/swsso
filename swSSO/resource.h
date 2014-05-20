@@ -143,6 +143,7 @@
 #define IDD_CHANGE_IDS                          1177
 #define CK_DISPLAY_MSG                          40000
 #define IDS_BADPWD                              40000
+#define PB_RECHALLENGE                          40000
 #define TX_FRAME1                               40000
 #define CK_NPMECA                               40001
 #define CK_VIEW                                 40001
@@ -280,17 +281,15 @@
 #define IDS_TIP_TB_PWD_ID                       40118
 #define IDS_TIP_TB_VALIDATION                   40119
 #define IDS_TIP_TB_LANCEMENT                    40120
-#define IDS_TIP_TB_ID2							40121
-#define IDS_TIP_TB_ID3							40122
-#define IDS_TIP_TB_ID4							40123
-#define IDS_TIP_CB_ID2_TYPE						40124
-#define IDS_TIP_TB_ID2_ID						40125
-#define IDS_TIP_CB_ID3_TYPE						40126
-#define IDS_TIP_TB_ID3_ID						40127
-#define IDS_TIP_CB_ID4_TYPE						40128
-#define IDS_TIP_TB_ID4_ID						40129
-#define IDS_TIP_CK_KBSIM						40130
-#define IDS_TIP_TB_KBSIM						40131
-#define IDS_BTN_RETRY				  			40132
-#define IDS_BTN_FORGOT				  			40133
-
+#define IDS_TIP_TB_ID2                          40121
+#define IDS_TIP_TB_ID3                          40122
+#define IDS_TIP_TB_ID4                          40123
+#define IDS_TIP_CB_ID2_TYPE                     40124
+#define IDS_TIP_TB_ID2_ID                       40125
+#define IDS_TIP_CB_ID3_TYPE                     40126
+#define IDS_TIP_TB_ID3_ID                       40127
+#define IDS_TIP_CB_ID4_TYPE                     40128
+#define IDS_TIP_TB_ID4_ID                       40129
+#define IDS_TIP_TB_KBSIM                        40130
+#define IDS_BTN_RETRY                           40131
+#define IDS_BTN_FORGOT                          40132
