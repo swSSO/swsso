@@ -3417,6 +3417,15 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		case WM_SIZE:			// ------------------------------------------------------- WM_SIZE
 			MoveControls(w,NULL); // 0.90, avant il y avait (w,w), correction bug#102
 			break;
+		case WM_SIZING: // ISSUE#116
+			{
+				RECT *pRectNewSize=(RECT*)lp;
+				TRACE((TRACE_DEBUG,_F_,"RectNewSize=%d,%d,%d,%d",pRectNewSize->top,pRectNewSize->left,pRectNewSize->bottom,pRectNewSize->right));
+				if (pRectNewSize->right-pRectNewSize->left < 560)  pRectNewSize->right=pRectNewSize->left+560;
+				if (pRectNewSize->bottom-pRectNewSize->top < 540)  pRectNewSize->bottom=pRectNewSize->top+540;
+				rc=TRUE;
+			}
+			break;
 		case WM_CTLCOLORSTATIC:	// ------------------------------------------------------- WM_CTLCOLORSTATIC
 			switch(GetDlgCtrlID((HWND)lp))
 			{
