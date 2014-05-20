@@ -35,6 +35,7 @@ extern char gszRes[];
 extern char gszComputedValue[];
 char *GetString(UINT uiString);
 BSTR GetBSTRFromSZ(const char *sz);
+char *GetSZFromBSTR(BSTR bstr);
 BOOL CompareBSTRtoSZ(BSTR bstr,const char *sz);
 char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams);
 char *HTTPEncodeParam(char *pszToEncode);

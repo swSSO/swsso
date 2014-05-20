@@ -273,7 +273,6 @@ char *GetW7PopupURL(HWND w)
 	IAccessible *pAccessible=NULL;
 	VARIANT index;
 	BSTR bstrName=NULL;
-	int  bstrLen;
 	char *pszURL=NULL;
 	IAccessible *pChild=NULL;
 	IDispatch *pIDispatch=NULL;
@@ -313,6 +312,8 @@ char *GetW7PopupURL(HWND w)
 	}
 	TRACE((TRACE_DEBUG,_F_,"pChild->get_accName(%ld)='%S'",index.lVal,bstrName));
 
+	// 
+	/* ISSUE#122 pb lié à la présence de caractères unicode qui fait planter le sprintf
 	bstrLen=SysStringLen(bstrName);
 	pszURL=(char*)malloc(bstrLen+1);
 	if (pszURL==NULL) 
@@ -321,6 +322,9 @@ char *GetW7PopupURL(HWND w)
 		goto end; 
 	}
 	sprintf_s(pszURL,bstrLen+1,"%S",bstrName);
+	*/
+	pszURL=GetSZFromBSTR(bstrName);
+	if (pszURL==NULL) goto end;
 	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
 		
 end:

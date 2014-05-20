@@ -250,7 +250,7 @@ char *GetFirefoxPopupURL(HWND w)
 	IAccessible *pAccessible=NULL;
 	IAccessible *pAccessibleFF4=NULL;
 	BSTR bstrName=NULL;
-	int  bstrLen;
+	//int  bstrLen;
 	char *pszURL=NULL;
 	IAccessible *pChild=NULL;
 	IAccessible *pChild2=NULL;
@@ -355,6 +355,7 @@ suite:
 	}
 	TRACE((TRACE_DEBUG,_F_,"pChild2->get_accName(%ld)='%S'",vtChild2.lVal,bstrName));
 
+	/* modif conformément à ISSUE#122 constatée sur IE11, explique peut-être le non fonctionnement sur certaines popup firefox
 	bstrLen=SysStringLen(bstrName);
 	pszURL=(char*)malloc(bstrLen+1);
 	if (pszURL==NULL) 
@@ -363,6 +364,10 @@ suite:
 		goto end; 
 	}
 	sprintf_s(pszURL,bstrLen+1,"%S",bstrName);
+	*/
+	pszURL=GetSZFromBSTR(bstrName);
+	if (pszURL==NULL) goto end;
+
 	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
 		
 end:

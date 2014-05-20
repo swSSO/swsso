@@ -99,6 +99,29 @@ end:
 }
 
 // ----------------------------------------------------------------------------------
+// Convertit une BSTR en sz (l'appelant doit libérer avec free si !NULL)
+// Nouvelle fonction en 1.00 pour remplacer la conversion sprintf("%S") qui échouait
+// lorsquela chaine contenait des caractères unicode (cf. ISSUE#122)
+// ----------------------------------------------------------------------------------
+// [in] chaine BSTR à convertir en sz
+// [rc] NULL si échec, la chaine convertie sinon
+// ----------------------------------------------------------------------------------
+char *GetSZFromBSTR(BSTR bstr)
+{
+	TRACE((TRACE_ENTER,_F_, "%S",bstr));
+	int len;
+	char *rc=NULL;
+	len=SysStringLen(bstr);
+	rc=(char*)malloc(len+1);
+	if (rc==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",len+1)); goto end; }
+	WideCharToMultiByte( CP_ACP, 0, bstr, -1, rc, len+1, NULL, NULL );
+	rc[len]=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "%s",rc));
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
 // CompareBSTRtoSZ
 // ----------------------------------------------------------------------------------
 // Compare une BSTR à une sz
