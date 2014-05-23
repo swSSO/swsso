@@ -149,6 +149,7 @@ void swCryptTerm()
 // swKeystoreLoad()
 //-----------------------------------------------------------------------------
 // Chargement du keystore contenant des clés privées 
+// Les clés ne sont pas déchiffrées au moment du chargement, elles restent chiffrées en mémoire
 //-----------------------------------------------------------------------------
 int swKeystoreLoad(char *szKeystoreFile)
 {
@@ -308,7 +309,7 @@ end:
 //-----------------------------------------------------------------------------
 // [in] hPrivateKey = handle clé
 // [in] sel
-// [in] szPassword = mot de passe à attribuer de la clé
+// [in] szPassword = mot de passe à attribuer à la clé
 // [out] ppszPrivateKeyData = clé chiffrée par un mdp et encodée base 64 (hors id)
 //-----------------------------------------------------------------------------
 int swCryptGetSZDataFromPrivateKey(HCRYPTKEY hPrivateKey,BYTE *pSalt,char *szPassword,char **ppszPrivateKeyData)
@@ -976,4 +977,29 @@ end:
 	if (pDataToEncrypt!=NULL) free(pDataToEncrypt);
 	TRACE((TRACE_LEAVE,_F_,"pszDest=0x%08lx",pszDest));
 	return pszDest;
+}
+
+// ISSUE#120
+int swChangeKeystorePassword(char *szOldPwd,char *szNewPwd)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	int rc=-1;
+	int i;
+	HCRYPTKEY hPrivateKey=NULL;
+
+	for (i=0;i<giNbPrivateKeys;i++)
+	{
+		rc=swCryptGetPrivateKeyFromSZData(gtabPrivateKey[i].szSaltData,gtabPrivateKey[i].szPrivateKeyData,szOldPwd,&hPrivateKey);
+		if (rc!=0) goto end;
+		rc=swCryptGetSZDataFromPrivateKey(hPrivateKey,(BYTE*)gtabPrivateKey[i].szSaltData,szNewPwd,&gtabPrivateKey[i].szPrivateKeyData);
+		if (rc!=0) goto end;
+		if(hPrivateKey!=NULL) { CryptDestroyKey(hPrivateKey); hPrivateKey=NULL; }
+	}
+	rc=swKeystoreSave(gszKeystoreFile);
+	if (rc!=0) goto end;
+	rc=0;
+end:
+	if(hPrivateKey!=NULL) { CryptDestroyKey(hPrivateKey); hPrivateKey=NULL; }
+	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	return rc;
 }

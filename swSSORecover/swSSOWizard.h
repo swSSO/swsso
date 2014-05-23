@@ -34,6 +34,7 @@
 #define LEN_PWD 50
 int RecoveryWizard(void);
 extern char gszKeystorePwd[LEN_PWD+1];
+extern char gszKeystoreFile[_MAX_PATH+1];
 
 extern const char gcszBeginChallenge[];
 extern const char gcszEndChallenge[];

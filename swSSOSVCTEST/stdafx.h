@@ -36,4 +36,6 @@
 
 #include <stdio.h>
 #include <tchar.h>
+#include <Iads.h>
+#include <Adshlp.h>
 #include <windows.h>

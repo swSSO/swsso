@@ -70,3 +70,5 @@ int swCryptDecryptDataRSA(int iKeyId,char *szKeystorePassword,BYTE *pEncryptedDa
 char *swCryptEncryptAES(BYTE *pData,DWORD dwLenData,HCRYPTKEY hKey);
 
 int swCreateAESKeyFromKeyData(BYTE *pAESKeyData,HCRYPTKEY *phKey);
+
+int swChangeKeystorePassword(char *szOldPwd,char *szNewPwd); // ISSUE#120

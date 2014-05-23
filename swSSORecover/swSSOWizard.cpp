@@ -41,6 +41,7 @@ char gszKeystorePwd[LEN_PWD+1];
 HANDLE ghFontCourrier=NULL;
 char gszFormattedResponseForDisplay[2048];
 char gszFormattedResponseForSave[2048];
+char gszKeystoreFile[_MAX_PATH+1];
 
 //-----------------------------------------------------------------------------
 // ImportKey()
@@ -377,14 +378,23 @@ UNREFERENCED_PARAMETER(wp);
 					} 
 					else 
 					{
-						strcpy_s(gszKeystorePwd,sizeof(gszKeystorePwd),szPwd1);
-						if (!gbFirstTime)
+						if (gbFirstTime) // définition du mot de passe initial
 						{
-							// TODO : transchiffrement du keystore !!!
-							
-							MessageBox(w,GetString(IDS_CONFIRM_PWD_CHANGE),"swSSO",MB_ICONINFORMATION | MB_OK) ;
+							strcpy_s(gszKeystorePwd,sizeof(gszKeystorePwd),szPwd1);
+							giCurrentPage++;
+						}	
+						else // changement de mot de passe (ISSUE#120)
+						{
+							if (swChangeKeystorePassword(gszKeystorePwd,szPwd1)) // changement réussi
+							{
+								MessageBox(w,GetString(IDS_CONFIRM_PWD_CHANGE),"swSSO",MB_ICONINFORMATION | MB_OK) ;
+								// TODO LOG !!!!!!!
+							}
+							else // echec du changement...
+							{
+								MessageBox(w,GetString(IDS_CONFIRM_PWD_CHANGE),"swSSO",MB_ICONINFORMATION | MB_OK) ;
+							}
 						}
-						giCurrentPage++;
 					}
 					SecureZeroMemory(szPwd1,sizeof(szPwd1));
 					SecureZeroMemory(szPwd2,sizeof(szPwd2));
@@ -447,7 +457,9 @@ UNREFERENCED_PARAMETER(wp);
 						ret=swKeystoreImportPrivateKey(szKeyFile,szKeyPwd,gszKeystorePwd);
 						if (ret==0) // Clé importée, sauvegarde le fichier keystore
 						{
-							ret=swKeystoreSave("./swSSO-Keystore.txt");
+							// ISSUE#119
+							// ret=swKeystoreSave("./swSSO-Keystore.txt");
+							ret=swKeystoreSave(gszKeystoreFile);
 							if (ret==0) // Tout va bien, page suivante ! 
 							{
 								MessageBox(w,GetString(IDS_CONFIRM_KEY_IMPORTED),"swSSO",MB_ICONINFORMATION | MB_OK) ;
@@ -611,6 +623,7 @@ int RecoveryWizard(void)
 	PROPSHEETHEADER psh;
 	int ret;
 	HANDLE hLogo=NULL;
+	int len;
 	
 	ZeroMemory(&psp,sizeof(PROPSHEETPAGE));
 	
@@ -631,14 +644,25 @@ int RecoveryWizard(void)
 	psh.hbmHeader=(HBITMAP)hLogo;
 	psh.nPages=5;
 	
-	ret=swKeystoreLoad("./swSSO-Keystore.txt");
+	// ISSUE#119 : fichier keystore dans le répertoire courant
+	// ret=swKeystoreLoad("./swSSO-Keystore.txt");
+	len=GetCurrentDirectory(_MAX_PATH-20,gszKeystoreFile);
+	if (len==0) goto end;
+	if (gszKeystoreFile[len-1]!='\\')
+	{
+		gszKeystoreFile[len]='\\';
+		len++;
+	}
+	strcpy_s(gszKeystoreFile+len,_MAX_PATH+1,"swSSO-Keystore.txt");
+	ret=swKeystoreLoad(gszKeystoreFile);
+
 	if (ret==0) // Keystore chargé OK
 		gbFirstTime=FALSE;
 	else if (ret==SWCRYPT_FILENOTFOUND)
 		gbFirstTime=TRUE;
 	else
 	{
-		TRACE((TRACE_ERROR,_F_,"swKeystoreLoad()=%d",ret));
+		TRACE((TRACE_ERROR,_F_,"swKeystoreLoad(%s)=%d",gszKeystoreFile,ret));
 		MessageBox(NULL,GetString(IDS_KEYSTORE_LOAD_ERROR),"swSSO",MB_ICONEXCLAMATION | MB_OK);
 		goto end;
 	}

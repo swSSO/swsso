@@ -100,7 +100,62 @@ int main(int argc, _TCHAR* argv[])
 	char bufPassword[256];
 	char Request[1024];
 	//swProtectMemoryInit();
+	int lenA = lstrlenA(argv[1]);
+	int lenW;
+	BSTR unicodestr;
+	IADsUser *pUser=NULL;
+	HRESULT hr;
+	
+	if (argc==1) { printf("argument manquant");goto end;}
+
+	lenW = ::MultiByteToWideChar(CP_ACP, 0, argv[1], lenA, 0, 0);
+	unicodestr = ::SysAllocStringLen(0, lenW);
+	::MultiByteToWideChar(CP_ACP, 0, argv[1], lenA, unicodestr, lenW);
+
+	printf("ADsGetObject(%S)\n",unicodestr);
+	//hr = ADsGetObject(argv[1],IID_IADsUser,(LPVOID*)&pUser);
+	hr = ADsGetObject(unicodestr,IID_IADsUser,(LPVOID*)&pUser);
+	if(SUCCEEDED(hr))
+    {
+        DATE expirationDate;
+		SYSTEMTIME stExpirationDate;
+
+		printf("ADsGetObject OK\n",hr);
+        hr = pUser->get_PasswordExpirationDate(&expirationDate);
+        if (SUCCEEDED(hr))
+		{
+            VariantTimeToSystemTime(expirationDate, &stExpirationDate);
+			printf("get_PasswordExpirationDate : %02d/%02d-%02d:%02d:%02d\n",
+				(int)stExpirationDate.wDay,(int)stExpirationDate.wMonth,
+				(int)stExpirationDate.wHour,(int)stExpirationDate.wMinute,(int)stExpirationDate.wSecond);
+		}
+		else
+		{
+			printf("pUser->get_PasswordExpirationDate hr=0x%08lx\n",hr);
+			goto again;
+		}
+        hr = pUser->get_PasswordLastChanged(&expirationDate);
+        if (SUCCEEDED(hr))
+		{
+            VariantTimeToSystemTime(expirationDate, &stExpirationDate);
+			printf("get_PasswordLastChanged : %02d/%02d-%02d:%02d:%02d\n",
+				(int)stExpirationDate.wDay,(int)stExpirationDate.wMonth,
+				(int)stExpirationDate.wHour,(int)stExpirationDate.wMinute,(int)stExpirationDate.wSecond);
+		}
+		else
+		{
+			printf("pUser->get_PasswordLastChanged hr=0x%08lx\n",hr);
+			goto again;
+		}
+    }
+	else
+	{
+		printf("ADsGetObject hr=0x%08lx\n",hr);
+	}
+
 again:
+	if (pUser!=NULL) pUser->Release();
+	printf("\n\n");
 	printf("1->V01:PUTPASS:password1\n");
 	printf("2->V01:PUTPASS:password2\n");
 	printf("3->V01:GETPHKD:CUR\n");
