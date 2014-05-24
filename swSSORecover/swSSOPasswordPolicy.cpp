@@ -136,9 +136,11 @@ void LoadPasswordPolicy(void)
 		dwValueType=REG_SZ;
 		dwValueSize=sizeof(szValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_LOG_FILE_NAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) 
-			strcpy_s(gszLogFileName,sizeof(gszLogFileName),szValue);
-	
+		if (rc==ERROR_SUCCESS)
+		{
+			//strcpy_s(gszLogFileName,sizeof(gszLogFileName),szValue);
+			ExpandFileName(szValue,gszLogFileName,_MAX_PATH+1);
+		}
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_LOG_LEVEL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) giLogLevel=(int)dwValue; 

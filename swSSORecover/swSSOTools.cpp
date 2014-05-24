@@ -216,3 +216,36 @@ end:
 	return ret;
 }
 
+//-----------------------------------------------------------------------------
+// ExpandFileName()
+//-----------------------------------------------------------------------------
+// Expande les variables d'environnement dans les noms de fichier
+//-----------------------------------------------------------------------------
+int ExpandFileName(char *szInFileName,char *szOutFileName, int iBufSize)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szTmpFileName[_MAX_PATH+1];
+	int iPos=0;
+	int len;
+
+	// on commence par enlever les éventuels guillemets de début et fin de chaine
+	if (*szInFileName=='"') iPos=1;
+	strcpy_s(szTmpFileName,_MAX_PATH+1,szInFileName+iPos);
+	len=strlen(szTmpFileName);
+	if (len>1 && szTmpFileName[len-1]=='"') szTmpFileName[len-1]=0;
+
+	// on expande les variables d'environnement
+	if (ExpandEnvironmentStrings(szTmpFileName,szOutFileName,iBufSize)==0)
+	{
+		TRACE((TRACE_ERROR,_F_,"ExpandEnvironmentStrings(%s)=%d",szTmpFileName,GetLastError()));
+		goto end;
+	}
+
+	TRACE((TRACE_DEBUG,_F_,"ExpandEnvironmentStrings(%s)=%s",szTmpFileName,szOutFileName));
+	rc=0;
+	
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}

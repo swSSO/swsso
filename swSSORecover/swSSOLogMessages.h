@@ -120,3 +120,12 @@
 //
 #define MSG_RECOVERY_FORUSER             ((DWORD)0x00000006L)
 
+//
+// MessageId: MSG_PWD_CHANGE
+//
+// MessageText:
+//
+// Changement de mot de passe du keystore
+//
+#define MSG_PWD_CHANGE                   ((DWORD)0x00000007L)
+

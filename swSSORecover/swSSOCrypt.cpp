@@ -979,20 +979,30 @@ end:
 	return pszDest;
 }
 
-// ISSUE#120
+//-----------------------------------------------------------------------------
+// swChangeKeystorePassword() -- ISSUE#120
+//-----------------------------------------------------------------------------
+// Changement du mot de passe du keystore
+// Remarque : la vérification de la conformité à la politique de mot de passe
+//            n'est pas faite ici, elle doit avoir été faite avant l'appel
+//-----------------------------------------------------------------------------
+// [in] szOldPwd = mot de passe actuel
+// [in] szNewPwd = nouveau mot de passe
+// [rc] 0 si OK
+///-----------------------------------------------------------------------------
 int swChangeKeystorePassword(char *szOldPwd,char *szNewPwd)
 {
 	TRACE((TRACE_ENTER,_F_,""));
 	int rc=-1;
 	int i;
 	HCRYPTKEY hPrivateKey=NULL;
+	BYTE Salt[PBKDF2_SALT_LEN];
 
 	for (i=0;i<giNbPrivateKeys;i++)
 	{
-		rc=swCryptGetPrivateKeyFromSZData(gtabPrivateKey[i].szSaltData,gtabPrivateKey[i].szPrivateKeyData,szOldPwd,&hPrivateKey);
-		if (rc!=0) goto end;
-		rc=swCryptGetSZDataFromPrivateKey(hPrivateKey,(BYTE*)gtabPrivateKey[i].szSaltData,szNewPwd,&gtabPrivateKey[i].szPrivateKeyData);
-		if (rc!=0) goto end;
+		if (swCryptGetPrivateKeyFromSZData(gtabPrivateKey[i].szSaltData,gtabPrivateKey[i].szPrivateKeyData,szOldPwd,&hPrivateKey)!=0) goto end;
+		if (swCryptDecodeBase64(gtabPrivateKey[i].szSaltData,(char*)Salt,PBKDF2_SALT_LEN)!=0) goto end;
+		if (swCryptGetSZDataFromPrivateKey(hPrivateKey,Salt,szNewPwd,&gtabPrivateKey[i].szPrivateKeyData)!=0) goto end;
 		if(hPrivateKey!=NULL) { CryptDestroyKey(hPrivateKey); hPrivateKey=NULL; }
 	}
 	rc=swKeystoreSave(gszKeystoreFile);

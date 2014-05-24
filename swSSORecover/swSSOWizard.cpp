@@ -385,10 +385,11 @@ UNREFERENCED_PARAMETER(wp);
 						}	
 						else // changement de mot de passe (ISSUE#120)
 						{
-							if (swChangeKeystorePassword(gszKeystorePwd,szPwd1)) // changement réussi
+							if (swChangeKeystorePassword(gszKeystorePwd,szPwd1)==0) // changement réussi
 							{
 								MessageBox(w,GetString(IDS_CONFIRM_PWD_CHANGE),"swSSO",MB_ICONINFORMATION | MB_OK) ;
-								// TODO LOG !!!!!!!
+								swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_PWD_CHANGE,NULL,NULL,NULL);
+								giCurrentPage++;
 							}
 							else // echec du changement...
 							{

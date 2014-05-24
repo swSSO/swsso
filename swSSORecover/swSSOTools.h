@@ -41,3 +41,4 @@ char *strnistr (const char *szStringToBeSearched,
 HFONT GetModifiedFont(HWND w,long lfWeight);
 void SetTextBold(HWND w,int iCtrlId);
 int atox4(char *sz);
+int ExpandFileName(char *szInFileName,char *szOutFileName, int iBufSize);

@@ -81,3 +81,11 @@ SymbolicName=MSG_RECOVERY_FORUSER
 Language=French
 Demande de recouvrement traitee pour l'utilisateur %1
 .
+
+MessageId=0x00000007
+Severity=Success
+Facility=Application
+SymbolicName=MSG_PWD_CHANGE
+Language=French
+Changement de mot de passe du keystore
+.
