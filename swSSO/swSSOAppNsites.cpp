@@ -3647,6 +3647,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 // ----------------------------------------------------------------------------------
 int ShowAppNsites(int iSelected)
 {
+	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=1;
 	
 	// si fenêtre déjà affichée, la replace au premier plan
@@ -3654,6 +3655,11 @@ int ShowAppNsites(int iSelected)
 	{
 		ShowWindow(gwAppNsites,SW_SHOW);
 		SetForegroundWindow(gwAppNsites);
+		
+		// ISSUE#117 --> Remplissage de la treeview et sélectionne l'application
+		FillTreeView(gwAppNsites);
+		TVSelectItemFromLParam(gwAppNsites,TYPE_APPLICATION,iSelected);
+				
 		goto end;
 	}
 
