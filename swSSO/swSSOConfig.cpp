@@ -3923,8 +3923,9 @@ doConfig:
 
 				TRACE((TRACE_DEBUG,_F_,"giNbActions=%d iType=%d szURL=%s",giNbActions,gptActions[giNbActions].iType,gptActions[giNbActions].szURL));
 				// et hop, c'est fait (la sauvegarde sera faite ou pas par l'utilisateur dans la fenêtre appNsites)
-				BackupAppsNcategs();
+				// BackupAppsNcategs(); Supprimé lors du traitement de ISSUE#114
 				giNbActions++; 
+				if (gwAppNsites!=NULL) EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
 				ShowAppNsites(giNbActions-1);
 			}
 		}
@@ -4019,8 +4020,17 @@ suite:
 		gptActions[giNbActions].bConfigSent=TRUE; // on vient de la récupérer sur le serveur, pas la peine de la remonter !
 		giNbActions++;
 	}
-	SaveApplications();
-	SavePortal();
+	// Complément ISSUE#117 : si fenêtre ouverte, ne fait pas la sauvegarde mais affiche la fenêtre
+	if (gwAppNsites!=NULL)
+	{
+		EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
+		ShowAppNsites(bReplaceOldConfig?giNbActions:giNbActions-1);
+	}
+	else
+	{
+		SaveApplications();
+		SavePortal();
+	}
 
 	rc=0;
 end:

@@ -85,6 +85,8 @@ static HBRUSH ghTabBrush;
 static BOOL gbPwdSubClass=FALSE;
 static BOOL gbPwdClearSubClass=FALSE;
 
+BOOL gbIsChanging=FALSE;
+
 typedef struct {
 	int iNbModified;
 	char szId1Value[LEN_ID+1];	
@@ -614,50 +616,6 @@ void TVSelectItemFromLParam(HWND w,int iAppOrCateg,LPARAM lp)
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
-
-#if 0
-// 0.90B1 : renommage direct, fonction devenue inutile
-//-----------------------------------------------------------------------------
-// UpdateActionsTitleFromTreeview()
-//-----------------------------------------------------------------------------
-// Met à jour les titres des applications dans la table gptActions à partir
-// des libellés de la Treeview
-// Cette fonction est utilisée à partir de la v0.88 : le renommage n'est plus
-// répercuté directement dans la table gptActions, mais uniquement lors de la 
-// validation (OK ou appliquer).
-// Ceci permet de corriger le bug #89
-//-----------------------------------------------------------------------------
-void UpdateActionsTitleFromTreeview(HWND w)
-{ 
-	TRACE((TRACE_ENTER,_F_, ""));
-	
-	HTREEITEM hNextCateg,hNextApp;
-	LPARAM lp;
-	char szText[LEN_APPLICATION_NAME+1];
-
-	hNextCateg=TreeView_GetRoot(GetDlgItem(w,TV_APPLICATIONS));
-	while (hNextCateg!=NULL)
-	{
-		hNextApp=TreeView_GetChild(GetDlgItem(w,TV_APPLICATIONS),hNextCateg);
-		while(hNextApp!=NULL)
-		{
-			lp=TVItemGetLParam(w,hNextApp);
-			if (lp!=-1)
-			{
-				TVItemGetText(w,hNextApp,szText,sizeof(szText));
-				if (strcmp(szText,gptActions[lp].szApplication)!=0)
-				{
-					TRACE((TRACE_INFO,_F_,"Application renommée (%d) : %s -> %s",lp,gptActions[lp].szApplication,szText)); 
-					strcpy_s(gptActions[lp].szApplication,LEN_APPLICATION_NAME+1,szText);
-				}
-			}
-			hNextApp=TreeView_GetNextSibling(GetDlgItem(w,TV_APPLICATIONS),hNextApp);
-		}
-		hNextCateg=TreeView_GetNextSibling(GetDlgItem(w,TV_APPLICATIONS),hNextCateg);
-	}
-	TRACE((TRACE_LEAVE,_F_, ""));
-}
-#endif
 
 //-----------------------------------------------------------------------------
 // TogglePasswordField()
@@ -1801,6 +1759,7 @@ end:
 void ShowApplicationDetails(HWND w,int iAction)
 {
 	TRACE((TRACE_ENTER,_F_, "iAction=%d",iAction));
+	gbIsChanging=TRUE;
 	
 	if (iAction>giNbActions) { TRACE((TRACE_ERROR,_F_,"iAction=%d ! (giNbActions=%d)",iAction,giNbActions)); goto end; }
 	
@@ -1869,6 +1828,7 @@ void ShowApplicationDetails(HWND w,int iAction)
 	// 0.93B7 ISSUE#10
 	MoveControls(w,GetDlgItem(w,TAB_CONFIG)); // marche pas : GetDlgItem(w,TAB_CONFIG)
 end:
+	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -2236,7 +2196,8 @@ void OnInitDialog(HWND w,int iSelected)
 	int cx;
 	int cy;
 	RECT rect;
-	
+
+	gbIsChanging=TRUE;
 	gbTVLabelEditing=FALSE;
 	//gbAtLeastOneAppRenamed=FALSE; // 0.90B1 : renommage direct, flag inutile
 	gbEffacementEnCours;
@@ -2338,7 +2299,9 @@ void OnInitDialog(HWND w,int iSelected)
 	gbPwdClearSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD_CLEAR),(SUBCLASSPROC)PwdProc,TB_PWD_CLEAR_SUBCLASS_ID,NULL);
 
 	InitTooltip(w); // ISSUE#111
-
+	
+	gbIsChanging=FALSE;
+	EnableWindow(GetDlgItem(w,IDAPPLY),FALSE); // ISSUE#114
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -2350,9 +2313,11 @@ void OnInitDialog(HWND w,int iSelected)
 void ClearApplicationDetails(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
+	gbIsChanging=TRUE;
 	EnableControls(w,UNK,FALSE);
 	// 0.90 : affichage de l'application en cours de modification dans la barre de titre
 	SetWindowText(w,GetString(IDS_TITRE_APPNSITES));
+	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -3247,7 +3212,15 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			}
 			break;
 		case WM_COMMAND:		// ------------------------------------------------------- WM_COMMAND
-			//TRACE((TRACE_DEBUG,_F_,"WM_COMMAND LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",LOWORD(wp),HIWORD(wp),lp));
+			TRACE((TRACE_DEBUG,_F_,"WM_COMMAND LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",LOWORD(wp),HIWORD(wp),lp));
+			// ISSUE#114
+			if (!IsWindowEnabled(GetDlgItem(w,IDAPPLY)) & !gbIsChanging)
+			{
+				if ((HIWORD(wp)==EN_CHANGE) || (HIWORD(wp)==CBN_SELCHANGE))
+				{
+					EnableWindow(GetDlgItem(w,IDAPPLY),TRUE);
+				}
+			}
 			switch (LOWORD(wp))
 			{
 				case IDOK:
@@ -3297,6 +3270,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						SaveApplications();
 						SavePortal();
 						BackupAppsNcategs();
+						EnableWindow(GetDlgItem(w,IDAPPLY),FALSE); // ISSUE#114
 						if (hCursorOld!=NULL) SetCursor(hCursorOld);
 					}
 					break;
@@ -3325,9 +3299,11 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case MENU_ACTIVER:
 					TVActivateSelectedAppOrCateg(w,ACTIVATE_YES);
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_DESACTIVER:
 					TVActivateSelectedAppOrCateg(w,ACTIVATE_NO);
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_RENOMMER:
 					{
@@ -3338,27 +3314,35 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case MENU_SUPPRIMER:
 					TVRemoveSelectedAppOrCateg(w);
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_DUPLIQUER:
 					TVDuplicateSelectedApp(w,FALSE);
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_AJOUTER_COMPTE:
 					TVDuplicateSelectedApp(w,TRUE);
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_UPLOADER_COMMUN:
 					UploadConfig(w,1);
+					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
 				case MENU_UPLOADER_DOMAINE:
 					UploadConfig(w,giDomainId);
+					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
 				case MENU_AJOUTER_APPLI:
 					NewApplication(w,GetString(IDS_NEW_APP),TRUE);
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_AJOUTER_CATEG:
 					NewCategory(w);
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_CHANGER_IDS:
 					ChangeCategIds(w);
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_LANCER_APPLI:
 					LaunchSelectedApp(w);
@@ -3375,6 +3359,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case CK_KBSIM:
 					MoveControls(w,GetDlgItem(w,TAB_CONFIG)); // marche pas : GetDlgItem(w,TAB_CONFIG)
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case TB_KBSIM:
 					break;
@@ -3400,7 +3385,11 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						ofn.Flags=OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 						//ofn.nFileOffset;
 						//ofn.lpstrDefExt;
-						if (GetOpenFileName(&ofn)) SetDlgItemText(w,TB_LANCEMENT,szFile);
+						if (GetOpenFileName(&ofn)) 
+						{
+							SetDlgItemText(w,TB_LANCEMENT,szFile);
+							if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+						}
 					}
 					break;
 
@@ -3410,6 +3399,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						TRACE((TRACE_DEBUG,_F_,"MENU_DEPLACER vers %d",LOWORD(wp)-SUBMENU_CATEG));
 						HTREEITEM hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
 						MoveApp(w,hItem,LOWORD(wp)-SUBMENU_CATEG);
+						if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					}
 					break;
 			}
@@ -3602,6 +3592,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 								break;*/
 							case VK_DELETE:
 								TVRemoveSelectedAppOrCateg(w);
+								if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 								break;
 						}
 					}
@@ -3610,6 +3601,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (wp==TV_APPLICATIONS) // 0.90 correction du bug #86
 					{
 						TVActivateSelectedAppOrCateg(w,ACTIVATE_TOGGLE);
+						if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					}
 					break;
 				case NM_RCLICK: 
