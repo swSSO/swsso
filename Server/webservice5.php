@@ -122,7 +122,10 @@ else if ($_GET['action']=="getconfig")
 			$conditions=$conditions."AND active=1 ";
 		else if ($var_old=="1" && ($var_new=="0" || $var_mod=="0"))
 			$conditions=$conditions."AND active=0 ";
-		if ($var_domainId!=-1) $conditions="and ("._TABLE_PREFIX_."config.domainId=1 or "._TABLE_PREFIX_."config.domainId=".$var_domainId.") ";
+		// ISSUE#125  : lorsque GetModifiedConfigsAtStart=1 et GetNewConfigsAtStart=0, seules les configurations modifiées devraient être mises à jour)
+		// L'affectation de $conditions au lieu d'un append écrasait la condition IN () préalablement construite...
+		//if ($var_domainId!=-1) $conditions="and ("._TABLE_PREFIX_."config.domainId=1 or "._TABLE_PREFIX_."config.domainId=".$var_domainId.") ";
+		if ($var_domainId!=-1) $conditions=$conditions."and ("._TABLE_PREFIX_."config.domainId=1 or "._TABLE_PREFIX_."config.domainId=".$var_domainId.") ";
 		$szRequest= "select ".$columns." from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ ".
 					"where "._TABLE_PREFIX_."categ.id="._TABLE_PREFIX_."config.categId AND lastModified>".$var_modifiedSince." ".
 					$conditions." ".
