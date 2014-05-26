@@ -925,8 +925,9 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			gbDontAskId4=TRUE;
 			gbDontAskPwd=TRUE;
 
-			//0.93 : logs
-			swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
+			// 0.93 : logs
+			// ISSUE#127 : déplacé + loin, une fois qu'on a réussi le SSO
+			// swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
 
 			if (gptActions[i].bKBSim && gptActions[i].szKBSim[0]!=0) // simulation de frappe clavier
 			{
@@ -1016,6 +1017,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					case WEBSSO: guiNbWEBSSO++; break;
 					case XEBSSO: guiNbWEBSSO++; break;
 				}
+				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
 				goto end;
 			}
 			switch(gptActions[i].iType)
@@ -1096,6 +1098,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 						// tant qu'il n'aura pas fermé / réouvert son navigateur (handle différent) !
 						gptActions[i].iNbEssais=0;
 						gptActions[i].iWaitFor=WAIT_IF_SSO_OK; 
+						swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
 					}
 					else if (rc==-2) // SSO abandonné car l'URL ne correspond pas
 					{
