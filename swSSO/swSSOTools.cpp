@@ -389,7 +389,9 @@ int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle)
 				{
 					for (i=0;i<giNbExcludedWindows;i++)
 					{
-						if (_stricmp(szTitle,gtabszExcludedWindows[i])==0) // fenêtre exclue
+						// ISSUE#124 : on utilise la fonction de comparaison qui prend en compte les jokers *
+						// if (_stricmp(szTitle,gtabszExcludedWindows[i])==0) // fenêtre exclue
+						if (swStringMatch(szTitle,gtabszExcludedWindows[i])) // fenêtre exclue
 						{ 
 							TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",gtabszExcludedWindows[i]));
 							rc=-1 ; // comme rc=-1, la boucle continue à la recherche d'une autre fenêtre
