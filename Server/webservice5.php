@@ -33,6 +33,7 @@ include('util.php');
 //-----------------------------------------------------------------------------
 // WEBSERVICE5.PHP : Utilisé à partir de la version swSSO 0.94
 //                   (les versions précédentes utilisent webservice4.php)
+// VERSION INTERNE : 5.2
 //------------------------------------------------------------------------------
 // Commandes : isalive, getversion, putconfig, getconfig et getdomains
 //------------------------------------------------------------------------------
