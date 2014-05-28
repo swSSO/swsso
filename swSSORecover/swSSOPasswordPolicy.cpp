@@ -50,16 +50,21 @@ BOOL gbWindowsEventLog=FALSE;				// 0.93 : log dans le journal d'événements de W
 char gszLogFileName[_MAX_PATH+1];			// 0.93 : chemin complet du fichier de log
 int  giLogLevel=LOG_LEVEL_NONE;				// 0.93 : niveau de log
 
+// ISSUE129
+char *gpszMailObject=NULL;
+char *gpszMailBodyBefore=NULL;
+char *gpszMailBodyAfter=NULL;
 
 //-----------------------------------------------------------------------------
 // LoadPasswordPolicy()
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-void LoadPasswordPolicy(void)
+int LoadPasswordPolicy(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc;
+	int ret=-1;
 	HKEY hKey=NULL;
 	char szValue[1024+1];
 	DWORD dwValue,dwValueSize,dwValueType;
@@ -148,6 +153,45 @@ void LoadPasswordPolicy(void)
 		RegCloseKey(hKey);
 	}
 
+	//--------------------------------------------------------------
+	// RECOVER OPTIONS
+	//--------------------------------------------------------------
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_RECOVER_OPTIONS,0,KEY_READ,&hKey);
+	if (rc==ERROR_SUCCESS)
+	{		
+		dwValueType=REG_SZ;
+		dwValueSize=0;
+		rc=RegQueryValueEx(hKey,REGVALUE_MAIL_OBJECT,NULL,&dwValueType,NULL,&dwValueSize);
+		if (rc==ERROR_SUCCESS)
+		{
+			gpszMailObject=(char*)malloc(dwValueSize);
+			if (gpszMailObject==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwValueSize)); goto end; }
+			rc=RegQueryValueEx(hKey,REGVALUE_MAIL_OBJECT,NULL,&dwValueType,(LPBYTE)gpszMailObject,&dwValueSize);
+			if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(MailObject)")); goto end; }
+		}
+		dwValueType=REG_SZ;
+		dwValueSize=0;
+		rc=RegQueryValueEx(hKey,REGVALUE_MAIL_BODY_BEFORE,NULL,&dwValueType,NULL,&dwValueSize);
+		if (rc==ERROR_SUCCESS)
+		{
+			gpszMailBodyBefore=(char*)malloc(dwValueSize);
+			if (gpszMailBodyBefore==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwValueSize)); goto end; }
+			rc=RegQueryValueEx(hKey,REGVALUE_MAIL_BODY_BEFORE,NULL,&dwValueType,(LPBYTE)gpszMailBodyBefore,&dwValueSize);
+			if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(MailObject)")); goto end; }
+		}
+		dwValueType=REG_SZ;
+		dwValueSize=0;
+		rc=RegQueryValueEx(hKey,REGVALUE_MAIL_BODY_AFTER,NULL,&dwValueType,NULL,&dwValueSize);
+		if (rc==ERROR_SUCCESS)
+		{
+			gpszMailBodyAfter=(char*)malloc(dwValueSize);
+			if (gpszMailBodyAfter==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwValueSize)); goto end; }
+			rc=RegQueryValueEx(hKey,REGVALUE_MAIL_BODY_AFTER,NULL,&dwValueType,(LPBYTE)gpszMailBodyAfter,&dwValueSize);
+			if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(MailObject)")); goto end; }
+		}
+		RegCloseKey(hKey);
+	}
+
 #ifdef TRACES_ACTIVEES
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
@@ -163,8 +207,15 @@ void LoadPasswordPolicy(void)
 	TRACE((TRACE_INFO,_F_,"giLogLevel=%d"					,giLogLevel));
 	TRACE((TRACE_INFO,_F_,"gszLogFileName=%s"				,gszLogFileName));
 	TRACE((TRACE_INFO,_F_,"gbWindowsEventLog=%d"			,gbWindowsEventLog));
+	TRACE((TRACE_INFO,_F_,"RECOVER OPTIONS ---------"));
+	TRACE((TRACE_INFO,_F_,"gpszMailObject=%s"				,gpszMailObject));
+	TRACE((TRACE_INFO,_F_,"gpszMailBodyBefore=%s"			,gpszMailBodyBefore));
+	TRACE((TRACE_INFO,_F_,"gpszMailBodyAfter=%s"			,gpszMailBodyAfter));
 #endif
+	ret=0;
+end:
 	TRACE((TRACE_LEAVE,_F_, ""));
+	return ret;
 }
 
 #define SEARCHTYPE_LETTERS		1

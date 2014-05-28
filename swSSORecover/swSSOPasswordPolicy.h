@@ -75,6 +75,18 @@ extern BOOL gbWindowsEventLog;				// 0.93 : log dans le journal d'événements de 
 extern char gszLogFileName[];				// 0.93 : chemin complet du fichier de log
 extern int  giLogLevel;						// 0.93 : niveau de log
 
+//-----------------------------------------------------------------------------
+#define REGKEY_RECOVER_OPTIONS "SOFTWARE\\swSSO\\RecoverOptions"
+//-----------------------------------------------------------------------------
+#define REGVALUE_MAIL_OBJECT						"MailObject"
+#define REGVALUE_MAIL_BODY_BEFORE					"MailBodyBefore"
+#define REGVALUE_MAIL_BODY_AFTER					"MailBodyAfter"						
+
+// ISSUE#129
+extern char *gpszMailObject;
+extern char *gpszMailBodyBefore;
+extern char *gpszMailBodyAfter;
+
 // FONCTIONS PUBLIQUES
-void LoadPasswordPolicy(void);
+int LoadPasswordPolicy(void);
 BOOL IsPasswordPolicyCompliant(const char *szPwd);

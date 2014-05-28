@@ -124,6 +124,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	RecoveryWizard();
 
 end:
+	if (gpszMailObject!=NULL) free(gpszMailObject) ;
+	if (gpszMailBodyBefore!=NULL) free(gpszMailBodyBefore) ;
+	if (gpszMailBodyAfter!=NULL) free(gpszMailBodyAfter) ;
 	swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_STOP,NULL,NULL,NULL);
 	swCryptTerm();
 	UnloadIcons();
