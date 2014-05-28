@@ -1017,6 +1017,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					case WEBSSO: guiNbWEBSSO++; break;
 					case XEBSSO: guiNbWEBSSO++; break;
 				}
+				// ISSUE#127 (le swLogEvent était fait trop tôt, cf. plus haut)
 				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
 				goto end;
 			}
@@ -1098,6 +1099,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 						// tant qu'il n'aura pas fermé / réouvert son navigateur (handle différent) !
 						gptActions[i].iNbEssais=0;
 						gptActions[i].iWaitFor=WAIT_IF_SSO_OK; 
+						// ISSUE#127 (le swLogEvent était fait trop tôt, cf. plus haut)
 						swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
 					}
 					else if (rc==-2) // SSO abandonné car l'URL ne correspond pas
