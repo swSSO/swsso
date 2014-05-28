@@ -36,7 +36,7 @@
 #include "stdafx.h"
 #define HTTP_RESULT_MAX_SIZE 512000
 // estimation : moyenne 1 Ko par config / 500 configs => 512 Ko
-
+static int giRefreshTimer=10;
 char gszRes[512];
 WCHAR gwcTmp1_512[512+1];
 WCHAR gwcTmp2_512[512+1];
@@ -573,6 +573,19 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				SetWindowText(w,GetString(pParams->iTitleString));
 				SendDlgItemMessage(w,STATIC_ICONE,STM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadIcon(NULL,pParams->szIcone));
 				MACRO_SET_SEPARATOR;
+				// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+				// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+				if (giRefreshTimer==giTimer) giRefreshTimer=11;
+				SetTimer(w,giRefreshTimer,200,NULL);
+			}
+			break;
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
 			}
 			break;
 		case WM_COMMAND:

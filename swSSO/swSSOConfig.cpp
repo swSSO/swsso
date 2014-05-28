@@ -3748,6 +3748,7 @@ int AddApplicationFromCurrentWindow(void)
 	int i;
 	BOOL bServerAvailable=FALSE;
 	int iBrowser=BROWSER_NONE;
+	int iNbConfigWithThisId;
 
 	if (swGetTopWindow(&w,szTitle,sizeof(szTitle))!=0) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
 
@@ -3939,36 +3940,52 @@ doConfig:
 	}
 	
 	// 0.85 : vérifie que cette configuration n'existe pas déjà, sinon propose de la remplacer
+	// ISSUE#126 : grosse modification apportée : ne pas se limiter à une seule configuration, mais mettre toutes les configurations 
+	//             portant cet ID à jour (s'il y en a plusieurs, c'est que l'utilisateur s'est ajouté des comptes sur une application,
+	//             dans ce cas il ne vaut mieux pas mettre à jour le titre -- c'est la stratégie déjà appliquée lors d'une mise à jour 
+	//             de configuration automatique depuis le serveur lorsque GetModifiedConfigsAtStart=1 par exemple)
+	
+	// On procède en 2 temps : on regarde combien de config locales avec cet id et on demande à l'utilisateur ce qu'il faut faire
+	iNbConfigWithThisId=0;
 	for (i=0;i<giNbActions;i++)
 	{
-		if ((gptActions[giNbActions].iType==gptActions[i].iType) &&
-			(gptActions[i].bActive) &&
-			(strcmp(gptActions[giNbActions].szTitle,gptActions[i].szTitle)==0) &&
-			(strcmp(gptActions[giNbActions].szURL,gptActions[i].szURL)==0))
+		if (gptActions[giNbActions].iConfigId==gptActions[i].iConfigId) iNbConfigWithThisId++;
+	}
+	if (iNbConfigWithThisId!=0) // Au moins une configuration a cet id, on demande à l'utilisateur s'il faut remplacer ou en ajouter une nouvelle
+	{
+		T_MESSAGEBOX3B_PARAMS params;
+		char szMsg[512];
+		char szSubTitle[128];
+		int reponse;
+		params.szIcone=IDI_EXCLAMATION;
+		params.iB1String=IDS_CONFIG_EXISTS_B1;
+		params.iB2String=IDS_CONFIG_EXISTS_B2;
+		params.iB3String=IDS_CONFIG_EXISTS_B3;
+		params.wParent=HWND_DESKTOP;
+		params.iTitleString=IDS_MESSAGEBOX_TITLE;
+		strcpy_s(szSubTitle,sizeof(szSubTitle),GetString(IDS_CONFIG_EXISTS_SUBTITLE));
+		params.szSubTitle=szSubTitle;
+		strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_CONFIG_EXISTS_MESSAGE));
+		params.szMessage=szMsg;
+		reponse=MessageBox3B(&params);
+		if (reponse==B3) // IDCANCEL : conservation de l'ancienne config, pas d'ajout de la nouvelle
+			goto end;
+		else if (reponse==B1) // B1 = remplacer : remplacement de la ou des anciennes configs par la nouvelle
+			bReplaceOldConfig=TRUE;
+		else if (reponse==B2) // B2 = ajouter : désactivation de la ou des anciennes configs et ajout de la nouvelle
+			bReplaceOldConfig=FALSE;
+	}
+	for (i=0;i<giNbActions;i++)
+	{
+		if (gptActions[giNbActions].iConfigId==gptActions[i].iConfigId)
 		{
-			// La configuration existe déjà, on demande à l'utilisateur
-			T_MESSAGEBOX3B_PARAMS params;
-			char szMsg[512];
-			char szSubTitle[128];
-			params.szIcone=IDI_EXCLAMATION;
-			params.iB1String=IDS_CONFIG_EXISTS_B1;
-			params.iB2String=IDS_CONFIG_EXISTS_B2;
-			params.iB3String=IDS_CONFIG_EXISTS_B3;
-			params.wParent=HWND_DESKTOP;
-			params.iTitleString=IDS_MESSAGEBOX_TITLE;
-			strcpy_s(szSubTitle,sizeof(szSubTitle),GetString(IDS_CONFIG_EXISTS_SUBTITLE));
-			params.szSubTitle=szSubTitle;
-			strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_CONFIG_EXISTS_MESSAGE));
-			params.szMessage=szMsg;
-			int reponse=MessageBox3B(&params);
-			//int reponse=MessageBox(NULL,GetString(IDS_CONFIG_ALREADY_EXISTS),"swSSO",MB_YESNOCANCEL | MB_ICONEXCLAMATION);
-			if (reponse==B3) // IDCANCEL : conservation de l'ancienne config, pas d'ajout de la nouvelle
-				goto end;
-			else if (reponse==B1) // Bouton 1 = remplacer : écrasement de l'ancienne config par la nouvelle : pas de mot de passe à demander, réutilisation du même !
+			if (bReplaceOldConfig) // remplacement de cette config par la nouvelle
 			{
-				// récupère de l'ancienne config : nom, catégorie, idS et mot de passe
-				strcpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),gptActions[i].szApplication);
-				gptActions[giNbActions].iCategoryId=gptActions[i].iCategoryId;
+				// ISSUE#126 : on récupère de l'ancienne config : idS + mot de passe + bActive + CategId si pas géré par le serveur (CategoryManagement=0)
+				//             + nom (uniquement s'il y a plusieurs config qui matchent)
+				if (!gbCategoryManagement) gptActions[giNbActions].iCategoryId=gptActions[i].iCategoryId;
+				if (iNbConfigWithThisId!=1) strcpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),gptActions[i].szApplication);
+				gptActions[giNbActions].bActive=gptActions[i].bActive;
 				memcpy(gptActions[giNbActions].szId1Value,gptActions[i].szId1Value,sizeof(gptActions[giNbActions].szId1Value));
 				memcpy(gptActions[giNbActions].szId2Value,gptActions[i].szId2Value,sizeof(gptActions[giNbActions].szId2Value));
 				memcpy(gptActions[giNbActions].szId3Value,gptActions[i].szId3Value,sizeof(gptActions[giNbActions].szId3Value));
@@ -3977,17 +3994,13 @@ doConfig:
 				// copie la nouvelle à l'ancienne position
 				memcpy(&gptActions[i],&gptActions[giNbActions],sizeof(T_ACTION));
 				bReplaceOldConfig=TRUE;
-				gptActions[i].bActive=TRUE;
 				gptActions[i].bSaved=FALSE; // 0.93B6 ISSUE#55
-				//gptActions[i].bConfigOK=FALSE; // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 				gptActions[i].bConfigSent=TRUE; // on vient de la récupérer sur le serveur, pas la peine de la remonter !
-				goto suite;
 			}
-			else //B2 : Bouton 2 = ajouter : désactivation de l'ancienne config et ajout de la nouvelle
+			else // désactivation de cette config
 			{
 				gptActions[i].bActive=FALSE;
 				gptActions[i].bSaved=FALSE; // 0.93B6 ISSUE#55
-				goto suite;
 			}
 		}
 	}
