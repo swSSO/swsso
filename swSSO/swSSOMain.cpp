@@ -778,6 +778,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		//TRACE((TRACE_DEBUG,_F_,"now-tLastDetect=%ld",t-gptActions[i].tLastDetect));
 		//TRACE((TRACE_DEBUG,_F_,"wLastDetect    =0x%08lx",gptActions[i].wLastDetect));
 		time(&tNow);
+		TRACE((TRACE_DEBUG,_F_,"tLastSSO     =%ld (time du dernier SSO sur cette action)",gptActions[i].tLastSSO));
 		TRACE((TRACE_DEBUG,_F_,"tNow-tLastSSO=%ld (nb secondes depuis dernier SSO sur cette action)",tNow-gptActions[i].tLastSSO));
 		TRACE((TRACE_DEBUG,_F_,"wLastSSO     =0x%08lx",gptActions[i].wLastSSO));
 
@@ -798,6 +799,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		// Détection d'un SSO déjà fait récemment sur la fenêtre afin de prévenir les essais multiples 
 		// avec mauvais mots de passe qui pourraient bloquer le compte 
 		tLastSSOOnThisWindow=LastDetect_GetTime(w); // date de dernier SSO sur cette fenêtre (toutes actions confondues)
+		TRACE((TRACE_DEBUG,_F_,"tLastSSOOnThisWindow        =%ld (time du dernier SSO sur cette fenêtre)",tLastSSOOnThisWindow));
 		TRACE((TRACE_DEBUG,_F_,"tNow-tLastSSOOnThisWindow	=%ld (nb secondes depuis dernier SSO sur cette fenêtre)",tNow-tLastSSOOnThisWindow));
 
 		if (gptActions[i].iType==WEBSSO || gptActions[i].iType==WEBPWD || gptActions[i].iType==XEBSSO)
@@ -815,6 +817,15 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				{
 					TRACE((TRACE_INFO,_F_,"(tNow-gptActions[i].tLastSSO)<gptActions[i].iWaitFor"));
 					bDoSSO=false;
+				}
+			}
+			else // jamais fait de SSO sur cette fenêtre, on a envie de tenter, mais il ne faut juste pas le faire  
+				 // si l'utilisateur a annulé dans la fenêtre de choix multi-comptes (ISSUE#133)
+			{
+				if (gptActions[i].iWaitFor==WAIT_ONE_MINUTE) 
+				{
+					TRACE((TRACE_INFO,_F_,"gptActions[i].iWaitFor==WAIT_ONE_MINUTE"));
+					bDoSSO=FALSE;
 				}
 			}
 		}
