@@ -478,7 +478,7 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 		case WM_COMMAND:
 			switch (LOWORD(wp))
 			{
-				case IDCANCEL:
+				case IDOK:
 				{
 					// L'utilisateur ne veut plus voir le message
 					if (IsDlgButtonChecked(w,CK_VIEW))
@@ -486,8 +486,12 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 						gbDisplayChangeAppPwdDialog=FALSE;
 						SaveConfigHeader();
 					}
-					EndDialog(w,IDCANCEL);
+					EndDialog(w,IDOK);
 					break;
+				}
+				case IDCANCEL:
+				{
+					EndDialog(w,IDCANCEL);
 				}
 			}
 			break;
@@ -732,7 +736,14 @@ int BeginChangeAppPassword(void)
 	}
 	
 	// 1ère popup : informe l'utilisateur que son mot de passe a été copié dans le presse papier
-	if (gbDisplayChangeAppPwdDialog) DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_POP_CHANGE_APP_PWD),NULL,PopChangeAppPwdDialogProc,bOldPwdFillDone);
+	if (gbDisplayChangeAppPwdDialog)
+	{
+		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_POP_CHANGE_APP_PWD),NULL,PopChangeAppPwdDialogProc,bOldPwdFillDone)==IDCANCEL) 
+		{
+			TRACE((TRACE_INFO,_F_,"Annulation par l'utilisateur"));
+			goto end;
+		}
+	}
 
 	while (!bDone)
 	{
