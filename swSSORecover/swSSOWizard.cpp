@@ -217,13 +217,19 @@ int MailResponse(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	
-	char szMailTo[2048];
-	wsprintf(szMailTo,"mailto:?subject=[swSSO]&body=%s",gszFormattedResponseForSave);
-	ShellExecute(NULL,"open",szMailTo,NULL,"",SW_SHOW );
+
+	// ISSUE#129
+	int lenMailTo;
+	char *pszMailTo=NULL;
+	lenMailTo=50+strlen(gszFormattedResponseForSave)+strlen(gpszMailBodyAfter)+strlen(gpszMailBodyBefore)+strlen(gpszMailObject);
+	pszMailTo=(char*)malloc(lenMailTo);
+	if (pszMailTo==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenMailTo)); goto end; }
+	wsprintf(pszMailTo,"mailto:?subject=%s&body=%s%s%s%s%s",gpszMailObject,gpszMailBodyBefore,"%0D%0D",gszFormattedResponseForSave,"%0D",gpszMailBodyAfter);
+	ShellExecute(NULL,"open",pszMailTo,NULL,"",SW_SHOW );
 	
 	rc=0;
-//end:
+end:
+	if (pszMailTo!=NULL) free(pszMailTo);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

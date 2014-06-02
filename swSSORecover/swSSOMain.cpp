@@ -138,9 +138,6 @@ end:
 	return 0; 
 }
 
-
-
-
 #if 0 /*************** TESTS ECRITURE JOURNAL SECURITE **************************/
 	{
 		/*

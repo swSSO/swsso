@@ -192,6 +192,25 @@ int LoadPasswordPolicy(void)
 		RegCloseKey(hKey);
 	}
 
+	if (gpszMailObject==NULL)
+	{
+		gpszMailObject=(char*)malloc(10);
+		if (gpszMailObject==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(1)")); goto end; }
+		strcpy_s(gpszMailObject,10,"[swSSO]");
+	}
+	if (gpszMailBodyBefore==NULL)
+	{
+		gpszMailBodyBefore=(char*)malloc(1);
+		if (gpszMailBodyBefore==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(1)")); goto end; }
+		*gpszMailBodyBefore=0;
+	}
+	if (gpszMailBodyAfter==NULL)
+	{
+		gpszMailBodyAfter=(char*)malloc(1);
+		if (gpszMailBodyAfter==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(1)")); goto end; }
+		*gpszMailBodyAfter=0;
+	}
+
 #ifdef TRACES_ACTIVEES
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
