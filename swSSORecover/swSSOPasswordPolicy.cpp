@@ -51,7 +51,7 @@ char gszLogFileName[_MAX_PATH+1];			// 0.93 : chemin complet du fichier de log
 int  giLogLevel=LOG_LEVEL_NONE;				// 0.93 : niveau de log
 
 // ISSUE129
-char *gpszMailObject=NULL;
+char *gpszMailSubject=NULL;
 char *gpszMailBodyBefore=NULL;
 char *gpszMailBodyAfter=NULL;
 
@@ -161,12 +161,12 @@ int LoadPasswordPolicy(void)
 	{		
 		dwValueType=REG_SZ;
 		dwValueSize=0;
-		rc=RegQueryValueEx(hKey,REGVALUE_MAIL_OBJECT,NULL,&dwValueType,NULL,&dwValueSize);
+		rc=RegQueryValueEx(hKey,REGVALUE_MAIL_SUBJECT,NULL,&dwValueType,NULL,&dwValueSize);
 		if (rc==ERROR_SUCCESS)
 		{
-			gpszMailObject=(char*)malloc(dwValueSize);
-			if (gpszMailObject==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwValueSize)); goto end; }
-			rc=RegQueryValueEx(hKey,REGVALUE_MAIL_OBJECT,NULL,&dwValueType,(LPBYTE)gpszMailObject,&dwValueSize);
+			gpszMailSubject=(char*)malloc(dwValueSize);
+			if (gpszMailSubject==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwValueSize)); goto end; }
+			rc=RegQueryValueEx(hKey,REGVALUE_MAIL_SUBJECT,NULL,&dwValueType,(LPBYTE)gpszMailSubject,&dwValueSize);
 			if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(MailObject)")); goto end; }
 		}
 		dwValueType=REG_SZ;
@@ -192,11 +192,11 @@ int LoadPasswordPolicy(void)
 		RegCloseKey(hKey);
 	}
 
-	if (gpszMailObject==NULL)
+	if (gpszMailSubject==NULL)
 	{
-		gpszMailObject=(char*)malloc(10);
-		if (gpszMailObject==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(1)")); goto end; }
-		strcpy_s(gpszMailObject,10,"[swSSO]");
+		gpszMailSubject=(char*)malloc(10);
+		if (gpszMailSubject==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(1)")); goto end; }
+		strcpy_s(gpszMailSubject,10,"[swSSO]");
 	}
 	if (gpszMailBodyBefore==NULL)
 	{
@@ -227,7 +227,7 @@ int LoadPasswordPolicy(void)
 	TRACE((TRACE_INFO,_F_,"gszLogFileName=%s"				,gszLogFileName));
 	TRACE((TRACE_INFO,_F_,"gbWindowsEventLog=%d"			,gbWindowsEventLog));
 	TRACE((TRACE_INFO,_F_,"RECOVER OPTIONS ---------"));
-	TRACE((TRACE_INFO,_F_,"gpszMailObject=%s"				,gpszMailObject));
+	TRACE((TRACE_INFO,_F_,"gpszMailSubject=%s"				,gpszMailSubject));
 	TRACE((TRACE_INFO,_F_,"gpszMailBodyBefore=%s"			,gpszMailBodyBefore));
 	TRACE((TRACE_INFO,_F_,"gpszMailBodyAfter=%s"			,gpszMailBodyAfter));
 #endif
