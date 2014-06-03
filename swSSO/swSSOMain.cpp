@@ -1514,12 +1514,16 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							gbRememberOnThisComputer=TRUE;
 							DPAPIStoreMasterPwd(szPwd);
 						}
-						// 0.90 : si une clé de recouvrement existe et les infos de recouvrement n'ont pas encore
-						//        été enregistrées dans le .ini (cas de la première utilisation après déploiement de la clé
 						BYTE AESKeyData[AES256_KEY_LEN];
 						swCryptDeriveKey(szPwd,&ghKey1,AESKeyData);
 						SecureZeroMemory(szPwd,strlen(szPwd));
-						RecoveryFirstUse(w,AESKeyData);
+						// 0.90 : si une clé de recouvrement existe et les infos de recouvrement n'ont pas encore
+						//        été enregistrées dans le .ini (cas de la première utilisation après déploiement de la clé
+						// ISSUE#139 : si on vient de faire la migration 093, on stocke une mauvaise clé et le recouvrement de mot de passe ne fonctionne pas !
+						if (*szPwdMigration093==0) // on n'est pas dans le cas de la migration, on peut stocker la clé, sinon on fait dans Migration093
+						{
+							RecoveryFirstUse(w,AESKeyData);
+						}
 						EndDialog(w,IDOK);
 					}
 					else
@@ -1638,7 +1642,11 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 				//        été enregistrée dans le .ini (cas de la première utilisation après déploiement de la clé
 				BYTE AESKeyData[AES256_KEY_LEN];
 				swCryptDeriveKey(szPwd,&ghKey1,AESKeyData);
-				RecoveryFirstUse(wParent,AESKeyData);
+				// ISSUE#139 : si on vient de faire la migration 093, on stocke une mauvaise clé et le recouvrement de mot de passe ne fonctionne pas !
+				if (*szPwdMigration093==0) // on n'est pas dans le cas de la migration, on peut stocker la clé, sinon on fait dans Migration093
+				{
+					RecoveryFirstUse(wParent,AESKeyData);
+				}
 				// 0.85B9 : remplacement de ZeroMemory(szPwd,sizeof(szPwd));
 				SecureZeroMemory(szPwd,strlen(szPwd));
 				gbRememberOnThisComputer=TRUE;

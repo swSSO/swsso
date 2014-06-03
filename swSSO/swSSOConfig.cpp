@@ -1584,6 +1584,9 @@ suite:
 	// effet de bord (mais sans importance) : redonne un peu de vie au mot de passe de l'utilisateur
 	SaveMasterPwdLastChange();
 
+	// ISSUE#139 : stockage des recovery infos (avant c'était fait trop tôt, avant initialisation de AESKeyData)
+	RecoveryFirstUse(w,AESKeyData);
+
 	rc=0;
 end:
 	if (rc!=0 && bBackupOK)
