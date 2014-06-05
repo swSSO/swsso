@@ -189,4 +189,12 @@
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Midl Include="ISimpleDOMDocument.idl">
+      <Filter>Source Files</Filter>
+    </Midl>
+    <Midl Include="ISimpleDOMNode.idl">
+      <Filter>Source Files</Filter>
+    </Midl>
+  </ItemGroup>
 </Project>

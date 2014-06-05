@@ -3820,6 +3820,8 @@ int AddApplicationFromCurrentWindow(void)
 		{
 			iType=XEBSSO; // pas UNK car WEBSSO pas supporté par Chrome
 			pszURL=GetChromeURL(w);
+			// ISSUE#142 : si pszURL=NULL, mieux vaut s'arrêter même si en fait ça ne crashe pas car bien géré partout
+			if (pszURL == NULL) { TRACE((TRACE_ERROR, _F_, "URL Chrome non trouvee")); goto suite; }
 			iBrowser=BROWSER_CHROME;
 		}
 		else // trouvé une popup Chrome, lecture du titre de la popup et de l'URL du site

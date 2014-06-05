@@ -634,6 +634,7 @@ int RecoveryResponse(HWND w)
 
 	// regarde dans le .ini s'il y a un recouvrement en cours
 	dwKsStringLen=GetPrivateProfileString("swSSO","recoveryRunning","",szKs,sizeof(szKs),gszCfgFile);
+	TRACE((TRACE_DEBUG, _F_, "recoveryRunning=%s len=%d",szKs,dwKsStringLen));
 	if (dwKsStringLen==0) { rc=-2; goto end; }// pas de recouvrement en cours
 
 	// affiche la fenêtre de saisie de la response

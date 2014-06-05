@@ -1848,10 +1848,13 @@ end:
 // ----------------------------------------------------------------------------------
 void GetApplicationDetails(HWND w,int iAction)
 {
-	TRACE((TRACE_ENTER,_F_, ""));
+	TRACE((TRACE_ENTER,_F_, "iAction=%d",iAction));
 
 	char szPassword[50+1];
 	char *pszEncryptedPassword=NULL;
+
+	// ISSUE#142 : si iAction=-1, on sort direct
+	if (iAction==-1) goto end;
 
 	// évalue si la configuration a changé et s'il faut donc la renvoyer sur le serveur
 	// stocke en même temps les éventuelles nouvelles valeurs de config

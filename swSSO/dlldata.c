@@ -22,6 +22,8 @@ extern "C"   {
 EXTERN_PROXY_FILE( Accessible2 )
 EXTERN_PROXY_FILE( AccessibleRelation )
 EXTERN_PROXY_FILE( AccessibleText )
+EXTERN_PROXY_FILE( ISimpleDOMDocument )
+EXTERN_PROXY_FILE( ISimpleDOMNode )
 EXTERN_PROXY_FILE( isimpledomdocument )
 EXTERN_PROXY_FILE( isimpledomnode )
 
@@ -31,6 +33,8 @@ PROXYFILE_LIST_START
   REFERENCE_PROXY_FILE( Accessible2 ),
   REFERENCE_PROXY_FILE( AccessibleRelation ),
   REFERENCE_PROXY_FILE( AccessibleText ),
+  REFERENCE_PROXY_FILE( ISimpleDOMDocument ),
+  REFERENCE_PROXY_FILE( ISimpleDOMNode ),
   REFERENCE_PROXY_FILE( isimpledomdocument ),
   REFERENCE_PROXY_FILE( isimpledomnode ),
 /* End of list */
