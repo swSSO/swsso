@@ -82,7 +82,8 @@ extern int giTimer;
 
 extern char szPwdMigration093[]; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-extern int giLastApplication;
+extern int giLastApplicationSSO;   
+extern int giLastApplicationConfig;
 
 extern SYSTEMTIME gLastLoginTime; // ISSUE#106
 

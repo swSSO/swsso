@@ -127,7 +127,7 @@ int LoadApplications(void);
 int SaveApplications(void);
 int LoadCategories(void);
 int SaveCategories(void);
-int ShowAppNsites(int iSelected);
+int ShowAppNsites(int iSelected, BOOL bFromSystray);
 BOOL IsApplicationNameUnique(int iAction,char *pszApplication);
 BOOL IsCategoryNameUnique(int iCategory,char *pszCategory);
 void GenerateCategoryName(int iCategory,char *pszProposition);
@@ -135,6 +135,7 @@ void GenerateApplicationName(int iAction,char *pszProposition);
 int GetCategoryIndex(int id);
 int BackupAppsNcategs(void);
 void ShowApplicationDetails(HWND w,int iAction);
+void GetApplicationDetails(HWND w,int iAction);
 
 // ATTENTION, ces deux fonctions sont utilisées par swSSOLaunchApp.cpp, cela suppose
 // que l'identifiant du treeview TV_APPLICATIONS soit bien identique dans les 2 fenêtres !

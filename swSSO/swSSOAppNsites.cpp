@@ -103,6 +103,12 @@ typedef struct {
 } T_IDSNPWD;
 T_IDSNPWD gIds; // identifiants et mot de passe (clearvalue effacée immédiatement après chiffrement)
 
+typedef struct
+{
+	int iSelected;
+	BOOL bFromSystray;
+} T_APPNSITES;
+
 // 0.89B2 (backup/restore mémoire des catégories et applications)
 static T_CATEGORY *gptBackupCategories=NULL;
 static T_ACTION   *gptBackupActions=NULL;
@@ -1762,7 +1768,8 @@ void ShowApplicationDetails(HWND w,int iAction)
 	gbIsChanging=TRUE;
 	
 	if (iAction>giNbActions) { TRACE((TRACE_ERROR,_F_,"iAction=%d ! (giNbActions=%d)",iAction,giNbActions)); goto end; }
-	
+	giLastApplicationConfig=iAction;
+
 	if (gbShowGeneratedPwd) { gbShowGeneratedPwd=FALSE; gbShowPwd=FALSE; }
 	// déchiffrement mot de passe
 	SetDlgItemText(w,TB_PWD,"");
@@ -1839,7 +1846,7 @@ end:
 // ----------------------------------------------------------------------------------
 // [in] iAction = indice de l'application sélectionnée dans la liste
 // ----------------------------------------------------------------------------------
-static void GetApplicationDetails(HWND w,int iAction)
+void GetApplicationDetails(HWND w,int iAction)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -2188,7 +2195,7 @@ end:
 //-----------------------------------------------------------------------------
 // OnInitDialog()
 //-----------------------------------------------------------------------------
-void OnInitDialog(HWND w,int iSelected)
+void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	
@@ -2287,10 +2294,10 @@ void OnInitDialog(HWND w,int iSelected)
 	FillTreeView(w);
 
 	// Sélectionne l'application
-	if (iSelected==-1) 
+	if (ptAppNsites->iSelected==-1) 
 		ClearApplicationDetails(w);
 	else
-		TVSelectItemFromLParam(w,TYPE_APPLICATION,iSelected);
+		TVSelectItemFromLParam(w,TYPE_APPLICATION,ptAppNsites->iSelected);
 
 	if (giSetForegroundTimer==giTimer) giSetForegroundTimer=21;
 	SetTimer(w,giSetForegroundTimer,100,NULL);
@@ -3176,9 +3183,7 @@ end:
 //-----------------------------------------------------------------------------
 static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
-	UNREFERENCED_PARAMETER(lp);
 	TRACE((TRACE_DEBUG,_F_,"msg=0x%08lx LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",msg,LOWORD(wp),HIWORD(wp),lp));
-	
 	int rc=FALSE;
 	switch (msg)
 	{
@@ -3187,11 +3192,15 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			hParentItem=(HTREEITEM)lp;
 			TreeView_SortChildren(GetDlgItem(w,TV_APPLICATIONS),hParentItem,FALSE);
 			break;
-		case WM_INITDIALOG:		// ------------------------------------------------------- WM_INITDIALOG
-			OnInitDialog(w,lp);
-			MoveControls(w,NULL); // 0.90, avant il y avait (w,w), correction bug#102
-			if (lp==-1) BackupAppsNcategs(); // #118 => le Backup est maintenant fait plus tôt (avant création nouvelle application)
-										     //         donc il ne faut pas le refaire ici (voir swSSOConfig.cpp)
+		case WM_INITDIALOG:	// ---------------------------------------------------------------------- WM_INITDIALOG
+			{
+				T_APPNSITES *ptAppNsites=(T_APPNSITES*)lp;
+				TRACE((TRACE_DEBUG,_F_,"iSelected=%d bFromSysTray=%d",ptAppNsites->iSelected,ptAppNsites->bFromSystray));
+				OnInitDialog(w,ptAppNsites);
+				MoveControls(w,NULL); // 0.90, avant il y avait (w,w), correction bug#102
+				if (ptAppNsites->bFromSystray) BackupAppsNcategs(); // #118 => le Backup est maintenant fait plus tôt (avant création nouvelle application)
+																	//         donc il ne faut pas le refaire ici (voir swSSOConfig.cpp)
+			}
 			break;
 		case WM_DESTROY:
 			if (gbPwdSubClass) RemoveWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)PwdProc,TB_PWD_SUBCLASS_ID);
@@ -3505,7 +3514,9 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							}
 						}
 						else
+						{
 							ShowApplicationDetails(w,pnmtv->itemNew.lParam);
+						}
 					}
 					break;
 				case TVN_BEGINLABELEDIT:
@@ -3637,11 +3648,15 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 // ----------------------------------------------------------------------------------
 // Fenêtre de config des applications et sites
 // ----------------------------------------------------------------------------------
-int ShowAppNsites(int iSelected)
+int ShowAppNsites(int iSelected, BOOL bFromSystray)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=1;
-	
+	T_APPNSITES tAppNsites;
+
+	tAppNsites.iSelected=iSelected;
+	tAppNsites.bFromSystray=bFromSystray;
+
 	// si fenêtre déjà affichée, la replace au premier plan
 	if (gwAppNsites!=NULL)
 	{
@@ -3649,13 +3664,16 @@ int ShowAppNsites(int iSelected)
 		SetForegroundWindow(gwAppNsites);
 		
 		// ISSUE#117 --> Remplissage de la treeview et sélectionne l'application
-		FillTreeView(gwAppNsites);
-		TVSelectItemFromLParam(gwAppNsites,TYPE_APPLICATION,iSelected);
-				
+		// SAUF si la demande de réaffichage vient du systray (dans ce cas on met juste au premier plan)
+		if (!bFromSystray)
+		{
+			FillTreeView(gwAppNsites);
+			TVSelectItemFromLParam(gwAppNsites,TYPE_APPLICATION,iSelected);
+		}	
 		goto end;
 	}
 
-	DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_APPNSITES),HWND_DESKTOP,AppNsitesDialogProc,iSelected);
+	DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_APPNSITES),HWND_DESKTOP,AppNsitesDialogProc,(LPARAM)&tAppNsites);
 	gwAppNsites=NULL;
 	rc=0;
 end:

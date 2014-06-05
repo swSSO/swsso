@@ -894,6 +894,7 @@ int GetConfigHeader()
 	
 	char szPwdProtection[9+1];
 	int rc=-1;
+	BOOL bCheckVersion;
 	
 	GetPrivateProfileString("swSSO","version","",gszCfgVersion,sizeof(gszCfgVersion),gszCfgFile);
 	TRACE((TRACE_INFO,_F_,"Version du fichier de configuration : %s",gszCfgVersion));
@@ -909,8 +910,9 @@ int GetConfigHeader()
 	}
 
 	gbSessionLock=GetConfigBoolValue("swSSO","sessionLock",FALSE,TRUE);
-
-	gbInternetCheckVersion=GetConfigBoolValue("swSSO","internetCheckVersion",TRUE,TRUE);
+	// ISSUE#134
+	bCheckVersion=strcmp(gszServerAddress,"ws.swsso.fr")==0;
+	gbInternetCheckVersion=GetConfigBoolValue("swSSO","internetCheckVersion",bCheckVersion,TRUE);
 	gbInternetCheckBeta=GetConfigBoolValue("swSSO","internetCheckBeta",FALSE,TRUE);
 	//gbInternetGetConfig=GetConfigBoolValue("swSSO","internetGetConfig",TRUE,TRUE); ISSUE#63 : plus de serveur de config par défaut.
 	gbInternetGetConfig=GetConfigBoolValue("swSSO","internetGetConfig",FALSE,TRUE);
@@ -3345,10 +3347,11 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				if (iReplaceExistingConfig==1)
 				{
 					rc=StoreNodeValue(gptActions[ptiActions[0]].szApplication,sizeof(gptActions[ptiActions[0]].szApplication),pChildElement);
+					/* En fait à ce stade on ne sait pas si l'utilisateur va ajouter ou remplacer ! Donc à faire plus tard.
 					if (rc>0) 
 					{
 						GenerateApplicationName(ptiActions[0],gptActions[ptiActions[0]].szApplication);
-					}
+					}*/
 				}
 			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"szKBSim")) 
@@ -3849,6 +3852,9 @@ int AddApplicationFromCurrentWindow(void)
 			if (rc==0) bConfigFound=TRUE;
 		}
 	}
+	// le ShowAppNsites fait beaucoup plus tard va recharger la treeview, il faut faire un GetApplicationDeltails 
+	// tout de suite sinon on perdra une éventuelle config commencée par l'utilisateur
+	if (gwAppNsites!=NULL) GetApplicationDetails(gwAppNsites,giLastApplicationConfig);
 
 	if (!bConfigFound) 
 	{
@@ -3927,10 +3933,15 @@ doConfig:
 
 				TRACE((TRACE_DEBUG,_F_,"giNbActions=%d iType=%d szURL=%s",giNbActions,gptActions[giNbActions].iType,gptActions[giNbActions].szURL));
 				// et hop, c'est fait (la sauvegarde sera faite ou pas par l'utilisateur dans la fenêtre appNsites)
-				// BackupAppsNcategs(); Supprimé lors du traitement de ISSUE#114
+				// si la fenêtre appnsites est ouverte, il ne faut pas faire le backup car il a été fait au moment de l'ouverture de la fenêtre 
+				// et on veut que l'annulation annule tout ce qu'il a fait depuis. Sinon on fait le backup avant d'ouvrir la fenêtre.
+				if (gwAppNsites==NULL) BackupAppsNcategs(); // il faut bien le faire avant le ++
 				giNbActions++; 
-				if (gwAppNsites!=NULL) EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
-				ShowAppNsites(giNbActions-1);
+				if (gwAppNsites!=NULL) 
+				{
+					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
+				}
+				ShowAppNsites(giNbActions-1,FALSE);
 			}
 		}
 		else // message personnalisé, ne pose plus la question d'ajout manuel de config
@@ -4002,6 +4013,7 @@ doConfig:
 			}
 			else // désactivation de cette config
 			{
+				GenerateApplicationName(i,gptActions[i].szApplication);
 				gptActions[i].bActive=FALSE;
 				gptActions[i].bSaved=FALSE; // 0.93B6 ISSUE#55
 			}
@@ -4040,7 +4052,7 @@ suite:
 	if (gwAppNsites!=NULL)
 	{
 		EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
-		ShowAppNsites(bReplaceOldConfig?giNbActions:giNbActions-1);
+		ShowAppNsites(bReplaceOldConfig?giNbActions:giNbActions-1, FALSE);
 	}
 	else
 	{
@@ -4056,7 +4068,6 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
-
 
 // ----------------------------------------------------------------------------------
 // InternetCheckProxyParams
@@ -4114,6 +4125,7 @@ void InternetCheckVersion()
 	char szBeta[10+1];
 	BOOL bNewVersion=FALSE;
 	BOOL bBeta=FALSE;
+	int iCurrentVersion,iInternetVersion;
 
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getversion",gszWebServiceAddress);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
@@ -4136,8 +4148,14 @@ void InternetCheckVersion()
 	{
 		if (strcmp(pReleaseVersion,gcszCurrentVersion)!=0) 
 		{
-			bNewVersion=TRUE;
-			wsprintf(szMsg,GetString(IDS_NEW_VERSION),pReleaseVersion[0],pReleaseVersion[1],pReleaseVersion[2],"");
+			// ISSUE#135
+			iCurrentVersion=atoi(gcszCurrentVersion);
+			iInternetVersion=atoi(pReleaseVersion);
+			if (iInternetVersion>iCurrentVersion)
+			{
+				bNewVersion=TRUE;
+				wsprintf(szMsg,GetString(IDS_NEW_VERSION),pReleaseVersion[0],pReleaseVersion[1],pReleaseVersion[2],"");
+			}
 		}
 	}
 	else // vérifie la présence de beta
@@ -4146,19 +4164,31 @@ void InternetCheckVersion()
 		{
 			if (strcmp(pReleaseVersion,gcszCurrentVersion)!=0) 
 			{
-				bNewVersion=TRUE;
-				wsprintf(szMsg,GetString(IDS_NEW_VERSION),pReleaseVersion[0],pReleaseVersion[1],pReleaseVersion[2],"");
+				// ISSUE#135
+				iCurrentVersion=atoi(gcszCurrentVersion);
+				iInternetVersion=atoi(pReleaseVersion);
+				if (iInternetVersion>iCurrentVersion)
+				{
+					bNewVersion=TRUE;
+					wsprintf(szMsg,GetString(IDS_NEW_VERSION),pReleaseVersion[0],pReleaseVersion[1],pReleaseVersion[2],"");
+				}
 			}
 		}
 		else if (strcmp(pBetaVersion,gcszCurrentBeta)!=0)
 		{
 			bBeta=TRUE;
-			bNewVersion=TRUE;
-			if (pBetaVersion[3]>'0' && pBetaVersion[3]<='9') // c'est une version beta qui est en ligne
-				wsprintf(szBeta," beta %c",pBetaVersion[3]);
-			else if (pBetaVersion[3]>='A' && pBetaVersion[3]<='Z')
-				wsprintf(szBeta," beta %d",pBetaVersion[3]-'A'+10);
-			wsprintf(szMsg,GetString(IDS_NEW_VERSION),pBetaVersion[0],pBetaVersion[1],pBetaVersion[2],szBeta);
+			// ISSUE#135
+			iCurrentVersion=atoi(gcszCurrentBeta);
+			iInternetVersion=atoi(pBetaVersion);
+			if (iInternetVersion>iCurrentVersion)
+			{
+				bNewVersion=TRUE;
+				if (pBetaVersion[3]>'0' && pBetaVersion[3]<='9') // c'est une version beta qui est en ligne
+					wsprintf(szBeta," beta %c",pBetaVersion[3]);
+				else if (pBetaVersion[3]>='A' && pBetaVersion[3]<='Z')
+					wsprintf(szBeta," beta %d",pBetaVersion[3]-'A'+10);
+				wsprintf(szMsg,GetString(IDS_NEW_VERSION),pBetaVersion[0],pBetaVersion[1],pBetaVersion[2],szBeta);
+			}
 		}
 	}
 	if (bNewVersion)

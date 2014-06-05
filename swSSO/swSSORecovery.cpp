@@ -381,6 +381,9 @@ static int CALLBACK ResponseDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case PB_RECHALLENGE:
 					EndDialog(w,PB_RECHALLENGE);
 					break;
+				case PB_MDP_RETROUVE:
+					EndDialog(w,PB_MDP_RETROUVE);
+					break;
 				case TB_CHALLENGE:
 					if (HIWORD(wp)==EN_CHANGE)
 					{
@@ -524,6 +527,8 @@ end:
 //-----------------------------------------------------------------------------
 // [in] w : handle fenêtre parent pour affichage messages
 //-----------------------------------------------------------------------------
+// rc : 0=OK, -1=erreur, -2=l'utilisateur a annulé
+//-----------------------------------------------------------------------------
 int RecoveryChallenge(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
@@ -556,11 +561,7 @@ int RecoveryChallenge(HWND w)
 	brc=CryptExportKey(hKs,0,PLAINTEXTKEYBLOB,0,pKsData,&dwKsDataLen);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"Erreur export Ks (CryptExportKey(1)=0x%08lx)",GetLastError())); goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,pKsData,dwKsDataLen,"pKsData :"));
-	// encodage base 64 et stockage dans le .ini
-	pszKsData=(char*)malloc(dwKsDataLen*2+1);
-	if (pszKsData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwKsDataLen*2+1)); goto end; }
-	swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData);
-	WritePrivateProfileString("swSSO","recoveryRunning",pszKsData,gszCfgFile);
+	// ISSUE#137 : encodage base 64 et stockage dans le .ini déplacé plus loin au cas où l'utilisateur annule
 	// chiffrement Ks par Kpub
 	if (RecoveryEncryptData((char*)pKsData,dwKsDataLen,&pszEncyptedKsData)!=0) goto end;
 	// construction du challenge
@@ -582,9 +583,20 @@ int RecoveryChallenge(HWND w)
 	strcat_s(gszFormattedChallengeForDisplay,sizeof(gszFormattedChallengeForDisplay),gcszEndChallenge);
 	strcat_s(gszFormattedChallengeForSave,sizeof(gszFormattedChallengeForSave),gcszEndChallenge);
 
-	DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_CHALLENGE),w,ChallengeDialogProc,(LPARAM)0);
-	swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,0);
-	rc=0;
+	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_CHALLENGE),w,ChallengeDialogProc,(LPARAM)0)==IDOK)
+	{
+		// encodage base 64 et stockage dans le .ini
+		pszKsData=(char*)malloc(dwKsDataLen*2+1);
+		if (pszKsData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwKsDataLen*2+1)); goto end; }
+		swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData);
+		WritePrivateProfileString("swSSO","recoveryRunning",pszKsData,gszCfgFile);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,0);
+		rc=0;
+	}
+	else
+	{
+		rc=-2;
+	}
 end:
 	if (pKsData!=NULL) free(pKsData);
 	if (pszKsData!=NULL) free(pszKsData);
@@ -626,6 +638,13 @@ int RecoveryResponse(HWND w)
 
 	// affiche la fenêtre de saisie de la response
 	ret=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_RESPONSE),w,ResponseDialogProc,(LPARAM)0);
+	if (ret==PB_MDP_RETROUVE) // ISSUE#138
+	{
+		gbRecoveryRunning=FALSE;
+		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile);
+		rc=-2;
+		goto end;
+	}
 	if (ret==PB_RECHALLENGE) { rc=-5; goto end; } // ISSUE#121
 	if (ret!=IDOK) { rc=-4; goto end; }
 

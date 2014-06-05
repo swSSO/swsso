@@ -118,7 +118,8 @@ T_LAST_DETECT gTabLastDetect[MAX_NB_LAST_DETECT]; // 0.93 liste des fenêtres dét
 
 HANDLE ghPwdChangeEvent=NULL; // 0.96
 
-int giLastApplication=-1;
+int giLastApplicationSSO=-1;		// dernière application sur laquelle le SSO a été réalisé
+int giLastApplicationConfig=-1; // dernière application utilisée (soit SSO soit config)
 SYSTEMTIME gLastLoginTime; // ISSUE#106
 
 //*****************************************************************************
@@ -772,7 +773,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 
 		// ISSUE#107 : conserve l'id de la dernière application reconnue pour l'accompagnement du changement de mot de passe
 		// ISSUE#108 : conserve l'id de la dernière application reconnue pour la sélectionner par défaut dans la fenêtre de gestion des sites
-		giLastApplication=i;
+		giLastApplicationSSO=i;
+		giLastApplicationConfig=i;
 
 		// 0.93
 		//TRACE((TRACE_DEBUG,_F_,"now-tLastDetect=%ld",t-gptActions[i].tLastDetect));
@@ -1387,43 +1389,6 @@ static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 	return rc;
 }
 
-//-------------------------------------------------------------------------------------
-// Hook pour changer les libellés de la message box d'erreur de mot de passe
-// qui propose de lancer la procédure de recouvrement (boutons : réessayer / oublié ?)
-//-------------------------------------------------------------------------------------
-WNDPROC gOldProc;
-HHOOK  ghHook;
-LRESULT CALLBACK HookWndProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
-{
-    LRESULT rc = CallWindowProc(gOldProc,w,msg,wp,lp);
-    if (msg==WM_INITDIALOG)
-    {
-		TRACE((TRACE_DEBUG,_F_,"WM_INITDIALOG"));
-		SetDlgItemText(w,IDCANCEL,GetString(IDS_BTN_FORGOT));
-		SetDlgItemText(w,IDRETRY,GetString(IDS_BTN_RETRY));
-    }
-    if (msg==WM_NCDESTROY) 
-	{
-		TRACE((TRACE_DEBUG,_F_,"WM_NCDESTROY"));
-		UnhookWindowsHookEx(ghHook);
-	}
-	return rc;
-}
-LRESULT CALLBACK SetHook(int nCode,WPARAM wp,LPARAM lp)
-{
-	if (nCode==HC_ACTION)
-	{
-		
-		CWPSTRUCT* pwp = (CWPSTRUCT*)lp;
-		if (pwp->message==WM_INITDIALOG) 
-		{ 
-			TRACE((TRACE_DEBUG,_F_,"WM_INITDIALOG"));
-			gOldProc=(WNDPROC)SetWindowLong(pwp->hwnd,GWL_WNDPROC,(LONG)HookWndProc); 
-		}
-	}
-	return CallNextHookEx(ghHook,nCode,wp,lp);
-}
-
 //-----------------------------------------------------------------------------
 // PwdDialogProc()
 //-----------------------------------------------------------------------------
@@ -1468,6 +1433,11 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			else
 			{
 				SetWindowPos(w,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
+			}
+			// ISSUE#136 : nouveau bouton mdp oublié (masqué si pas de recouvrement défini)
+			if (gpRecoveryKeyValue==NULL || *gszRecoveryInfos==0)
+			{
+				ShowWindow(GetDlgItem(w,PB_MDP_OUBLIE),SW_HIDE);
 			}
 			MACRO_SET_SEPARATOR;
 			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
@@ -1537,21 +1507,8 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 
 						SendDlgItemMessage(w,TB_PWD,EM_SETSEL,0,-1);
 
-						if (gpRecoveryKeyValue==NULL || *gszRecoveryInfos==0)
-						{
-							MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
-						}
-						else // une clé de recouvrement existe et que les recoveryInfos ont déjà été stockées
-							 // on propose de réinitialiser le mot de passe
-						{
-							ghHook=SetWindowsHookEx (WH_CALLWNDPROC,(HOOKPROC)SetHook,NULL,GetCurrentThreadId());
-							if (MessageBox(w,GetString(IDS_BADPWD2),"swSSO",MB_RETRYCANCEL | MB_ICONEXCLAMATION)==IDCANCEL)
-							{
-								RecoveryChallenge(w);
-								EndDialog(w,IDCANCEL);
-								PostQuitMessage(-1);
-							}
-						}
+						// ISSUE#136 : le message en cas d'erreur devient générique suite à l'ajout du bouton mdp oublié
+						MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 						if (giBadPwdCount>5) PostQuitMessage(-1);
 					}
 					break;
@@ -1567,6 +1524,15 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						int len;
 						len=GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
 						EnableWindow(GetDlgItem(w,IDOK),len==0 ? FALSE : TRUE);
+					}
+					break;
+				}
+				case PB_MDP_OUBLIE: // ISSUE#136
+				{
+					if (RecoveryChallenge(w)==0)
+					{
+						EndDialog(w,IDCANCEL);
+						PostQuitMessage(-1);
 					}
 					break;
 				}
@@ -2091,7 +2057,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			TRACE((TRACE_DEBUG,_F_,"PP_WINDOWS demandé en base de registre, on force la migration"));
 			giPwdProtection=PP_WINDOWS;
 		}
-
+askpwd:
 		if (giPwdProtection==PP_ENCRYPTED)
 		{
 			// regarde s'il y a une réinit de mdp en cours
@@ -2107,8 +2073,10 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			}
 			else if (ret==-5)  // l'utilisateur a demandé de regénérer le challenge (ISSUE#121)
 			{
-				RecoveryChallenge(NULL);
-				goto end;
+				if (RecoveryChallenge(NULL)==0) 
+					goto end;
+				else
+					goto askpwd; // je sais, c'est moche, mais c'est tellement plus simple...
 			}
 			else // il y a eu une réinit et ça n'a pas marché :-(
 			{
@@ -2316,7 +2284,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		}
 		gbRecoveryRunning=FALSE;
 		// supprime le recovery running
-		WritePrivateProfileString("swSSO","recoveryRunning","",gszCfgFile);
+		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile);
 		// 
 		MessageBox(NULL,GetString(giPwdProtection==PP_ENCRYPTED?IDS_RECOVERY_ENCRYPTED_OK:IDS_RECOVERY_WINDOWS_OK),"swSSO",MB_ICONINFORMATION | MB_OK);
 		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_SUCCESS,NULL,NULL,NULL,0);

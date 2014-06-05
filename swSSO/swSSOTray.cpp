@@ -72,7 +72,7 @@ static void ShowContextMenu(HWND w)
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_THIS_APPLI,GetString(IDS_MENU_THIS_APPLI));
 	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_SSO_NOW,GetString(IDS_MENU_SSO_NOW));
-	if (gbShowMenu_AppPasswordMenu && giLastApplication!=-1) // ISSUE#107
+	if (gbShowMenu_AppPasswordMenu && giLastApplicationSSO!=-1) // ISSUE#107
 	{
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_CHANGEAPPPWD,GetString(IDS_MENU_CHANGEAPPPWD));
 	}
@@ -188,7 +188,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						// 0.63B3 : le double click déverrouille si verrouillé, ouvre la config sinon
 						if (gbSSOActif)
 							// ShowAppNsites(-1); ISSUE#108
-							ShowAppNsites(giLastApplication);
+							ShowAppNsites(giLastApplicationConfig,TRUE);
 						else
 							SSOActivate(w);
 					}
@@ -239,7 +239,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						SSOActivate(w);
 					}
 					// ShowAppNsites(-1); ISSUE#108
-					ShowAppNsites(giLastApplication);
+					ShowAppNsites(giLastApplicationConfig,TRUE);
 					break;
 				case TRAY_MENU_MDP:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_MDP"));
@@ -434,8 +434,8 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			// titre en gras
 			SetTextBold(w,TX_APP_NAME);
 			SetTextBold(w,TX_ID);
-			SetDlgItemText(w,TX_ID,gptActions[giLastApplication].szId1Value);
-			SetDlgItemText(w,TX_APP_NAME,gptActions[giLastApplication].szApplication);
+			SetDlgItemText(w,TX_ID,gptActions[giLastApplicationSSO].szId1Value);
+			SetDlgItemText(w,TX_APP_NAME,gptActions[giLastApplicationSSO].szApplication);
 			// affiche un message différent si la saisie automatique du mot de passe n'a pas été faite ou n'était pas demandée
 			SetDlgItemText(w,TX_FRAME2,GetString(lp==1?IDS_MSG_CHANGE_APP_PWD_1:IDS_MSG_CHANGE_APP_PWD_2));
 			// positionnement en bas à droite de l'écran, près de l'icone swSSO
@@ -704,29 +704,29 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 //-----------------------------------------------------------------------------
 int BeginChangeAppPassword(void)
 {
-	TRACE((TRACE_ENTER,_F_, "giLastApplication=%d",giLastApplication));
+	TRACE((TRACE_ENTER,_F_, "giLastApplicationSSO=%d",giLastApplicationSSO));
 	int rc=-1;
 	BOOL bDone=FALSE;
 	char *pszEncryptedPassword=NULL;
 	BOOL bOldPwdFillDone=0;
 	
-	if (giLastApplication==-1) goto end; // ne peut pas se produire en théorie puisque le menu systray n'est affiché que si !=1
+	if (giLastApplicationSSO==-1) goto end; // ne peut pas se produire en théorie puisque le menu systray n'est affiché que si !=1
 
 	// déchiffre le mot de passe de l'application, essaie de le saisir et le copie dans le presse papier
-	if ((*gptActions[giLastApplication].szPwdEncryptedValue!=0))
+	if ((*gptActions[giLastApplicationSSO].szPwdEncryptedValue!=0))
 	{
-		char *pszPassword=swCryptDecryptString(gptActions[giLastApplication].szPwdEncryptedValue,ghKey1);
+		char *pszPassword=swCryptDecryptString(gptActions[giLastApplicationSSO].szPwdEncryptedValue,ghKey1);
 		if (pszPassword!=NULL) 
 		{
 			// copie le mot de passedans le presse-papier
 			ClipboardCopy(pszPassword);
 			// si remplissage de l'ancien mot de passe demandé et que la fenêtre est toujours présente
-			if (gbOldPwdAutoFill && gptActions[giLastApplication].wLastSSO!=NULL && IsWindow(gptActions[giLastApplication].wLastSSO))
+			if (gbOldPwdAutoFill && gptActions[giLastApplicationSSO].wLastSSO!=NULL && IsWindow(gptActions[giLastApplicationSSO].wLastSSO))
 			{
 				// mise au premier plan de la fenêtre
-				SetForegroundWindow(gptActions[giLastApplication].wLastSSO);
+				SetForegroundWindow(gptActions[giLastApplicationSSO].wLastSSO);
 				// saisie à l'aveugle de l'ancien mot de passe, en espérant que ce soit le champ avec le focus...
-				TRACE((TRACE_INFO,_F_,"Fenetre 0x%08lx tjs presente, saisie de l'ancien mdp",gptActions[giLastApplication].wLastSSO));
+				TRACE((TRACE_INFO,_F_,"Fenetre 0x%08lx tjs presente, saisie de l'ancien mdp",gptActions[giLastApplicationSSO].wLastSSO));
 				KBSim(FALSE,200,pszPassword,TRUE);	
 				bOldPwdFillDone=1;
 			}
@@ -757,11 +757,11 @@ int BeginChangeAppPassword(void)
 				pszEncryptedPassword=swCryptEncryptString(gszNewAppPwd,ghKey1);
 				SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
 				if (pszEncryptedPassword==NULL) goto end;
-				strcpy_s(gptActions[giLastApplication].szPwdEncryptedValue,sizeof(gptActions[giLastApplication].szPwdEncryptedValue),pszEncryptedPassword);
+				strcpy_s(gptActions[giLastApplicationSSO].szPwdEncryptedValue,sizeof(gptActions[giLastApplicationSSO].szPwdEncryptedValue),pszEncryptedPassword);
 				// sauvegarde
 				SaveApplications();
 				// log
-				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CHANGE_APP_PWD,gptActions[giLastApplication].szApplication,gptActions[giLastApplication].szId1Value,NULL,0);
+				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CHANGE_APP_PWD,gptActions[giLastApplicationSSO].szApplication,gptActions[giLastApplicationSSO].szId1Value,NULL,0);
 				// fini !
 				bDone=TRUE;
 				rc=0;

@@ -143,11 +143,13 @@
 #define IDD_CHANGE_IDS                          1177
 #define CK_DISPLAY_MSG                          40000
 #define IDS_BADPWD                              40000
+#define PB_MDP_OUBLIE                           40000
 #define PB_RECHALLENGE                          40000
 #define TX_FRAME1                               40000
 #define CK_NPMECA                               40001
 #define CK_VIEW                                 40001
 #define IDS_DEFAULT_PORTAL                      40001
+#define PB_MDP_RETROUVE                         40001
 #define IDS_COMBOTYPE1                          40002
 #define TX_FRAME2                               40002
 #define IDB_COPIER                              40003

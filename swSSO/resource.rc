@@ -138,10 +138,11 @@ STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMEN
 CAPTION "swSSO - Réinitialisation du mot de passe"
 FONT 8, "Tahoma"
 {
+    DEFPUSHBUTTON   "&Terminer", IDOK, 261, 227, 57, 14, 0, WS_EX_LEFT
     CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 297, 1, WS_EX_LEFT
-    DEFPUSHBUTTON   "&Fermer", IDOK, 264, 227, 55, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "Enregistrer &sous...", PB_SAVEAS, 191, 227, 70, 14, 0, WS_EX_LEFT
     EDITTEXT        TB_CHALLENGE, 7, 47, 311, 177, ES_MULTILINE, WS_EX_LEFT
+    PUSHBUTTON      "Enregistrer &sous...", PB_SAVEAS, 123, 227, 70, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "&Annuler", IDCANCEL, 197, 227, 60, 14, 0, WS_EX_LEFT
     LTEXT           "Voici les informations à envoyer à votre support. Vous pouvez les coller dans un email ou les enregistrer dans un fichier.", TX_FRAME, 46, 6, 247, 17, SS_LEFT, WS_EX_LEFT
 }
 
@@ -324,6 +325,7 @@ FONT 8, "Tahoma"
     AUTOCHECKBOX    "&Ne plus me demander mon mot de passe sur cet ordinateur", CK_SAVE, 60, 63, 199, 11, 0, WS_EX_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 156, 85, 50, 14, WS_DISABLED, WS_EX_LEFT
     PUSHBUTTON      "Annuler", IDCANCEL, 210, 85, 50, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "Mot de passe &oublié ?", PB_MDP_OUBLIE, 71, 85, 81, 14, 0, WS_EX_LEFT
     LTEXT           "&Mot de passe :", IDC_STATIC, 9, 47, 48, 10, SS_LEFT, WS_EX_LEFT
 }
 
@@ -335,11 +337,12 @@ STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMEN
 CAPTION "swSSO - Réinitialisation du mot de passe"
 FONT 8, "Tahoma"
 {
+    PUSHBUTTON      "&Ouvrir...", PB_SAVEAS, 191, 127, 70, 14, 0, WS_EX_LEFT
+    DEFPUSHBUTTON   "&Valider", IDOK, 264, 127, 55, 14, WS_DISABLED, WS_EX_LEFT
     CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 297, 1, WS_EX_LEFT
     EDITTEXT        TB_CHALLENGE, 7, 47, 311, 77, ES_MULTILINE, WS_EX_LEFT
     PUSHBUTTON      "&Regénérer le challenge", PB_RECHALLENGE, 7, 127, 87, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "&Ouvrir...", PB_SAVEAS, 191, 127, 70, 14, 0, WS_EX_LEFT
-    DEFPUSHBUTTON   "&Valider", IDOK, 264, 127, 55, 14, WS_DISABLED, WS_EX_LEFT
+    PUSHBUTTON      "&Mot de passe retrouvé", PB_MDP_RETROUVE, 96, 127, 90, 14, 0, WS_EX_LEFT
     LTEXT           "Copiez ici les informations reçues de votre support ou utilisez le bouton Ouvrir, puis cliquez sur valider. Pour regénérer les informations à envoyer au support, cliquez sur le bouton ""Regénérer le challenge""", TX_FRAME, 46, 3, 273, 26, SS_LEFT, WS_EX_LEFT
 }
 
@@ -423,7 +426,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Fichier de configuration :", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT, WS_EX_LEFT
     LTEXT           "Licence", TX_LICENCE, 7, 41, 28, 11, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Version 1.01 BETA 2 (26/05/2014)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Version 1.01 BETA 3 (06/06/2014)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Portail :", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1, WS_EX_LEFT
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1, WS_EX_LEFT
