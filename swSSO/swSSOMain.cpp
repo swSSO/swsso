@@ -65,6 +65,7 @@ HICON ghIconLoupe=NULL;
 HANDLE ghLogo=NULL;
 HANDLE ghLogoFondBlanc50=NULL;
 HANDLE ghLogoFondBlanc90=NULL;
+HANDLE ghLogoExclamation=NULL;
 HCURSOR ghCursorHand=NULL; 
 HCURSOR ghCursorWait=NULL;
 HIMAGELIST ghImageList=NULL;
@@ -1232,9 +1233,11 @@ static int LoadIcons(void)
 	if (ghLogo==NULL) goto end;
 	ghLogoFondBlanc50=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO_FONDBLANC50),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
 	if (ghLogoFondBlanc50==NULL) goto end;
-	ghLogoFondBlanc90=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO_FONDBLANC90),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
-	if (ghLogoFondBlanc90==NULL) goto end;
-	ghCursorHand=(HCURSOR)LoadImage(ghInstance,
+	ghLogoFondBlanc90 = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO_FONDBLANC90), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+	if (ghLogoFondBlanc90 == NULL) goto end;
+	ghLogoExclamation = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_EXCLAMATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+	if (ghLogoExclamation == NULL) goto end;
+	ghCursorHand = (HCURSOR)LoadImage(ghInstance,
 					MAKEINTRESOURCE(IDC_CURSOR_HAND),
 					IMAGE_CURSOR,
 					0,
@@ -1266,7 +1269,8 @@ static void UnloadIcons(void)
 	if (ghLogo!=NULL) { DeleteObject(ghLogo); ghLogo=NULL; }
 	if (ghLogoFondBlanc50!=NULL) { DeleteObject(ghLogoFondBlanc50); ghLogoFondBlanc50=NULL; }
 	if (ghLogoFondBlanc90!=NULL) { DeleteObject(ghLogoFondBlanc90); ghLogoFondBlanc90=NULL; }
-	if (ghCursorHand!=NULL) { DestroyCursor(ghCursorHand); ghCursorHand=NULL; }
+	if (ghLogoExclamation != NULL) { DeleteObject(ghLogoExclamation); ghLogoExclamation = NULL; }
+	if (ghCursorHand != NULL) { DestroyCursor(ghCursorHand); ghCursorHand = NULL; }
 	if (ghCursorWait!=NULL) { DestroyCursor(ghCursorWait); ghCursorWait=NULL; }
 	if (ghImageList!=NULL) ImageList_Destroy(ghImageList);
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -1434,8 +1438,8 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			{
 				SetWindowPos(w,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
 			}
-			// ISSUE#136 : nouveau bouton mdp oublié (masqué si pas de recouvrement défini)
-			if (gpRecoveryKeyValue==NULL || *gszRecoveryInfos==0)
+			// ISSUE#136 : nouveau bouton mdp oublié (masqué si pas de recouvrement défini ou si askpwd depuis loupe AppNsites)
+			if (gpRecoveryKeyValue==NULL || *gszRecoveryInfos==0 || !bUseDPAPI)
 			{
 				ShowWindow(GetDlgItem(w,PB_MDP_OUBLIE),SW_HIDE);
 			}

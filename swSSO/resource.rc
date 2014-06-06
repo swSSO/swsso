@@ -21,6 +21,10 @@
 // Bitmap resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDB_EXCLAMATION    BITMAP         ".\\exclamation.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDB_LOGO           BITMAP         "swsso-v5 52x44.bmp"
 
 
@@ -208,16 +212,15 @@ FONT 8, "Tahoma"
 
 
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-IDD_CONFIRM_NEW_APP_PWD DIALOG 0, 0, 277, 73
+IDD_CONFIRM_NEW_APP_PWD DIALOG 0, 0, 241, 56
 STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 EXSTYLE WS_EX_TOPMOST
-CAPTION "swSSO - Mise en coffre du nouveau mot de passe"
+CAPTION "swSSO - Enregistrement du mot de passe"
 FONT 8, "Tahoma"
 {
-    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 4, 48, 242, 1, WS_EX_LEFT
-    LTEXT           "Attention !\r\nN'enregistrez votre nouveau mot de passe que si le changement de mot de passe a bien été réalisé dans l'application !", TX_FRAME1, 44, 7, 227, 35, SS_LEFT, WS_EX_LEFT
-    DEFPUSHBUTTON   "&Enregistrer", IDOK, 172, 54, 45, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "Annuler", IDCANCEL, 222, 54, 50, 14, 0, WS_EX_LEFT
+    LTEXT           "Voulez-vous vraiment enregistrer votre nouveau mot de passe ?", TX_FRAME1, 17, 13, 206, 8, SS_LEFT, WS_EX_LEFT
+    DEFPUSHBUTTON   "&Oui", IDOK, 70, 34, 45, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "&Non", IDCANCEL, 120, 34, 50, 14, 0, WS_EX_LEFT
 }
 
 
@@ -349,22 +352,23 @@ FONT 8, "Tahoma"
 
 
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-IDD_SAVE_NEW_APP_PWD DIALOG 0, 0, 277, 94
+IDD_SAVE_NEW_APP_PWD DIALOG 0, 0, 277, 131
 STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 EXSTYLE WS_EX_TOPMOST
 CAPTION "swSSO - Mise en coffre du nouveau mot de passe"
 FONT 8, "Tahoma"
 {
-    LTEXT           "&Nouveau mot de passe :", IDC_STATIC, 7, 58, 84, 8, SS_LEFT, WS_EX_LEFT
-    EDITTEXT        TB_PWD, 92, 56, 146, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
-    EDITTEXT        TB_PWD_CLEAR, 92, 56, 146, 13, ES_AUTOHSCROLL, WS_EX_LEFT
-    PUSHBUTTON      "&Copier", IDB_COPIER, 241, 55, 30, 14, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "&Afficher en clair", CK_VIEW, 92, 74, 71, 8, 0, WS_EX_LEFT
-    DEFPUSHBUTTON   "&Enregistrer", IDOK, 171, 75, 45, 14, WS_DISABLED, WS_EX_LEFT
-    PUSHBUTTON      "Annuler", IDCANCEL, 221, 75, 50, 14, 0, WS_EX_LEFT
+    LTEXT           "&Nouveau mot de passe :", IDC_STATIC, 7, 95, 84, 8, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        TB_PWD, 92, 93, 146, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    EDITTEXT        TB_PWD_CLEAR, 92, 93, 146, 13, ES_AUTOHSCROLL, WS_EX_LEFT
+    PUSHBUTTON      "&Copier", IDB_COPIER, 241, 92, 30, 14, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "&Afficher en clair", CK_VIEW, 92, 111, 71, 8, 0, WS_EX_LEFT
+    DEFPUSHBUTTON   "&Enregistrer", IDOK, 171, 112, 45, 14, WS_DISABLED, WS_EX_LEFT
+    PUSHBUTTON      "Annuler", IDCANCEL, 221, 112, 50, 14, 0, WS_EX_LEFT
     LTEXT           "Veuillez saisir ci-dessous votre nouveau mot de passe puis cliquer sur Copier.", TX_FRAME1, 44, 7, 217, 18, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Collez ensuite ce mot de passe dans les champs ""nouveau mot de passe"" de l'application avec CTRL+V", TX_FRAME2, 43, 25, 225, 18, SS_LEFT, WS_EX_LEFT
-    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 4, 48, 242, 1, WS_EX_LEFT
+    LTEXT           "Collez ensuite ce mot de passe dans les champs ""nouveau mot de passe"" de l'application avec CTRL+V.", TX_FRAME2, 43, 25, 218, 18, SS_LEFT, WS_EX_LEFT
+    LTEXT           "N'enregistrez votre nouveau mot de passe que si le changement de mot de passe a bien été réalisé dans l'application !", TX_FRAME3, 75, 53, 182, 27, SS_LEFT, WS_EX_LEFT
+    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 5, 86, 242, 1, WS_EX_LEFT
 }
 
 
@@ -611,6 +615,8 @@ STRINGTABLE
     IDS_TIP_TB_KBSIM              "Permet définir un script de saisie automatique. Exemple : [ID] saisit l'identifiant, [PWD] saisit le mot de passe, [TAB] simule un appui sur la touche TAB, [ENTER] simule un appui sur la touche ENTER."
     IDS_BTN_RETRY                 "Réessayer"
     IDS_BTN_FORGOT                "Oublié ?"
+    IDS_CONFIRM_NEWPWD_MSG        "Voulez-vous vraiment enregistrer votre nouveau mot de passe ?"
+    IDS_CONFIRM_NEWPWD_TITLE      "swSSO - Enregistrement du mot de passe"
 }
 
 
@@ -648,3 +654,4 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
+

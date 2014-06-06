@@ -510,6 +510,30 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 }
 
 //-----------------------------------------------------------------------------
+// DrawLogoAndWarningBar()
+//-----------------------------------------------------------------------------
+// Affichage d'un bandeau blanc avec logo swSSO et warning 
+//-----------------------------------------------------------------------------
+void DrawLogoAndWarningBar(HWND w)
+{
+	TRACE((TRACE_ENTER, _F_, "w=0x%08lx", w));
+
+	PAINTSTRUCT ps;
+	RECT rect;
+	HDC dc = NULL;
+
+	if (!GetClientRect(w, &rect)) { TRACE((TRACE_ERROR, _F_, "GetClientRect(0x%08lx)=%ld", w, GetLastError()));  goto end; }
+	dc = BeginPaint(w, &ps);
+	if (dc == NULL) { TRACE((TRACE_ERROR, _F_, "BeginPaint()=%ld", GetLastError())); goto end; }
+	if (!BitBlt(dc, 0, 0, rect.right, 140, 0, 0, 0, WHITENESS)) { TRACE((TRACE_ERROR, _F_, "BitBlt(WHITENESS)=%ld", GetLastError())); }
+	DrawBitmap(ghLogoFondBlanc90, dc, 0, 0, 60, 80);
+	DrawBitmap(ghLogoExclamation, dc, 50, 75, 60, 60);
+end:
+	if (dc != NULL) EndPaint(w, &ps);
+	TRACE((TRACE_LEAVE, _F_, ""));
+}
+
+//-----------------------------------------------------------------------------
 // SaveNewAppPwdDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la fenêtre de mise en coffre du nouveau mot de passe d'une appli
@@ -532,14 +556,15 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// limitation chamsp de saisie
 			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,LEN_PWD,0);
 			SendMessage(GetDlgItem(w,TB_PWD_CLEAR),EM_LIMITTEXT,LEN_PWD,0);
-			//SetDlgItemText(w,TX_FRAME2,GetString());
+			// Avertissement en gras
+			SetTextBold(w, TX_FRAME3);
 			// positionnement en bas à droite de l'écran, près de l'icone swSSO
 			cx = GetSystemMetrics( SM_CXSCREEN );
 			cy = GetSystemMetrics( SM_CYSCREEN );
 			TRACE((TRACE_INFO,_F_,"SM_CXSCREEN=%d SM_CYSCREEN=%d",cx,cy));
 			GetWindowRect(w,&rect);
 			SetWindowPos(w,NULL,cx-(rect.right-rect.left)-100,cy-(rect.bottom-rect.top)-100,0,0,SWP_NOSIZE | SWP_NOZORDER);
-			MACRO_SET_SEPARATOR_80;
+			MACRO_SET_SEPARATOR_140;
 			RevealPasswordField(w,FALSE);
 			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
 			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
@@ -562,7 +587,8 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			{
 				case TX_FRAME1:
 				case TX_FRAME2:
-					SetBkMode((HDC)wp,TRANSPARENT);
+				case TX_FRAME3:
+					SetBkMode((HDC)wp, TRANSPARENT);
 					rc=(int)GetStockObject(HOLLOW_BRUSH);
 					break;
 			}
@@ -608,8 +634,8 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			Help();
 			break;
 		case WM_PAINT:
-			DrawLogoBar(w,80,ghLogoFondBlanc90);
-			rc=TRUE;
+			DrawLogoAndWarningBar(w);
+			rc = TRUE;
 			break;
 		case WM_ACTIVATE:
 			InvalidateRect(w,NULL,FALSE);
@@ -635,42 +661,14 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 			int cx;
 			int cy;
 			RECT rect;
-			//gwChangeMasterPwd=w;
 			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
 			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
-			// titre en gras
-			SetTextBold(w,TX_FRAME1);
 			// positionnement en bas à droite de l'écran, près de l'icone swSSO
 			cx = GetSystemMetrics( SM_CXSCREEN );
 			cy = GetSystemMetrics( SM_CYSCREEN );
 			TRACE((TRACE_INFO,_F_,"SM_CXSCREEN=%d SM_CYSCREEN=%d",cx,cy));
 			GetWindowRect(w,&rect);
 			SetWindowPos(w,NULL,cx-(rect.right-rect.left)-100,cy-(rect.bottom-rect.top)-100,0,0,SWP_NOSIZE | SWP_NOZORDER);
-			MACRO_SET_SEPARATOR_80;
-			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
-			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
-			if (giRefreshTimer==giTimer) giRefreshTimer=11;
-			SetTimer(w,giRefreshTimer,200,NULL);
-			break;
-		case WM_TIMER:
-			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
-			if (giRefreshTimer==(int)wp) 
-			{
-				KillTimer(w,giRefreshTimer);
-				InvalidateRect(w,NULL,FALSE);
-				SetForegroundWindow(w); 
-			}
-			break;
-		case WM_CTLCOLORSTATIC:
-			int ctrlID;
-			ctrlID=GetDlgCtrlID((HWND)lp);
-			switch(ctrlID)
-			{
-				case TX_FRAME1:
-					SetBkMode((HDC)wp,TRANSPARENT);
-					rc=(int)GetStockObject(HOLLOW_BRUSH);
-					break;
-			}
 			break;
 		case WM_COMMAND:
 			switch (LOWORD(wp))
@@ -685,13 +683,6 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 			break;
 		case WM_HELP:
 			Help();
-			break;
-		case WM_PAINT:
-			DrawLogoBar(w,80,ghLogoFondBlanc90);
-			rc=TRUE;
-			break;
-		case WM_ACTIVATE:
-			InvalidateRect(w,NULL,FALSE);
 			break;
 	}
 	return rc;

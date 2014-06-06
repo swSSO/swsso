@@ -13,6 +13,7 @@
 #define IDB_LOGO_FONDBLANC90                    119
 #define IDD_SAVE_NEW_APP_PWD                    121
 #define IDD_CONFIRM_NEW_APP_PWD                 123
+#define IDB_EXCLAMATION                         125
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000
@@ -154,7 +155,6 @@
 #define TX_FRAME2                               40002
 #define IDB_COPIER                              40003
 #define IDS_COMBOTYPE2                          40003
-#define TX_FRAME3                               40003
 #define IDS_COMBOTYPE3                          40004
 #define TX_APP_NAME                             40004
 #define IDS_OLDVERSION                          40005
@@ -295,3 +295,6 @@
 #define IDS_TIP_TB_KBSIM                        40130
 #define IDS_BTN_RETRY                           40131
 #define IDS_BTN_FORGOT                          40132
+#define IDS_CONFIRM_NEWPWD_MSG                  40133
+#define IDS_CONFIRM_NEWPWD_TITLE                40134
+#define TX_FRAME3                               40135

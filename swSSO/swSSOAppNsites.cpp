@@ -591,7 +591,7 @@ end:
 void TVSelectItemFromLParam(HWND w,int iAppOrCateg,LPARAM lp)
 {
 	TRACE((TRACE_ENTER,_F_, "lp=%ld",lp));
-	
+	if (lp==-1) goto end;
 	HTREEITEM hNextCateg,hNextApp;
 	hNextCateg=TreeView_GetRoot(GetDlgItem(w,TV_APPLICATIONS));
 	while (hNextCateg!=NULL)
