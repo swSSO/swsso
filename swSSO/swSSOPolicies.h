@@ -65,6 +65,8 @@
 // ISSUE#107
 #define REGVALUE_SHOWMENU_CHANGEAPPPASSWORD			"ShowChangeAppPwdMenu"
 #define REGVALUE_OLD_PWD_AUTO_FILL					"OldPwdAutoFill"
+// ISSUE#140
+#define REGVALUE_REACTIVATE_WITHOUT_PWD				"ReactivateWithoutPwd"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -97,6 +99,8 @@ extern BOOL gbShowMenu_AddThisApp;
 // ISSUE#107
 extern BOOL gbShowMenu_AppPasswordMenu;
 extern BOOL gbOldPwdAutoFill;
+// ISSUE#140
+extern BOOL gbReactivateWithoutPwd;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"

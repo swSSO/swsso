@@ -128,7 +128,8 @@ void SSOActivate(HWND w)
 		strcpy_s(nid.szTip,sizeof(nid.szTip),GetString(IDS_DESACTIVE)); //max64
 		//0.83 : supprime la clé de la mémoire
 		//0.96 : sauf si SSO Windows (et si on décide de le faire, attention effet de bord dans AskPWd()).
-		if (giPwdProtection!=PP_WINDOWS)
+		//1.01 (ISSUE#140) : sauf si mode réactivation sans saisie de mot de passe
+		if (giPwdProtection!=PP_WINDOWS && !gbReactivateWithoutPwd)
 		{
 			if (ghKey1!=NULL) { CryptDestroyKey(ghKey1); ghKey1=NULL; }
 		}
@@ -165,7 +166,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			switch(lp)
 			{
 				case WM_LBUTTONDBLCLK:
-					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 					if (HIBYTE(GetAsyncKeyState(VK_SHIFT))!=0) 
 					{
@@ -175,7 +176,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					else if (HIBYTE(GetAsyncKeyState(VK_CONTROL))!=0) 
 					{
 						TRACE((TRACE_INFO,_F_, "WM_APP + CTRL + WM_LBUTTONDBLCLK"));
-						if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+						if (!gbSSOActif && !gbReactivateWithoutPwd)
 						{
 							if (AskPwd(NULL,TRUE)!=0) goto end;
 							SSOActivate(w);
@@ -209,7 +210,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			{
 				case TRAY_MENU_LAUNCH_APP:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_LAUNCH_APP"));
-					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
@@ -218,13 +219,13 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_ACTIVER:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_ACTIVER"));
-					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 					SSOActivate(w);
 					break;
 				case TRAY_MENU_PROPRIETES:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_PROPRIETES"));
-					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
@@ -233,7 +234,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_APPNSITES:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_APPNSITES"));
-					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
@@ -243,7 +244,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_MDP:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_MDP"));
-					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
@@ -252,7 +253,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_PORTAL:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_PORTAL"));
-					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
@@ -261,7 +262,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_THIS_APPLI:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_THIS_APPLI"));
-					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
@@ -270,7 +271,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_SSO_NOW:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_SSO_NOW"));
-					if (!gbSSOActif && giPwdProtection>=PP_ENCRYPTED)
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);

@@ -68,6 +68,8 @@ BOOL gbShowMenu_AddThisApp=TRUE;
 // ISSUE#107
 BOOL gbShowMenu_AppPasswordMenu=FALSE;
 BOOL gbOldPwdAutoFill=FALSE;
+// ISSUE#140
+BOOL gbReactivateWithoutPwd=FALSE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -250,6 +252,11 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_OLD_PWD_AUTO_FILL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbOldPwdAutoFill=(BOOL)dwValue; 
+
+		// ISSUE#140
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_REACTIVATE_WITHOUT_PWD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbReactivateWithoutPwd=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
