@@ -62,6 +62,7 @@ HICON ghIconAltTab=NULL;
 HICON ghIconSystrayActive=NULL;
 HICON ghIconSystrayInactive=NULL;
 HICON ghIconLoupe=NULL;
+HICON ghIconHelp = NULL;
 HANDLE ghLogo=NULL;
 HANDLE ghLogoFondBlanc50=NULL;
 HANDLE ghLogoFondBlanc90=NULL;
@@ -1222,16 +1223,23 @@ static int LoadIcons(void)
 					GetSystemMetrics(SM_CYSMICON),
 					LR_DEFAULTCOLOR);
 	if (ghIconSystrayInactive==NULL) goto end;
-	ghIconLoupe=(HICON)LoadImage(ghInstance, 
-					MAKEINTRESOURCE(IDI_LOUPE), 
-					IMAGE_ICON,
-					GetSystemMetrics(SM_CXSMICON),
-					GetSystemMetrics(SM_CYSMICON),
-					LR_LOADTRANSPARENT);
-	if (ghIconLoupe==NULL) goto end;
-	ghLogo=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
-	if (ghLogo==NULL) goto end;
-	ghLogoFondBlanc50=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDB_LOGO_FONDBLANC50),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
+	ghIconLoupe = (HICON)LoadImage(ghInstance,
+		MAKEINTRESOURCE(IDI_LOUPE),
+		IMAGE_ICON,
+		GetSystemMetrics(SM_CXSMICON),
+		GetSystemMetrics(SM_CYSMICON),
+		LR_LOADTRANSPARENT);
+	if (ghIconLoupe == NULL) goto end;
+	ghIconHelp = (HICON)LoadImage(ghInstance,
+		MAKEINTRESOURCE(IDI_HELP),
+		IMAGE_ICON,
+		GetSystemMetrics(SM_CXSMICON),
+		GetSystemMetrics(SM_CYSMICON),
+		LR_LOADTRANSPARENT);
+	if (ghIconHelp == NULL) goto end;
+	ghLogo = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+	if (ghLogo == NULL) goto end;
+	ghLogoFondBlanc50 = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO_FONDBLANC50), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 	if (ghLogoFondBlanc50==NULL) goto end;
 	ghLogoFondBlanc90 = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO_FONDBLANC90), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 	if (ghLogoFondBlanc90 == NULL) goto end;
@@ -1265,8 +1273,9 @@ static void UnloadIcons(void)
 	if (ghIconAltTab!=NULL) { DestroyIcon(ghIconAltTab); ghIconAltTab=NULL; }
 	if (ghIconSystrayActive!=NULL) { DestroyIcon(ghIconSystrayActive); ghIconSystrayActive=NULL; }
 	if (ghIconSystrayInactive!=NULL) { DestroyIcon(ghIconSystrayInactive); ghIconSystrayInactive=NULL; }
-	if (ghIconLoupe!=NULL) { DestroyIcon(ghIconLoupe); ghIconLoupe=NULL; }
-	if (ghLogo!=NULL) { DeleteObject(ghLogo); ghLogo=NULL; }
+	if (ghIconLoupe != NULL) { DestroyIcon(ghIconLoupe); ghIconLoupe = NULL; }
+	if (ghIconHelp != NULL) { DestroyIcon(ghIconHelp); ghIconHelp = NULL; }
+	if (ghLogo != NULL) { DeleteObject(ghLogo); ghLogo = NULL; }
 	if (ghLogoFondBlanc50!=NULL) { DeleteObject(ghLogoFondBlanc50); ghLogoFondBlanc50=NULL; }
 	if (ghLogoFondBlanc90!=NULL) { DeleteObject(ghLogoFondBlanc90); ghLogoFondBlanc90=NULL; }
 	if (ghLogoExclamation != NULL) { DeleteObject(ghLogoExclamation); ghLogoExclamation = NULL; }

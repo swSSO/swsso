@@ -164,7 +164,7 @@ typedef struct
 	int iTip;
 	int idString;
 } T_TIP;
-T_TIP gtip[38];
+T_TIP gtip[39];
 
 // ----------------------------------------------------------------------------------
 // InitTooltip()
@@ -176,15 +176,15 @@ static void InitTooltip(HWND w)
     TOOLINFO ti;
 	int i;
 
-	gtip[0].iTip=TX_ID;				gtip[0].idString=IDS_TIP_TB_ID;
+	gtip[0].iTip=IMG_ID;				gtip[0].idString=IDS_TIP_TB_ID;
 	gtip[1].iTip=TB_ID;				gtip[1].idString=IDS_TIP_TB_ID;
-	gtip[2].iTip=TX_PWD;			gtip[2].idString=IDS_TIP_TB_PWD;
+	gtip[2].iTip=IMG_PWD;			gtip[2].idString=IDS_TIP_TB_PWD;
 	gtip[3].iTip=TB_PWD;			gtip[3].idString=IDS_TIP_TB_PWD;
-	gtip[4].iTip=TX_ID2;			gtip[4].idString=IDS_TIP_TB_ID2;
+	gtip[4].iTip=IMG_ID2;			gtip[4].idString=IDS_TIP_TB_ID2;
 	gtip[5].iTip=TB_ID2;			gtip[5].idString=IDS_TIP_TB_ID2;
-	gtip[6].iTip=TX_ID3;			gtip[6].idString=IDS_TIP_TB_ID3;
+	gtip[6].iTip=IMG_ID3;			gtip[6].idString=IDS_TIP_TB_ID3;
 	gtip[7].iTip=TB_ID3;			gtip[7].idString=IDS_TIP_TB_ID3;
-	gtip[8].iTip=TX_ID4;			gtip[8].idString=IDS_TIP_TB_ID4;
+	gtip[8].iTip=IMG_ID4;			gtip[8].idString=IDS_TIP_TB_ID4;
 	gtip[9].iTip=TB_ID4;			gtip[9].idString=IDS_TIP_TB_ID4;
 	gtip[10].iTip=TX_TYPE;			gtip[10].idString=IDS_TIP_CB_TYPE;
 	gtip[11].iTip=CB_TYPE;			gtip[11].idString=IDS_TIP_CB_TYPE;
@@ -214,7 +214,7 @@ static void InitTooltip(HWND w)
 	gtip[35].iTip=TB_ID4_ID;      	gtip[35].idString=IDS_TIP_TB_ID4_ID;
 	gtip[36].iTip=CK_KBSIM;      	gtip[36].idString=IDS_TIP_TB_KBSIM;
 	gtip[37].iTip=TB_KBSIM;      	gtip[37].idString=IDS_TIP_TB_KBSIM;
-
+	gtip[38].iTip=IMG_LOUPE;      	gtip[38].idString=IDS_TIP_LOUPE;
     gwTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL,
 							WS_POPUP | TTS_ALWAYSTIP /*| TTS_BALLOON*/,	
 							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
@@ -226,7 +226,7 @@ static void InitTooltip(HWND w)
     ti.uFlags = TTF_SUBCLASS | TTF_IDISHWND ;
     ti.hinst = ghInstance;
 
-	for (i=0;i<38;i++)
+	for (i=0;i<39;i++)
 	{
 		ti.hwnd = w;
 	    ti.lpszText=GetString(gtip[i].idString);
@@ -2286,9 +2286,27 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	SendMessage(GetDlgItem(w,TB_KBSIM),EM_LIMITTEXT,LEN_KBSIM,0);
 	SendMessage(GetDlgItem(w,TB_LANCEMENT),EM_LIMITTEXT,LEN_FULLPATHNAME,0);
 
-	// champ mot de passe et loupe
-	SendDlgItemMessage(w,IMG_LOUPE,STM_SETIMAGE,IMAGE_ICON,(LPARAM)ghIconLoupe);
-	//SendMessage(GetDlgItem(w,TB_PWD),EM_SETPASSWORDCHAR,'*',0);
+	// loupe et help
+	SendDlgItemMessage(w, IMG_LOUPE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconLoupe);
+	SendDlgItemMessage(w, IMG_ID, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_PWD, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID2, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID3, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID4, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_TYPE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_TITRE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_URL, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID_ID, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_PWD_ID, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_VALIDATION, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_LANCEMENT, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID2_TYPE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID2_ID, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID3_TYPE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID3_ID, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID4_TYPE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_ID4_ID, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_KBSIM, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
 
 	// Chargement de l'image list
 	TreeView_SetImageList(GetDlgItem(w,TV_APPLICATIONS),ghImageList,TVSIL_STATE);
@@ -2368,19 +2386,25 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,TB_ID2),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID3),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID4),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID2),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID3),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID4),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_ID)   ,NULL,rect.right*2/5+25,50,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_PWD)  ,NULL,rect.right*2/5+25,80,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID)   ,NULL,rect.right*2/5+25+80,47,rect.right*3/5-120,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID)   ,NULL,rect.right*2/5+25+80,47,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID)  ,NULL,rect.right-30,49,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		if (gbEnableOption_ShowPassword)
 		{
-			SetWindowPos(GetDlgItem(w,IMG_LOUPE),NULL,rect.right-35,79,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_PWD)      ,NULL,rect.right*2/5+25+80,77,rect.right*3/5-145,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_PWD_CLEAR),NULL,rect.right*2/5+25+80,77,rect.right*3/5-145,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_LOUPE),NULL,rect.right-52,79,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD)      ,NULL,rect.right*2/5+25+80,77,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD_CLEAR),NULL,rect.right*2/5+25+80,77,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 		else
 		{
 			ShowWindow(GetDlgItem(w,IMG_LOUPE),SW_HIDE);
-			SetWindowPos(GetDlgItem(w,TB_PWD)  ,NULL,rect.right*2/5+25+80,77,rect.right*3/5-120,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD)  ,NULL,rect.right*2/5+25+80,77,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 		ShowWindow(GetDlgItem(w,TB_PWD),gbShowPwd?SW_HIDE:SW_SHOW);
 		ShowWindow(GetDlgItem(w,TB_PWD_CLEAR),gbShowPwd?SW_SHOW:SW_HIDE);
@@ -2392,13 +2416,19 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,TB_ID)   ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_PWD)  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_PWD_CLEAR)  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID)   ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_PWD)  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_LOUPE),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_ID2),NULL,rect.right*2/5+25,50,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_ID3),NULL,rect.right*2/5+25,80,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_ID4),NULL,rect.right*2/5+25,110,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID2),NULL,rect.right*2/5+25+80,47,rect.right*3/5-120,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID3),NULL,rect.right*2/5+25+80,77,rect.right*3/5-120,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID4),NULL,rect.right*2/5+25+80,107,rect.right*3/5-120,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID2),NULL,rect.right*2/5+25+80,47,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID3),NULL,rect.right*2/5+25+80,77,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID4),NULL,rect.right*2/5+25+80,107,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID2),NULL,rect.right-30,49,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID3),NULL,rect.right-30,79,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID4),NULL,rect.right-30,109,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+
 	}
 
 	// TabControl bas droite (config)
@@ -2417,6 +2447,12 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,CB_ID2_TYPE),SW_HIDE);
 		ShowWindow(GetDlgItem(w,CB_ID3_TYPE),SW_HIDE);
 		ShowWindow(GetDlgItem(w,CB_ID4_TYPE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID2_TYPE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID3_TYPE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID4_TYPE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID2_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID3_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID4_ID),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_TYPE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+35,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,CB_TYPE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+35-3,rect.right*3/5-150,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_TITRE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+65,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
@@ -2470,6 +2506,14 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,TX_LANCEMENT) ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_LANCEMENT) ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,PB_PARCOURIR) ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_TYPE)	  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_TITRE)	  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_URL)		  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID_ID)	  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_PWD_ID)	  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_VALIDATION),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_KBSIM)     ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_LANCEMENT) ,SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_ID2_TYPE),NULL,rect.right*2/5+25,rect.bottom*1/3+35,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_ID2_ID)  ,NULL,rect.right*2/5+25,rect.bottom*1/3+65,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_ID3_TYPE),NULL,rect.right*2/5+25,rect.bottom*1/3+95,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);

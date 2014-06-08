@@ -84,6 +84,25 @@ STYLE DS_SETFONT | WS_CAPTION | WS_GROUP | WS_MAXIMIZEBOX | WS_POPUP | WS_THICKF
 CAPTION "swSSO - Gestion des sites et applications"
 FONT 8, "Tahoma", 400, 0, 0
 {
+    ICON            "", IMG_ID, 418, 18, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID2, 415, 57, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID3, 417, 70, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID4, 416, 86, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_TYPE, 9, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_TITRE, 32, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_URL, 55, 286, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID_ID, 80, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_PWD_ID, 106, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_VALIDATION, 129, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_LANCEMENT, 154, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID2_TYPE, 179, 286, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID2_ID, 197, 287, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID3_TYPE, 226, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID3_ID, 243, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID4_TYPE, 264, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID4_ID, 283, 287, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_KBSIM, 309, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_PWD, 419, 36, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     CONTROL         "Tree1", TV_APPLICATIONS, WC_TREEVIEW, WS_TABSTOP | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS, 15, 29, 168, 202, WS_EX_LEFT
     CONTROL         "Tab1", TAB_APPLICATIONS, WC_TABCONTROL, 0, 7, 7, 181, 235, WS_EX_LEFT
     CONTROL         "Tab1", TAB_IDPWD, WC_TABCONTROL, 0, 197, 7, 16, 85, WS_EX_LEFT
@@ -595,7 +614,7 @@ STRINGTABLE
     IDS_MSG_CHANGE_APP_PWD_1      "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V."
     IDS_MSG_CHANGE_APP_PWD_2      "L'ancien mot de passe a été copié dans le presse-papier. Si nécessaire, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V."
     IDS_TIP_TB_ID                 "Votre identifiant pour cette application"
-    IDS_TIP_TB_PWD                "Votre mot de passe pour cette application"
+    IDS_TIP_TB_PWD                "Votre mot de passe pour cette application. Cliquez sur la loupe pour le révéler."
     IDS_TIP_CB_TYPE               "Type de la fenêtre : choisir 'Site Web (configuration simplifiée)' pour configurer un site Internet ou une application Intranet"
     IDS_TIP_TB_TITRE              "Titre complet ou début du titre de la fenêtre. Les caractères joker type '*' sont acceptés en début et/ou fin de chaîne. Exemples : *titre, titre*, *titre*"
     IDS_TIP_TB_URL                "URL complète ou partielle de l'application. Le caractère joker '*' est accepté à la fin uniquement et permet d'indiquer que seul le début de l'URL est fourni. Exemple : http://www.google.fr/*"
@@ -603,9 +622,9 @@ STRINGTABLE
     IDS_TIP_TB_PWD_ID             "En configuration simplifiée : position absolue du champ mot de passe. En général, il n'y a qu'un seul champ de mot de passe et la valeur 1 convient."
     IDS_TIP_TB_VALIDATION         "En configuration simplifiée : séquence de simulation de frappe clavier à exécuter pour valider la saisie. Exemple : [ENTER]"
     IDS_TIP_TB_LANCEMENT          "(Optionnel) Définit la ligne de commande à exécuter pour lancer l'application si vous utilisez le lanceur d'application swSSO. "
-    IDS_TIP_TB_ID2                "(Optionnel) Votre identifiant n°2 pour cette application"
-    IDS_TIP_TB_ID3                "(Optionnel) Votre identifiant n°3 pour cette application"
-    IDS_TIP_TB_ID4                "(Optionnel) Votre identifiant n°4 pour cette application"
+    IDS_TIP_TB_ID2                "(Optionnel) Votre identifiant n°2 pour cette application. Exemple : date de naissance, code postal..."
+    IDS_TIP_TB_ID3                "(Optionnel) Votre identifiant n°3 pour cette application. Exemple : date de naissance, code postal..."
+    IDS_TIP_TB_ID4                "(Optionnel) Votre identifiant n°4 pour cette application. Exemple : date de naissance, code postal..."
     IDS_TIP_CB_ID2_TYPE           "(Optionnel) Type du champ identifiant n°2 : 'champ de saisie' ou 'liste de choix'. En configuration simplifiée, choisir 'champ de saisie'"
     IDS_TIP_TB_ID2_ID             "(Optionnel) En configuration simplifiée : position relative du champ identifiant n°2 par rapport au champ mot de passe. Exemple : 1 si ce champ se trouve juste après le champ mot de passe."
     IDS_TIP_CB_ID3_TYPE           "(Optionnel) Type du champ identifiant n°3 : 'champ de saisie' ou 'liste de choix'. En configuration simplifiée, choisir 'champ de saisie'"
@@ -617,6 +636,7 @@ STRINGTABLE
     IDS_BTN_FORGOT                "Oublié ?"
     IDS_CONFIRM_NEWPWD_MSG        "Voulez-vous vraiment enregistrer votre nouveau mot de passe ?"
     IDS_CONFIRM_NEWPWD_TITLE      "swSSO - Enregistrement du mot de passe"
+    IDS_TIP_LOUPE                 "Cliquez pour révéler votre mot de passe"
 }
 
 
@@ -632,6 +652,10 @@ IDC_CURSOR_HAND    CURSOR         "hand.cur"
 //
 // Icon resources
 //
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_HELP           ICON           ".\\help.ico"
+
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_LOGO           ICON           "logo.ICO"
 

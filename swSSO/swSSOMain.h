@@ -40,6 +40,7 @@ extern HICON ghIconAltTab;
 extern HICON ghIconSystrayActive;
 extern HICON ghIconSystrayInactive; 
 extern HICON ghIconLoupe; 
+extern HICON ghIconHelp;
 extern HANDLE ghLogo;
 extern HANDLE ghLogoFondBlanc50;
 extern HANDLE ghLogoFondBlanc90;
