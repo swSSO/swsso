@@ -14,7 +14,6 @@
 #define IDD_SAVE_NEW_APP_PWD                    121
 #define IDD_CONFIRM_NEW_APP_PWD                 123
 #define IDB_EXCLAMATION                         125
-#define IDI_HELP                                130
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000
@@ -33,7 +32,6 @@
 #define IDC_SEP_SECURITE                        1003
 #define TB_LANCEMENT                            1003
 #define IDC_SEP_AUTORISATIONS                   1004
-#define IDI_LOUPE                               1004
 #define TX_SERVER2                              1004
 #define IDC_SEP_PROXY                           1005
 #define TX_SERVER                               1005
@@ -319,3 +317,5 @@
 #define IDS_CONFIRM_NEWPWD_TITLE                40134
 #define IDS_TIP_LOUPE                           40135
 #define TX_FRAME3                               40135
+#define IDI_HELP                                40136
+#define IDI_LOUPE                               40137

@@ -164,7 +164,7 @@ typedef struct
 	int iTip;
 	int idString;
 } T_TIP;
-T_TIP gtip[39];
+T_TIP gtip[40];
 
 // ----------------------------------------------------------------------------------
 // InitTooltip()
@@ -176,7 +176,7 @@ static void InitTooltip(HWND w)
     TOOLINFO ti;
 	int i;
 
-	gtip[0].iTip=IMG_ID;				gtip[0].idString=IDS_TIP_TB_ID;
+	gtip[0].iTip=IMG_ID;			gtip[0].idString=IDS_TIP_TB_ID;
 	gtip[1].iTip=TB_ID;				gtip[1].idString=IDS_TIP_TB_ID;
 	gtip[2].iTip=IMG_PWD;			gtip[2].idString=IDS_TIP_TB_PWD;
 	gtip[3].iTip=TB_PWD;			gtip[3].idString=IDS_TIP_TB_PWD;
@@ -186,35 +186,36 @@ static void InitTooltip(HWND w)
 	gtip[7].iTip=TB_ID3;			gtip[7].idString=IDS_TIP_TB_ID3;
 	gtip[8].iTip=IMG_ID4;			gtip[8].idString=IDS_TIP_TB_ID4;
 	gtip[9].iTip=TB_ID4;			gtip[9].idString=IDS_TIP_TB_ID4;
-	gtip[10].iTip=TX_TYPE;			gtip[10].idString=IDS_TIP_CB_TYPE;
+	gtip[10].iTip=IMG_TYPE;			gtip[10].idString=IDS_TIP_CB_TYPE;
 	gtip[11].iTip=CB_TYPE;			gtip[11].idString=IDS_TIP_CB_TYPE;
-	gtip[12].iTip=TX_TITRE;			gtip[12].idString=IDS_TIP_TB_TITRE;
+	gtip[12].iTip=IMG_TITRE;			gtip[12].idString=IDS_TIP_TB_TITRE;
 	gtip[13].iTip=TB_TITRE;			gtip[13].idString=IDS_TIP_TB_TITRE;
-	gtip[14].iTip=TX_URL;			gtip[14].idString=IDS_TIP_TB_URL;
+	gtip[14].iTip=IMG_URL;			gtip[14].idString=IDS_TIP_TB_URL;
 	gtip[15].iTip=TB_URL;			gtip[15].idString=IDS_TIP_TB_URL;
-	gtip[16].iTip=TX_ID_ID;			gtip[16].idString=IDS_TIP_TB_ID_ID;
+	gtip[16].iTip=IMG_ID_ID;			gtip[16].idString=IDS_TIP_TB_ID_ID;
 	gtip[17].iTip=TB_ID_ID;      	gtip[17].idString=IDS_TIP_TB_ID_ID;
-	gtip[18].iTip=TX_PWD_ID;     	gtip[18].idString=IDS_TIP_TB_PWD_ID;
+	gtip[18].iTip=IMG_PWD_ID;     	gtip[18].idString=IDS_TIP_TB_PWD_ID;
 	gtip[19].iTip=TB_PWD_ID;     	gtip[19].idString=IDS_TIP_TB_PWD_ID;
-	gtip[20].iTip=TX_VALIDATION; 	gtip[20].idString=IDS_TIP_TB_VALIDATION;
+	gtip[20].iTip=IMG_VALIDATION; 	gtip[20].idString=IDS_TIP_TB_VALIDATION;
 	gtip[21].iTip=TB_VALIDATION; 	gtip[21].idString=IDS_TIP_TB_VALIDATION;
-	gtip[22].iTip=TX_LANCEMENT;  	gtip[22].idString=IDS_TIP_TB_LANCEMENT;
+	gtip[22].iTip=IMG_LANCEMENT;  	gtip[22].idString=IDS_TIP_TB_LANCEMENT;
 	gtip[23].iTip=TB_LANCEMENT;  	gtip[23].idString=IDS_TIP_TB_LANCEMENT;
-	gtip[24].iTip=TX_ID2_TYPE;      gtip[24].idString=IDS_TIP_CB_ID2_TYPE;
+	gtip[24].iTip=IMG_ID2_TYPE;      gtip[24].idString=IDS_TIP_CB_ID2_TYPE;
 	gtip[25].iTip=CB_ID2_TYPE;      gtip[25].idString=IDS_TIP_CB_ID2_TYPE;
-	gtip[26].iTip=TX_ID2_ID;      	gtip[26].idString=IDS_TIP_TB_ID2_ID;
+	gtip[26].iTip=IMG_ID2_ID;      	gtip[26].idString=IDS_TIP_TB_ID2_ID;
 	gtip[27].iTip=TB_ID2_ID;      	gtip[27].idString=IDS_TIP_TB_ID2_ID;
-	gtip[28].iTip=TX_ID3_TYPE;      gtip[28].idString=IDS_TIP_CB_ID3_TYPE;
+	gtip[28].iTip=IMG_ID3_TYPE;      gtip[28].idString=IDS_TIP_CB_ID3_TYPE;
 	gtip[29].iTip=CB_ID3_TYPE;      gtip[29].idString=IDS_TIP_CB_ID3_TYPE;
-	gtip[30].iTip=TX_ID3_ID;      	gtip[30].idString=IDS_TIP_TB_ID3_ID;
+	gtip[30].iTip=IMG_ID3_ID;      	gtip[30].idString=IDS_TIP_TB_ID3_ID;
 	gtip[31].iTip=TB_ID3_ID;      	gtip[31].idString=IDS_TIP_TB_ID3_ID;
-	gtip[32].iTip=TX_ID4_TYPE;      gtip[32].idString=IDS_TIP_CB_ID4_TYPE;
+	gtip[32].iTip=IMG_ID4_TYPE;      gtip[32].idString=IDS_TIP_CB_ID4_TYPE;
 	gtip[33].iTip=CB_ID4_TYPE;      gtip[33].idString=IDS_TIP_CB_ID4_TYPE;
-	gtip[34].iTip=TX_ID4_ID;      	gtip[34].idString=IDS_TIP_TB_ID4_ID;
+	gtip[34].iTip=IMG_ID4_ID;      	gtip[34].idString=IDS_TIP_TB_ID4_ID;
 	gtip[35].iTip=TB_ID4_ID;      	gtip[35].idString=IDS_TIP_TB_ID4_ID;
 	gtip[36].iTip=CK_KBSIM;      	gtip[36].idString=IDS_TIP_TB_KBSIM;
 	gtip[37].iTip=TB_KBSIM;      	gtip[37].idString=IDS_TIP_TB_KBSIM;
 	gtip[38].iTip=IMG_LOUPE;      	gtip[38].idString=IDS_TIP_LOUPE;
+	gtip[39].iTip=IMG_KBSIM;      	gtip[39].idString=IDS_TIP_TB_KBSIM;
     gwTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL,
 							WS_POPUP | TTS_ALWAYSTIP /*| TTS_BALLOON*/,	
 							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
@@ -226,7 +227,7 @@ static void InitTooltip(HWND w)
     ti.uFlags = TTF_SUBCLASS | TTF_IDISHWND ;
     ti.hinst = ghInstance;
 
-	for (i=0;i<39;i++)
+	for (i=0;i<40;i++)
 	{
 		ti.hwnd = w;
 	    ti.lpszText=GetString(gtip[i].idString);
@@ -2359,6 +2360,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 	TRACE((TRACE_ENTER,_F_, ""));
 	
 	RECT rect;
+	RECT rectKBSim;
 	GetClientRect(w,&rect);
 
 	RECT rectTabConfig;
@@ -2454,12 +2456,17 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_ID3_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_ID4_ID),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_TYPE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+35,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,CB_TYPE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+35-3,rect.right*3/5-150,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,CB_TYPE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+35-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_TITRE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+65,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_TITRE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+65-3,rect.right*3/5-150,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_TITRE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+65-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_URL)		,NULL,rect.right*2/5+25,rect.bottom*1/3+95,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_URL)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+95-3,rect.right*3/5-150,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_URL)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+95-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,CK_KBSIM)		,NULL,rect.right*2/5+25,rect.bottom*1/3+125,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_TYPE)		,NULL,rect.right-30,rect.bottom*1/3+35-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_TITRE)	,NULL,rect.right-30,rect.bottom*1/3+65-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_URL)		,NULL,rect.right-30,rect.bottom*1/3+95-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		GetClientRect(GetDlgItem(w,CK_KBSIM),&rectKBSim);
+		SetWindowPos(GetDlgItem(w,IMG_KBSIM)	,NULL,rectTabConfig.left+rectKBSim.right+15,rect.bottom*1/3+125,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		if (IsDlgButtonChecked(w,CK_KBSIM)==BST_CHECKED)
 		{
 			ShowWindow(GetDlgItem(w,TX_ID_ID)	  ,SW_HIDE);
@@ -2468,6 +2475,9 @@ static void MoveControls(HWND w,HWND wToRefresh)
 			ShowWindow(GetDlgItem(w,TB_ID_ID)	  ,SW_HIDE);
 			ShowWindow(GetDlgItem(w,TB_PWD_ID)	  ,SW_HIDE);
 			ShowWindow(GetDlgItem(w,TB_VALIDATION),SW_HIDE);
+			ShowWindow(GetDlgItem(w,IMG_ID_ID)	  ,SW_HIDE);
+			ShowWindow(GetDlgItem(w,IMG_PWD_ID)	  ,SW_HIDE);
+			ShowWindow(GetDlgItem(w,IMG_VALIDATION),SW_HIDE);
 			SetWindowPos(GetDlgItem(w,TB_KBSIM)		,NULL,rect.right*2/5+25,rect.bottom*1/3+155-3,rect.right*3/5-40,80,SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 		else
@@ -2475,15 +2485,19 @@ static void MoveControls(HWND w,HWND wToRefresh)
 			SetWindowPos(GetDlgItem(w,TX_ID_ID)		,NULL,rect.right*2/5+25,rect.bottom*1/3+155,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			SetWindowPos(GetDlgItem(w,TX_PWD_ID)    ,NULL,rect.right*2/5+25,rect.bottom*1/3+185,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			SetWindowPos(GetDlgItem(w,TX_VALIDATION),NULL,rect.right*2/5+25,rect.bottom*1/3+215,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_ID_ID)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+155-3,rect.right*3/5-150,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_PWD_ID)	,NULL,rect.right*2/5+25+110,rect.bottom*1/3+185-3,rect.right*3/5-150,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_VALIDATION),NULL,rect.right*2/5+25+110,rect.bottom*1/3+215-3,rect.right*3/5-150,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_ID_ID)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+155-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_ID_ID)	,NULL,rect.right-30,rect.bottom*1/3+155-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD_ID)	,NULL,rect.right*2/5+25+110,rect.bottom*1/3+185-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD_ID)	,NULL,rect.right-30,rect.bottom*1/3+185-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_VALIDATION),NULL,rect.right*2/5+25+110,rect.bottom*1/3+215-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_VALIDATION),NULL,rect.right-30,rect.bottom*1/3+215-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			ShowWindow(GetDlgItem(w,TB_KBSIM),SW_HIDE);
 		}
 		if (gbShowMenu_LaunchApp)
 		{
 			SetWindowPos(GetDlgItem(w,TX_LANCEMENT),NULL,rect.right*2/5+25,rect.bottom*1/3+245,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_LANCEMENT),NULL,rect.right*2/5+25+110,rect.bottom*1/3+245-3,rect.right*3/5-150,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_LANCEMENT),NULL,rect.right*2/5+25+110,rect.bottom*1/3+245-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_LANCEMENT),NULL,rect.right-30,rect.bottom*1/3+245-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			SetWindowPos(GetDlgItem(w,PB_PARCOURIR),NULL,rect.right-72,rect.bottom*1/3+267,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 	}
@@ -2508,24 +2522,30 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,PB_PARCOURIR) ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_TYPE)	  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_TITRE)	  ,SW_HIDE);
-		ShowWindow(GetDlgItem(w,IMG_URL)		  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_URL)	  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_ID_ID)	  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_PWD_ID)	  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_VALIDATION),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_KBSIM)     ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_LANCEMENT) ,SW_HIDE);
-		SetWindowPos(GetDlgItem(w,TX_ID2_TYPE),NULL,rect.right*2/5+25,rect.bottom*1/3+35,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID2_ID)  ,NULL,rect.right*2/5+25,rect.bottom*1/3+65,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID3_TYPE),NULL,rect.right*2/5+25,rect.bottom*1/3+95,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID3_ID)  ,NULL,rect.right*2/5+25,rect.bottom*1/3+125,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID4_TYPE),NULL,rect.right*2/5+25,rect.bottom*1/3+155,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID4_ID)  ,NULL,rect.right*2/5+25,rect.bottom*1/3+185,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,CB_ID2_TYPE),NULL,rect.right*2/5+25+120,rect.bottom*1/3+35-3,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID2_ID)  ,NULL,rect.right*2/5+25+120,rect.bottom*1/3+65-3,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,CB_ID3_TYPE),NULL,rect.right*2/5+25+120,rect.bottom*1/3+95-3,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID3_ID)  ,NULL,rect.right*2/5+25+120,rect.bottom*1/3+125-3,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,CB_ID4_TYPE),NULL,rect.right*2/5+25+120,rect.bottom*1/3+155-3,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID4_ID)  ,NULL,rect.right*2/5+25+120,rect.bottom*1/3+185-3,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID2_TYPE)	,NULL,rect.right*2/5+25,rect.bottom*1/3+35,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,CB_ID2_TYPE)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+35-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID2_TYPE)	,NULL,rect.right-30,rect.bottom*1/3+35-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID2_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+65,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID2_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+65-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID2_ID)	,NULL,rect.right-30,rect.bottom*1/3+65-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID3_TYPE)	,NULL,rect.right*2/5+25,rect.bottom*1/3+95,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,CB_ID3_TYPE)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+95-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID3_TYPE)	,NULL,rect.right-30,rect.bottom*1/3+95-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID3_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+125,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID3_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+125-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID3_ID)	,NULL,rect.right-30,rect.bottom*1/3+125-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID4_TYPE)	,NULL,rect.right*2/5+25,rect.bottom*1/3+155,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,CB_ID4_TYPE)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+155-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID4_TYPE)	,NULL,rect.right-30,rect.bottom*1/3+155-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID4_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+185,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID4_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+185-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID4_ID)	,NULL,rect.right-30,rect.bottom*1/3+185-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 	}
 	HideConfigControls(w);
 	if (wToRefresh==NULL)

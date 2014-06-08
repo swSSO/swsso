@@ -1209,33 +1209,13 @@ static int LoadIcons(void)
 					0,
 					LR_DEFAULTSIZE);
 	if (ghIconAltTab==NULL) goto end;
-	ghIconSystrayActive=(HICON)LoadImage(ghInstance, 
-					MAKEINTRESOURCE(IDI_SYSTRAY_ACTIVE),
-					IMAGE_ICON,
-					GetSystemMetrics(SM_CXSMICON),
-					GetSystemMetrics(SM_CYSMICON),
-					LR_DEFAULTCOLOR);
+	ghIconSystrayActive=(HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDI_SYSTRAY_ACTIVE),IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
 	if (ghIconSystrayActive==NULL) goto end;
-	ghIconSystrayInactive=(HICON)LoadImage(ghInstance, 
-					MAKEINTRESOURCE(IDI_SYSTRAY_INACTIVE), 
-					IMAGE_ICON,
-					GetSystemMetrics(SM_CXSMICON),
-					GetSystemMetrics(SM_CYSMICON),
-					LR_DEFAULTCOLOR);
+	ghIconSystrayInactive=(HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDI_SYSTRAY_INACTIVE), IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
 	if (ghIconSystrayInactive==NULL) goto end;
-	ghIconLoupe = (HICON)LoadImage(ghInstance,
-		MAKEINTRESOURCE(IDI_LOUPE),
-		IMAGE_ICON,
-		GetSystemMetrics(SM_CXSMICON),
-		GetSystemMetrics(SM_CYSMICON),
-		LR_LOADTRANSPARENT);
+	ghIconLoupe = (HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDI_LOUPE),IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_LOADTRANSPARENT);
 	if (ghIconLoupe == NULL) goto end;
-	ghIconHelp = (HICON)LoadImage(ghInstance,
-		MAKEINTRESOURCE(IDI_HELP),
-		IMAGE_ICON,
-		GetSystemMetrics(SM_CXSMICON),
-		GetSystemMetrics(SM_CYSMICON),
-		LR_LOADTRANSPARENT);
+	ghIconHelp = (HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDI_HELP),IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_LOADTRANSPARENT);
 	if (ghIconHelp == NULL) goto end;
 	ghLogo = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 	if (ghLogo == NULL) goto end;

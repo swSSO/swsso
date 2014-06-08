@@ -124,7 +124,7 @@ FONT 8, "Tahoma", 400, 0, 0
     EDITTEXT        TB_TITRE, 281, 113, 128, 13, ES_AUTOHSCROLL, WS_EX_LEFT
     LTEXT           "&URL", TX_URL, 209, 125, 16, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_URL, 281, 124, 128, 13, ES_AUTOHSCROLL, WS_EX_LEFT
-    AUTOCHECKBOX    "&Simulation de frappe clavier", CK_KBSIM, 201, 137, 107, 10, WS_GROUP, WS_EX_LEFT
+    AUTOCHECKBOX    "&Simulation de frappe clavier", CK_KBSIM, 201, 137, 100, 10, WS_GROUP, WS_EX_LEFT
     EDITTEXT        TB_KBSIM, 303, 134, 128, 55, ES_MULTILINE, WS_EX_LEFT
     LTEXT           "&Champ identifiant", TX_ID_ID, 209, 148, 61, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_ID_ID, 281, 144, 128, 13, ES_AUTOHSCROLL, WS_EX_LEFT
@@ -621,7 +621,7 @@ STRINGTABLE
     IDS_TIP_TB_ID_ID              "En configuration simplifiée : position relative du champ identifiant par rapport au champ mot de passe. Exemple : -1 si le champ identifiant se trouve juste avant le champ mot de passe."
     IDS_TIP_TB_PWD_ID             "En configuration simplifiée : position absolue du champ mot de passe. En général, il n'y a qu'un seul champ de mot de passe et la valeur 1 convient."
     IDS_TIP_TB_VALIDATION         "En configuration simplifiée : séquence de simulation de frappe clavier à exécuter pour valider la saisie. Exemple : [ENTER]"
-    IDS_TIP_TB_LANCEMENT          "(Optionnel) Définit la ligne de commande à exécuter pour lancer l'application si vous utilisez le lanceur d'application swSSO. "
+    IDS_TIP_TB_LANCEMENT          "(Optionnel) Définit la ligne de commande à exécuter pour lancer l'application si vous utilisez le lanceur d'application swSSO."
     IDS_TIP_TB_ID2                "(Optionnel) Votre identifiant n°2 pour cette application. Exemple : date de naissance, code postal..."
     IDS_TIP_TB_ID3                "(Optionnel) Votre identifiant n°3 pour cette application. Exemple : date de naissance, code postal..."
     IDS_TIP_TB_ID4                "(Optionnel) Votre identifiant n°4 pour cette application. Exemple : date de naissance, code postal..."
@@ -636,7 +636,7 @@ STRINGTABLE
     IDS_BTN_FORGOT                "Oublié ?"
     IDS_CONFIRM_NEWPWD_MSG        "Voulez-vous vraiment enregistrer votre nouveau mot de passe ?"
     IDS_CONFIRM_NEWPWD_TITLE      "swSSO - Enregistrement du mot de passe"
-    IDS_TIP_LOUPE                 "Cliquez pour révéler votre mot de passe"
+    IDS_TIP_LOUPE                 "Cliquez pour révéler votre mot de passe. Cliquez à nouveau pour le masquer."
 }
 
 
@@ -653,24 +653,19 @@ IDC_CURSOR_HAND    CURSOR         "hand.cur"
 // Icon resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDI_HELP           ICON           ".\\help.ico"
-
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_LOGO           ICON           "logo.ICO"
 
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDI_LOUPE          ICON           "loupe.ico"
-
+IDI_LOUPE          ICON           ".\\loupe-8bits.ico"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_SYSTRAY_ACTIVE ICON           "SystrayActive.ico"
 
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_HELP           ICON           ".\\help-8bits.ico"
 
 
 //
