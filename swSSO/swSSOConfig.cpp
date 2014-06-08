@@ -271,6 +271,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					// correction bug portail en 0.90B2
 					if (strcmp(gszCfgPortal,GetString(IDS_DEFAULT_PORTAL))==0) *gszCfgPortal=0;
 					SaveConfigHeader();
+					PropSheet_UnChanged(gwPropertySheet,w);
 					break;
 			}
 			break;
@@ -306,6 +307,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					{
 						SetDlgItemText(w,TX_PORTAL,gszCfgPortal);
 						SavePortal();
+						PropSheet_Changed(gwPropertySheet,w);
 					}
 					break;
 			}
@@ -436,7 +438,6 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			break;
 
 		case WM_NOTIFY:
-			PropSheet_Changed(gwPropertySheet,w);
 			switch (((NMHDR FAR *)lp)->code) 
 			{
 				case PSN_KILLACTIVE : // bouton OK ou appliquer
@@ -457,12 +458,21 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					GetDlgItemText(w,TB_PROXY_USER,gszProxyUser,sizeof(gszProxyUser));
 					GetDlgItemText(w,TB_PROXY_PWD,gszProxyPwd,sizeof(gszProxyPwd));
 					SaveConfigHeader();
+					PropSheet_UnChanged(gwPropertySheet,w);
 					break;
 			}
 			break;
 		case WM_COMMAND:
+			if (HIWORD(wp)==EN_CHANGE) PropSheet_Changed(gwPropertySheet,w);
 			switch (LOWORD(wp))
 			{
+				case CK_CHECK_BETA:
+				case CK_LOCK:
+				case CK_DISPLAY_MSG:
+				case CK_GET_CONFIG:
+				case CK_MANUAL_PUT_CONFIG:
+					PropSheet_Changed(gwPropertySheet,w);
+					break;
 				case CK_USE_PROXY:
 					if (gbEnableOption_Proxy)
 					{
@@ -470,6 +480,7 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						EnableWindow(GetDlgItem(w,TB_PROXY_USER),(IsDlgButtonChecked(w,CK_USE_PROXY)==BST_CHECKED?TRUE:FALSE));
 						EnableWindow(GetDlgItem(w,TB_PROXY_PWD),(IsDlgButtonChecked(w,CK_USE_PROXY)==BST_CHECKED?TRUE:FALSE));
 					}
+					PropSheet_Changed(gwPropertySheet,w);
 					break;
 				case CK_CHECK_VERSION:
 					if (gbEnableOption_CheckVersion)
@@ -478,6 +489,7 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							CheckDlgButton(w,CK_CHECK_BETA,BST_UNCHECKED);
 						EnableWindow(GetDlgItem(w,CK_CHECK_BETA),(IsDlgButtonChecked(w,CK_CHECK_VERSION)==BST_CHECKED?TRUE:FALSE));
 					}
+					PropSheet_Changed(gwPropertySheet,w);
 					break;
 				case PB_TEST:
 					InternetCheckProxyParams(w);
