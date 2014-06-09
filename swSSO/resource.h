@@ -14,6 +14,11 @@
 #define IDD_SAVE_NEW_APP_PWD                    121
 #define IDD_CONFIRM_NEW_APP_PWD                 123
 #define IDB_EXCLAMATION                         125
+#define IDI_SYSTRAY_ACTIVE                      200
+#define IDI_SYSTRAY_INACTIVE                    201
+#define IDI_LOGO                                202
+#define IDI_HELP                                203
+#define IDI_LOUPE                               204
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000
@@ -21,12 +26,10 @@
 #define TX_SERVER1                              1000
 #define CK_VISIBLE                              1001
 #define IDC_SEP_INFORMATIONS                    1001
-#define IDI_SYSTRAY_ACTIVE                      1001
 #define LV_CONFIGS                              1001
 #define TB_CHALLENGE                            1001
 #define CK_ID1                                  1002
 #define IDC_SEP_STATISTIQUES                    1002
-#define IDI_SYSTRAY_INACTIVE                    1002
 #define CB_DOMAINS                              1003
 #define IDC_CURSOR_HAND                         1003
 #define IDC_SEP_SECURITE                        1003
@@ -139,7 +142,6 @@
 #define TB_KBSIM                                1173
 #define CK_KBSIM                                1174
 #define IDC_SEPARATOR                           1175
-#define IDI_LOGO                                1176
 #define IDD_CHANGE_IDS                          1177
 #define CK_DISPLAY_MSG                          40000
 #define IDS_BADPWD                              40000
@@ -317,5 +319,3 @@
 #define IDS_CONFIRM_NEWPWD_TITLE                40134
 #define IDS_TIP_LOUPE                           40135
 #define TX_FRAME3                               40135
-#define IDI_HELP                                40136
-#define IDI_LOUPE                               40137
