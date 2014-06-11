@@ -658,12 +658,17 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 	switch (msg)
 	{
 		case WM_INITDIALOG:
+		{
 			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
 			int cx;
 			int cy;
 			RECT rect;
+			char szMessage[512];
 			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
 			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			// ISSUE#144
+			wsprintf(szMessage,GetString(IDS_MSG_CONFIRM_PWD_SAVE),gptActions[giLastApplicationSSO].szApplication);
+			SetDlgItemText(w,TX_FRAME1,szMessage);
 			// positionnement en bas à droite de l'écran, près de l'icone swSSO
 			cx = GetSystemMetrics( SM_CXSCREEN );
 			cy = GetSystemMetrics( SM_CYSCREEN );
@@ -671,6 +676,7 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 			GetWindowRect(w,&rect);
 			SetWindowPos(w,NULL,cx-(rect.right-rect.left)-100,cy-(rect.bottom-rect.top)-100,0,0,SWP_NOSIZE | SWP_NOZORDER);
 			break;
+		}
 		case WM_COMMAND:
 			switch (LOWORD(wp))
 			{
