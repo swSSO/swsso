@@ -231,15 +231,15 @@ FONT 8, "Tahoma"
 
 
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-IDD_CONFIRM_NEW_APP_PWD DIALOG 0, 0, 241, 56
+IDD_CONFIRM_NEW_APP_PWD DIALOG 0, 0, 241, 58
 STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 EXSTYLE WS_EX_TOPMOST
 CAPTION "swSSO - Enregistrement du mot de passe"
 FONT 8, "Tahoma"
 {
-    LTEXT           "Voulez-vous vraiment enregistrer votre nouveau mot de passe ?", TX_FRAME1, 17, 13, 206, 8, SS_LEFT, WS_EX_LEFT
-    DEFPUSHBUTTON   "&Oui", IDOK, 70, 34, 45, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "&Non", IDCANCEL, 120, 34, 50, 14, 0, WS_EX_LEFT
+    LTEXT           "Voulez-vous vraiment enregistrer votre nouveau mot de passe pour l'application ?", TX_FRAME1, 17, 11, 206, 24, SS_LEFT, WS_EX_LEFT
+    DEFPUSHBUTTON   "&Oui", IDOK, 70, 40, 45, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "&Non", IDCANCEL, 120, 40, 50, 14, 0, WS_EX_LEFT
 }
 
 
@@ -449,7 +449,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Fichier de configuration :", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT, WS_EX_LEFT
     LTEXT           "Licence", TX_LICENCE, 7, 41, 28, 11, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Version 1.01 BETA 4 (09/06/2014)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Version 1.01 BETA 5 (11/06/2014)", TX_ABOUT, 47, 12, 153, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Portail :", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1, WS_EX_LEFT
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1, WS_EX_LEFT
@@ -637,6 +637,7 @@ STRINGTABLE
     IDS_CONFIRM_NEWPWD_MSG        "Voulez-vous vraiment enregistrer votre nouveau mot de passe ?"
     IDS_CONFIRM_NEWPWD_TITLE      "swSSO - Enregistrement du mot de passe"
     IDS_TIP_LOUPE                 "Cliquez pour révéler votre mot de passe. Cliquez à nouveau pour le masquer."
+    IDS_MSG_CONFIRM_PWD_SAVE      "Voulez-vous vraiment enregistrer votre nouveau mot de passe pour l'application %s ?"
 }
 
 
@@ -653,19 +654,24 @@ IDC_CURSOR_HAND    CURSOR         "hand.cur"
 // Icon resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_HELP           ICON           ".\\help-8bits.ico"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_LOGO           ICON           "logo.ICO"
+
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_LOUPE          ICON           ".\\loupe-8bits.ico"
 
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_SYSTRAY_ACTIVE ICON           "SystrayActive.ico"
+
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDI_HELP           ICON           ".\\help-8bits.ico"
 
 
 //
