@@ -385,6 +385,12 @@ int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle)
 						rc=-1;
 					}
 				}
+				// ISSUE#143 : exclut la fenêtre gestion des sites et applications
+				if (swStringMatch(szTitle,"swSSO - Gestion des sites et application*")) // fenêtre exclue
+				{
+					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
+					rc=-1;
+				}
 				if (rc==0) 
 				{
 					for (i=0;i<giNbExcludedWindows;i++)
