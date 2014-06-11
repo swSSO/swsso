@@ -231,15 +231,16 @@ FONT 8, "Tahoma"
 
 
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-IDD_CONFIRM_NEW_APP_PWD DIALOG 0, 0, 241, 58
+IDD_CONFIRM_NEW_APP_PWD DIALOG 0, 0, 241, 62
 STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 EXSTYLE WS_EX_TOPMOST
 CAPTION "swSSO - Enregistrement du mot de passe"
 FONT 8, "Tahoma"
 {
-    LTEXT           "Voulez-vous vraiment enregistrer votre nouveau mot de passe pour l'application ?", TX_FRAME1, 17, 11, 206, 24, SS_LEFT, WS_EX_LEFT
-    DEFPUSHBUTTON   "&Oui", IDOK, 70, 40, 45, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "&Non", IDCANCEL, 120, 40, 50, 14, 0, WS_EX_LEFT
+    LTEXT           "Voulez-vous vraiment enregistrer votre nouveau mot de passe pour l'application :", TX_FRAME1, 23, 9, 201, 18, SS_LEFT, WS_EX_LEFT
+    LTEXT           ".", TX_FRAME2, 23, 26, 210, 8, SS_LEFT, WS_EX_LEFT
+    DEFPUSHBUTTON   "&Oui", IDOK, 70, 44, 45, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "&Non", IDCANCEL, 120, 44, 50, 14, 0, WS_EX_LEFT
 }
 
 

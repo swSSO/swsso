@@ -663,12 +663,11 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 			int cx;
 			int cy;
 			RECT rect;
-			char szMessage[512];
 			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
 			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
 			// ISSUE#144
-			wsprintf(szMessage,GetString(IDS_MSG_CONFIRM_PWD_SAVE),gptActions[giLastApplicationSSO].szApplication);
-			SetDlgItemText(w,TX_FRAME1,szMessage);
+			SetDlgItemText(w,TX_FRAME2,gptActions[giLastApplicationSSO].szApplication);
+			SetTextBold(w,TX_FRAME2);
 			// positionnement en bas à droite de l'écran, près de l'icone swSSO
 			cx = GetSystemMetrics( SM_CXSCREEN );
 			cy = GetSystemMetrics( SM_CYSCREEN );
