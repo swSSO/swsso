@@ -1862,6 +1862,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	OSVERSIONINFO osvi;
 	BOOL b64=false;
 	BOOL bMigrationWindowsSSO=FALSE;
+	BOOL bForcePwdChangeNow=FALSE;
 	
 	// init des traces
 	TRACE_OPEN();
@@ -2149,10 +2150,11 @@ askpwd:
 	if (LoadCategories()!=0) { iError=-2; goto end; }
 	// lecture des applications configurées
 	if (LoadApplications()==-1) { iError=-2; goto end; }
-	
+
 	// vérifie la date de dernier changement de mot de passe
 	// attention, comme il y a transchiffrement des id&pwd et des mdp proxy, il 
 	// faut bien que ces infos aient été lues avant un éventuel changement de mot de passe imposé !
+	// ISSUE#145 : si jamais on est en phase de migration, il faut le faire plus tard, après la migration
 	if (giPwdProtection==PP_ENCRYPTED)
 	{
 		if (giPwdPolicy_MaxAge!=0)
@@ -2166,10 +2168,19 @@ askpwd:
 			if ((tNow-tLastPwdChange)>(giPwdPolicy_MaxAge*86400))
 			{
 				// impose le changement de mot de passe
-				if (WindowChangeMasterPwd(TRUE)!=0) goto end;
+				if (*szPwdMigration093==0) 
+				{
+					if (WindowChangeMasterPwd(TRUE) != 0) goto end;
+				}
+				else
+				{
+					bForcePwdChangeNow=TRUE;
+				}
 			}
 		}
 	}
+
+
 	// 0.91 : propose à l'utilisateur de récupérer toutes les configurations disponibles sur le serveur
 	TRACE((TRACE_DEBUG,_F_,"giNbActions=%d gbGetAllConfigsAtFirstStart=%d giDomainId=%d",giNbActions,gbGetAllConfigsAtFirstStart,giDomainId));
 	if (giNbActions==0 && gbGetAllConfigsAtFirstStart) 
@@ -2253,6 +2264,11 @@ askpwd:
 		rc=Migration093(NULL,szPwdMigration093);
 		SecureZeroMemory(szPwdMigration093,sizeof(szPwdMigration093));
 		if (rc!=0) goto end;
+	}
+	// ISSUE#145
+	if (bForcePwdChangeNow)
+	{
+		if (WindowChangeMasterPwd(TRUE)!=0) goto end;
 	}
 
 	if (bMigrationWindowsSSO)
