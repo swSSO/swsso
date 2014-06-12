@@ -151,6 +151,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_LOG_FILE_NAME						"LogFileName"
 #define REGVALUE_LOG_LEVEL							"LogLevel"		
 #define REGVALUE_STAT								"Stat"
+#define REGVALUE_WELCOME_MESSAGE					"WelcomeMessage"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -175,7 +176,8 @@ extern BOOL gbDisplayConfigsNotifications;	// 0.92 : affiche les messages de not
 extern BOOL gbWindowsEventLog;				// 0.93 : log dans le journal d'événements de Windows
 extern char gszLogFileName[];				// 0.93 : chemin complet du fichier de log
 extern int  giLogLevel;						// 0.93 : niveau de log
-extern BOOL gbStat;						// 0.99 : statistiques - ISSUE#106
+extern BOOL gbStat;							// 0.99 : statistiques - ISSUE#106
+extern char gszWelcomeMessage[];			// 1.01 : message de définition du mot de passe maitre dans la fenêtre bienvenue - ISSUE#146
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="101";	// 082 = 0.82
-const char gcszCurrentBeta[]="1015";	// 0851 = 085 beta 1, 0000 pas de beta
+const char gcszCurrentBeta[]="0000";	// 0851 = 085 beta 1, 0000 pas de beta
 
 static HWND gwMain=NULL;
 
@@ -1288,6 +1288,8 @@ static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			SendMessage(GetDlgItem(w,TB_PWD2),EM_LIMITTEXT,LEN_PWD,0);
 			// titres en gras
 			SetTextBold(w,TX_FRAME);
+			// ISSUE#146
+			if (*gszWelcomeMessage != 0) SetDlgItemText(w,TX_FRAME1,gszWelcomeMessage);
 			// policies
 			if (!gbEnableOption_SavePassword) EnableWindow(GetDlgItem(w,CK_SAVE),FALSE);
 			MACRO_SET_SEPARATOR;

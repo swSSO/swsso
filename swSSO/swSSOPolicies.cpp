@@ -102,6 +102,7 @@ BOOL gbWindowsEventLog=FALSE;				// 0.93 : log dans le journal d'événements de W
 char gszLogFileName[_MAX_PATH+1];			// 0.93 : chemin complet du fichier de log
 int  giLogLevel=LOG_LEVEL_NONE;				// 0.93 : niveau de log
 BOOL gbStat=FALSE;							// 0.99 : statistiques - ISSUE#106
+char gszWelcomeMessage[512+1];				// 1.01 : message de définition du mot de passe maitre dans la fenêtre bienvenue - ISSUE#146
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -129,6 +130,7 @@ void LoadPolicies(void)
 	strcpy_s(gszErrorServerNotAvailable,sizeof(gszErrorServerNotAvailable),GetString(IDS_CONFIG_PROXY));
 	strcpy_s(gszErrorServerConfigNotFound,sizeof(gszErrorServerConfigNotFound),GetString(IDS_CONFIG_NOT_FOUND));
 	*gszLogFileName=0;
+	*gszWelcomeMessage=0;
 
 	//--------------------------------------------------------------
 	// GLOBAL POLICY
@@ -429,7 +431,16 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_LOG_LEVEL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) giLogLevel=(int)dwValue; 
-		
+
+		// ISSUE#146
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_WELCOME_MESSAGE,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+		{
+			strncpy_s(gszWelcomeMessage,sizeof(gszWelcomeMessage),szValue,sizeof(gszWelcomeMessage)-1);
+		}
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
