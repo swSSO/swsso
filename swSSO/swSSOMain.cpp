@@ -1526,8 +1526,8 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				{
 					if (RecoveryChallenge(w)==0)
 					{
-						EndDialog(w,IDCANCEL);
-						PostQuitMessage(-1);
+						EndDialog(w,-2);
+						//PostQuitMessage(-1); ISSUE#147
 					}
 					break;
 				}
@@ -1568,7 +1568,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 //-----------------------------------------------------------------------------
 // Demande et vérifie le mot de passe de l'utilisateur.
 //-----------------------------------------------------------------------------
-// [rc] : 0 si OK
+// [rc] : 0 si OK, -1 si mauvais mot de passe, -2 mot de passe oublié
 //-----------------------------------------------------------------------------
 int AskPwd(HWND wParent,BOOL bUseDPAPI)
 {
@@ -1618,6 +1618,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 	}
 	rc=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_PWD),wParent,PwdDialogProc,(LPARAM)bUseDPAPI);
 	gwAskPwd=NULL;
+	if (rc==-2) { ret=-2; goto end; } // ISSUE#147
 	if (rc!=IDOK) goto end;
 	
 	giBadPwdCount=0;
@@ -2065,12 +2066,18 @@ askpwd:
 			}
 			else if (ret==-2)  // pas de réinit
 			{
-				if (AskPwd(NULL,TRUE)!=0) goto end;
+				// ISSUE#147
+				// if (AskPwd(NULL,TRUE)!=0) goto end;
+				rc=AskPwd(NULL,TRUE);
+				if (rc==-1) // mauvais mot de passe
+					goto end;
+				else if (rc==-2) // mot de passe oublié
+					goto askpwd;
 			}
 			else if (ret==-5)  // l'utilisateur a demandé de regénérer le challenge (ISSUE#121)
 			{
 				if (RecoveryChallenge(NULL)==0) 
-					goto end;
+					goto askpwd;
 				else
 					goto askpwd; // je sais, c'est moche, mais c'est tellement plus simple...
 			}

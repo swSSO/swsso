@@ -161,7 +161,7 @@ STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMEN
 CAPTION "swSSO - Réinitialisation du mot de passe"
 FONT 8, "Tahoma"
 {
-    DEFPUSHBUTTON   "&Terminer", IDOK, 261, 227, 57, 14, 0, WS_EX_LEFT
+    DEFPUSHBUTTON   "&Continuer", IDOK, 261, 227, 57, 14, 0, WS_EX_LEFT
     CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 297, 1, WS_EX_LEFT
     EDITTEXT        TB_CHALLENGE, 7, 47, 311, 177, ES_MULTILINE, WS_EX_LEFT
     PUSHBUTTON      "Enregistrer &sous...", PB_SAVEAS, 123, 227, 70, 14, 0, WS_EX_LEFT
@@ -680,4 +680,3 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
-
