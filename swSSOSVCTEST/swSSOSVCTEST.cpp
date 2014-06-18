@@ -93,25 +93,39 @@ end:
 
 int main(int argc, _TCHAR* argv[])
 {
-	UNREFERENCED_PARAMETER(argc);
-	UNREFERENCED_PARAMETER(argv);
-	char szCmd[256];
-	int iCmd;
-	char bufPassword[256];
-	char Request[1024];
+	// char szCmd[256];
+	// 	int iCmd;
+	// 	char bufPassword[256];
+	// 	char Request[1024];
 	//swProtectMemoryInit();
+	HRESULT   ghrCoIni=E_FAIL;	 // code retour CoInitialize()
 	int lenA = lstrlenA(argv[1]);
 	int lenW;
 	BSTR unicodestr;
 	IADsUser *pUser=NULL;
+	IADsDomain *pIADsDomain=NULL;
 	HRESULT hr;
+	long lMaxPwdAge=0;
 	
 	if (argc==1) { printf("argument manquant");goto end;}
 
+	ghrCoIni=CoInitialize(NULL);
+	if (FAILED(ghrCoIni)) 
+	{
+		printf("CoInitialize hr=0x%08lx",ghrCoIni);
+		goto end;
+	}
 	lenW = ::MultiByteToWideChar(CP_ACP, 0, argv[1], lenA, 0, 0);
 	unicodestr = ::SysAllocStringLen(0, lenW);
 	::MultiByteToWideChar(CP_ACP, 0, argv[1], lenA, unicodestr, lenW);
 
+	// Bind to the domain object.
+	hr = ADsGetObject(L"WinNT://domain",IID_IADsDomain,(void**)&pIADsDomain);
+	if (FAILED(hr)) { printf("ADsGetObject(IID_IADsDomain)",hr); goto end; }
+	hr=pIADsDomain->get_MaxPasswordAge(&lMaxPwdAge);
+	if (FAILED(hr)) { printf("pIADsDomain->get_MaxPasswordAge() hr=0x%08lx\n",hr); goto end; }
+	printf("pIADsDomain->get_MaxPasswordAge()=%ld\n",lMaxPwdAge);
+	
 	printf("ADsGetObject(%S)\n",unicodestr);
 	//hr = ADsGetObject(argv[1],IID_IADsUser,(LPVOID*)&pUser);
 	hr = ADsGetObject(unicodestr,IID_IADsUser,(LPVOID*)&pUser);
@@ -119,6 +133,7 @@ int main(int argc, _TCHAR* argv[])
     {
         DATE expirationDate;
 		SYSTEMTIME stExpirationDate;
+		LONG l;
 
 		printf("ADsGetObject OK\n",hr);
         hr = pUser->get_PasswordExpirationDate(&expirationDate);
@@ -132,7 +147,6 @@ int main(int argc, _TCHAR* argv[])
 		else
 		{
 			printf("pUser->get_PasswordExpirationDate hr=0x%08lx\n",hr);
-			goto again;
 		}
         hr = pUser->get_PasswordLastChanged(&expirationDate);
         if (SUCCEEDED(hr))
@@ -145,14 +159,22 @@ int main(int argc, _TCHAR* argv[])
 		else
 		{
 			printf("pUser->get_PasswordLastChanged hr=0x%08lx\n",hr);
-			goto again;
+		}
+        hr = pUser->get_PasswordMinimumLength(&l);
+        if (SUCCEEDED(hr))
+		{
+            printf("get_PasswordMinimumLength : %ld\n",l);
+		}
+		else
+		{
+			printf("pUser->get_PasswordMinimumLength hr=0x%08lx\n",hr);
 		}
     }
 	else
 	{
 		printf("ADsGetObject hr=0x%08lx\n",hr);
 	}
-
+#if 0
 again:
 	if (pUser!=NULL) pUser->Release();
 	printf("\n\n");
@@ -213,7 +235,9 @@ again:
 			break;
 	}
 	goto again;
+#endif
 end:
+	if (ghrCoIni==S_OK) CoUninitialize();
 	//swProtectMemoryTerm();
 	return 0;
 }
