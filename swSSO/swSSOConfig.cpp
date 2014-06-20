@@ -2928,6 +2928,8 @@ end:
 //						ici, c'est simplement getconfig côté serveur qui retourne les configs
 //						triées dans le bon sens !
 // ----------------------------------------------------------------------------------
+// rc : 0 OK, -1 erreur, -2 nb max configs atteint
+// ----------------------------------------------------------------------------------
 /* Format du fichier XML retourné par le serveur (paramètre bstrXML): 
 <app num=NNN>
 	<configId></configId>
@@ -3082,6 +3084,8 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 #endif
 					if (iReplaceExistingConfig==0) // nouvelle action, quelques initialisations
 					{
+						// ISSUE#149
+						if (giNbActions>=giMaxConfigs) { TRACE((TRACE_ERROR,_F_,"giNbActions=%d > giMaxConfigs=%d",giNbActions,giMaxConfigs)); rc=-2; goto end; }
 						ZeroMemory(&gptActions[iAction],sizeof(T_ACTION));
 						//gptActions[iAction].wLastDetect=NULL;
 						//gptActions[iAction].tLastDetect=-1;
@@ -3570,10 +3574,15 @@ int GetAllConfigsFromServer(void)
 	}
 	// OK, on a le résultat de la requête HTTP : parsing du XML et remplissage des configs
 	rc=AddApplicationFromXML(NULL,bstrXML,TRUE);
-	if (rc!=0)
+	if (rc==-1)
 	{
 		// 0.92 / ISSUE#26 : n'affiche pas les messages d'erreur si gbDisplayConfigsNotifications=FALSE
 		if (gbDisplayConfigsNotifications) MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+		goto end;
+	}
+	else if (rc==-2) // ISSUE#149
+	{
+		MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP);
 		goto end;
 	}
 	SaveApplications();
@@ -3654,10 +3663,15 @@ int GetNewOrModifiedConfigsFromServer(void)
 	}
 	// OK, on a le résultat de la requête HTTP : parsing du XML et remplissage des configs
 	rc=AddApplicationFromXML(NULL,bstrXML,TRUE);
-	if (rc!=0)
+	if (rc==-1)
 	{
 		// 0.92 / ISSUE#26 : n'affiche pas la demande si gbDisplayConfigsNotifications=FALSE
 		if (gbDisplayConfigsNotifications) MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+		goto end;
+	}
+	else if (rc==-2) // ISSUE#149
+	{
+		MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP);
 		goto end;
 	}
 	SaveApplications();

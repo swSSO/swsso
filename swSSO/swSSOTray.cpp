@@ -267,6 +267,8 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
 					}
+					// ISSUE#149
+					if (giNbActions>=giMaxConfigs) { MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
 					AddApplicationFromCurrentWindow();
 					break;
 				case TRAY_MENU_SSO_NOW:

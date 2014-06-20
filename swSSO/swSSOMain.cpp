@@ -112,7 +112,7 @@ static const char gcszStaticPwd093[]="*éAl43HJj8]_3za;?,!ù¨AHI3le!ma!/sw\aw+==,;
 typedef struct
 {
 	int iNbConfigs;
-	int tabConfigs[NB_MAX_APPLICATIONS];
+	int tabConfigs[NB_MAX_APPLICATIONS]; // ISSUE#149 : je laisse 500, c'est trop compliqué de faire dynamique avec giMaxConfigs et surtout inutile
 	int iConfig;
 } T_CHOOSE_CONFIG;
 
@@ -2146,11 +2146,11 @@ askpwd:
 	GetProxyConfig(gszComputerName,&gbInternetUseProxy,gszProxyURL,gszProxyUser,gszProxyPwd);
 
 	// allocation du tableau d'actions
-	gptActions=(T_ACTION*)malloc(NB_MAX_APPLICATIONS*sizeof(T_ACTION));
-	TRACE((TRACE_DEBUG,_F_,"malloc (%d)",NB_MAX_APPLICATIONS*sizeof(T_ACTION)));
+	gptActions=(T_ACTION*)malloc(giMaxConfigs*sizeof(T_ACTION));
+	TRACE((TRACE_DEBUG,_F_,"malloc (%d)",giMaxConfigs*sizeof(T_ACTION)));
 	if (gptActions==NULL)
 	{
-		TRACE((TRACE_ERROR,_F_,"malloc (%d)",NB_MAX_APPLICATIONS*sizeof(T_ACTION)));
+		TRACE((TRACE_ERROR,_F_,"malloc (%d)",giMaxConfigs*sizeof(T_ACTION)));
 		iError=-1;
 		goto end;
 	}

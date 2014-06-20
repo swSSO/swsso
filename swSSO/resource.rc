@@ -639,6 +639,7 @@ STRINGTABLE
     IDS_CONFIRM_NEWPWD_TITLE      "swSSO - Enregistrement du mot de passe"
     IDS_TIP_LOUPE                 "Cliquez pour révéler votre mot de passe. Cliquez à nouveau pour le masquer."
     IDS_MSG_CONFIRM_PWD_SAVE      "Voulez-vous vraiment enregistrer votre nouveau mot de passe pour l'application %s ?"
+    IDS_MSG_MAX_CONFIGS           "Erreur : le nombre maximum d'applications est dépassé. Il n'est plus possible d'ajouter de nouvelles applications."
 }
 
 
