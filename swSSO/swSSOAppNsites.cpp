@@ -3606,6 +3606,8 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						HTREEITEM hParentItem;
 						if (ptvdi->item.pszText!=NULL)
 						{
+							// ISSUE#151
+							if (*(ptvdi->item.pszText)==0) { rc=FALSE; goto end; }
 							hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),ptvdi->item.hItem);
 							if (hParentItem==NULL) // fin d'edition du label d'une catégorie
 							{
@@ -3710,6 +3712,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			}
 			break;
 	}
+end:
 	return rc;
 }
 
