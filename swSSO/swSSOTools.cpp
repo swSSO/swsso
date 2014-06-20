@@ -34,8 +34,9 @@
 //-----------------------------------------------------------------------------
 
 #include "stdafx.h"
-#define HTTP_RESULT_MAX_SIZE 512000
+// #define HTTP_RESULT_MAX_SIZE 512000
 // estimation : moyenne 1 Ko par config / 500 configs => 512 Ko
+static DWORD gdwHTTPResultFactor=2048; // 2 Ko octets par config
 static int giRefreshTimer=10;
 char gszRes[512];
 WCHAR gwcTmp1_512[512+1];
@@ -167,6 +168,7 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	HINTERNET hConnect = NULL;
 	HINTERNET hRequest = NULL;
 	T_PROXYPARAMS *pProxyParams=NULL;
+	DWORD dwHTTPResultMaxSize;
 
 	// 0.89 : si pas de paramètres proxy reçus, utilise les valeurs globales
 	if (pInProxyParams==NULL)
@@ -221,10 +223,12 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
     brc = WinHttpReceiveResponse(hRequest, NULL);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpReceiveResponse()")); goto end; }
 
-	pszResult=(char*)malloc(HTTP_RESULT_MAX_SIZE);
+	dwHTTPResultMaxSize=gdwHTTPResultFactor*giMaxConfigs;
+	TRACE((TRACE_INFO,_F_,"dwHTTPResultMaxSize=%u",dwHTTPResultMaxSize));
+	pszResult=(char*)malloc(dwHTTPResultMaxSize);
 	TRACE((TRACE_DEBUG,_F_,"pszResult=0x%08lx",pszResult));
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(HTTP_RESULT_MAX_SIZE)")); goto end; }
-	ZeroMemory(pszResult,HTTP_RESULT_MAX_SIZE);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwHTTPResultMaxSize)); goto end; }
+	ZeroMemory(pszResult,dwHTTPResultMaxSize);
 	p=pszResult;
     do 
 	{
@@ -232,8 +236,7 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
         brc=WinHttpQueryDataAvailable(hRequest,&dwSize);
 		TRACE((TRACE_DEBUG,_F_,"WinHttpQueryDataAvailable=%ld",dwSize));
 		if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpQueryDataAvailable()")); goto end; }
-		// TODO ajouter un controle...
-		if (p+dwSize > pszResult+HTTP_RESULT_MAX_SIZE) { TRACE((TRACE_ERROR,_F_,"Buf too small (dwSize=%ld)",dwSize)); goto end; }
+		if (p+dwSize > pszResult+dwHTTPResultMaxSize) { TRACE((TRACE_ERROR,_F_,"Buf too small (dwSize=%ld)",dwSize)); goto end; }
         brc=WinHttpReadData(hRequest,p, dwSize, &dwDownloaded);
         if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpReadData()")); goto end; }
 		p+=dwSize;

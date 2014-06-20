@@ -445,7 +445,7 @@ void LoadPolicies(void)
 		// ISSUE#149
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_MAX_CONFIGS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) giMaxConfigs=(int)dwValue; 
+		if (rc==ERROR_SUCCESS) giMaxConfigs=(dwValue<10 ? 10:(int)dwValue); // mini 10 
 
 		RegCloseKey(hKey);
 	}

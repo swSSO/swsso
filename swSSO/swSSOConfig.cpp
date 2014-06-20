@@ -2703,7 +2703,10 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	BSTR bstrXML=NULL;
-	char szRequest[4096+1]; // attention, contient la liste des ids (500 configs * 4 octets => 2Ko au moins)
+	//ISSUE#149
+	//char szRequest[4096+1]; // attention, contient la liste des ids (500 configs * 4 octets => 2Ko au moins)
+	char *pszRequest=NULL;
+	int sizeofRequest;
 	char *pszResult=NULL;
 	char *pszEncodedURL=NULL;
 	char *pszEncodedTitle=NULL;
@@ -2727,6 +2730,10 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	pszEncodedTitle=HTTPEncodeParam((char*)szTitle); if (pszEncodedTitle==NULL) goto end;
 	pszEncodedIds=HTTPEncodeParam((char*)szIds); if (pszEncodedIds==NULL) goto end;
 
+	// ISSUE#149 : calcul dynamique taille de la requête
+	sizeofRequest=strlen(pszEncodedIds)+2048; // 2 Ko + taille des ids
+	pszRequest=(char*)malloc(sizeofRequest);
+	if (pszRequest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeofRequest)); goto end;};
 	switch (iType)
 	{
 		case WINSSO : strcpy_s(szType,sizeof(szType),"WIN"); break;
@@ -2737,16 +2744,16 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	}
 
 	//&debug=1
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s",
+	sprintf_s(pszRequest,sizeofRequest,"%s?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s",
 			gszWebServiceAddress,
 			pszEncodedTitle,
 			pszEncodedURL,
 			pszEncodedIds,
 			*szDate==0?"20000101000000":szDate,
 			bNew,bMod,bOld,szType,giDomainId,szVersion);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(szRequest,8,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",pszRequest));
+	pszResult=HTTPRequest(pszRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",pszRequest)); goto end; }
 
 	bstrXML=GetBSTRFromSZ(pszResult);
 	if (bstrXML==NULL) goto end;
@@ -2756,6 +2763,7 @@ end:
 	if (pszEncodedTitle!=NULL) free(pszEncodedTitle);
 	if (pszEncodedIds!=NULL) free(pszEncodedIds);
 	if (pszResult!=NULL) free(pszResult);
+	if (pszRequest!=NULL) free(pszRequest);
 	TRACE((TRACE_LEAVE,_F_, ""));
 	return bstrXML;
 }
@@ -3637,7 +3645,7 @@ int GetNewOrModifiedConfigsFromServer(void)
 		else
 		{
 			// construction de la liste des configurations connues localement
-			sizeofIdsList=5*giNbActions; // on prend un peu de marge avec 4 octet par Id + 1 pour séparateur
+			sizeofIdsList=6*giNbActions; // on prend un peu de marge avec 5 octets par Id + 1 pour séparateur 
 			pszIds=(char*)malloc(sizeofIdsList);
 			if (pszIds==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeofIdsList)); goto end; }
 			pos=0;
