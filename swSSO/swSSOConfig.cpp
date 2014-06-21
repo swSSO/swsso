@@ -3370,7 +3370,21 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				// sinon, comme c'est l'utilisateur lui-même qui a dupliqué les configs, on ne casse pas son nommage.
 				if (iReplaceExistingConfig==1)
 				{
-					rc=StoreNodeValue(gptActions[ptiActions[0]].szApplication,sizeof(gptActions[ptiActions[0]].szApplication),pChildElement);
+					char szTmpApplication[LEN_APPLICATION_NAME+1];
+					// ISSUE#150 : si on est dans le cas d'un ajout au démarrage (bGetAll=TRUE) et que le nom est vide, il faut mettre le titre à la place
+					//             si on est dans le cas d'un ajout manuel, c'est traité plus loin car on ne sait pas ce que va faire l'utilisateur et dans
+					//             certains cas il ne faut pas prendre en compte le nom fourni par le serveur
+					rc=StoreNodeValue(szTmpApplication,sizeof(szTmpApplication),pChildElement);
+					if (bGetAll)
+					{
+						if (*szTmpApplication==0)
+						{
+							strncpy_s(szTmpApplication,sizeof(szTmpApplication),gptActions[ptiActions[0]].szTitle,LEN_APPLICATION_NAME-5);
+							int len=strlen(szTmpApplication);
+							if (len>0) { if (szTmpApplication[len-1]=='*') szTmpApplication[len-1]=0; }
+						}
+					}
+					strcpy_s(gptActions[ptiActions[0]].szApplication,sizeof(gptActions[ptiActions[0]].szApplication),szTmpApplication);
 					/* En fait à ce stade on ne sait pas si l'utilisateur va ajouter ou remplacer ! Donc à faire plus tard.
 					if (rc>0) 
 					{
@@ -3852,7 +3866,7 @@ int AddApplicationFromCurrentWindow(void)
 		HWND wChromePopup=GetChromePopupHandle(w,-1);
 		if (wChromePopup==NULL) // pas de popup trouvée, c'est du contenu chrome Web
 		{
-			iType=XEBSSO; // pas UNK car WEBSSO pas supporté par Chrome
+			iType=UNK; // pas UNK car WEBSSO pas supporté par Chrome
 			pszURL=GetChromeURL(w);
 			// ISSUE#142 : si pszURL=NULL, mieux vaut s'arrêter même si en fait ça ne crashe pas car bien géré partout
 			// ISSUE#155
@@ -4038,7 +4052,9 @@ doConfig:
 				// ISSUE#126 : on récupère de l'ancienne config : idS + mot de passe + bActive + CategId si pas géré par le serveur (CategoryManagement=0)
 				//             + nom (uniquement s'il y a plusieurs config qui matchent)
 				if (!gbCategoryManagement) gptActions[giNbActions].iCategoryId=gptActions[i].iCategoryId;
-				if (iNbConfigWithThisId!=1) strcpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),gptActions[i].szApplication);
+				// ISSUE#150 : si le nom de config récupéré sur le serveur est vide, on remet le nom de config qui existait en local
+				// if (iNbConfigWithThisId!=1) strcpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),gptActions[i].szApplication);
+				if (iNbConfigWithThisId!=1 || *gptActions[giNbActions].szApplication==0) strcpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),gptActions[i].szApplication);
 				gptActions[giNbActions].bActive=gptActions[i].bActive;
 				memcpy(gptActions[giNbActions].szId1Value,gptActions[i].szId1Value,sizeof(gptActions[giNbActions].szId1Value));
 				memcpy(gptActions[giNbActions].szId2Value,gptActions[i].szId2Value,sizeof(gptActions[giNbActions].szId2Value));
