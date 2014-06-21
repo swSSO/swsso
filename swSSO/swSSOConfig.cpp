@@ -3909,7 +3909,10 @@ int AddApplicationFromCurrentWindow(void)
 	}
 	// le ShowAppNsites fait beaucoup plus tard va recharger la treeview, il faut faire un GetApplicationDeltails 
 	// tout de suite sinon on perdra une éventuelle config commencée par l'utilisateur
-	if (gwAppNsites!=NULL) GetApplicationDetails(gwAppNsites,giLastApplicationConfig);
+	// ISSUE#152 : tant pis, on ne fait plus, ça génère trop de cas foireux car le giLastApplicationConfig ne varie
+	//             pas seulement en fonction de la config sélectionnée dans la liste mais aussi en fonction des applis
+	//             détectées (pour justement pouvoir mettre le focus sur la config dans appnsites)
+	// if (gwAppNsites!=NULL) GetApplicationDetails(gwAppNsites,giLastApplicationConfig);
 
 	if (!bConfigFound) 
 	{
