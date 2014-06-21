@@ -3572,6 +3572,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (hParentItem==NULL) // c'est une catégorie 
 						{
 							ClearApplicationDetails(w);
+							giLastApplicationConfig=-1; // ISSUE
 							TRACE((TRACE_DEBUG,_F_,"pnmtv->itemNew.lParam=%ld",pnmtv->itemNew.lParam));
 							if (GetKeyState(VK_SHIFT) & 0x8000)
 							{
