@@ -3803,6 +3803,7 @@ int AddApplicationFromCurrentWindow(void)
 	BOOL bServerAvailable=FALSE;
 	int iBrowser=BROWSER_NONE;
 	int iNbConfigWithThisId;
+	int iOneOfReplacedConfigs=-1;
 
 	if (swGetTopWindow(&w,szTitle,sizeof(szTitle))!=0) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
 
@@ -4049,6 +4050,7 @@ doConfig:
 		{
 			if (bReplaceOldConfig) // remplacement de cette config par la nouvelle
 			{
+				iOneOfReplacedConfigs=i;
 				// ISSUE#126 : on récupère de l'ancienne config : idS + mot de passe + bActive + CategId si pas géré par le serveur (CategoryManagement=0)
 				//             + nom (uniquement s'il y a plusieurs config qui matchent)
 				if (!gbCategoryManagement) gptActions[giNbActions].iCategoryId=gptActions[i].iCategoryId;
@@ -4108,7 +4110,7 @@ doConfig:
 	if (gwAppNsites!=NULL)
 	{
 		EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
-		ShowAppNsites(bReplaceOldConfig?giNbActions:giNbActions-1, FALSE);
+		ShowAppNsites(bReplaceOldConfig?iOneOfReplacedConfigs:giNbActions-1, FALSE);
 	}
 	else
 	{
