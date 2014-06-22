@@ -223,7 +223,7 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
     brc = WinHttpReceiveResponse(hRequest, NULL);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpReceiveResponse()")); goto end; }
 
-	dwHTTPResultMaxSize=gdwHTTPResultFactor*giMaxConfigs;
+	dwHTTPResultMaxSize=gdwHTTPResultFactor*(giMaxConfigs<=500?500:giMaxConfigs);
 	TRACE((TRACE_INFO,_F_,"dwHTTPResultMaxSize=%u",dwHTTPResultMaxSize));
 	pszResult=(char*)malloc(dwHTTPResultMaxSize);
 	TRACE((TRACE_DEBUG,_F_,"pszResult=0x%08lx",pszResult));
