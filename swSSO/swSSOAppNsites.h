@@ -45,7 +45,7 @@
 #define LEN_ENCRYPTED_AES256  192
 #define LEN_URL 128
 #define LEN_TITLE 90
-#define LEN_KBSIM 200
+#define LEN_KBSIM 400
 #define LEN_FULLPATHNAME 255
 
 #define UNK	   0

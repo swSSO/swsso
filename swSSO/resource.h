@@ -320,3 +320,4 @@
 #define IDS_TIP_LOUPE                           40135
 #define TX_FRAME3                               40135
 #define IDS_MSG_CONFIRM_PWD_SAVE                40136
+#define IDS_MSG_MAX_CONFIGS                     40137

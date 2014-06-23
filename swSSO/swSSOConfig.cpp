@@ -2703,7 +2703,10 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	BSTR bstrXML=NULL;
-	char szRequest[4096+1]; // attention, contient la liste des ids (500 configs * 4 octets => 2Ko au moins)
+	//ISSUE#149
+	//char szRequest[4096+1]; // attention, contient la liste des ids (500 configs * 4 octets => 2Ko au moins)
+	char *pszRequest=NULL;
+	int sizeofRequest;
 	char *pszResult=NULL;
 	char *pszEncodedURL=NULL;
 	char *pszEncodedTitle=NULL;
@@ -2727,6 +2730,10 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	pszEncodedTitle=HTTPEncodeParam((char*)szTitle); if (pszEncodedTitle==NULL) goto end;
 	pszEncodedIds=HTTPEncodeParam((char*)szIds); if (pszEncodedIds==NULL) goto end;
 
+	// ISSUE#149 : calcul dynamique taille de la requête
+	sizeofRequest=strlen(pszEncodedIds)+2048; // 2 Ko + taille des ids
+	pszRequest=(char*)malloc(sizeofRequest);
+	if (pszRequest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeofRequest)); goto end;};
 	switch (iType)
 	{
 		case WINSSO : strcpy_s(szType,sizeof(szType),"WIN"); break;
@@ -2737,16 +2744,16 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	}
 
 	//&debug=1
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s",
+	sprintf_s(pszRequest,sizeofRequest,"%s?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s",
 			gszWebServiceAddress,
 			pszEncodedTitle,
 			pszEncodedURL,
 			pszEncodedIds,
 			*szDate==0?"20000101000000":szDate,
 			bNew,bMod,bOld,szType,giDomainId,szVersion);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(szRequest,8,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",pszRequest));
+	pszResult=HTTPRequest(pszRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",pszRequest)); goto end; }
 
 	bstrXML=GetBSTRFromSZ(pszResult);
 	if (bstrXML==NULL) goto end;
@@ -2756,6 +2763,7 @@ end:
 	if (pszEncodedTitle!=NULL) free(pszEncodedTitle);
 	if (pszEncodedIds!=NULL) free(pszEncodedIds);
 	if (pszResult!=NULL) free(pszResult);
+	if (pszRequest!=NULL) free(pszRequest);
 	TRACE((TRACE_LEAVE,_F_, ""));
 	return bstrXML;
 }
@@ -2928,6 +2936,8 @@ end:
 //						ici, c'est simplement getconfig côté serveur qui retourne les configs
 //						triées dans le bon sens !
 // ----------------------------------------------------------------------------------
+// rc : 0 OK, -1 erreur, -2 nb max configs atteint
+// ----------------------------------------------------------------------------------
 /* Format du fichier XML retourné par le serveur (paramètre bstrXML): 
 <app num=NNN>
 	<configId></configId>
@@ -3082,6 +3092,8 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 #endif
 					if (iReplaceExistingConfig==0) // nouvelle action, quelques initialisations
 					{
+						// ISSUE#149
+						if (giNbActions>=giMaxConfigs) { TRACE((TRACE_ERROR,_F_,"giNbActions=%d > giMaxConfigs=%d",giNbActions,giMaxConfigs)); rc=-2; goto end; }
 						ZeroMemory(&gptActions[iAction],sizeof(T_ACTION));
 						//gptActions[iAction].wLastDetect=NULL;
 						//gptActions[iAction].tLastDetect=-1;
@@ -3358,7 +3370,21 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				// sinon, comme c'est l'utilisateur lui-même qui a dupliqué les configs, on ne casse pas son nommage.
 				if (iReplaceExistingConfig==1)
 				{
-					rc=StoreNodeValue(gptActions[ptiActions[0]].szApplication,sizeof(gptActions[ptiActions[0]].szApplication),pChildElement);
+					char szTmpApplication[LEN_APPLICATION_NAME+1];
+					// ISSUE#150 : si on est dans le cas d'un ajout au démarrage (bGetAll=TRUE) et que le nom est vide, il faut mettre le titre à la place
+					//             si on est dans le cas d'un ajout manuel, c'est traité plus loin car on ne sait pas ce que va faire l'utilisateur et dans
+					//             certains cas il ne faut pas prendre en compte le nom fourni par le serveur
+					rc=StoreNodeValue(szTmpApplication,sizeof(szTmpApplication),pChildElement);
+					if (bGetAll)
+					{
+						if (*szTmpApplication==0)
+						{
+							strncpy_s(szTmpApplication,sizeof(szTmpApplication),gptActions[ptiActions[0]].szTitle,LEN_APPLICATION_NAME-5);
+							int len=strlen(szTmpApplication);
+							if (len>0) { if (szTmpApplication[len-1]=='*') szTmpApplication[len-1]=0; }
+						}
+					}
+					strcpy_s(gptActions[ptiActions[0]].szApplication,sizeof(gptActions[ptiActions[0]].szApplication),szTmpApplication);
 					/* En fait à ce stade on ne sait pas si l'utilisateur va ajouter ou remplacer ! Donc à faire plus tard.
 					if (rc>0) 
 					{
@@ -3570,10 +3596,15 @@ int GetAllConfigsFromServer(void)
 	}
 	// OK, on a le résultat de la requête HTTP : parsing du XML et remplissage des configs
 	rc=AddApplicationFromXML(NULL,bstrXML,TRUE);
-	if (rc!=0)
+	if (rc==-1)
 	{
 		// 0.92 / ISSUE#26 : n'affiche pas les messages d'erreur si gbDisplayConfigsNotifications=FALSE
 		if (gbDisplayConfigsNotifications) MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+		goto end;
+	}
+	else if (rc==-2) // ISSUE#149
+	{
+		MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP);
 		goto end;
 	}
 	SaveApplications();
@@ -3628,7 +3659,7 @@ int GetNewOrModifiedConfigsFromServer(void)
 		else
 		{
 			// construction de la liste des configurations connues localement
-			sizeofIdsList=5*giNbActions; // on prend un peu de marge avec 4 octet par Id + 1 pour séparateur
+			sizeofIdsList=6*giNbActions; // on prend un peu de marge avec 5 octets par Id + 1 pour séparateur 
 			pszIds=(char*)malloc(sizeofIdsList);
 			if (pszIds==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeofIdsList)); goto end; }
 			pos=0;
@@ -3654,10 +3685,15 @@ int GetNewOrModifiedConfigsFromServer(void)
 	}
 	// OK, on a le résultat de la requête HTTP : parsing du XML et remplissage des configs
 	rc=AddApplicationFromXML(NULL,bstrXML,TRUE);
-	if (rc!=0)
+	if (rc==-1)
 	{
 		// 0.92 / ISSUE#26 : n'affiche pas la demande si gbDisplayConfigsNotifications=FALSE
 		if (gbDisplayConfigsNotifications) MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+		goto end;
+	}
+	else if (rc==-2) // ISSUE#149
+	{
+		MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP);
 		goto end;
 	}
 	SaveApplications();
@@ -3767,6 +3803,7 @@ int AddApplicationFromCurrentWindow(void)
 	BOOL bServerAvailable=FALSE;
 	int iBrowser=BROWSER_NONE;
 	int iNbConfigWithThisId;
+	int iOneOfReplacedConfigs=-1;
 
 	if (swGetTopWindow(&w,szTitle,sizeof(szTitle))!=0) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
 
@@ -3830,17 +3867,21 @@ int AddApplicationFromCurrentWindow(void)
 		HWND wChromePopup=GetChromePopupHandle(w,-1);
 		if (wChromePopup==NULL) // pas de popup trouvée, c'est du contenu chrome Web
 		{
-			iType=XEBSSO; // pas UNK car WEBSSO pas supporté par Chrome
+			iType=UNK; // pas UNK car WEBSSO pas supporté par Chrome
 			pszURL=GetChromeURL(w);
 			// ISSUE#142 : si pszURL=NULL, mieux vaut s'arrêter même si en fait ça ne crashe pas car bien géré partout
-			if (pszURL == NULL) { TRACE((TRACE_ERROR, _F_, "URL Chrome non trouvee")); goto suite; }
+			// ISSUE#155
+			// if (pszURL == NULL) { TRACE((TRACE_ERROR, _F_, "URL Chrome non trouvee")); goto suite; }
+			if (pszURL == NULL) { TRACE((TRACE_ERROR, _F_, "URL Chrome non trouvee")); goto end; }
 			iBrowser=BROWSER_CHROME;
 		}
 		else // trouvé une popup Chrome, lecture du titre de la popup et de l'URL du site
 		{
 			GetWindowText(wChromePopup,szTitle,sizeof(szTitle));
 			pszURL=GetChromeURL(w);
-			if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup Chrome non trouvee")); goto suite; }
+			// ISSUE#155
+			// if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup Chrome non trouvee")); goto suite; }
+			if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup Chrome non trouvee")); goto end; }
 			iType=POPSSO;
 		}
 	}
@@ -3868,7 +3909,10 @@ int AddApplicationFromCurrentWindow(void)
 	}
 	// le ShowAppNsites fait beaucoup plus tard va recharger la treeview, il faut faire un GetApplicationDeltails 
 	// tout de suite sinon on perdra une éventuelle config commencée par l'utilisateur
-	if (gwAppNsites!=NULL) GetApplicationDetails(gwAppNsites,giLastApplicationConfig);
+	// ISSUE#152 : tant pis, on ne fait plus, ça génère trop de cas foireux car le giLastApplicationConfig ne varie
+	//             pas seulement en fonction de la config sélectionnée dans la liste mais aussi en fonction des applis
+	//             détectées (pour justement pouvoir mettre le focus sur la config dans appnsites)
+	// if (gwAppNsites!=NULL) GetApplicationDetails(gwAppNsites,giLastApplicationConfig);
 
 	if (!bConfigFound) 
 	{
@@ -4009,10 +4053,13 @@ doConfig:
 		{
 			if (bReplaceOldConfig) // remplacement de cette config par la nouvelle
 			{
+				iOneOfReplacedConfigs=i;
 				// ISSUE#126 : on récupère de l'ancienne config : idS + mot de passe + bActive + CategId si pas géré par le serveur (CategoryManagement=0)
 				//             + nom (uniquement s'il y a plusieurs config qui matchent)
 				if (!gbCategoryManagement) gptActions[giNbActions].iCategoryId=gptActions[i].iCategoryId;
-				if (iNbConfigWithThisId!=1) strcpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),gptActions[i].szApplication);
+				// ISSUE#150 : si le nom de config récupéré sur le serveur est vide, on remet le nom de config qui existait en local
+				// if (iNbConfigWithThisId!=1) strcpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),gptActions[i].szApplication);
+				if (iNbConfigWithThisId!=1 || *gptActions[giNbActions].szApplication==0) strcpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),gptActions[i].szApplication);
 				gptActions[giNbActions].bActive=gptActions[i].bActive;
 				memcpy(gptActions[giNbActions].szId1Value,gptActions[i].szId1Value,sizeof(gptActions[giNbActions].szId1Value));
 				memcpy(gptActions[giNbActions].szId2Value,gptActions[i].szId2Value,sizeof(gptActions[giNbActions].szId2Value));
@@ -4033,7 +4080,7 @@ doConfig:
 			}
 		}
 	}
-suite:
+//suite:
 	if (!bReplaceOldConfig)
 	{
 		// Demande à l'utilisateur de saisir son id et son mdp pour cette application
@@ -4066,7 +4113,7 @@ suite:
 	if (gwAppNsites!=NULL)
 	{
 		EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
-		ShowAppNsites(bReplaceOldConfig?giNbActions:giNbActions-1, FALSE);
+		ShowAppNsites(bReplaceOldConfig?iOneOfReplacedConfigs:giNbActions-1, FALSE);
 	}
 	else
 	{

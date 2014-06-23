@@ -152,6 +152,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_LOG_LEVEL							"LogLevel"		
 #define REGVALUE_STAT								"Stat"
 #define REGVALUE_WELCOME_MESSAGE					"WelcomeMessage"
+#define REGVALUE_MAX_CONFIGS						"MaxConfigs"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -178,12 +179,13 @@ extern char gszLogFileName[];				// 0.93 : chemin complet du fichier de log
 extern int  giLogLevel;						// 0.93 : niveau de log
 extern BOOL gbStat;							// 0.99 : statistiques - ISSUE#106
 extern char gszWelcomeMessage[];			// 1.01 : message de définition du mot de passe maitre dans la fenêtre bienvenue - ISSUE#146
+extern int  giMaxConfigs;					// 1.01 : nb max de configurations - ISSUE#149
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"
 //-----------------------------------------------------------------------------
 #define LEN_EXCLUDED_WINDOW_TITLE	200
-#define MAX_EXCLUDED_WINDOWS		10
+#define MAX_EXCLUDED_WINDOWS		25   // ISSUE#154
 
 extern char gtabszExcludedWindows[][LEN_EXCLUDED_WINDOW_TITLE+1];
 extern int  giNbExcludedWindows;

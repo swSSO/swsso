@@ -103,6 +103,7 @@ char gszLogFileName[_MAX_PATH+1];			// 0.93 : chemin complet du fichier de log
 int  giLogLevel=LOG_LEVEL_NONE;				// 0.93 : niveau de log
 BOOL gbStat=FALSE;							// 0.99 : statistiques - ISSUE#106
 char gszWelcomeMessage[512+1];				// 1.01 : message de définition du mot de passe maitre dans la fenêtre bienvenue - ISSUE#146
+int  giMaxConfigs=500;						// 1.01 : nb max de configurations - ISSUE#149
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -441,6 +442,11 @@ void LoadPolicies(void)
 			strncpy_s(gszWelcomeMessage,sizeof(gszWelcomeMessage),szValue,sizeof(gszWelcomeMessage)-1);
 		}
 
+		// ISSUE#149
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_MAX_CONFIGS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giMaxConfigs=(dwValue<10 ? 10:(int)dwValue); // mini 10 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -523,6 +529,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gszLogFileName=%s"					,gszLogFileName));
 	TRACE((TRACE_INFO,_F_,"gbWindowsEventLog=%d"				,gbWindowsEventLog));
 	TRACE((TRACE_INFO,_F_,"gbStat=%d"							,gbStat));
+	TRACE((TRACE_INFO,_F_,"giMaxConfigs=%d"						,giMaxConfigs));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS ---------"));

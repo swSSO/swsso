@@ -794,6 +794,9 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive)
 	int rc=-1;
 	HTREEITEM hParentItem,hNewItem,hSelectedItem;
 
+	// ISSUE#149
+	if (giNbActions>=giMaxConfigs) { MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
+
 	ZeroMemory(&gptActions[giNbActions],sizeof(T_ACTION));
 	//gptActions[giNbActions].wLastDetect=NULL;
 	//gptActions[giNbActions].tLastDetect=-1;
@@ -830,7 +833,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive)
 	giNbActions++;
 	//ClearApplicationDetails(w);
 	rc=0;
-//end:
+end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -2866,11 +2869,11 @@ int LoadApplications(void)
 	char szId1EncryptedValue[LEN_ENCRYPTED_AES256+1];
 	int lenTitle;
 
-	pSectionNames=(char*)malloc(NB_MAX_APPLICATIONS*(LEN_APPLICATION_NAME+1)); 
-	if (pSectionNames==NULL) { TRACE((TRACE_ERROR,_F_,"malloc (%d)",NB_MAX_APPLICATIONS*(LEN_APPLICATION_NAME+1))); goto end; }
+	pSectionNames=(char*)malloc(giMaxConfigs*(LEN_APPLICATION_NAME+1)); 
+	if (pSectionNames==NULL) { TRACE((TRACE_ERROR,_F_,"malloc (%d)",giMaxConfigs*(LEN_APPLICATION_NAME+1))); goto end; }
 
 	// énumération des sections du .ini passé en ligne de commande
-	dw=GetPrivateProfileSectionNames(pSectionNames,NB_MAX_APPLICATIONS*(LEN_APPLICATION_NAME+1),gszCfgFile);
+	dw=GetPrivateProfileSectionNames(pSectionNames,giMaxConfigs*(LEN_APPLICATION_NAME+1),gszCfgFile);
 	if (dw==0) // rien lu ! Fichier vide ou non trouvé
 	{
 		rc=-2;
@@ -2885,9 +2888,9 @@ int LoadApplications(void)
 		giNbActions++;
 		p++;
 	}
-	if (giNbActions>NB_MAX_APPLICATIONS)
+	if (giNbActions>giMaxConfigs+2) // +2 car 2 sections hors sujet : swSSO et swSSO-Categories
 	{
-		TRACE((TRACE_ERROR,_F_,"giNbActions=%d > NB_MAX_APPLICATIONS=%d",giNbActions,NB_MAX_APPLICATIONS));
+		TRACE((TRACE_ERROR,_F_,"giNbActions=%d > giMaxConfigs=%d",giNbActions,giMaxConfigs));
 		goto end;
 	}
 
@@ -3569,6 +3572,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (hParentItem==NULL) // c'est une catégorie 
 						{
 							ClearApplicationDetails(w);
+							giLastApplicationConfig=-1; // ISSUE#152
 							TRACE((TRACE_DEBUG,_F_,"pnmtv->itemNew.lParam=%ld",pnmtv->itemNew.lParam));
 							if (GetKeyState(VK_SHIFT) & 0x8000)
 							{
@@ -3603,6 +3607,8 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						HTREEITEM hParentItem;
 						if (ptvdi->item.pszText!=NULL)
 						{
+							// ISSUE#151
+							if (*(ptvdi->item.pszText)==0) { rc=FALSE; goto end; }
 							hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),ptvdi->item.hItem);
 							if (hParentItem==NULL) // fin d'edition du label d'une catégorie
 							{
@@ -3707,6 +3713,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			}
 			break;
 	}
+end:
 	return rc;
 }
 
