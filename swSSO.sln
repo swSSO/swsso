@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Windows Desktop
+# Visual Studio Express 2013 for Windows Desktop
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swSSOCM", "swSSOCM\swSSOCM.vcxproj", "{7F5FDB49-BCED-421D-A517-35C15BF01609}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swSSOSVC", "swSSOSVC\swSSOSVC.vcxproj", "{9762F468-1D39-472F-BCA7-9F98AC6C4D12}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swSSOSVCTEST", "swSSOSVCTEST\swSSOSVCTEST.vcxproj", "{3EEB3128-CF65-4404-994F-C8C90B80C8C0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SWSSO", "swSSO\SWSSO.EXE.vcxproj", "{5CF382F4-6ECA-4F1C-8054-047BF6292E2A}"
 EndProject
@@ -75,28 +75,6 @@ Global
 		{9762F468-1D39-472F-BCA7-9F98AC6C4D12}.Release|Win32.ActiveCfg = Release|Win32
 		{9762F468-1D39-472F-BCA7-9F98AC6C4D12}.Release|Win32.Build.0 = Release|Win32
 		{9762F468-1D39-472F-BCA7-9F98AC6C4D12}.Release|x64.ActiveCfg = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Debug|Win32.Build.0 = Debug|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Debug|x64.ActiveCfg = Debug|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr_trace|Mixed Platforms.ActiveCfg = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr_trace|Mixed Platforms.Build.0 = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr_trace|Win32.ActiveCfg = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr_trace|Win32.Build.0 = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr_trace|x64.ActiveCfg = Release|x64
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr_trace|x64.Build.0 = Release|x64
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr|Mixed Platforms.ActiveCfg = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr|Mixed Platforms.Build.0 = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr|Win32.ActiveCfg = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr|Win32.Build.0 = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr|x64.ActiveCfg = Release|x64
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.fr|x64.Build.0 = Release|x64
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Release|Win32.ActiveCfg = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Release|Win32.Build.0 = Release|Win32
-		{3EEB3128-CF65-4404-994F-C8C90B80C8C0}.Release|x64.ActiveCfg = Release|Win32
 		{5CF382F4-6ECA-4F1C-8054-047BF6292E2A}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
 		{5CF382F4-6ECA-4F1C-8054-047BF6292E2A}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{5CF382F4-6ECA-4F1C-8054-047BF6292E2A}.Debug|Win32.ActiveCfg = Debug|Win32
