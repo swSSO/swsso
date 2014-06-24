@@ -1411,6 +1411,8 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// policies
 			bUseDPAPI=(BOOL)lp;
 			if (!gbEnableOption_SavePassword || !bUseDPAPI || giPwdProtection==PP_WINDOWS) ShowWindow(GetDlgItem(w,CK_SAVE),SW_HIDE);
+			// Complément ISSUE#136 : ne pas afficher le bouton mdp oublié si synchro mdp Windows activée
+			if (giPwdProtection==PP_WINDOWS) ShowWindow(GetDlgItem(w,PB_MDP_OUBLIE),SW_HIDE);
 			// 0.81 : centrage si parent!=NULL
 			if (GetParent(w)!=NULL)
 			{
