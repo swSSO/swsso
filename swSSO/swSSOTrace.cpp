@@ -101,7 +101,7 @@ end:
 	// si fichier existe, se positionne à la fin du fichier pour écritures ultérieures
 	if (ghfTrace!=INVALID_HANDLE_VALUE) SetFilePointer(ghfTrace,0,0,FILE_END);
 	//
-	len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : taille max fichier=%d octets ===================\r\n",gdwTraceFileSize);
+	len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : version=%s beta=%s ===================\r\n",gcszCurrentVersion,gcszCurrentBeta);
 	WriteFile(ghfTrace,gszTraceBuf,len,&dw,NULL);
 }
 
