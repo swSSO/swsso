@@ -33,6 +33,9 @@
     <ClCompile Include="swSSOProtectMemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="swSSOLogs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -50,11 +53,18 @@
     <ClInclude Include="swSSOProtectMemory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="swSSOLogMessages.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLogs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="swSSOCM.def">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="swSSOLogMessages.mc" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc">

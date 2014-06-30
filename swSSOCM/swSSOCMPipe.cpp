@@ -140,7 +140,11 @@ int swPipeWrite(char *bufRequest,int lenRequest)
 	while (hPipe==INVALID_HANDLE_VALUE)
 	{
 		TRACE((TRACE_ERROR,_F_,"CreateNamedPipe()=%d (SVC pas prêt - essai %d)",GetLastError(),iNbTry));
-		if (iNbTry>30) goto end;
+		if (iNbTry > 30)
+		{
+			swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVICE_NOT_STARTED,NULL,NULL,NULL);
+			goto end;
+		}
 		Sleep(1000);
 		iNbTry++;
 		hPipe = CreateFile("\\\\.\\pipe\\swsso",GENERIC_READ | GENERIC_WRITE, 0,NULL,OPEN_EXISTING,0,NULL);

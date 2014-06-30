@@ -28,28 +28,7 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
+// swSSOLogs.h
+//-----------------------------------------------------------------------------
 
-
-#pragma once
-
-#include "targetver.h"
-
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-// Windows Header Files:
-#include <windows.h>
-#include <Npapi.h>
-#include <Ntsecapi.h>
-#include <ShellAPI.h>
-#include <wincrypt.h>
-#include <stdlib.h>
-#include <WinCrypt.h>
-#include "swSSOCM.h"
-#include "swSSOTrace.h"
-#include "swSSOProtectMemory.h"
-#include "swSSOLogs.h"
-#include "swSSOLogMessages.h"
-
-// swSSOCMPipe
-int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo);
-int swPipeWrite(char *bufRequest,int lenRequest);
-
+int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszParam3);

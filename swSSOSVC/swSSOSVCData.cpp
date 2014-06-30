@@ -137,7 +137,7 @@ int swGetUserDataIndex(const char *BufRequest,int iOffset)
 		if (_stricmp(pszUserName,gUserData[i].szUserName)==0 &&
 			_stricmp(pszLogonDomainName,gUserData[i].szLogonDomainName)==0)
 		{
-			TRACE((TRACE_INFO,_F_,"Trouvé %s\\%s index %d",pszUserName,pszLogonDomainName,i));
+			TRACE((TRACE_INFO,_F_,"Trouvé %s\\%s index %d",pszLogonDomainName,pszUserName,i));
 			rc=i;
 			goto end;
 		}
