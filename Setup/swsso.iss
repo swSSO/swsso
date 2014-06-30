@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "swSSO"
-#define MyAppVersion "1.01"
+#define MyAppVersion "1.02"
 #define MyAppURL "www.swsso.fr"
 #define MyAppExeName "swSSO.exe"
 

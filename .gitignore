@@ -170,3 +170,5 @@ $RECYCLE.BIN/
 .DS_Store
 /swSSO/ISimpleDOMDocument_h.h
 /swSSO/ISimpleDOMNode_h.h
+/swSSOCM/MSG0040C.bin
+*.stat
