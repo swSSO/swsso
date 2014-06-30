@@ -1363,9 +1363,11 @@ int InitWindowsSSO(void)
 	if (swGenPBKDF2Salt()!=0) goto end;
 
 	// Envoie les sels à swSSOSVC : V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
+	// ISSUE#156 : pour y voir plus clair dans les traces
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:PUTPSKS:",12);
-	memcpy(bufRequest+12,gpszRDN,DOMAIN_LEN);
-	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,USER_LEN);
+	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
+	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
@@ -1381,9 +1383,11 @@ int InitWindowsSSO(void)
 
 	// Demande le keydata à swssosvc
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
+	// ISSUE#156 : pour y voir plus clair dans les traces
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
-	memcpy(bufRequest+16,gpszRDN,DOMAIN_LEN);
-	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,USER_LEN);
+	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
+	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
@@ -1435,9 +1439,11 @@ int MigrationWindowsSSO(void)
 	TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gbufPBKDF2KeySalt"));
 
 	// Envoie les sels à swSSOSVC : V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
+	// ISSUE#156 : pour y voir plus clair dans les traces
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:PUTPSKS:",12);
-	memcpy(bufRequest+12,gpszRDN,DOMAIN_LEN);
-	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,USER_LEN);
+	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
+	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
@@ -1448,9 +1454,11 @@ int MigrationWindowsSSO(void)
 
 	// Demande le keydata à swssosvc
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
+	// ISSUE#156 : pour y voir plus clair dans les traces
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
-	memcpy(bufRequest+16,gpszRDN,DOMAIN_LEN);
-	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,USER_LEN);
+	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
+	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
@@ -1658,9 +1666,11 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gbufPBKDF2KeySalt"));
 
 	// Envoie les sels à swSSOSVC : V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
+	// ISSUE#156 : pour y voir plus clair dans les traces
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:PUTPSKS:",12);
-	memcpy(bufRequest+12,gpszRDN,DOMAIN_LEN);
-	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,USER_LEN);
+	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
+	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
@@ -1671,9 +1681,11 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 
 	// Demande le keydata à swssosvc
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
+	// ISSUE#156 : pour y voir plus clair dans les traces
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
-	memcpy(bufRequest+16,gpszRDN,DOMAIN_LEN);
-	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,USER_LEN);
+	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
+	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
@@ -1692,6 +1704,8 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	{
 		TRACE((TRACE_INFO,_F_,"ReadVerifyCheckSynchroValue(CUR) failed"));
 		swCryptDestroyKey(ghKey1); ghKey1=NULL;
+		// ISSUE#156 : pour y voir plus clair dans les traces
+		SecureZeroMemory(bufRequest,sizeof(bufRequest));
 		memcpy(bufRequest,"V02:GETPHKD:OLD:",16);
 		memcpy(bufRequest+16,gpszRDN,DOMAIN_LEN);
 		memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,USER_LEN);
@@ -2249,9 +2263,11 @@ int ChangeWindowsPwd(void)
 	
 	// Demande le nouveau keydata à swssosvc
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
+	// ISSUE#156 : pour y voir plus clair dans les traces
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
-	memcpy(bufRequest+16,gpszRDN,DOMAIN_LEN);
-	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,USER_LEN);
+	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
+	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)==0) 
 	{
 		if (dwLenResponse==PBKDF2_PWD_LEN+AES256_KEY_LEN)

@@ -65,7 +65,7 @@ int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszP
 
 	lenUserName=sizeof(szUserName); GetUserName(szUserName,&lenUserName);
 
-	hEventLog=RegisterEventSource(NULL,"swSSORecover");
+	hEventLog=RegisterEventSource(NULL,"swSSOCM");
 	if (hEventLog==NULL)
 	{
 		TRACE((TRACE_ERROR,_F_,"RegisterEventSource()=%d",GetLastError()));

@@ -98,12 +98,16 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	TRACE((TRACE_PWD,_F_,"bufPassword=%s",bufPassword));
 	// Chiffre le mot de passe
 	if (swProtectMemoryInit()!=0) goto end;
-	if (swProtectMemory(bufPassword,sizeof(bufPassword),CRYPTPROTECTMEMORY_SAME_LOGON)!=0) goto end;
+	// ISSUE#156 : remplacement de CRYPTPROTECTMEMORY_SAME_LOGON par CRYPTPROTECTMEMORY_CROSS_PROCESS
+	//             et à réception le service rechiffrera avec CRYPTPROTECTMEMORY_SAME_PROCESS
+	if (swProtectMemory(bufPassword,sizeof(bufPassword),CRYPTPROTECTMEMORY_CROSS_PROCESS)!=0) goto end;
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)bufPassword,PWD_LEN,"bufPassword"));
 	// Construit la requête à envoyer à swSSOSVC : V02:PUTPASS:domain(256octets)username(256octets)password(256octets)
+	// ISSUE#156 : pour y voir plus clair dans les traces
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:PUTPASS:",12);
-	memcpy(bufRequest+12,szLogonDomainName,DOMAIN_LEN);
-	memcpy(bufRequest+12+DOMAIN_LEN,szUserName,USER_LEN);
+	memcpy(bufRequest+12,szLogonDomainName,strlen(szLogonDomainName)+1);
+	memcpy(bufRequest+12+DOMAIN_LEN,szUserName,strlen(szUserName)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,bufPassword,PWD_LEN);
 	lenRequest=12+DOMAIN_LEN+USER_LEN+PWD_LEN;
 

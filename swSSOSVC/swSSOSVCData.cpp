@@ -51,11 +51,6 @@ typedef struct
 	char bufPasswordOld[PWD_LEN]; 
 	BOOL bPasswordStored;
 	BOOL bPasswordOldStored;
-	// PHKD (Password Hash + Key Data)
-	BYTE PBKDF2Pwd[PBKDF2_PWD_LEN];
-	BYTE AESKeyData[AES256_KEY_LEN];
-	BYTE PBKDF2PwdOld[PBKDF2_PWD_LEN];
-	BYTE AESKeyDataOld[AES256_KEY_LEN];
 	// PSKS (Password Salt + Key Salt)
 	T_SALT Salts;
 } T_USER_DATA;
@@ -71,7 +66,7 @@ int giMaxUserDataIndex=0;
 void swInitData(void)
 {
 	TRACE((TRACE_ENTER,_F_,""));
-	ZeroMemory(gUserData,sizeof(gUserData));
+	SecureZeroMemory(gUserData,sizeof(gUserData));
 	TRACE((TRACE_LEAVE,_F_,""));
 }
 
@@ -120,7 +115,7 @@ end:
 //-----------------------------------------------------------------------------
 // Retourne l'index de l'utilisateur dans la table gUserData ou -1 si non trouvé
 // BufRequest est de la forme : xxxxxxxxx:domain(len=256):username(len=256):xxxxxxxxx
-// iOffset pointe ici -------------------|
+// iOffset pointe ici -------------------^
 //-----------------------------------------------------------------------------
 int swGetUserDataIndex(const char *BufRequest,int iOffset)
 {
@@ -150,11 +145,11 @@ end:
 // swWaitForMessage()
 //-----------------------------------------------------------------------------
 // Attend un message et le traite. Commandes supportées :
-// V02:PUTPASS:domain(256octets)username(256octets)password(256octets) (chiffré par CryptProtectMemory avec flag CRYPTPROTECTMEMORY_SAME_LOGON)
+// V02:PUTPASS:domain(256octets)username(256octets)password(256octets) (chiffré par CryptProtectMemory avec flag CRYPTPROTECTMEMORY_CROSS_PROCESS)
 // V02:GETPHKD:CUR:domain(256octets)username(256octets) > demande à SVC de fournir le KeyData courant
 // V02:GETPHKD:OLD:domain(256octets)username(256octets) > demande à SVC de fournir le KeyData précédent (si chgt de mdp par exemple)
 // V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets) > demande à SVC de stocker PwdSalt et KeySalt
-// N'est plus supporté :
+// Ne sont plus supportées :
 // V01:PUTPHKD:PwdHash(32octets)KeyData(32octets) > demande à SVC de stocker PwdHash et KeyData 
 // V01:PUTPASS:password(256octets)(chiffré par CryptProtectMemory avec flag CRYPTPROTECTMEMORY_SAME_LOGON)
 // V01:GETPHKD:CUR > demande à SVC de fournir le KeyData courant
@@ -167,14 +162,16 @@ int swWaitForMessage()
 	int rc=-1;
 	char bufRequest[1024];
 	char bufResponse[1024];
-	char tempPBKDF2Pwd[PBKDF2_PWD_LEN];
+	char szEventName[1024];
 	int lenResponse;
 	DWORD cbRead,cbWritten;
 	HANDLE hEvent=NULL;
 	BOOL brc;
 	char tmpBufPwd[PWD_LEN];
-	BOOL bSendEvent=TRUE;
 	int iUserDataIndex;
+	// PHKD (Password Hash + Key Data)
+	BYTE PBKDF2Pwd[PBKDF2_PWD_LEN];
+	BYTE AESKeyData[AES256_KEY_LEN];
 	
 	TRACE((TRACE_ENTER,_F_,""));	
 	
@@ -228,61 +225,36 @@ int swWaitForMessage()
 						iUserDataIndex=giMaxUserDataIndex;
 						memcpy(gUserData[iUserDataIndex].szLogonDomainName,bufRequest+12,DOMAIN_LEN);
 						memcpy(gUserData[iUserDataIndex].szUserName,bufRequest+12+DOMAIN_LEN,USER_LEN);
+						TRACE((TRACE_INFO,_F_,"Utilisateur %s\\%s pas encore connu, on le crée",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName));
 						giMaxUserDataIndex++;
 					}
 					TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
 					// extrait le mdp de la requête dans une variable temporaire effacée de manière sécurisée à la fin de la fonction
 					memcpy(tmpBufPwd,bufRequest+12+DOMAIN_LEN+USER_LEN,PWD_LEN);
-					if (gUserData[iUserDataIndex].Salts.bPBKDF2KeySaltReady && gUserData[iUserDataIndex].Salts.bPBKDF2PwdSaltReady) // Les sels sont connus, on peut calculer PHKD sans conserver le mot de passe :-)
+					// ISSUE#156 : on ne calcule plus le PKHD tout de suite, on le fait maintenant systématiquement quand on recoit un GETPKHD
+					//             comme ça on est sûr d'être à jour à la fois du mot de passe et des sels. Et ça simplifie le code.
+					// ISSUE#156 : on déchiffre le mot de passe reçu qui est chiffré avec CRYPTPROTECTMEMORY_CROSS_PROCESS
+					//             pour le rechiffrer avec CRYPTPROTECTMEMORY_SAME_PROCESS
+					if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_CROSS_PROCESS)!=0) goto end;
+					TRACE((TRACE_PWD,_F_,"tmpBufPwd=%s",tmpBufPwd));
+					if (swProtectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
+					// Vérifie qu'on n'a pas déjà ce mot de passe
+					if (memcmp(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN)==0)
 					{
-						TRACE((TRACE_DEBUG,_F_,"Sels OK, on calcule PHKD"));
-						// Déchiffre le mot de passe
-						if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_LOGON)!=0) goto end;
-						TRACE((TRACE_PWD,_F_,"tmpBufPwd=%s",tmpBufPwd));
-						// On fait déjà le calcul dans un buffer temporaire pour vérifier qu'on n'a pas déjà ces informations
-						if (swPBKDF2((BYTE*)tempPBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-						if (memcmp(gUserData[iUserDataIndex].PBKDF2Pwd,tempPBKDF2Pwd,PBKDF2_PWD_LEN)==0)
-						{
-							TRACE((TRACE_INFO,_F_,"ON A DEJA CE MOT DE PASSE, ON IGNORE"));
-							bSendEvent=FALSE;
-						}
-						else // OK, on n'a pas, on garde !
-						{
-							// Archive les valeurs précédentes
-							memcpy(gUserData[iUserDataIndex].PBKDF2PwdOld,gUserData[iUserDataIndex].PBKDF2Pwd,PBKDF2_PWD_LEN);
-							memcpy(gUserData[iUserDataIndex].AESKeyDataOld,gUserData[iUserDataIndex].AESKeyData,AES256_KEY_LEN);
-							TRACE_BUFFER((TRACE_DEBUG,_F_,gUserData[iUserDataIndex].PBKDF2PwdOld,PBKDF2_PWD_LEN,"gUserData[%d].PBKDF2PwdOld",iUserDataIndex));
-							TRACE_BUFFER((TRACE_DEBUG,_F_,gUserData[iUserDataIndex].AESKeyDataOld,AES256_KEY_LEN,"gUserData[%d].AESKeyDataOld",iUserDataIndex));
-							// Calcul PHKD
-							if (swPBKDF2((BYTE*)gUserData[iUserDataIndex].PBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-							if (swPBKDF2((BYTE*)gUserData[iUserDataIndex].AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-						}
+						TRACE((TRACE_INFO,_F_,"ON A DEJA CE MOT DE PASSE, ON IGNORE"));
 					}
-					else // Sinon, on garde le mot de passe et c'est au moment où les sels seront fournis (PUTPSKS) que le calcul sera fait et le mot de passe effacé.
+					else
 					{
-						TRACE((TRACE_DEBUG,_F_,"Sels NOK, on calculera PHKD plus tard..."));
-						// Vérifie qu'on n'a pas déjà ce mot de passe
-						if (memcmp(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN)==0)
+						// Si on a déjà stocké un mot de passe, on copie la valeur précédente dans old
+						if (gUserData[iUserDataIndex].bPasswordStored)
 						{
-							TRACE((TRACE_INFO,_F_,"ON A DEJA CE MOT DE PASSE, ON IGNORE"));
-							bSendEvent=FALSE;
+							memcpy(gUserData[iUserDataIndex].bufPasswordOld,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
+							gUserData[iUserDataIndex].bPasswordOldStored=TRUE;
 						}
-						else
-						{
-							// Conserve valeur précédente + stocke la nouvelle
-							if (gUserData[iUserDataIndex].bPasswordStored)
-							{
-								memcpy(gUserData[iUserDataIndex].bufPasswordOld,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
-								gUserData[iUserDataIndex].bPasswordOldStored=TRUE;
-							}
-							memcpy(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN);
-							gUserData[iUserDataIndex].bPasswordStored=TRUE;
-						}
-					}
-					// Si swSSO est lancé, envoie un message pour signaler le nouveau mot de passe
-					if (bSendEvent)
-					{
-						char szEventName[1024];
+						// Stocke le nouveau mot de passe reçu
+						memcpy(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN);
+						gUserData[iUserDataIndex].bPasswordStored=TRUE;
+						// Si swSSO est lancé, envoie un message pour signaler le nouveau mot de passe pour cet utilisateur
 						sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName);
 						hEvent=OpenEvent(EVENT_MODIFY_STATE,FALSE,szEventName);
 						if (hEvent==NULL)
@@ -319,8 +291,17 @@ int swWaitForMessage()
 					else // Prépare la réponse, format = PwdHash(32octets)KeyData(32octets)
 					{
 						TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
-						memcpy(bufResponse,gUserData[iUserDataIndex].PBKDF2Pwd,PBKDF2_PWD_LEN);
-						memcpy(bufResponse+PBKDF2_PWD_LEN,gUserData[iUserDataIndex].AESKeyData,AES256_KEY_LEN);
+						// ISSUE#156 : maintenant le calcul PKHD est fait ici et uniquement ici
+						if (gUserData[iUserDataIndex].bPasswordStored)
+						{
+							memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
+							if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
+							TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
+							if (swPBKDF2((BYTE*)PBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+							if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+						}
+						memcpy(bufResponse,PBKDF2Pwd,PBKDF2_PWD_LEN);
+						memcpy(bufResponse+PBKDF2_PWD_LEN,AESKeyData,AES256_KEY_LEN);
 						lenResponse=PBKDF2_PWD_LEN+AES256_KEY_LEN;
 					}
 				}
@@ -336,8 +317,17 @@ int swWaitForMessage()
 					else // Prépare la réponse, format = PwdHash(32octets)KeyData(32octets)
 					{
 						TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
-						memcpy(bufResponse,gUserData[iUserDataIndex].PBKDF2PwdOld,PBKDF2_PWD_LEN);
-						memcpy(bufResponse+PBKDF2_PWD_LEN,gUserData[iUserDataIndex].AESKeyDataOld,AES256_KEY_LEN);
+						// ISSUE#156 : maintenant le calcul PKHD est fait ici et uniquement ici
+						if (gUserData[iUserDataIndex].bPasswordOldStored)
+						{
+							memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPasswordOld,PWD_LEN);
+							if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
+							TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPasswordOld=%s",iUserDataIndex,tmpBufPwd));
+							if (swPBKDF2((BYTE*)PBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+							if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+						}
+						memcpy(bufResponse,PBKDF2Pwd,PBKDF2_PWD_LEN);
+						memcpy(bufResponse+PBKDF2_PWD_LEN,AESKeyData,AES256_KEY_LEN);
 						lenResponse=PBKDF2_PWD_LEN+AES256_KEY_LEN;
 					}
 				}
@@ -375,29 +365,6 @@ int swWaitForMessage()
 						gUserData[iUserDataIndex].Salts.bPBKDF2KeySaltReady=TRUE;
 						TRACE_BUFFER((TRACE_DEBUG,_F_,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,"gUserData[%d].Salts.bufPBKDF2PwdSalt",iUserDataIndex));
 						TRACE_BUFFER((TRACE_DEBUG,_F_,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gUserData[%d].Salts.bufPBKDF2KeySalt",iUserDataIndex));
-						// Si on a des mots de passe en mémoire, maintenant qu'on a les sels on peut les traiter et les effacer !
-						if (gUserData[iUserDataIndex].bPasswordStored)
-						{
-							// Calcul PHKD (CUR)
-							// Déchiffre le mot de passe
-							if (swUnprotectMemory(gUserData[iUserDataIndex].bufPassword,PWD_LEN,CRYPTPROTECTMEMORY_SAME_LOGON)!=0) goto end;
-							TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,gUserData[iUserDataIndex].bufPassword));
-							if (swPBKDF2((BYTE*)gUserData[iUserDataIndex].PBKDF2Pwd,PBKDF2_PWD_LEN,gUserData[iUserDataIndex].bufPassword,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-							if (swPBKDF2((BYTE*)gUserData[iUserDataIndex].AESKeyData,AES256_KEY_LEN,gUserData[iUserDataIndex].bufPassword,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-							SecureZeroMemory(gUserData[iUserDataIndex].bufPassword,sizeof(gUserData[iUserDataIndex].bufPassword));
-							gUserData[iUserDataIndex].bPasswordStored=FALSE;
-						}
-						if (gUserData[iUserDataIndex].bPasswordOldStored)
-						{
-							// Calcul PHKD (OLD)
-							// Déchiffre le mot de passe
-							if (swUnprotectMemory(gUserData[iUserDataIndex].bufPasswordOld,PWD_LEN,CRYPTPROTECTMEMORY_SAME_LOGON)!=0) goto end;
-							TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPasswordOld=%s",iUserDataIndex,gUserData[iUserDataIndex].bufPasswordOld));
-							if (swPBKDF2((BYTE*)gUserData[iUserDataIndex].PBKDF2PwdOld,PBKDF2_PWD_LEN,gUserData[iUserDataIndex].bufPasswordOld,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-							if (swPBKDF2((BYTE*)gUserData[iUserDataIndex].AESKeyDataOld,AES256_KEY_LEN,gUserData[iUserDataIndex].bufPasswordOld,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-							SecureZeroMemory(gUserData[iUserDataIndex].bufPasswordOld,sizeof(gUserData[iUserDataIndex].bufPasswordOld));
-							gUserData[iUserDataIndex].bPasswordOldStored=FALSE;
-						}
 						// Réponse
 						strcpy_s(bufResponse,sizeof(bufResponse),"OK");
 						lenResponse=strlen(bufResponse);
@@ -435,6 +402,8 @@ end:
 	// Efface la requête de manière sécurisée (elle peut contenir un mot de passe !)
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	SecureZeroMemory(tmpBufPwd,sizeof(tmpBufPwd));
+	SecureZeroMemory(PBKDF2Pwd,sizeof(PBKDF2Pwd));
+	SecureZeroMemory(AESKeyData,sizeof(AESKeyData));
 	TRACE((TRACE_LEAVE,_F_,"rc=0x%08lx",rc));
 	return rc;
 }
