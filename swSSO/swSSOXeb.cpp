@@ -292,6 +292,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 	int iId3Index;
 	int iId4Index;
 	IAccessible *pNiveau0=NULL,*pChildNiveau1=NULL, *pChildNiveau2=NULL;
+	int iNbTry;
 	
 	// ISSUE#39 : important, initialisation pour que le pointer iAccessible soit à NULL sinon le release provoque plantage !
 	ZeroMemory(&tSuivi,sizeof(T_SUIVI_ACCESSIBLE));
@@ -409,13 +410,18 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState()=0x%08lx",hr)); goto end; }
 	TRACE((TRACE_DEBUG,_F_,"get_accState(DOCUMENT PRINCIPAL) vtState.lVal=0x%08lx",vtState.lVal));
 	
-	if (vtState.lVal & STATE_SYSTEM_BUSY) {
-		TRACE((TRACE_DEBUG,_F_,"STATE_SYSTEM_BUSY"));
-		Sleep(5000);
+	// ISSUE#163 : plutôt que d'attendre 1 fois 5 secondes, on attend 5 fois 100ms et ensuite on continue, 
+	//             ça ne semble pas être bloquant surtout que Chrome et IE ont l'air de se mettre BUSY dès qu'ils n'ont pas le focus...
+	iNbTry=1;
+	while ((vtState.lVal & STATE_SYSTEM_BUSY) && iNbTry < 6)
+	{
+		TRACE((TRACE_DEBUG,_F_,"STATE_SYSTEM_BUSY -- wait 100ms before retry #%d (max 5)",iNbTry));
+		Sleep(100);
 		VariantInit(&vtState);
 		hr=pAccessible->get_accState(vtChild,&vtState);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState()=0x%08lx",hr)); goto end; }
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState()=0x%08lx",hr)); }
 		TRACE((TRACE_DEBUG,_F_,"get_accState(DOCUMENT PRINCIPAL) vtState.lVal=0x%08lx",vtState.lVal));
+		iNbTry++;
 	}
 	
 	lCount=0;
@@ -424,7 +430,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end; }
 	if (iBrowser==BROWSER_CHROME) // lCount=0 arrive parfois quelque fois après ouverture d'un nouvel onglet
 	{
-		int iNbTry=0;
+		iNbTry=0;
 		while (lCount==0 && iNbTry<10) // ajouté en 0.93B1 : 10 essais supplémentaires au lieu d'un seul
 		{
 			Sleep(150);
