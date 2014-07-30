@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="101";	// 101 = 1.01
-const char gcszCurrentBeta[]="1021";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1022";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 static HWND gwMain=NULL;
 
@@ -112,7 +112,7 @@ static const char gcszStaticPwd093[]="*éAl43HJj8]_3za;?,!ù¨AHI3le!ma!/sw\aw+==,;
 typedef struct
 {
 	int iNbConfigs;
-	int tabConfigs[NB_MAX_APPLICATIONS]; // ISSUE#149 : je laisse 500, c'est trop compliqué de faire dynamique avec giMaxConfigs et surtout inutile
+	int tabConfigs[500]; // ISSUE#149 : je laisse 500, c'est trop compliqué de faire dynamique avec giMaxConfigs et surtout inutile
 	int iConfig;
 } T_CHOOSE_CONFIG;
 

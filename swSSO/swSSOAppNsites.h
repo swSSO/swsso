@@ -32,7 +32,6 @@
 //-----------------------------------------------------------------------------
 
 #define NB_MAX_CATEGORIES	50
-#define NB_MAX_APPLICATIONS 500
 #define LEN_CATEGORY_LABEL	 50
 #define LEN_APPLICATION_NAME 50
 
@@ -43,7 +42,7 @@
 // Avec AES  = (16+64+16)*2+1 = 193
 #define LEN_ENCRYPTED_3DES  144
 #define LEN_ENCRYPTED_AES256  192
-#define LEN_URL 128
+#define LEN_URL 256 // ISSUE#160
 #define LEN_TITLE 90
 #define LEN_KBSIM 400
 #define LEN_FULLPATHNAME 255

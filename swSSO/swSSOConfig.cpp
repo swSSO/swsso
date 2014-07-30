@@ -2797,7 +2797,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId)
 
 	char szType[3+1];
 	int rc=-1;
-	char szRequest[1024+1];
+	char szRequest[2048+1]; // augmenté en 1.02 pour ISSUE#160 (taille champ URL 128 -> 256)
 	char *pszResult=NULL;
 	char szId2Type[5+1]="";
 	char szId3Type[5+1]="";
