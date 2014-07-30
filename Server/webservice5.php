@@ -38,7 +38,7 @@ include('util.php');
 // Commandes : isalive, getversion, putconfig, getconfig et getdomains
 //------------------------------------------------------------------------------
 
-$swssoVersion="101:0000";
+$swssoVersion="102:0000"; // "000:0000" désactive le contrôle de version côté client
 
 // ------------------------------------------------------------
 // isalive
