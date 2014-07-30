@@ -1026,6 +1026,7 @@ end:
 // 1) szToBeCompared="08/06/2010 TOTO"            / szPattern="*TOTO"
 // 2) szToBeCompared="TOTO 08/06/2010"            / szPattern="TOTO*"
 // 3) szToBeCompared="08/06/2010 TOTO 08/06/2010" / szPattern="*TOTO*"
+// 4) szToBeCompared="08/06/2010"				  / szPattern="08/06/2010"
 //
 // Idée d'implémentation simple (il faut que ça booste car appelé 2 fois par seconde
 // pour chaque fenêtre visible à l'écran !) pour ces 3 cas :
@@ -1036,46 +1037,113 @@ end:
 // 3) Si szPattern commence et termine par *, on regarde si la chaine entre les * 
 //    est inclue dans szToBeCompared.
 // 4) Si pas de joker en début ou fin de szPattern, comparaison stricte
+//
+// Nouveau en 1.02 (ISSUE#161) : possibilité de placer en complément une * ailleurs que début et fin
+// 4 cas de matching attendus
+// A) szToBeCompared="abcdXYZ1234"					/ szPattern="abcd*1234"
+// B) szToBeCompared="XYZabcd891234"				/ szPattern="*abcd*1234"
+// C) szToBeCompared="abcdXYZ123489"				/ szPattern="abcd*1234*"
+// D) szToBeCompared="XYZabcdEFG123489"				/ szPattern="*abcd*1234*"
 //-----------------------------------------------------------------------------
 BOOL swStringMatch(char *szToBeCompared,char *szPattern)
 {
 	//TROP VERBEUX ! TRACE((TRACE_ENTER,_F_, ""));
 	BOOL rc=FALSE;
 	int lenToBeCompared,lenPattern;
+	char *pMidJoker;
+	char *pszPatG=NULL;
+	char *pszPatD=NULL;
+	int lenPatG, lenPatD;
 	
 	//TROP VERBEUX ! TRACE((TRACE_DEBUG,_F_, "szToBeCompared=%s szPattern=%s",szToBeCompared,szPattern));
 	if (szToBeCompared==NULL || szPattern==NULL) goto end;
 	lenToBeCompared=strlen(szToBeCompared);
 	lenPattern=strlen(szPattern);
+	if (lenPattern==1 && szPattern[0]=='*') { rc=TRUE; goto end; } // * matche avec tout
 	if (lenToBeCompared==0 || lenPattern==0) goto end; // chaines vides ne matchent jamais... à revoir peut-être.
-	
-	if (lenPattern>2 && szPattern[0]=='*' && szPattern[lenPattern-1]=='*') // cas n°3 : szPattern commence et se termine par *
+
+	// Pour ne pas perturber ni ralentir le fonctionnement, on commence par tester s'il y a un joker 
+	// ailleurs que début et fin : si oui, on part dans une branche à part, sinon on branche sur l'existant
+	pMidJoker=strchr(szPattern+1,'*');
+	if (pMidJoker!=NULL && pMidJoker!=szPattern+lenPattern-1) // on a trouvé une * et ce n'est pas le dernier caractère (ni le premier puisqu'on a fait le strchr sur szPattern+1)
+	// traitement des cas A à D - ISSUE#161
 	{
-		char *pszModifiedPattern=(char*)malloc(lenPattern-2+1); // +1 ajouté dans 0.92B7, pouvait provoquer le plantage vu par Erwan
-		if (pszModifiedPattern==NULL) goto end;
-		memcpy(pszModifiedPattern,szPattern+1,lenPattern-2);
-		pszModifiedPattern[lenPattern-2]=0;
-		// TROP VERBEUX TRACE((TRACE_DEBUG,_F_,"szToBeCompared=%s pszModifiedPattern=%s",szToBeCompared,pszModifiedPattern));
-		rc=(strnistr(szToBeCompared,pszModifiedPattern,-1)!=NULL);
-		free(pszModifiedPattern);
+		if (lenPattern>2 && szPattern[0]=='*' && szPattern[lenPattern-1]=='*') // cas D : szPattern commence et se termine par *
+		{
+			//printf("Cas D\n");
+			
+		}
+		else if (lenPattern>1 && szPattern[0]=='*') // cas B : szPattern commence par *
+		{
+			//printf("Cas B\n");
+			
+		}
+		else if (lenPattern>1 && szPattern[lenPattern-1]=='*') // cas C : szPattern se termine par *
+		{
+			//printf("Cas C\n");
+			// stocke les 2 parties du pattern dans PatG et PatD
+			lenPatG=pMidJoker-szPattern;
+			lenPatD=szPattern+lenPattern-pMidJoker-2;
+			//printf("lenPatG=%d lenPatD=%d\n",lenPatG,lenPatD);
+			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
+			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
+			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
+			strncpy_s(pszPatG,lenPatG+1,szPattern,lenPatG);
+			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
+			//printf("PatG=%s PatD=%s\n",pszPatG,pszPatD);
+			// szToBeCompared doit commencer par PatG et PatD doit être dans szToBeCompared à partir de la fin de la position de PatG
+			rc=((_strnicmp(szToBeCompared,pszPatG,lenPatG)==0) &&
+				(strnistr(szToBeCompared+lenPatG,pszPatD,-1)!=NULL));
+		}
+		else // cas A : pas de * en début et fin
+		{
+			//printf("Cas A\n");
+			// stocke les 2 parties du pattern dans PatG et PatD
+			lenPatG=pMidJoker-szPattern;
+			lenPatD=szPattern+lenPattern-pMidJoker-1;
+			//printf("lenPatG=%d lenPatD=%d\n",lenPatG,lenPatD);
+			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
+			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
+			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
+			strncpy_s(pszPatG,lenPatG+1,szPattern,lenPatG);
+			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
+			//printf("PatG=%s PatD=%s\n",pszPatG,pszPatD);
+			// szToBeCompared doit commencer par PatG et finir par PatD pour matcher
+			rc=((_strnicmp(szToBeCompared,pszPatG,lenPatG)==0) &&
+				(_strnicmp(szToBeCompared+lenToBeCompared-lenPatD,pszPatD,lenPatD)==0));
+		}
 	}
-	else if (lenPattern>1 && szPattern[0]=='*') // cas n°1 : szPattern commence par *
+	else // pas de * hors début et fin, traitement des cas 1 à 4
 	{
-		rc=(_strnicmp(szToBeCompared+lenToBeCompared-(lenPattern-1),szPattern+1,lenPattern-1)==0);
-	}
-	else if (lenPattern>1 && szPattern[lenPattern-1]=='*') // cas n°2 : szPattern se termine par *
-	{
-		rc=(_strnicmp(szToBeCompared,szPattern,lenPattern-1)==0);
-	}
-	else 
-	{
-		rc=(_stricmp(szToBeCompared,szPattern)==0);
+		if (lenPattern>2 && szPattern[0]=='*' && szPattern[lenPattern-1]=='*') // cas n°3 : szPattern commence et se termine par *
+		{
+			char *pszModifiedPattern=(char*)malloc(lenPattern-2+1); // +1 ajouté dans 0.92B7, pouvait provoquer le plantage vu par Erwan
+			if (pszModifiedPattern==NULL) goto end;
+			memcpy(pszModifiedPattern,szPattern+1,lenPattern-2);
+			pszModifiedPattern[lenPattern-2]=0;
+			// TROP VERBEUX TRACE((TRACE_DEBUG,_F_,"szToBeCompared=%s pszModifiedPattern=%s",szToBeCompared,pszModifiedPattern));
+			rc=(strnistr(szToBeCompared,pszModifiedPattern,-1)!=NULL);
+			free(pszModifiedPattern);
+		}
+		else if (lenPattern>1 && szPattern[0]=='*') // cas n°1 : szPattern commence par *
+		{
+			rc=(_strnicmp(szToBeCompared+lenToBeCompared-(lenPattern-1),szPattern+1,lenPattern-1)==0);
+		}
+		else if (lenPattern>1 && szPattern[lenPattern-1]=='*') // cas n°2 : szPattern se termine par *
+		{
+			rc=(_strnicmp(szToBeCompared,szPattern,lenPattern-1)==0);
+		}
+		else // cas n°4 : pas de *, comparaison stricte
+		{
+			rc=(_stricmp(szToBeCompared,szPattern)==0);
+		}
 	}
 end:
 	//TROP VERBEUX ! TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	if (pszPatG!=NULL) free(pszPatG);
+	if (pszPatD!=NULL) free(pszPatD);
 	return rc;
 }
-
 
 //-----------------------------------------------------------------------------
 // swURLMatch()
