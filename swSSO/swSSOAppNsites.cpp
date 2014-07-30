@@ -2221,7 +2221,8 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	gwAppNsites=w;
 
 	// Positionnement et dimensionnement de la fenêtre
-	if (gx!=-1 && gy!=-1 && gcx!=-1 && gcy!=-1)
+	// ISSUE#1 : si Alt enfoncée à l'ouverture, retaillage et repositionnement par défaut
+	if ((gx!=-1 && gy!=-1 && gcx!=-1 && gcy!=-1) && HIBYTE(GetAsyncKeyState(VK_MENU))==0) 
 	{
 		SetWindowPos(w,NULL,gx,gy,gcx,gcy,SWP_NOZORDER);
 	}
@@ -3728,6 +3729,9 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=1;
 	T_APPNSITES tAppNsites;
+	int cx;
+	int cy;
+	RECT rect;
 
 	tAppNsites.iSelected=iSelected;
 	tAppNsites.bFromSystray=bFromSystray;
@@ -3736,6 +3740,14 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 	if (gwAppNsites!=NULL)
 	{
 		ShowWindow(gwAppNsites,SW_SHOW);
+		// ISSUE#1 : si Alt enfoncée à l'ouverture, repositionnement par défaut
+		if (HIBYTE(GetAsyncKeyState(VK_MENU))!=0) 
+		{
+			cx = GetSystemMetrics( SM_CXSCREEN );
+			cy = GetSystemMetrics( SM_CYSCREEN );
+			GetWindowRect(gwAppNsites,&rect);
+			SetWindowPos(gwAppNsites,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
+		}
 		SetForegroundWindow(gwAppNsites);
 		
 		// ISSUE#117 --> Remplissage de la treeview et sélectionne l'application
