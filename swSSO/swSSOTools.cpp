@@ -1070,44 +1070,57 @@ BOOL swStringMatch(char *szToBeCompared,char *szPattern)
 	{
 		if (lenPattern>2 && szPattern[0]=='*' && szPattern[lenPattern-1]=='*') // cas D : szPattern commence et se termine par *
 		{
-			//printf("Cas D\n");
-			
+			// stocke les 2 parties du pattern dans PatG et PatD
+			lenPatG=pMidJoker-szPattern-1;
+			lenPatD=szPattern+lenPattern-pMidJoker-2;
+			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
+			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
+			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
+			strncpy_s(pszPatG,lenPatG+1,szPattern+1,lenPatG);
+			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
+			// PatG doit être dans szToBeCompared avant la position de PatD
+			// PatD doit être dans szToBeCompared à partir de la fin de la position de PatG
+			rc=((strnistr(szToBeCompared,pszPatG,lenToBeCompared-lenPatD)!=NULL) &&
+				(strnistr(szToBeCompared+lenPatG,pszPatD,-1)!=NULL));
 		}
 		else if (lenPattern>1 && szPattern[0]=='*') // cas B : szPattern commence par *
 		{
-			//printf("Cas B\n");
-			
+			// stocke les 2 parties du pattern dans PatG et PatD
+			lenPatG=pMidJoker-szPattern-1;
+			lenPatD=szPattern+lenPattern-pMidJoker-1;
+			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
+			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
+			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
+			strncpy_s(pszPatG,lenPatG+1,szPattern+1,lenPatG);
+			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
+			// szToBeCompared doit finir par PatD et PatG doit être dans szToBeCompared avant la position de PatD
+			rc=((_strnicmp(szToBeCompared+lenToBeCompared-lenPatD,pszPatD,lenPatD)==0) &&
+				(strnistr(szToBeCompared,pszPatG,lenToBeCompared-lenPatD)!=NULL));
 		}
 		else if (lenPattern>1 && szPattern[lenPattern-1]=='*') // cas C : szPattern se termine par *
 		{
-			//printf("Cas C\n");
 			// stocke les 2 parties du pattern dans PatG et PatD
 			lenPatG=pMidJoker-szPattern;
 			lenPatD=szPattern+lenPattern-pMidJoker-2;
-			//printf("lenPatG=%d lenPatD=%d\n",lenPatG,lenPatD);
 			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
 			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
 			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
 			strncpy_s(pszPatG,lenPatG+1,szPattern,lenPatG);
 			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
-			//printf("PatG=%s PatD=%s\n",pszPatG,pszPatD);
 			// szToBeCompared doit commencer par PatG et PatD doit être dans szToBeCompared à partir de la fin de la position de PatG
 			rc=((_strnicmp(szToBeCompared,pszPatG,lenPatG)==0) &&
 				(strnistr(szToBeCompared+lenPatG,pszPatD,-1)!=NULL));
 		}
 		else // cas A : pas de * en début et fin
 		{
-			//printf("Cas A\n");
 			// stocke les 2 parties du pattern dans PatG et PatD
 			lenPatG=pMidJoker-szPattern;
 			lenPatD=szPattern+lenPattern-pMidJoker-1;
-			//printf("lenPatG=%d lenPatD=%d\n",lenPatG,lenPatD);
 			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
 			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
 			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
 			strncpy_s(pszPatG,lenPatG+1,szPattern,lenPatG);
 			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
-			//printf("PatG=%s PatD=%s\n",pszPatG,pszPatD);
 			// szToBeCompared doit commencer par PatG et finir par PatD pour matcher
 			rc=((_strnicmp(szToBeCompared,pszPatG,lenPatG)==0) &&
 				(_strnicmp(szToBeCompared+lenToBeCompared-lenPatD,pszPatD,lenPatD)==0));
