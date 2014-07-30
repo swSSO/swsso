@@ -3883,7 +3883,7 @@ int AddApplicationFromCurrentWindow(void)
 		HWND wChromePopup=GetChromePopupHandle(w,-1);
 		if (wChromePopup==NULL) // pas de popup trouvée, c'est du contenu chrome Web
 		{
-			iType=UNK; // pas UNK car WEBSSO pas supporté par Chrome
+			iType=UNK; // permet de récupérer les configs WEB ou XEB 
 			pszURL=GetChromeURL(w);
 			// ISSUE#142 : si pszURL=NULL, mieux vaut s'arrêter même si en fait ça ne crashe pas car bien géré partout
 			// ISSUE#155
@@ -3957,7 +3957,9 @@ doConfig:
 				{
 					// le UNK était utile dans la requete WEB pour récupérer configs WEB et XEB, maintenant il 
 					// s'agit de proposer une config par défaut la plus aboutie possible
-					if (iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
+					// ISSUE#162
+					// if (iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
+					if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
 				}
 				gptActions[giNbActions].iType=iType;
 
