@@ -1053,7 +1053,7 @@ BOOL swStringMatch(char *szToBeCompared,char *szPattern)
 	char *pMidJoker;
 	char *pszPatG=NULL;
 	char *pszPatD=NULL;
-	int lenPatG, lenPatD;
+	int lenPatG,lenPatD;
 	
 	//TROP VERBEUX ! TRACE((TRACE_DEBUG,_F_, "szToBeCompared=%s szPattern=%s",szToBeCompared,szPattern));
 	if (szToBeCompared==NULL || szPattern==NULL) goto end;
@@ -1074,8 +1074,8 @@ BOOL swStringMatch(char *szToBeCompared,char *szPattern)
 			lenPatG=pMidJoker-szPattern-1;
 			lenPatD=szPattern+lenPattern-pMidJoker-2;
 			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
-			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
-			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
+			pszPatG=(char*)malloc(lenPatG+1); if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
+			pszPatD=(char*)malloc(lenPatD+1); if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
 			strncpy_s(pszPatG,lenPatG+1,szPattern+1,lenPatG);
 			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
 			// PatG doit être dans szToBeCompared avant la position de PatD
@@ -1089,8 +1089,8 @@ BOOL swStringMatch(char *szToBeCompared,char *szPattern)
 			lenPatG=pMidJoker-szPattern-1;
 			lenPatD=szPattern+lenPattern-pMidJoker-1;
 			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
-			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
-			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
+			pszPatG=(char*)malloc(lenPatG+1); if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
+			pszPatD=(char*)malloc(lenPatD+1); if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
 			strncpy_s(pszPatG,lenPatG+1,szPattern+1,lenPatG);
 			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
 			// szToBeCompared doit finir par PatD et PatG doit être dans szToBeCompared avant la position de PatD
@@ -1103,8 +1103,8 @@ BOOL swStringMatch(char *szToBeCompared,char *szPattern)
 			lenPatG=pMidJoker-szPattern;
 			lenPatD=szPattern+lenPattern-pMidJoker-2;
 			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
-			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
-			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
+			pszPatG=(char*)malloc(lenPatG+1); if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
+			pszPatD=(char*)malloc(lenPatD+1); if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
 			strncpy_s(pszPatG,lenPatG+1,szPattern,lenPatG);
 			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
 			// szToBeCompared doit commencer par PatG et PatD doit être dans szToBeCompared à partir de la fin de la position de PatG
@@ -1117,8 +1117,8 @@ BOOL swStringMatch(char *szToBeCompared,char *szPattern)
 			lenPatG=pMidJoker-szPattern;
 			lenPatD=szPattern+lenPattern-pMidJoker-1;
 			if (lenToBeCompared<lenPatG+lenPatD) goto end; // ne peut pas matcher si plus courte que la taille des 2 patterns
-			pszPatG=(char*)malloc(lenPatG+1); //if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
-			pszPatD=(char*)malloc(lenPatD+1); //if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
+			pszPatG=(char*)malloc(lenPatG+1); if (pszPatG==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatG+1)); goto end; }
+			pszPatD=(char*)malloc(lenPatD+1); if (pszPatD==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenPatD+1)); goto end; }
 			strncpy_s(pszPatG,lenPatG+1,szPattern,lenPatG);
 			strncpy_s(pszPatD,lenPatD+1,pMidJoker+1,lenPatD);
 			// szToBeCompared doit commencer par PatG et finir par PatD pour matcher
