@@ -1213,7 +1213,7 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 
-	char szMsg[250];
+	// char szMsg[250];
 	//char szCategoryId[8+1];
 	HTREEITEM hItem,hParentItem,hNextCateg,hNextApp,hNewSelectedItem;
 	int iAction,iCategoryId,iCategory;
@@ -1272,8 +1272,9 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 			MessageBox(w,GetString(IDS_DELETION_FORBIDDEN),"swSSO",MB_ICONEXCLAMATION);
 			goto end;
 		}
-		wsprintf(szMsg,GetString(IDS_DELETE),gptActions[iAction].szApplication);
-		if (MessageBox(w,szMsg,"swSSO",MB_YESNO | MB_ICONQUESTION)==IDNO) goto end;
+		// ISSUE#159 : on ne demande plus de confirmation puisque la suppression est annulable
+		// wsprintf(szMsg,GetString(IDS_DELETE),gptActions[iAction].szApplication);
+		// if (MessageBox(w,szMsg,"swSSO",MB_YESNO | MB_ICONQUESTION)==IDNO) goto end;
 		TRACE((TRACE_INFO,_F_,"SUPPRESSION application %ld",iAction));
 		// effacement dans le fichier : ne me semble plus utile depuis que le fichier est réécrit 
 		// complètement à chaque sauvegarde => supprimé en 0.90B1
