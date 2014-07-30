@@ -348,7 +348,7 @@ FONT 8, "Tahoma"
     AUTOCHECKBOX    "&Ne plus me demander mon mot de passe sur cet ordinateur", CK_SAVE, 60, 63, 199, 11, 0, WS_EX_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 156, 85, 50, 14, WS_DISABLED, WS_EX_LEFT
     PUSHBUTTON      "Annuler", IDCANCEL, 210, 85, 50, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "Mot de passe &oublié ?", PB_MDP_OUBLIE, 71, 85, 81, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "Mot de passe &oublié ?", PB_MDP_OUBLIE, 7, 85, 81, 14, 0, WS_EX_LEFT
     LTEXT           "&Mot de passe :", IDC_STATIC, 9, 47, 48, 10, SS_LEFT, WS_EX_LEFT
 }
 
@@ -681,3 +681,4 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
+
