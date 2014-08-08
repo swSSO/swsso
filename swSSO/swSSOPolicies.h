@@ -153,6 +153,8 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_STAT								"Stat"
 #define REGVALUE_WELCOME_MESSAGE					"WelcomeMessage"
 #define REGVALUE_MAX_CONFIGS						"MaxConfigs"
+#define REGVALUE_SERVER_PORT						"ServerPort"
+#define REGVALUE_SERVER_HTTPS						"ServerHTTPS"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -180,6 +182,8 @@ extern int  giLogLevel;						// 0.93 : niveau de log
 extern BOOL gbStat;							// 0.99 : statistiques - ISSUE#106
 extern char gszWelcomeMessage[];			// 1.01 : message de définition du mot de passe maitre dans la fenêtre bienvenue - ISSUE#146
 extern int  giMaxConfigs;					// 1.01 : nb max de configurations - ISSUE#149
+extern BOOL gbServerHTTPS;					// 1.03 - ISSUE#162
+extern int  giServerPort;					// 1.03 - ISSUE#162
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

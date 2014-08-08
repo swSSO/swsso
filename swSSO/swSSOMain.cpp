@@ -101,12 +101,12 @@ char *gpszRDN=NULL;
 char gszComputerName[MAX_COMPUTERNAME_LENGTH+1]="";
 char gszUserName[UNLEN+1]="";
 
-
 char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-// obligé de changer aussi le mot de passe statique pour l'encodage simple car il était trop long d'un caractère !!!
-static const char gcszStaticPwd092[]="1;*$pmoç_-'-é(-èe+==é&&*/}epaw&²1KijahBv15*µµ%?./§q"; 
-static const char gcszStaticPwd093[]="*éAl43HJj8]_3za;?,!ù¨AHI3le!ma!/sw\aw+==,;/§A6YhPM"; 
+static const char gcszK1[]="_1111111";
+static const char gcszK2[]="22222222";
+static const char gcszK3[]="33333333";
+static const char gcszK4[]="44444444";
 
 // 0.91 : pour choix de config (fenêtre ChooseConfig)
 typedef struct
@@ -1593,6 +1593,34 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 		goto end;
 	}
 
+	// mode de fonctionnement sans mot de passe
+	if (gcszK1[0]!='1')
+	{
+		char szTemp[LEN_PWD+1];
+		SecureZeroMemory(szTemp,LEN_PWD+1);
+		memcpy(szTemp,gcszK1,8);
+		memcpy(szTemp+8,gcszK2,8);
+		memcpy(szTemp+16,gcszK3,8);
+		memcpy(szTemp+24,gcszK4,8);
+		memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+
+		if (CheckMasterPwd(szTemp)==0)
+		{
+			BYTE AESKeyData[AES256_KEY_LEN];
+			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData);
+			ret=0;
+		}
+		else
+		{
+			swLogEvent(EVENTLOG_ERROR_TYPE,MSG_GENERIC_START_ERROR,NULL,NULL,NULL,0);
+			char szErrMsg[1024+1];
+			strcpy_s(szErrMsg,sizeof(szErrMsg),GetString(IDS_GENERIC_STARTING_ERROR));
+			MessageBox(NULL,szErrMsg,GetString(IDS_MESSAGEBOX_TITLE),MB_OK | MB_ICONSTOP);
+		}
+		SecureZeroMemory(szTemp,LEN_PWD+1);
+		goto end;
+	}	
+
 	//0.76 : DPAPI
 	if (bUseDPAPI)
 	{
@@ -2043,9 +2071,26 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			giPwdProtection=PP_WINDOWS;
 			SaveConfigHeader();
 		}
-		else
+		else if (gcszK1[0]=='1')
 		{
 			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SIMPLE_PWD_CHOICE),NULL,SimplePwdChoiceDialogProc)!=IDOK) goto end;
+		}
+		else
+		{
+			BYTE AESKeyData[AES256_KEY_LEN];
+			giPwdProtection=PP_ENCRYPTED;
+			// génère le sel qui sera pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
+			swGenPBKDF2Salt();
+			char szTemp[LEN_PWD+1];
+			SecureZeroMemory(szTemp,LEN_PWD+1);
+			memcpy(szTemp,gcszK1,8);
+			memcpy(szTemp+8,gcszK2,8);
+			memcpy(szTemp+16,gcszK3,8);
+			memcpy(szTemp+24,gcszK4,8);
+			memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData);
+			StoreMasterPwd(szTemp);
+			SaveConfigHeader();
 		}
 	}
 	else // 

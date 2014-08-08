@@ -169,6 +169,7 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	HINTERNET hRequest = NULL;
 	T_PROXYPARAMS *pProxyParams=NULL;
 	DWORD dwHTTPResultMaxSize;
+	DWORD dwOptions;
 
 	// 0.89 : si pas de paramètres proxy reçus, utilise les valeurs globales
 	if (pInProxyParams==NULL)
@@ -199,14 +200,21 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 
 	// WinHttpConnect
 	MultiByteToWideChar(CP_ACP,0,gszServerAddress,-1,gwcTmp1_512,sizeof(gwcTmp1_512)-1);
-    hConnect = WinHttpConnect(hSession,gwcTmp1_512,INTERNET_DEFAULT_HTTP_PORT, 0);
+    hConnect = WinHttpConnect(hSession,gwcTmp1_512,(INTERNET_PORT)giServerPort, 0); // ISSUE€162 (port configurable)
 	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s)",gszServerAddress)); goto end; }
     
 	// WinHttpOpenRequest
 	MultiByteToWideChar(CP_ACP,0,szRequest,-1,gwcTmp1_512,sizeof(gwcTmp1_512)-1);
-    hRequest = WinHttpOpenRequest( hConnect,L"GET",gwcTmp1_512,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,0);
+    hRequest = WinHttpOpenRequest( hConnect,L"GET",gwcTmp1_512,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,gbServerHTTPS?WINHTTP_FLAG_SECURE:0); // ISSUE#162 (HTTPS possible)
 	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(GET %s%s)",gszServerAddress,szRequest)); 
 	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(GET %s)",szRequest)); goto end; }
+
+	if (gbServerHTTPS)
+	{
+		dwOptions=SECURITY_FLAG_IGNORE_CERT_CN_INVALID | SECURITY_FLAG_IGNORE_CERT_DATE_INVALID | SECURITY_FLAG_IGNORE_UNKNOWN_CA;
+		brc=WinHttpSetOption(hRequest,WINHTTP_OPTION_SECURITY_FLAGS,&dwOptions,sizeof(dwOptions));
+		if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpSetOption(0x%08lx)=0x%08lx",dwOptions,GetLastError())); goto end; }
+	}
 
 	if (*(pProxyParams->szProxyUser)!=0)
 	{
@@ -214,7 +222,7 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 		MultiByteToWideChar(CP_ACP,0,pProxyParams->szProxyPwd,-1,gwcTmp2_512,sizeof(gwcTmp2_512)-1);
 		brc=WinHttpSetCredentials(hRequest,WINHTTP_AUTH_TARGET_PROXY,WINHTTP_AUTH_SCHEME_BASIC,gwcTmp1_512,gwcTmp2_512,NULL);
 		TRACE((TRACE_INFO,_F_,"WinHttpSetCredentials(user:%s)",pProxyParams->szProxyUser)); 
-		if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpSetCredentials()")); goto end; }
+		if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpSetCredentials()=0x%08lx",GetLastError())); goto end; }
 	}
 
 	brc = WinHttpSendRequest(hRequest,WINHTTP_NO_ADDITIONAL_HEADERS, 0,WINHTTP_NO_REQUEST_DATA,0,0,0);

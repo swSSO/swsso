@@ -104,6 +104,8 @@ int  giLogLevel=LOG_LEVEL_NONE;				// 0.93 : niveau de log
 BOOL gbStat=FALSE;							// 0.99 : statistiques - ISSUE#106
 char gszWelcomeMessage[512+1];				// 1.01 : message de définition du mot de passe maitre dans la fenêtre bienvenue - ISSUE#146
 int  giMaxConfigs=500;						// 1.01 : nb max de configurations - ISSUE#149
+BOOL gbServerHTTPS=FALSE;						// 1.03 - ISSUE#162
+int  giServerPort=INTERNET_DEFAULT_HTTP_PORT;	// 1.03 - ISSUE#162
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -447,6 +449,15 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_MAX_CONFIGS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) giMaxConfigs=(dwValue<10 ? 10:(int)dwValue); // mini 10 
 
+		// ISSUE#162
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SERVER_PORT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giServerPort=(int)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SERVER_HTTPS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbServerHTTPS=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -515,6 +526,8 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_IdMaxCommonChars=%d"	,giPwdPolicy_IdMaxCommonChars));
 	TRACE((TRACE_INFO,_F_,"ENTERPRISE OPTIONS ---------"));
 	TRACE((TRACE_INFO,_F_,"gszServerAddress=%s"				,gszServerAddress));
+	TRACE((TRACE_INFO,_F_,"gszServerPort=%d"				,giServerPort));
+	TRACE((TRACE_INFO,_F_,"gszServerHTTPS=%d"				,gbServerHTTPS));
 	TRACE((TRACE_INFO,_F_,"gszWebServiceAddress=%s"			,gszWebServiceAddress));
 	TRACE((TRACE_INFO,_F_,"gszErrorMessageIniFile=%s"		,gszErrorMessageIniFile));
 	TRACE((TRACE_INFO,_F_,"giRecoveryKeyId=%04d"			,giRecoveryKeyId));
