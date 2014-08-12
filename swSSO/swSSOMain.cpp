@@ -103,7 +103,7 @@ char gszUserName[UNLEN+1]="";
 
 char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-static const char gcszK1[]="_1111111";
+static const char gcszK1[]="11111111";
 static const char gcszK2[]="22222222";
 static const char gcszK3[]="33333333";
 static const char gcszK4[]="44444444";
