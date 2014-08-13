@@ -103,10 +103,7 @@ char gszUserName[UNLEN+1]="";
 
 char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-static const char gcszK1[]="11111111";
-static const char gcszK2[]="22222222";
-static const char gcszK3[]="33333333";
-static const char gcszK4[]="44444444";
+const char gcszK1[]="_1111111";
 
 // 0.91 : pour choix de config (fenêtre ChooseConfig)
 typedef struct
@@ -123,6 +120,10 @@ HANDLE ghPwdChangeEvent=NULL; // 0.96
 int giLastApplicationSSO=-1;		// dernière application sur laquelle le SSO a été réalisé
 int giLastApplicationConfig=-1; // dernière application utilisée (soit SSO soit config)
 SYSTEMTIME gLastLoginTime; // ISSUE#106
+
+T_DOMAIN gtabDomains[50];
+int giNbDomains=0;
+
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -249,7 +250,8 @@ int KBSimSSO(HWND w, int iAction)
 	// déchiffrement du champ mot de passe
 	if ((*gptActions[iAction].szPwdEncryptedValue!=0)) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 	{
-		char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+		// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+		char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
 		if (pszPassword!=NULL) 
 		{
 			strcpy_s(szDecryptedPassword,sizeof(szDecryptedPassword),pszPassword);
@@ -1658,12 +1660,7 @@ end:
 	return ret;
 }
 
-typedef struct 
-{
-	int iDomainId;
-	char szDomainLabel[LEN_DOMAIN+1];
-}
-T_DOMAIN;
+
 
 //-----------------------------------------------------------------------------
 // SelectDomainDialogProc()
@@ -1752,16 +1749,11 @@ static int CALLBACK SelectDomainDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 }
 
 //-----------------------------------------------------------------------------
-// SelectDomain()
+// GetDomains()
 //-----------------------------------------------------------------------------
-// Récupère la liste des domaines disponibles sur le serveur et s'il y en 
-// a plus d'un propose le choix à l'utilisateur
-// rc :  0 - OK, l'utilisateur a choisi, le domaine est renseigné dans giDomainId et gszDomainLabel
-//    :  1 - Il n'y avait qu'un seul domaine, l'utilisateur n'a rien vu mais le domaine est bien renseigné
-//    :  2 - L'utilisateur a annulé
-//    : -1 - Erreur (serveur non disponible, ...)
+// Récupère la liste des domaines disponibles sur le serveur
 //-----------------------------------------------------------------------------
-int SelectDomain(void)
+int GetDomains(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
@@ -1778,10 +1770,9 @@ int SelectDomain(void)
 	IXMLDOMNode		*pNextChildElement=NULL;
 	VARIANT_BOOL	vbXMLLoaded=VARIANT_FALSE;
 	BSTR bstrNodeName=NULL;
-	T_DOMAIN tDomains[50];
 	char tmp[10];
-	int iNbDomains=0;
-	int ret;
+
+	giNbDomains=0;
 
 	// requete le serveur pour obtenir la liste des domaines
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getdomains",gszWebServiceAddress);
@@ -1817,11 +1808,11 @@ int SelectDomain(void)
 			if (CompareBSTRtoSZ(bstrNodeName,"id")) 
 			{
 				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
-				tDomains[iNbDomains].iDomainId=atoi(tmp);
+				gtabDomains[giNbDomains].iDomainId=atoi(tmp);
 			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"label")) 
 			{
-				StoreNodeValue(tDomains[iNbDomains].szDomainLabel,sizeof(tDomains[iNbDomains].szDomainLabel),pChildElement);
+				StoreNodeValue(gtabDomains[giNbDomains].szDomainLabel,sizeof(gtabDomains[giNbDomains].szDomainLabel),pChildElement);
 			}
 			// rechercher ses frères et soeurs
 			pChildElement->get_nextSibling(&pNextChildElement);
@@ -1833,44 +1824,65 @@ int SelectDomain(void)
 		pChildApp->Release();
 		pChildApp=pNextChildApp;
 		TRACE((TRACE_DEBUG,_F_,"</domain>"));
-		iNbDomains++;
+		giNbDomains++;
 	} // while(pNode!=NULL)
-	tDomains[iNbDomains].iDomainId=-1;
+	gtabDomains[giNbDomains].iDomainId=-1;
 
 #ifdef TRACES_ACTIVEES
 	int trace_i;
-	for (trace_i=0;trace_i<iNbDomains;trace_i++)
+	for (trace_i=0;trace_i<giNbDomains;trace_i++)
 	{
-		TRACE((TRACE_INFO,_F_,"Domaine %d : id=%d label=%s",trace_i,tDomains[trace_i].iDomainId,tDomains[trace_i].szDomainLabel));
+		TRACE((TRACE_INFO,_F_,"Domaine %d : id=%d label=%s",trace_i,gtabDomains[trace_i].iDomainId,gtabDomains[trace_i].szDomainLabel));
 	}
 #endif
+	rc=0;
+end:
+	if (bstrXML!=NULL) SysFreeString(bstrXML);
+	if (bstrNodeName!=NULL) SysFreeString(bstrNodeName);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
 
-	if (iNbDomains==0) // aucun domaine
+//-----------------------------------------------------------------------------
+// SelectDomain()
+//-----------------------------------------------------------------------------
+// Récupère la liste des domaines disponibles sur le serveur et s'il y en 
+// a plus d'un propose le choix à l'utilisateur
+// rc :  0 - OK, l'utilisateur a choisi, le domaine est renseigné dans giDomainId et gszDomainLabel
+//    :  1 - Il n'y avait qu'un seul domaine, l'utilisateur n'a rien vu mais le domaine est bien renseigné
+//    :  2 - L'utilisateur a annulé
+//-----------------------------------------------------------------------------
+int SelectDomain(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	int ret;
+
+	if (giNbDomains==0) // aucun domaine
 	{
 		giDomainId=1; *gszDomainLabel=0;
 		rc=1; goto end;
 	}
-	else if (iNbDomains==1) // domaine commun -> renseigne le domaine commun
+	else if (giNbDomains==1) // domaine commun -> renseigne le domaine commun
 	{
-		giDomainId=tDomains[0].iDomainId;
-		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),tDomains[0].szDomainLabel);
+		giDomainId=gtabDomains[0].iDomainId;
+		strcpy_s(gszDomainLabel,sizeof(gtabDomains),gtabDomains[0].szDomainLabel);
 		rc=1; goto end;
 	}
-	else if (iNbDomains==2) // domaine commun + 1 domaine spécifique -> renseigne le domaine spécifique
+	else if (giNbDomains==2) // domaine commun + 1 domaine spécifique -> renseigne le domaine spécifique
 	{
-		giDomainId=tDomains[1].iDomainId;
-		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),tDomains[1].szDomainLabel);
+		giDomainId=gtabDomains[1].iDomainId;
+		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),gtabDomains[1].szDomainLabel);
 		rc=1; goto end;
 	}
 	else // plus de 2 domaines, demande à l'utilisateur de choisir
 	{
-		ret=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_SELECT_DOMAIN),NULL,SelectDomainDialogProc,(LPARAM)tDomains);
+		ret=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_SELECT_DOMAIN),NULL,SelectDomainDialogProc,(LPARAM)gtabDomains);
 		if (ret==IDCANCEL) { rc=2; goto end; }
 	}
 	rc=0;
 end:
 	SaveConfigHeader();
-	if (bstrXML!=NULL) SysFreeString(bstrXML);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -2241,8 +2253,13 @@ askpwd:
 	TRACE((TRACE_DEBUG,_F_,"giNbActions=%d gbGetAllConfigsAtFirstStart=%d giDomainId=%d",giNbActions,gbGetAllConfigsAtFirstStart,giDomainId));
 	if (giNbActions==0 && gbGetAllConfigsAtFirstStart) 
 	{
-		// 0.94 : gestion des domaines
-		if (giDomainId==1) // domaine non renseigné dans le .ini 
+		// 1.03 : récupère la liste des domaines (avant, était dans SelectDomain, mais doit être fait dans tous les cas pour alimenter le menu Upload)
+		if (GetDomains()!=0) 
+		{ 
+			MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); 
+			giNbDomains=0;
+		}
+		if (giDomainId==1 && giNbDomains!=0) // domaine non renseigné dans le .ini 
 		{
 			int ret= SelectDomain();
 			// ret:  0 - OK, l'utilisateur a choisi, le domaine est renseigné dans giDomainId et gszDomainLabel
@@ -2264,6 +2281,10 @@ askpwd:
 		// 0.91 : si demandé, récupère les nouvelles configurations et/ou les configurations modifiées
 		if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
 		{
+			// 1.03 : récupère la liste des domaines (doit être fait dans tous les cas pour alimenter le menu Upload)
+			// mais si échoue, ne doit pas être bloquant ni générer de message d'erreur (mode déconnecté)
+			// Pour ne pas générer une requête inutile, on ne fait que pour les utilisateurs qui ont le droit d'utiliser le menu upload
+			if (gbInternetManualPutConfig) GetDomains();
 			GetNewOrModifiedConfigsFromServer();
 		}
 	}
@@ -2281,6 +2302,11 @@ askpwd:
 
 	// initialisation SSO Web (IE)
 	if (SSOWebInit()!=0) { iError=-1; goto end; }
+	
+	// 1.03 : si configuré pour utiliser le mot de passe AD comme mot de passe secondaire (%ADPASSWORD%),
+	//        vérifie que la date de dernier changement de mot de passe AD et le cas échéant demande à 
+	//        l'utilisateur de le saisir
+	if (gbUseADPasswordForAppLogin) CheckADPwdChange(); // ne doit pas être bloquant si échoue, car peut être lié à AD non joignable par ex.
 	
 	// création fenêtre technique (réception des messages)
 	gwMain=CreateMainWindow();

@@ -28,56 +28,11 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// stdafx.h
+// swSSOAd.h
 //-----------------------------------------------------------------------------
 
-#include <mshtml.h>
-#include <oleacc.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <malloc.h>
-#include <windows.h>
-#include <commctrl.h>
-#include <string.h>
-#include <tchar.h>
-#include <wincrypt.h>  
-#include <Wtsapi32.h>
-#include <msxml2.h>
-#include <Winhttp.h>
-#include <Exdisp.h>
-//#include <LM.h>
-//#include <Lmapibuf.h>
-//#include <Lmstats.h>
-#include <Lmcons.h>
-#include <MsHtmcid.h>
-#include <sddl.h>
-#include <Iads.h>
-#include <Adshlp.h>
-
-#include "resource.h"
-#include "swSSOTrace.h"
-#include "swSSOCrypt.h"
-#include "swSSOAppNsites.h"
-#include "swSSOConfig.h"
-#include "swSSOTools.h"
-#include "swSSOLaunchApp.h"
-#include "swSSOPolicies.h"
-#include "swSSORecovery.h"
-#include "swSSOMain.h"
-#include "swSSOTray.h"
-#include "swSSOWin.h"
-#include "swSSOWeb.h"
-#include "swSSOXeb.h"
-#include "swSSOFirefox.h"
-#include "swSSOChrome.h"
-#include "swSSOFirefoxTools.h"
-#include "swSSOIETools.h"
-#include "ISimpleDOMNode.h"
-#include "ISimpleDOMDocument.h"
-#include "swSSOLogs.h"
-#include "swSSOLogMessages.h"
-#include "swSSOAD.h"
-
-
-
+int GetUserDomainAndComputer(void);
+int GetLastADPwdChange(char *pszLastADPwdChange);
+int AskADPwd(void);
+int CheckADPwdChange();
+char *GetDecryptedPwd(char *szPwdEncryptedValue);

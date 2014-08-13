@@ -46,6 +46,11 @@ function showAll($active,$domain)
 		$param_title="AES_DECRYPT(title,'"._AESPWD_."')";
 		$param_szFullPathName="AES_DECRYPT(szFullPathName,'"._AESPWD_."')";
 		$param_szName="AES_DECRYPT(szName,'"._AESPWD_."')";
+		$param_id1Value="AES_DECRYPT(id1Value,'"._AESPWD_."')";
+		$param_id2Value="AES_DECRYPT(id2Value,'"._AESPWD_."')";
+		$param_id3Value="AES_DECRYPT(id3Value,'"._AESPWD_."')";
+		$param_id4Value="AES_DECRYPT(id4Value,'"._AESPWD_."')";
+		$param_pwdValue="AES_DECRYPT(pwdValue,'"._AESPWD_."')";
 	}
 	else
 	{
@@ -53,6 +58,11 @@ function showAll($active,$domain)
 		$param_title="title";
 		$param_szFullPathName="szFullPathName";
 		$param_szName="szName";
+		$param_id1Value="id1Value";
+		$param_id2Value="id2Value";
+		$param_id3Value="id3Value";
+		$param_id4Value="id4Value";
+		$param_pwdValue="pwdValue";
 	}
 	if ($active==1)
 		echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > <a href=./admin.php?action=menu"._MENUSUFFIX_."&domain=".$domain.">Gestion du domaine ".getDomainLabel($cnx,$domain)."</a> > Liste des configurations actives</b><br/><br/>";
@@ -63,11 +73,22 @@ function showAll($active,$domain)
 	{
 		$szWhere=" AND domainId=".$domain;
 	}
-		
-	$szRequest="select id,".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
-			   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
-			   ",categId,lastModified,domainId from "._TABLE_PREFIX_."config where active=".$active." ".
-			   $szWhere." order by domainId,categId,id";
+	if (_ENCRYPT_=="TRUE")
+	{
+		$szRequest="select id,".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
+				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
+				   ",categId,lastModified,domainId,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
+				   ",".$param_id4Value.",".$param_pwdValue.
+				   " from "._TABLE_PREFIX_."config where active=".$active." ".
+				   $szWhere." order by domainId,categId,id";
+	}	
+	else
+	{
+		$szRequest="select id,".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
+				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
+				   ",categId,lastModified,domainId from "._TABLE_PREFIX_."config where active=".$active." ".
+				   $szWhere." order by domainId,categId,id";
+	}
 	if ($_GET['debug']!="") echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -95,6 +116,12 @@ function showAll($active,$domain)
 	echo "<th>4eme id.</th>";
 	echo "<th>szFullPathName</th>";
 	echo "<th>lastModified</th>";
+	echo "<th>withIdPwd</th>";
+	echo "<th>id1Value</th>";
+	echo "<th>id2Value</th>";
+	echo "<th>id3Value</th>";
+	echo "<th>id4Value</th>";
+	echo "<th>pwdValue</th>";
 	echo "</tr>";
 	for ($i=0;$i<mysql_num_rows($req);$i++)
 	{
@@ -122,6 +149,12 @@ function showAll($active,$domain)
 		if ($ligne[14]!="") echo "<td>".utf8_encode($ligne[14])."(".utf8_encode($ligne[15]).")</td>"; else echo "<td align=center>-</td>"; // id4Name+id4Type
 		if ($ligne[16]!="") echo "<td>".utf8_encode($ligne[16])."</td>"; else echo "<td align=center>-</td>";   // szFullPathName
 		if ($ligne[18]!="") echo "<td>".utf8_encode($ligne[18])."</td>"; else echo "<td align=center>-</td>";   // lastModified
+		if ($ligne[20]!="") echo "<td>".utf8_encode($ligne[20])."</td>"; else echo "<td align=center>-</td>";   // withIdPwd
+		if ($ligne[21]!="") echo "<td>".utf8_encode($ligne[21])."</td>"; else echo "<td align=center>-</td>";   // id1Value
+		if ($ligne[22]!="") echo "<td>".utf8_encode($ligne[22])."</td>"; else echo "<td align=center>-</td>";   // id2Value
+		if ($ligne[23]!="") echo "<td>".utf8_encode($ligne[23])."</td>"; else echo "<td align=center>-</td>";   // id3Value
+		if ($ligne[24]!="") echo "<td>".utf8_encode($ligne[24])."</td>"; else echo "<td align=center>-</td>";   // id4Value
+		if ($ligne[25]!="") echo "<td>".utf8_encode($ligne[25])."</td>"; else echo "<td align=center>-</td>";   // pwdValue
 		echo "</tr>";
 	}
 	echo "</table>";

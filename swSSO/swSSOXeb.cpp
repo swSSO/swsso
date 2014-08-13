@@ -532,7 +532,8 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accSelect(SELFLAG_TAKEFOCUS)=0x%08lx",hr)); } 
 			if ((*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0))
 			{
-				char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
+				//char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
+				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
 				if (pszPassword!=NULL) 
 				{
 					KBSim(FALSE,200,pszPassword,TRUE);				
@@ -550,7 +551,8 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			// KBSimEx(NULL,gptActions[ptSuivi->iAction].szValidateName,"","","","","");
 			// ISSUE#101 suite : on autorise aussi le mot de passe sinon c'est naze...
 			char szDecryptedPassword[LEN_PWD+1];
-			char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
+			// char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
+			char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
 			if (pszPassword!=NULL) 
 			{
 				strcpy_s(szDecryptedPassword,sizeof(szDecryptedPassword),pszPassword);

@@ -75,6 +75,11 @@ extern HCRYPTKEY ghKey1;
 extern HCRYPTKEY ghKey2;
 extern HWND gwAskPwd ; 
 
+extern const char gcszK1[8+1];
+extern const char gcszK2[8+1];
+extern const char gcszK3[8+1];
+extern const char gcszK4[8+1];
+
 extern SID *gpSid;
 extern char *gpszRDN;
 extern char gszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
@@ -86,6 +91,15 @@ extern char szPwdMigration093[]; // stockage temporaire du mot de passe pour mig
 
 extern int giLastApplicationSSO;   
 extern int giLastApplicationConfig;
+
+typedef struct 
+{
+	int iDomainId;
+	char szDomainLabel[LEN_DOMAIN+1];
+}
+T_DOMAIN;
+extern T_DOMAIN gtabDomains[];
+extern int giNbDomains;
 
 extern SYSTEMTIME gLastLoginTime; // ISSUE#106
 

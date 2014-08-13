@@ -101,6 +101,9 @@
     <ClCompile Include="swSSOXeb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="swSSOAD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="hand.cur">
@@ -173,6 +176,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="swSSOXeb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOAD.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -52,7 +52,7 @@ int WindowChangeMasterPwd(BOOL bForced);
 void SavePortal();
 int AddApplicationFromCurrentWindow(void);
 void ReactivateApplicationFromCurrentWindow(void);
-int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId);
+int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploadIdPwd);
 int InternetCheckProxyParams(HWND w);
 void InternetCheckVersion();
 int GetProxyConfig(const char *szComputerName, BOOL *pbInternetUseProxy, char *szProxyURL,char *szProxyUser,char *szProxyPwd);
@@ -141,3 +141,6 @@ extern T_SALT gSalts;
 
 #define USER_LEN 256	// limite officielle
 #define DOMAIN_LEN 256	// limite à moi...
+
+extern char gszLastADPwdChange[14+1];					// 1.03 : date de dernier changement de mdp dans l'AD, format AAAAMMJJHHMMSS
+extern char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1];	// 1.03 : valeur du mot de passe AD (fourni par l'utilisateur)

@@ -146,7 +146,8 @@ static int CALLBACK WinEnumChildProc(HWND w, LPARAM lp)
 		TRACE((TRACE_DEBUG,_F_,"Saisie pwd"));
 		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 		{
-			char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
 			if (pszPassword!=NULL) 
 			{
 				// 0.85B6
@@ -292,7 +293,8 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 				hr=pChild->accSelect(SELFLAG_TAKEFOCUS,vtSelf);
 				if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 				{
-					char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+					//char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+					char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
 					if (pszPassword!=NULL) 
 					{
 						TRACE((TRACE_PWD,_F_,"Champ %d Saisie pwd : '%s'",l,pszPassword));
@@ -455,7 +457,8 @@ void FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 		rc=W7PopupSetTabOnField(w,pLevel1Child,4);
 		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 		{
-			char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
 			if (pszPassword!=NULL) 
 			{
 				TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
@@ -500,7 +503,8 @@ void FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 		rc=W7PopupSetTabOnField(w,pLevel2Child,3);
 		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 		{
-			char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
 			if (pszPassword!=NULL) 
 			{
 				TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));

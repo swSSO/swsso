@@ -126,15 +126,17 @@ static int giSetForegroundTimer=20;
 #define MENU_SUPPRIMER  50005
 #define MENU_AJOUTER_APPLI	50006
 #define MENU_AJOUTER_CATEG	50007
-#define MENU_UPLOADER_COMMUN   50008
-#define MENU_UPLOADER_DOMAINE   50009
+#define MENU_UPLOADER   50008
+#define MENU_UPLOADER_ID_PWD   50009
 #define MENU_DUPLIQUER   50010
 #define MENU_IMPORTER   50011
 #define MENU_EXPORTER   50012
 #define MENU_CHANGER_IDS 50013
 #define MENU_LANCER_APPLI 50014
 #define MENU_AJOUTER_COMPTE 50015
-#define SUBMENU_CATEG	50100
+#define SUBMENU_CATEG			50100
+#define SUBMENU_UPLOAD			50200
+#define SUBMENU_UPLOAD_ID_PWD	50300
 
 #define TYPE_APPLICATION	1
 #define TYPE_CATEGORY		2
@@ -1664,7 +1666,9 @@ static void TVShowContextMenu(HWND w)
 	POINT pt;
 	GetCursorPos(&pt);
 	HMENU hMenu=NULL;
-	HMENU hSubMenu=NULL;
+	HMENU hSubMenuCateg=NULL;
+	HMENU hSubMenuUpload=NULL;
+	HMENU hSubMenuUploadIdPwd=NULL;
 	HTREEITEM hItem,hParentItem;
 	int iAction;
 	int i;
@@ -1672,6 +1676,18 @@ static void TVShowContextMenu(HWND w)
 
 	hMenu=CreatePopupMenu(); if (hMenu==NULL) goto end;
 
+	// Construction des sous-menus upload et upload avec id et mdp vers domaine
+	if (giNbDomains>1)
+	{
+		hSubMenuUpload=CreatePopupMenu(); if (hSubMenuUpload==NULL) goto end;
+		hSubMenuUploadIdPwd=CreatePopupMenu(); if (hSubMenuUploadIdPwd==NULL) goto end;
+		for (i=0;i<giNbDomains;i++) 
+		{
+			InsertMenu(hSubMenuUpload, (UINT)-1, MF_BYPOSITION,SUBMENU_UPLOAD+i,gtabDomains[i].szDomainLabel);
+			InsertMenu(hSubMenuUploadIdPwd, (UINT)-1, MF_BYPOSITION,SUBMENU_UPLOAD_ID_PWD+i,gtabDomains[i].szDomainLabel);
+		}
+	}
+	
 	hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
 	if (hItem==NULL) { TRACE((TRACE_INFO,_F_,"TreeView_GetSelection()->NULL"));goto end;}
 	
@@ -1697,11 +1713,17 @@ static void TVShowContextMenu(HWND w)
 		if (gbEnableOption_ManualPutConfig && gbInternetManualPutConfig && TreeView_GetChild(GetDlgItem(w,TV_APPLICATIONS),hItem)!=NULL)
 		{
 			if (bAddSeparator) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_COMMUN,GetString(IDS_MENU_UPLOADER_COMMUN));
-			if (giDomainId!=1)
+			if (giNbDomains>1)
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_POPUP,(UINT_PTR)hSubMenuUpload,GetString(IDS_MENU_UPLOADER_VERS));
+			else
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER,GetString(IDS_MENU_UPLOADER));
+			bAddSeparator=TRUE;
+			if (gbShowMenu_UploadWithIdPwd)
 			{
-				wsprintf(buf2048,GetString(IDS_MENU_UPLOADER_DOMAINE),gszDomainLabel);
-				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_DOMAINE,buf2048);
+				if (giNbDomains>1)
+					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_POPUP,(UINT_PTR)hSubMenuUploadIdPwd,GetString(IDS_MENU_UPLOADER_IDPWD_VERS));
+				else
+					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_ID_PWD,GetString(IDS_MENU_UPLOADER_IDPWD));
 			}
 		}
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
@@ -1711,8 +1733,8 @@ static void TVShowContextMenu(HWND w)
 	else // c'est une appli
 	{
 		// Construction sous-menu catégories
-		hSubMenu=CreatePopupMenu(); if (hSubMenu==NULL) goto end;
-		for (i=0;i<giNbCategories;i++) InsertMenu(hSubMenu, (UINT)-1, MF_BYPOSITION,SUBMENU_CATEG+i,gptCategories[i].szLabel);
+		hSubMenuCateg=CreatePopupMenu(); if (hSubMenuCateg==NULL) goto end;
+		for (i=0;i<giNbCategories;i++) InsertMenu(hSubMenuCateg, (UINT)-1, MF_BYPOSITION,SUBMENU_CATEG+i,gptCategories[i].szLabel);
 
 		iAction=TVItemGetLParam(w,hItem);
 		if (iAction==-1) goto end;
@@ -1734,7 +1756,7 @@ static void TVShowContextMenu(HWND w)
 			bAddSeparator=TRUE;
 		}
 		if (gbShowMenu_Rename) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_RENOMMER,GetString(IDS_MENU_RENOMMER));
-		if (gbShowMenu_Move) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION |MF_POPUP,(UINT_PTR)hSubMenu,GetString(IDS_MENU_DEPLACER));
+		if (gbShowMenu_Move) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION |MF_POPUP,(UINT_PTR)hSubMenuCateg,GetString(IDS_MENU_DEPLACER));
 		if (gbShowMenu_Duplicate) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DUPLIQUER,GetString(IDS_MENU_DUPLIQUER));
 		if (gbShowMenu_AddAccount) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COMPTE,GetString(IDS_MENU_AJOUTER_COMPTE));
 		if (gbShowMenu_Delete) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_SUPPRIMER,GetString(IDS_MENU_SUPPRIMER));
@@ -1742,13 +1764,18 @@ static void TVShowContextMenu(HWND w)
 		if (gbInternetManualPutConfig && gbEnableOption_ManualPutConfig)
 		{
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_COMMUN,GetString(IDS_MENU_UPLOADER_COMMUN));
-			if (giDomainId!=1)
-			{
-				wsprintf(buf2048,GetString(IDS_MENU_UPLOADER_DOMAINE),gszDomainLabel);
-				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_DOMAINE,buf2048);
-			}
+			if (giNbDomains>1)
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_POPUP,(UINT_PTR)hSubMenuUpload,GetString(IDS_MENU_UPLOADER_VERS));
+			else
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER,GetString(IDS_MENU_UPLOADER));
 			bAddSeparator=TRUE;
+			if (gbShowMenu_UploadWithIdPwd)
+			{
+				if (giNbDomains>1)
+					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_POPUP,(UINT_PTR)hSubMenuUploadIdPwd,GetString(IDS_MENU_UPLOADER_IDPWD_VERS));
+				else
+					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_ID_PWD,GetString(IDS_MENU_UPLOADER_IDPWD));
+			}
 		}
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
@@ -1757,7 +1784,9 @@ static void TVShowContextMenu(HWND w)
 	SetForegroundWindow(w);
 	TrackPopupMenu(hMenu, TPM_TOPALIGN,pt.x, pt.y, 0, w, NULL );
 end:	
-	if (hSubMenu!=NULL) DestroyMenu(hSubMenu);
+	if (hSubMenuCateg!=NULL) DestroyMenu(hSubMenuCateg);
+	if (hSubMenuUpload!=NULL) DestroyMenu(hSubMenuUpload);
+	if (hSubMenuUploadIdPwd!=NULL) DestroyMenu(hSubMenuUploadIdPwd);
 	if (hMenu!=NULL) DestroyMenu(hMenu);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
@@ -2666,9 +2695,9 @@ end:
 // auquel cas l'ensemble des configurations de la catégories sont remontées 
 // sur le serveur
 //-----------------------------------------------------------------------------
-void UploadConfig(HWND w, int iDomainId)
+void UploadConfig(HWND w, int iDomainId,BOOL bUploadIdPwd)
 {
-	TRACE((TRACE_ENTER,_F_, ""));
+	TRACE((TRACE_ENTER,_F_, "iDomainId=%d bUploadIdPwd=%d",iDomainId,bUploadIdPwd));
 
 	HTREEITEM hItem,hParentItem,hNextApp;
 	int iAction,iCategoryId;
@@ -2694,7 +2723,7 @@ void UploadConfig(HWND w, int iDomainId)
 			iAction=TVItemGetLParam(w,hNextApp); 
 			if (iAction==-1 || iAction>=giNbActions) { rc=-1; goto end; }
 			TRACE((TRACE_INFO,_F_,"Upload config n°%d (%s)",iAction,gptActions[iAction].szApplication));
-			rc=PutConfigOnServer(iAction,&iNewCategoryId,iDomainId);
+			rc=PutConfigOnServer(iAction,&iNewCategoryId,iDomainId,bUploadIdPwd);
 			TVUpdateItemState(w,hNextApp,iAction);
 			if (rc==0) iNbConfigUploaded++;
 			else if (rc==-2) { iNbConfigIgnored++; rc=0; }
@@ -2710,7 +2739,7 @@ void UploadConfig(HWND w, int iDomainId)
 		if (iAction==-1 || iAction>=giNbActions) goto end;
 		TRACE((TRACE_INFO,_F_,"Upload config n°%d (%s)",iAction,gptActions[iAction].szApplication));
 		iOldCategoryId=gptActions[iAction].iCategoryId;
-		rc=PutConfigOnServer(iAction,&iNewCategoryId,iDomainId);
+		rc=PutConfigOnServer(iAction,&iNewCategoryId,iDomainId,bUploadIdPwd);
 		TVUpdateItemState(w,hItem,iAction);
 		gptActions[iAction].iDomainId=iDomainId;
 		strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_UPLOAD_OK));
@@ -3405,14 +3434,6 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					TVDuplicateSelectedApp(w,TRUE);
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
-				case MENU_UPLOADER_COMMUN:
-					UploadConfig(w,1);
-					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
-					break;
-				case MENU_UPLOADER_DOMAINE:
-					UploadConfig(w,giDomainId);
-					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
-					break;
 				case MENU_AJOUTER_APPLI:
 					NewApplication(w,GetString(IDS_NEW_APP),TRUE);
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
@@ -3427,6 +3448,14 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case MENU_LANCER_APPLI:
 					LaunchSelectedApp(w);
+					break;
+				case MENU_UPLOADER:
+					UploadConfig(w,1,FALSE);
+					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
+					break;
+				case MENU_UPLOADER_ID_PWD:
+					UploadConfig(w,1,TRUE);
+					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
 				case IMG_LOUPE:
 					if (HIWORD(wp)==0) TogglePasswordField(w);
@@ -3475,12 +3504,26 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 
 				default:
-					if (LOWORD(wp)>=SUBMENU_CATEG) 
+					if (LOWORD(wp)>=SUBMENU_CATEG && LOWORD(wp)<SUBMENU_CATEG+100) 
 					{
 						TRACE((TRACE_DEBUG,_F_,"MENU_DEPLACER vers %d",LOWORD(wp)-SUBMENU_CATEG));
 						HTREEITEM hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
 						MoveApp(w,hItem,LOWORD(wp)-SUBMENU_CATEG);
 						if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+					}
+					if (LOWORD(wp)>=SUBMENU_UPLOAD && LOWORD(wp)<SUBMENU_UPLOAD+50) 
+					{
+						int iDomain=LOWORD(wp)-SUBMENU_UPLOAD;
+						TRACE((TRACE_DEBUG,_F_,"Upload vers domaine #%d (id=%d,label=%s)",iDomain,gtabDomains[iDomain].iDomainId,gtabDomains[iDomain].szDomainLabel));
+						UploadConfig(w,gtabDomains[iDomain].iDomainId,FALSE);
+						EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
+					}
+					if (LOWORD(wp)>=SUBMENU_UPLOAD_ID_PWD && LOWORD(wp)<SUBMENU_UPLOAD_ID_PWD+50)
+					{
+						int iDomain=LOWORD(wp)-SUBMENU_UPLOAD_ID_PWD;
+						TRACE((TRACE_DEBUG,_F_,"Upload avec id et mdp vers domaine #%d (id=%d,label=%s)",iDomain,gtabDomains[iDomain].iDomainId,gtabDomains[iDomain].szDomainLabel));
+						UploadConfig(w,gtabDomains[iDomain].iDomainId,TRUE);
+						EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					}
 					break;
 			}

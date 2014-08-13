@@ -39,6 +39,7 @@
 static DWORD gdwHTTPResultFactor=2048; // 2 Ko octets par config
 static int giRefreshTimer=10;
 char gszRes[512];
+const char gcszK3[]="33333333";
 WCHAR gwcTmp1_512[512+1];
 WCHAR gwcTmp2_512[512+1];
 char gszComputedValue[256+1];
@@ -170,6 +171,7 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	T_PROXYPARAMS *pProxyParams=NULL;
 	DWORD dwHTTPResultMaxSize;
 	DWORD dwOptions;
+	DWORD dwFlags;
 
 	// 0.89 : si pas de paramètres proxy reçus, utilise les valeurs globales
 	if (pInProxyParams==NULL)
@@ -201,12 +203,14 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	// WinHttpConnect
 	MultiByteToWideChar(CP_ACP,0,gszServerAddress,-1,gwcTmp1_512,sizeof(gwcTmp1_512)-1);
     hConnect = WinHttpConnect(hSession,gwcTmp1_512,(INTERNET_PORT)giServerPort, 0); // ISSUE€162 (port configurable)
-	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s)",gszServerAddress)); goto end; }
+	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s) - port : %d",gszServerAddress,giServerPort)); goto end; }
     
 	// WinHttpOpenRequest
 	MultiByteToWideChar(CP_ACP,0,szRequest,-1,gwcTmp1_512,sizeof(gwcTmp1_512)-1);
-    hRequest = WinHttpOpenRequest( hConnect,L"GET",gwcTmp1_512,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,gbServerHTTPS?WINHTTP_FLAG_SECURE:0); // ISSUE#162 (HTTPS possible)
-	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(GET %s%s)",gszServerAddress,szRequest)); 
+	dwFlags=WINHTTP_FLAG_ESCAPE_PERCENT;
+	if (gbServerHTTPS) dwFlags|=WINHTTP_FLAG_SECURE;
+    hRequest = WinHttpOpenRequest( hConnect,L"GET",gwcTmp1_512,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,dwFlags); // ISSUE#162 (HTTPS possible)
+	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",gbServerHTTPS?"https":"http",gszServerAddress,giServerPort,szRequest)); 
 	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(GET %s)",szRequest)); goto end; }
 
 	if (gbServerHTTPS)
@@ -1503,59 +1507,6 @@ end:
 	if (hPipe!=INVALID_HANDLE_VALUE) CloseHandle(hPipe); 
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
 	return rc;
-}
-
-//-----------------------------------------------------------------------------
-// GetUserDomainAndComputer() 
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-int GetUserDomainAndComputer(void)
-{
-	TRACE((TRACE_ENTER,_F_,""));
-
-	DWORD cbRDN,cbSid;
-	SID_NAME_USE eUse;
-	DWORD lenComputerName;
-	DWORD lenUserName;
-	int rc=-1;
-
-	// ComputerName
-	lenComputerName=sizeof(gszComputerName); 
-	if (!GetComputerName(gszComputerName,&lenComputerName))
-	{
-		TRACE((TRACE_ERROR,_F_,"GetComputerName(%d)",GetLastError())); goto end;
-	}
-
-	// UserName
-	lenUserName=sizeof(gszUserName); 
-	if (!GetUserName(gszUserName,&lenUserName))
-	{
-		TRACE((TRACE_ERROR,_F_,"GetUserName(%d)",GetLastError())); goto end;
-	}
-
-	// détermine le SID de l'utilisateur courant et récupère le nom de domaine
-	cbSid=0;
-	cbRDN=0;
-	LookupAccountName(NULL,gszUserName,NULL,&cbSid,NULL,&cbRDN,&eUse); // pas de test d'erreur, car la fonction échoue forcément
-	if (GetLastError()!=ERROR_INSUFFICIENT_BUFFER)
-	{
-		TRACE((TRACE_ERROR,_F_,"LookupAccountName[1](%s)=%d",gszUserName,GetLastError()));
-		goto end;
-	}
-	gpSid=(SID *)malloc(cbSid); if (gpSid==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",cbSid)); goto end; }
-	gpszRDN=(char *)malloc(cbRDN); if (gpszRDN==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",cbRDN)); goto end; }
-	if(!LookupAccountName(NULL,gszUserName,gpSid,&cbSid,gpszRDN,&cbRDN,&eUse))
-	{
-		TRACE((TRACE_ERROR,_F_,"LookupAccountName[2](%s)=%d",gszUserName,GetLastError()));
-		goto end;
-	}
-	TRACE((TRACE_INFO,_F_,"LookupAccountName(%s) pszRDN=%s",gszUserName,gpszRDN));
-	rc=0;
-end:
-	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
-	return rc;
-
 }
 
 typedef struct

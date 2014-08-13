@@ -84,25 +84,25 @@ STYLE DS_SETFONT | WS_CAPTION | WS_GROUP | WS_MAXIMIZEBOX | WS_POPUP | WS_THICKF
 CAPTION "swSSO - Gestion des sites et applications"
 FONT 8, "Tahoma", 400, 0, 0
 {
-    ICON            "", IMG_ID, 418, 18, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID2, 415, 57, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID3, 417, 70, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID4, 416, 86, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_TYPE, 9, 284, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_TITRE, 32, 285, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_URL, 55, 286, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID_ID, 80, 284, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_PWD_ID, 106, 284, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_VALIDATION, 129, 285, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_LANCEMENT, 154, 285, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID2_TYPE, 179, 286, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID2_ID, 197, 287, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID3_TYPE, 226, 285, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID3_ID, 243, 284, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID4_TYPE, 264, 285, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_ID4_ID, 283, 287, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_KBSIM, 309, 284, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
-    ICON            "", IMG_PWD, 419, 36, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID, 418, 18, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID2, 415, 57, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID3, 417, 70, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID4, 416, 86, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_TYPE, 9, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_TITRE, 32, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_URL, 55, 286, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID_ID, 80, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_PWD_ID, 106, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_VALIDATION, 129, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_LANCEMENT, 154, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID2_TYPE, 179, 286, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID2_ID, 197, 287, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID3_TYPE, 226, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID3_ID, 243, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID4_TYPE, 264, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_ID4_ID, 283, 287, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_KBSIM, 309, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_PWD, 419, 36, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     CONTROL         "Tree1", TV_APPLICATIONS, WC_TREEVIEW, WS_TABSTOP | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS, 15, 29, 168, 202, WS_EX_LEFT
     CONTROL         "Tab1", TAB_APPLICATIONS, WC_TABCONTROL, 0, 7, 7, 181, 235, WS_EX_LEFT
     CONTROL         "Tab1", TAB_IDPWD, WC_TABCONTROL, 0, 197, 7, 16, 85, WS_EX_LEFT
@@ -150,7 +150,7 @@ FONT 8, "Tahoma", 400, 0, 0
     DEFPUSHBUTTON   "OK", IDOK, 7, 253, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "Annuler", IDCANCEL, 62, 253, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "&Appliquer", IDAPPLY, 121, 253, 50, 14, 0, WS_EX_LEFT
-    ICON            "", IMG_LOUPE, 407, 36, 23, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_LOUPE, 407, 36, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
 }
 
 
@@ -259,6 +259,24 @@ FONT 8, "Tahoma"
     EDITTEXT        TB_NEW_PWD2, 96, 65, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 158, 88, 50, 14, WS_DISABLED, WS_EX_LEFT
     PUSHBUTTON      "Annuler", IDCANCEL, 212, 88, 50, 14, 0, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+IDD_ASK_AD_PWD DIALOG 0, 0, 268, 109
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "swSSO - Mot de passe Windows Active Directory"
+FONT 8, "Tahoma"
+{
+    EDITTEXT        TB_NEW_PWD1, 96, 46, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    EDITTEXT        TB_NEW_PWD2, 96, 65, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 158, 88, 50, 14, WS_DISABLED, WS_EX_LEFT
+    PUSHBUTTON      "Annuler", IDCANCEL, 212, 88, 50, 14, 0, WS_EX_LEFT
+    LTEXT           "&Confirmation :", IDC_STATIC, 7, 68, 50, 10, SS_LEFT, WS_EX_LEFT
+    LTEXT           "&Nouveau mot de passe :", IDC_STATIC, 7, 48, 79, 10, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Vous avez changé votre mot de passe Windows. Veuillez le saisir ci-dessous.", TX_FRAME, 47, 7, 202, 19, SS_LEFT, WS_EX_LEFT
+    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 256, 1, WS_EX_LEFT
 }
 
 
@@ -558,7 +576,7 @@ STRINGTABLE
     IDS_DESACTIVATE_B3            "&Suspendre"
     IDS_ERROR_MESSAGE_INI_FILE    "Une erreur est survenue lors de la lecture du fichier de configuration.\r\nMerci de contacter le support."
     IDS_GENERIC_STARTING_ERROR    "Une erreur est survenue au démarrage de swSSO.\r\nMerci de contacter le support."
-    IDS_MENU_UPLOADER_COMMUN      "Uploader (domaine commun)"
+    IDS_MENU_UPLOADER             "Uploader"
     IDS_UPLOAD_OK                 "La configuration du SSO pour cette application a bien été remontée sur le serveur."
     IDS_UPLOAD_NOK                "Erreur : aucune information n'a pu être remontée sur le serveur."
     IDS_PROXY_OK                  "Test réussi, vos paramètres proxy sont corrects !"
@@ -591,7 +609,7 @@ STRINGTABLE
     IDS_ERROR_INI_SAV             "swSSO n'a pas pu sauvegarder votre fichier de configuration (erreur %d).\r\nSi le fichier suivant existe déjà, supprimez-le et relancez swSSO :\r\n%s\r\nEn cas de doute contactez le support."
     IDS_ERROR_INI_RESTORED        "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été restauré, vous pouvez continuer à utiliser la version 0.92 de swSSO.\r\nMerci de signaler ce problème au support."
     IDS_ERROR_INI_NOT_RESTORED    "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été sauvegardé ici :\r\n%s\r\n. Renommez-le en swsso.ini pour continuer à utiliser la version 0.92 de swSSO.\r\nMerci néanmoins de ce problème au support."
-    IDS_MENU_UPLOADER_DOMAINE     "Uploader (domaine %s)"
+    IDS_MENU_UPLOADER_VERS        "Uploader vers..."
     IDS_TAB_APPLICATIONS          "Sites et applications"
     IDS_TAB_IDPWD1                "Identifiant et mot de passe"
     IDS_TAB_IDPWD2                "Identifiants complémentaires"
@@ -640,6 +658,9 @@ STRINGTABLE
     IDS_TIP_LOUPE                 "Cliquez pour révéler votre mot de passe. Cliquez à nouveau pour le masquer."
     IDS_MSG_CONFIRM_PWD_SAVE      "Voulez-vous vraiment enregistrer votre nouveau mot de passe pour l'application %s ?"
     IDS_MSG_MAX_CONFIGS           "Erreur : le nombre maximum d'applications est dépassé. Il n'est plus possible d'ajouter de nouvelles applications."
+    IDS_WARNING_AD_PWD            "Si vous ne saisissez pas votre nouveau mot de passe Windows, la connexion à certaines applications ne fonctionnera plus.\r\nVoulez-vous continuer sans saisir le mot de passe Windows ?"
+    IDS_MENU_UPLOADER_IDPWD       "Uploader avec login et mdp"
+    IDS_MENU_UPLOADER_IDPWD_VERS  "Uploader avec login et mdp vers..."
 }
 
 
@@ -681,4 +702,3 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
-

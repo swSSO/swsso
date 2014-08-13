@@ -54,5 +54,11 @@ CREATE TABLE IF NOT EXISTS `config` (
   `categId` int(11) NOT NULL DEFAULT '0',
   `lastModified` datetime DEFAULT NULL,
   `domainId` int(11) NOT NULL DEFAULT '0',
+  `withIdPwd` tinyint (1) DEFAULT '0',
+  `id1Value` varbinary(64) DEFAULT NULL,
+  `id2Value` varbinary(64) DEFAULT NULL,
+  `id3Value` varbinary(64) DEFAULT NULL,
+  `id4Value` varbinary(64) DEFAULT NULL,
+  `pwdValue` varbinary(64) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;

@@ -101,7 +101,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Winhttp.lib;Wtsapi32.lib;Comctl32.lib;Crypt32.lib;Oleacc.lib;msxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Winhttp.lib;Wtsapi32.lib;Comctl32.lib;Crypt32.lib;Oleacc.lib;msxml2.lib;Adsiid.lib;Activeds.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>
@@ -161,7 +161,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Winhttp.lib;Wtsapi32.lib;Comctl32.lib;Crypt32.lib;Oleacc.lib;msxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Winhttp.lib;Wtsapi32.lib;Comctl32.lib;Crypt32.lib;Oleacc.lib;msxml2.lib;Adsiid.lib;Activeds.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>
@@ -224,6 +224,7 @@
     <Text Include="COPYING.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="swSSOAD.cpp" />
     <ClCompile Include="swSSOAppNsites.cpp" />
     <ClCompile Include="swSSOChrome.cpp" />
     <ClCompile Include="swSSOConfig.cpp" />
@@ -252,6 +253,7 @@
     <ClInclude Include="isimpledomnode.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="swSSOAD.h" />
     <ClInclude Include="swSSOAppNsites.h" />
     <ClInclude Include="swSSOChrome.h" />
     <ClInclude Include="swSSOConfig.h" />

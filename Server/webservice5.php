@@ -33,12 +33,12 @@ include('util.php');
 //-----------------------------------------------------------------------------
 // WEBSERVICE5.PHP : Utilisé à partir de la version swSSO 0.94
 //                   (les versions précédentes utilisent webservice4.php)
-// VERSION INTERNE : 5.2
+// VERSION INTERNE : 5.3
 //------------------------------------------------------------------------------
 // Commandes : isalive, getversion, putconfig, getconfig et getdomains
 //------------------------------------------------------------------------------
 
-$swssoVersion="102:0000"; // "000:0000" désactive le contrôle de version côté client
+$swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
 
 // ------------------------------------------------------------
 // isalive
@@ -270,8 +270,14 @@ else if ($_GET['action']=="putconfig")
     $var_szFullPathName =utf8_decode(myaddslashes($_GET['szFullPathName']));
     $var_lastModified   =utf8_decode(myaddslashes($_GET['lastModified']));
 	$var_domainId		=utf8_decode(myaddslashes($_GET['domainId']));
+	$var_withIdPwd		=utf8_decode(myaddslashes($_GET['withIdPwd'])); // ajouté en 5.3 pour client 1.03
+	$var_id1Value		=utf8_decode(myaddslashes($_GET['id1Value']));  // ajouté en 5.3 pour client 1.03
+	$var_id2Value		=utf8_decode(myaddslashes($_GET['id2Value']));  // ajouté en 5.3 pour client 1.03
+	$var_id3Value		=utf8_decode(myaddslashes($_GET['id3Value']));  // ajouté en 5.3 pour client 1.03
+	$var_id4Value		=utf8_decode(myaddslashes($_GET['id4Value']));  // ajouté en 5.3 pour client 1.03
+	$var_pwdValue		=utf8_decode(myaddslashes($_GET['pwdValue']));  // ajouté en 5.3 pour client 1.03
     
-    // V4 : gestion des catégories
+	// V4 : gestion des catégories
 	// Ajoute la catégorie si n'existe pas ou met à jour le label
 	if ($var_categId!="" AND $var_categLabel!="") // ne fait rien si pas d'info categorie remontée
 	{
@@ -305,6 +311,14 @@ else if ($_GET['action']=="putconfig")
 		$param_title=         "AES_ENCRYPT('".$var_title."','"._AESPWD_."')";
 		$param_szFullPathName="AES_ENCRYPT('".$var_szFullPathName."','"._AESPWD_."')";
 		$param_szName=        "AES_ENCRYPT('".$var_szName."','"._AESPWD_."')";
+		if ($var_withIdPwd==1)
+		{
+			$param_id1Value=  "AES_ENCRYPT('".$var_id1Value."','"._AESPWD_."')";
+			$param_id2Value=  "AES_ENCRYPT('".$var_id2Value."','"._AESPWD_."')";
+			$param_id3Value=  "AES_ENCRYPT('".$var_id3Value."','"._AESPWD_."')";
+			$param_id4Value=  "AES_ENCRYPT('".$var_id4Value."','"._AESPWD_."')";
+			$param_pwdValue=  "AES_ENCRYPT('".$var_pwdValue."','"._AESPWD_."')";
+		}
 	}
 	else
 	{
@@ -326,6 +340,16 @@ else if ($_GET['action']=="putconfig")
 
 	if ($var_configId!="0")
 	{
+		$szRequestOptions="";
+		if ($var_withIdPwd==1) 
+		{
+			$szRequestionOptions=",withIdPwd=1,".
+								 "id1Value=".$param_id1Value.",".
+								 "id2Value=".$param_id2Value.",".
+								 "id3Value=".$param_id3Value.",".
+								 "id4Value=".$param_id4Value.",".
+								 "pwdValue=".$param_pwdValue;
+		}
 		$szRequest="update "._TABLE_PREFIX_."config set typeapp='".$var_typeapp."',".
 									  "title=".$param_title.",".
 									  "url=".$param_url.",".
@@ -347,7 +371,8 @@ else if ($_GET['action']=="putconfig")
 									  "categId='".$var_categId."',".
 									  "domainId='".$var_domainId."',".
 									  "szFullPathName=".$param_szFullPathName.",".
-									  "lastModified='".$var_lastModified."' WHERE ".
+									  "lastModified='".$var_lastModified."' ".
+									  $szRequestionOptions." WHERE ".
 									  _TABLE_PREFIX_."config.id='".$var_configId."'";
 		
 		if ($_GET['debug']!="") echo $szRequest;
@@ -359,13 +384,22 @@ else if ($_GET['action']=="putconfig")
 	}
 	if ($var_configId=="0") // =0 soit parce que 0 passé en param soit parce que id passé en param non trouvé en base
 	{
+		$szRequestOptions1="";
+		$szRequestOptions2="";
+		if ($var_withIdPwd==1) 
+		{
+			$szRequestOptions1=",withIdPwd,id1Value,id2Value,id3Value,id4Value,pwdValue";
+			$szRequestOptions2=",1,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue;
+		}
+		
 		$szRequest="insert into "._TABLE_PREFIX_."config (active,typeapp,title,url,id1Name,id1Type,pwdName,validateName,".
-	           "id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,id5Name,id5Type,bKBSim,szKBSim,szName,categId,domainId,szFullPathName,lastModified) ".
+	           "id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,id5Name,id5Type,bKBSim,szKBSim,szName,categId,domainId,".
+			   "szFullPathName,lastModified".$szRequestOptions1.") ".
 	           "values (1,'".$var_typeapp."',".$param_title.",".$param_url.",'".$var_id1Name."','EDIT','".
 	           $var_pwdName."','".$var_validateName."','".$var_id2Name."','".$var_id2Type."','".
 	           $var_id3Name."','".$var_id3Type."','".$var_id4Name."','".$var_id4Type."','".
 	           $var_id5Name."','".$var_id5Type."',".$var_bKBSim.",'".$var_szKBSim."',".$param_szName.",'".
-	           $var_categId."',".$var_domainId.",".$param_szFullPathName.",'".$var_lastModified."')";
+	           $var_categId."',".$var_domainId.",".$param_szFullPathName.",'".$var_lastModified."'".$szRequestOptions2.")";
 		if ($_GET['debug']!="") echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }

@@ -19,6 +19,7 @@
 #define IDI_LOGO                                202
 #define IDI_HELP                                203
 #define IDI_LOUPE                               204
+#define IDD_ASK_AD_PWD                          206
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000
@@ -228,7 +229,7 @@
 #define IDS_DESACTIVATE_B3                      40053
 #define IDS_ERROR_MESSAGE_INI_FILE              40054
 #define IDS_GENERIC_STARTING_ERROR              40055
-#define IDS_MENU_UPLOADER_COMMUN                40056
+#define IDS_MENU_UPLOADER                       40056
 #define IDS_UPLOAD_OK                           40057
 #define IDS_UPLOAD_NOK                          40058
 #define IDS_PROXY_OK                            40059
@@ -262,7 +263,7 @@
 #define IDS_ERROR_INI_SAV                       40086
 #define IDS_ERROR_INI_RESTORED                  40087
 #define IDS_ERROR_INI_NOT_RESTORED              40088
-#define IDS_MENU_UPLOADER_DOMAINE               40089
+#define IDS_MENU_UPLOADER_VERS                  40089
 #define IDS_TAB_APPLICATIONS                    40090
 #define IDS_TAB_IDPWD1                          40091
 #define IDS_TAB_IDPWD2                          40092
@@ -321,3 +322,6 @@
 #define TX_FRAME3                               40135
 #define IDS_MSG_CONFIRM_PWD_SAVE                40136
 #define IDS_MSG_MAX_CONFIGS                     40137
+#define IDS_WARNING_AD_PWD                      40138
+#define IDS_MENU_UPLOADER_IDPWD                 40139
+#define IDS_MENU_UPLOADER_IDPWD_VERS            40140

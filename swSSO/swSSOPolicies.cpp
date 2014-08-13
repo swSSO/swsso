@@ -106,6 +106,8 @@ char gszWelcomeMessage[512+1];				// 1.01 : message de définition du mot de pass
 int  giMaxConfigs=500;						// 1.01 : nb max de configurations - ISSUE#149
 BOOL gbServerHTTPS=FALSE;						// 1.03 - ISSUE#162
 int  giServerPort=INTERNET_DEFAULT_HTTP_PORT;	// 1.03 - ISSUE#162
+BOOL gbUseADPasswordForAppLogin=FALSE;			// 1.03 - permet d'utiliser %ADPASSWORD% dans le champ mot de passe (n'utilise pas (encore) swSSOCM --> le mdp AD est demandé à l'utilisateur)
+BOOL gbShowMenu_UploadWithIdPwd=FALSE;				// 1.03 - active le menu "Uploader avec identifiant et mot de passe"
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -262,6 +264,10 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_REACTIVATE_WITHOUT_PWD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbReactivateWithoutPwd=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_UPLOAD_WITH_ID_PWD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_UploadWithIdPwd=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -458,6 +464,10 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_SERVER_HTTPS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbServerHTTPS=(BOOL)dwValue; 
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_USE_AD_PASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbUseADPasswordForAppLogin=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -514,6 +524,8 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddThisApp=%d"		,gbShowMenu_AddThisApp));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AppPasswordMenu=%d"	,gbShowMenu_AppPasswordMenu));
 	TRACE((TRACE_INFO,_F_,"gbOldPwdAutoFill=%d"		        ,gbOldPwdAutoFill));
+	TRACE((TRACE_INFO,_F_,"gbReactivateWithoutPwd=%d"		,gbReactivateWithoutPwd));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_UploadWithIdPwd=%d"	,gbShowMenu_UploadWithIdPwd));
 	TRACE((TRACE_INFO,_F_,"PASSWORD -------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
@@ -543,6 +555,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbWindowsEventLog=%d"				,gbWindowsEventLog));
 	TRACE((TRACE_INFO,_F_,"gbStat=%d"							,gbStat));
 	TRACE((TRACE_INFO,_F_,"giMaxConfigs=%d"						,giMaxConfigs));
+	TRACE((TRACE_INFO,_F_,"gbUseADPasswordForAppLogin=%d"		,gbUseADPasswordForAppLogin));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS ---------"));

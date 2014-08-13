@@ -67,6 +67,7 @@
 #define REGVALUE_OLD_PWD_AUTO_FILL					"OldPwdAutoFill"
 // ISSUE#140
 #define REGVALUE_REACTIVATE_WITHOUT_PWD				"ReactivateWithoutPwd"
+#define REGVALUE_SHOWMENU_UPLOAD_WITH_ID_PWD		"ShowUploadWithIdPwdMenu"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -101,6 +102,7 @@ extern BOOL gbShowMenu_AppPasswordMenu;
 extern BOOL gbOldPwdAutoFill;
 // ISSUE#140
 extern BOOL gbReactivateWithoutPwd;
+extern BOOL gbShowMenu_UploadWithIdPwd;				// 1.03 - active le menu "Uploader avec identifiant et mot de passe"
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
@@ -155,6 +157,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_MAX_CONFIGS						"MaxConfigs"
 #define REGVALUE_SERVER_PORT						"ServerPort"
 #define REGVALUE_SERVER_HTTPS						"ServerHTTPS"
+#define REGVALUE_USE_AD_PASSWORD					"UseADPassword"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -184,6 +187,7 @@ extern char gszWelcomeMessage[];			// 1.01 : message de définition du mot de pas
 extern int  giMaxConfigs;					// 1.01 : nb max de configurations - ISSUE#149
 extern BOOL gbServerHTTPS;					// 1.03 - ISSUE#162
 extern int  giServerPort;					// 1.03 - ISSUE#162
+extern BOOL gbUseADPasswordForAppLogin;		// 1.03 - permet d'utiliser %ADPASSWORD% dans le champ mot de passe (n'utilise pas (encore) swSSOCM --> le mdp AD est demandé à l'utilisateur)
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

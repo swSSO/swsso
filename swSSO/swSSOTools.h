@@ -46,7 +46,6 @@ void Help(void);
 char *strnistr (const char *szStringToBeSearched,
 				const char *szSubstringToSearchFor,
 				const int  nStringLen);
-int GetUserDomainAndComputer(void);
 
 #define B1 1
 #define B2 2

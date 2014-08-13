@@ -59,6 +59,8 @@ HWND gTabExcludedHandles[MAX_EXCLUDED_HANDLES];
 int  giDomainId=1;						// 0.94B1 : gestion des domaines
 char gszDomainLabel[LEN_DOMAIN+1]="";
 BOOL gbDisplayChangeAppPwdDialog ; // ISSUE#107
+char gszLastADPwdChange[14+1]="";				// 1.03 : date de dernier changement de mdp dans l'AD, format AAAAMMJJHHMMSS
+char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1]; // 1.03 : valeur du mot de passe AD (fourni par l'utilisateur)
 
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
@@ -77,6 +79,8 @@ BOOL gbDontAskId2,gbDontAskId3,gbDontAskId4;
 // pour l'énumération des computernames...
 static char *gpNextComputerName=NULL;
 static char *gpComputerNameContext=NULL;
+
+const char gcszK2[]="22222222";
 
 static int giRefreshTimer=10;
 
@@ -964,6 +968,13 @@ int GetConfigHeader()
 	// ISSUE#107
 	gbDisplayChangeAppPwdDialog=GetConfigBoolValue("swSSO","displayChangeAppPwdDialog",TRUE,TRUE);
 
+	// 1.03 : lecture de la date de dernier changement mot de passe AD
+	if (gbUseADPasswordForAppLogin)
+	{
+		GetPrivateProfileString("swSSO","lastADPwdChange","",gszLastADPwdChange,sizeof(gszLastADPwdChange),gszCfgFile);
+		GetPrivateProfileString("swSSO","ADPwd","",gszEncryptedADPwd,sizeof(gszEncryptedADPwd),gszCfgFile);
+	}
+
 	// REMARQUE : la config proxy est lue plus loin dans le démarrage du main, sinon la clé n'est pas disponible
 	//            pour déchiffrer le mot de passe proxy !
 	rc=0;
@@ -1134,6 +1145,12 @@ int SaveConfigHeader()
 	// ISSUE#107
 	WritePrivateProfileString("swSSO","displayChangeAppPwdDialog",gbDisplayChangeAppPwdDialog?"YES":"NO",gszCfgFile);
 
+	// 1.03 : date de dernier changement mot de passe AD
+	if (gbUseADPasswordForAppLogin)
+	{
+		WritePrivateProfileString("swSSO","lastADPwdChange",gszLastADPwdChange,gszCfgFile);
+		WritePrivateProfileString("swSSO","ADPwd",gszEncryptedADPwd,gszCfgFile);
+	}
 	rc=0;
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
@@ -2428,7 +2445,23 @@ suite:
 		if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
 		if (pszTranscryptedPwd!=NULL) { free(pszTranscryptedPwd); pszTranscryptedPwd=NULL; }
 	}
-	
+	// 1.03 - transchiffre aussi le mot de passe AD, si présent
+	if (gbUseADPasswordForAppLogin)
+	{
+		if (*gszEncryptedADPwd!=0)
+		{
+			// déchiffrement mot de passe
+			pszDecryptedPwd=swCryptDecryptString(gszEncryptedADPwd,ghKey1);
+			if (pszDecryptedPwd==NULL) goto end;
+			// rechiffrement avec la nouvelle clé
+			pszTranscryptedPwd=swCryptEncryptString(pszDecryptedPwd,ghKey2);
+			SecureZeroMemory(pszDecryptedPwd,strlen(pszDecryptedPwd));
+			if (pszTranscryptedPwd==NULL) goto end;
+			strcpy_s(gszEncryptedADPwd,sizeof(gszEncryptedADPwd),pszTranscryptedPwd);
+			if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
+			if (pszTranscryptedPwd!=NULL) { free(pszTranscryptedPwd); pszTranscryptedPwd=NULL; }
+		}
+	}
 	rc=0;
 end:
 	if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
@@ -2791,9 +2824,9 @@ end:
 // ----------------------------------------------------------------------------------
 // Retour : 0=OK, -1=erreur, -2=configuration ignorée
 // ----------------------------------------------------------------------------------
-int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId)
+int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploadIdPwd)
 {
-	TRACE((TRACE_ENTER,_F_, ""));
+	TRACE((TRACE_ENTER,_F_, "iAction=%d iDomainId=%d bUploadIdPwd=%d",iAction,iDomainId,bUploadIdPwd));
 
 	char szType[3+1];
 	int rc=-1;
@@ -2812,6 +2845,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId)
 	SYSTEMTIME localTime;
 	char *p;
 	int i;
+	char *pszDecryptedPwd=NULL;
 
 	*piNewCategoryId=-1;
 
@@ -2885,6 +2919,20 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId)
 				gptActions[iAction].szFullPathName,
 				szLastModified,
 				iDomainId); 
+	if (bUploadIdPwd)
+	{
+		strcat_s(szRequest,sizeof(szRequest),"&withIdPwd=1");
+		strcat_s(szRequest,sizeof(szRequest),"&id1Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId1Value);
+		strcat_s(szRequest,sizeof(szRequest),"&id2Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId2Value);
+		strcat_s(szRequest,sizeof(szRequest),"&id3Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId3Value);
+		strcat_s(szRequest,sizeof(szRequest),"&id4Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId4Value);
+		pszDecryptedPwd=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+		if (pszDecryptedPwd!=NULL)
+		{
+			strcat_s(szRequest,sizeof(szRequest),"&pwdValue="); strcat_s(szRequest,sizeof(szRequest),pszDecryptedPwd);
+		}
+		//strcat_s(szRequest,"&debug=1");
+	}
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
 	
 	pszResult=HTTPRequest(szRequest,5,NULL); // timeout : 5 secondes
@@ -2930,6 +2978,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId)
 
 	rc=0;
 end:
+	if (pszDecryptedPwd!=NULL) free(pszDecryptedPwd);
 	if (pszEncodedTitle!=NULL) free(pszEncodedTitle);
 	if (pszEncodedURL!=NULL) free(pszEncodedURL);
 	if (pszResult!=NULL) free(pszResult);

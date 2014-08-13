@@ -294,7 +294,8 @@ static void DoDOMAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_FIREFOX *ptS
 			hr=pAccessible->accSelect(SELFLAG_TAKEFOCUS,index);
 			if ((*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0)) 
 			{
-				char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
+				// char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
+				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
 				if (pszPassword!=NULL) 
 				{
 					KBSim(FALSE,200,pszPassword,TRUE);				
