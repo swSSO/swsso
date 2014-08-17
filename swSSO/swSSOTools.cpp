@@ -1707,3 +1707,113 @@ end:
 }
 
 
+//-----------------------------------------------------------------------------
+// getIniEncryptedHash()
+//-----------------------------------------------------------------------------
+// Retourne un hash chiffré par ghKey1 du fichier .ini
+//-----------------------------------------------------------------------------
+char *getIniEncryptedHash()
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	HANDLE hf=INVALID_HANDLE_VALUE;
+	DWORD dwFileSize;
+	DWORD dwByteRead;
+	char *pszFileContent=NULL;
+	HCRYPTHASH hHash=NULL;
+	unsigned char bufHashValue[HASH_LEN];
+	char szHashValue[HASH_LEN*2+1];
+	DWORD lenHash;
+	char *pszEncryptedHash=NULL;
+
+	// ouvre le .ini en lecture
+	hf=CreateFile(gszCfgFile,GENERIC_READ,0,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hf==INVALID_HANDLE_VALUE) {	TRACE((TRACE_ERROR,_F_,"CreateFile(OPEN_ALWAYS,%s)",gszCfgFile)); goto end;	}
+	// regarde la taille et alloue le buffer pour la lecture
+	dwFileSize=GetFileSize(hf,NULL);
+	if (dwFileSize==INVALID_FILE_SIZE) { TRACE((TRACE_ERROR,_F_,"GetFileSize(%s)=INVALID_FILE_SIZE",gszCfgFile)); goto end;	}
+	pszFileContent=(char*)malloc(dwFileSize);
+	if (pszFileContent==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwFileSize)); goto end;	}
+	// lit le fichier complet
+	if (!ReadFile(hf,pszFileContent,dwFileSize,&dwByteRead,NULL)) {	TRACE((TRACE_ERROR,_F_,"ReadFile(%s)=0x%08lx",gszCfgFile,GetLastError())); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"ReadFile(%s) : %ld octets lus",gszCfgFile,dwByteRead));
+	// ferme le fichier
+	CloseHandle(hf); hf=INVALID_HANDLE_VALUE;
+	// calcul du hash sur le fichier
+	if (!CryptCreateHash(ghProv,CALG_SHA1,0,0,&hHash)) { TRACE((TRACE_ERROR,_F_,"CryptCreateHash(CALG_SHA1)=0x%08lx",GetLastError())); goto end; }
+	if (!CryptHashData(hHash,(unsigned char*)pszFileContent,dwFileSize,0)) { TRACE((TRACE_ERROR,_F_,"CryptHashData()=0x%08lx",GetLastError())); goto end; }
+	lenHash=sizeof(bufHashValue);
+	if (!CryptGetHashParam(hHash,HP_HASHVAL,bufHashValue,&lenHash,0)) { TRACE((TRACE_ERROR,_F_,"CryptGetHashParam(HP_HASHVAL)=0x%08lx",GetLastError())); goto end; }
+	TRACE_BUFFER((TRACE_DEBUG,_F_,bufHashValue,lenHash,"hash fichier .ini"));
+	// chiffrement du hash par ghKey1
+	swCryptEncodeBase64(bufHashValue,HASH_LEN,szHashValue);
+	pszEncryptedHash=swCryptEncryptString(szHashValue,ghKey1);
+	TRACE((TRACE_DEBUG,"pszEncryptedHash=%s",szHashValue));
+	
+end:
+	if (hf!=INVALID_HANDLE_VALUE) CloseHandle(hf);
+	if (pszFileContent!=NULL) free(pszFileContent);
+	if (hHash!=NULL) CryptDestroyHash(hHash);
+	TRACE((TRACE_LEAVE,_F_, "pszEncryptedHash=0x%08lx",pszEncryptedHash));
+	return pszEncryptedHash;
+}
+
+//-----------------------------------------------------------------------------
+// StoreIniEncryptedHash()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+int StoreIniEncryptedHash(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char *pszEncryptedHash=NULL;
+	HANDLE hf=INVALID_HANDLE_VALUE; 
+	char szFilename[_MAX_PATH+1];
+	char *p;
+	DWORD dw;
+
+	// calcule le hash chiffré
+	pszEncryptedHash=getIniEncryptedHash();
+	if (pszEncryptedHash==NULL) goto end;
+
+	// nom du fichier : swsso.ini -> swsso.xxx
+	strcpy_s(szFilename,sizeof(szFilename),gszCfgFile);
+	p=strrchr(szFilename,'.');
+	if (p==NULL) { TRACE((TRACE_ERROR,_F_,"gszCfgFile=%s",gszCfgFile)); goto end; }
+	memcpy(p+1,"xxx",4);
+		
+	hf=CreateFile(szFilename,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hf==INVALID_HANDLE_VALUE)
+	{
+		TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFilename,GetLastError()));
+		goto end;
+	}
+	if (!WriteFile(hf,pszEncryptedHash,strlen(pszEncryptedHash),&dw,NULL))
+	{
+		TRACE((TRACE_ERROR,_F_,"WriteFile(%s,%ld)=%d",szFilename,len,GetLastError()));
+		goto end;
+	}
+
+	rc=0;
+end:
+	if (hf!=INVALID_HANDLE_VALUE) CloseHandle(hf); 
+	if (pszEncryptedHash!=NULL) free(pszEncryptedHash);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// CheckIniEncryptedHash()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+int CheckIniEncryptedHash(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}

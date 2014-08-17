@@ -2403,6 +2403,21 @@ askpwd:
 	// Si -launchapp, ouvre la fenêtre ShowAppNsites
 	if (bLaunchApp) ShowLaunchApp();
 
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	// JUSTE POUR TEST *******************************
+	StoreIniEncryptedHash();
+
 	// Ici on peut considérer que swSSO est bien démarré et que l'utilisateur est connecté
 	// Prise de la date de login pour les stats
 	GetLocalTime(&gLastLoginTime);

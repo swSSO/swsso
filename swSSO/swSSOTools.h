@@ -92,15 +92,18 @@ int    LastDetect_AddOrUpdateWindow(HWND w);	// ajoute ou met à jour une fenêtre
 int    LastDetect_RemoveWindow(HWND w);			// supprime une fenêtre dans la liste des dernières détectées
 time_t LastDetect_GetTime(HWND w);				// retourne la date de dernière détection d'une fenêtre
 int    LastDetect_TagWindow(HWND w);			// marque la fenêtre comme toujours présente
-void   LastDetect_UntagAllWindows(void);		// détaggue toutes les fenêtres
-void   LastDetect_RemoveUntaggedWindows(void);	// efface toutes les fenêtres non tagguées
-void   ExcludeOpenWindows(void);
+void   LastDetect_UntagAllWindows();		// détaggue toutes les fenêtres
+void   LastDetect_RemoveUntaggedWindows();	// efface toutes les fenêtres non tagguées
+void   ExcludeOpenWindows();
 BOOL   IsExcluded(HWND w);
 int swPipeWrite(char *bufRequest,int lenRequest,char *bufResponse,DWORD sizeofBufResponse,DWORD *pdwLenResponse);
 void RevealPasswordField(HWND w,BOOL bReveal);
 void ClipboardCopy(char *sz);
 void ClipboardDelete();
 int ExpandFileName(char *szInFileName,char *szOutFileName, int iBufSize);
+char *getIniEncryptedHash();
+int StoreIniEncryptedHash();
+int CheckIniEncryptedHash();
 
 // comme RESEDIT est un peu merdique et me change la taille du séparateur quand il a envie
 // cette macro (à positionner dans WM_INITDIALOG) le replace correctement !
