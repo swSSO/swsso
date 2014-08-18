@@ -82,6 +82,7 @@ static void SaveWindowPos(HWND w)
 	wsprintf(s,"%d",gcx2); WritePrivateProfileString("swSSO","cx2",s,gszCfgFile);
 	wsprintf(s,"%d",gcy2); WritePrivateProfileString("swSSO","cy2",s,gszCfgFile);
 	WritePrivateProfileString("swSSO","LaunchTopMost",gbLaunchTopMost?"YES":"NO",gszCfgFile);
+	StoreIniEncryptedHash(); // ISSUE#164
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }

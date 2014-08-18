@@ -445,7 +445,10 @@ BOOL GetConfigBoolValue(char *szSection,char *szItem,BOOL bDefault,BOOL bWriteIf
 	GetPrivateProfileString(szSection,szItem,"",szTmp,sizeof(szTmp),gszCfgFile);
 	if (*szTmp==0) // valeur non trouvé, on retourne la valeur par défaut et on l'écrit dans le fichier de config
 	{
-		if (bWriteIfNotFound) WritePrivateProfileString(szSection,szItem,bDefault?"YES":"NO",gszCfgFile);
+		if (bWriteIfNotFound && !gbCheckIniIntegrity) // ISSUE#164 : si vérif d'intégrité, n'écrit pas les valeurs par défaut pour que la lecture reste une lecture...
+		{ 
+			WritePrivateProfileString(szSection,szItem,bDefault?"YES":"NO",gszCfgFile); 
+		} 
 	}
 	else if (strcmp(szTmp,"NO")==0)
 		rc=FALSE;
@@ -460,7 +463,8 @@ BOOL GetConfigBoolValue(char *szSection,char *szItem,BOOL bDefault,BOOL bWriteIf
 //-----------------------------------------------------------------------------
 // Ouvre le fichier swsso.chm si présent, sinon ouvre le pdf, sinon pointe vers site web
 //-----------------------------------------------------------------------------
-void Help(void){
+void Help(void)
+{
 	TRACE((TRACE_ENTER,_F_, ""));
 	char szHelpFile[_MAX_PATH+1];
 	int len;
@@ -1708,11 +1712,11 @@ end:
 
 
 //-----------------------------------------------------------------------------
-// getIniEncryptedHash()
+// GetIniHash()
 //-----------------------------------------------------------------------------
-// Retourne un hash chiffré par ghKey1 du fichier .ini
+// Retourne un hash du fichier .ini
 //-----------------------------------------------------------------------------
-char *getIniEncryptedHash()
+int GetIniHash(unsigned char *pBufHashValue)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	HANDLE hf=INVALID_HANDLE_VALUE;
@@ -1720,14 +1724,12 @@ char *getIniEncryptedHash()
 	DWORD dwByteRead;
 	char *pszFileContent=NULL;
 	HCRYPTHASH hHash=NULL;
-	unsigned char bufHashValue[HASH_LEN];
-	char szHashValue[HASH_LEN*2+1];
 	DWORD lenHash;
-	char *pszEncryptedHash=NULL;
-
+	int rc=-1;
+	
 	// ouvre le .ini en lecture
-	hf=CreateFile(gszCfgFile,GENERIC_READ,0,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-	if (hf==INVALID_HANDLE_VALUE) {	TRACE((TRACE_ERROR,_F_,"CreateFile(OPEN_ALWAYS,%s)",gszCfgFile)); goto end;	}
+	hf=CreateFile(gszCfgFile,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hf==INVALID_HANDLE_VALUE) {	TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",gszCfgFile,GetLastError())); goto end;	}
 	// regarde la taille et alloue le buffer pour la lecture
 	dwFileSize=GetFileSize(hf,NULL);
 	if (dwFileSize==INVALID_FILE_SIZE) { TRACE((TRACE_ERROR,_F_,"GetFileSize(%s)=INVALID_FILE_SIZE",gszCfgFile)); goto end;	}
@@ -1741,26 +1743,23 @@ char *getIniEncryptedHash()
 	// calcul du hash sur le fichier
 	if (!CryptCreateHash(ghProv,CALG_SHA1,0,0,&hHash)) { TRACE((TRACE_ERROR,_F_,"CryptCreateHash(CALG_SHA1)=0x%08lx",GetLastError())); goto end; }
 	if (!CryptHashData(hHash,(unsigned char*)pszFileContent,dwFileSize,0)) { TRACE((TRACE_ERROR,_F_,"CryptHashData()=0x%08lx",GetLastError())); goto end; }
-	lenHash=sizeof(bufHashValue);
-	if (!CryptGetHashParam(hHash,HP_HASHVAL,bufHashValue,&lenHash,0)) { TRACE((TRACE_ERROR,_F_,"CryptGetHashParam(HP_HASHVAL)=0x%08lx",GetLastError())); goto end; }
-	TRACE_BUFFER((TRACE_DEBUG,_F_,bufHashValue,lenHash,"hash fichier .ini"));
-	// chiffrement du hash par ghKey1
-	swCryptEncodeBase64(bufHashValue,HASH_LEN,szHashValue);
-	pszEncryptedHash=swCryptEncryptString(szHashValue,ghKey1);
-	TRACE((TRACE_DEBUG,"pszEncryptedHash=%s",szHashValue));
+	lenHash=HASH_LEN;
+	if (!CryptGetHashParam(hHash,HP_HASHVAL,pBufHashValue,&lenHash,0)) { TRACE((TRACE_ERROR,_F_,"CryptGetHashParam(HP_HASHVAL)=0x%08lx",GetLastError())); goto end; }
+	TRACE_BUFFER((TRACE_DEBUG,_F_,pBufHashValue,lenHash,"hash fichier .ini"));
+	rc=0;
 	
 end:
 	if (hf!=INVALID_HANDLE_VALUE) CloseHandle(hf);
 	if (pszFileContent!=NULL) free(pszFileContent);
 	if (hHash!=NULL) CryptDestroyHash(hHash);
-	TRACE((TRACE_LEAVE,_F_, "pszEncryptedHash=0x%08lx",pszEncryptedHash));
-	return pszEncryptedHash;
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
 }
 
 //-----------------------------------------------------------------------------
 // StoreIniEncryptedHash()
 //-----------------------------------------------------------------------------
-// 
+// Stocke le hash chiffré dans le fichier swsso.chk
 //-----------------------------------------------------------------------------
 int StoreIniEncryptedHash(void)
 {
@@ -1771,28 +1770,31 @@ int StoreIniEncryptedHash(void)
 	char szFilename[_MAX_PATH+1];
 	char *p;
 	DWORD dw;
+	unsigned char bufHashValue[HASH_LEN];
+	BYTE AESKeyData[AES256_KEY_LEN];
+	char szHashValue[HASH_LEN*2+1];
 
-	// calcule le hash chiffré
-	pszEncryptedHash=getIniEncryptedHash();
+	if (!gbCheckIniIntegrity) { rc=0; goto end; }
+
+	// calcule le hash 
+	if (GetIniHash(bufHashValue)!=0) goto end;
+	// chiffre
+	if (ghKey3==NULL) swCryptDeriveKey(gszUserName,&ghKey3,AESKeyData,TRUE);
+	swCryptEncodeBase64(bufHashValue,HASH_LEN,szHashValue);
+	pszEncryptedHash=swCryptEncryptString(szHashValue,ghKey3);
 	if (pszEncryptedHash==NULL) goto end;
+	TRACE((TRACE_DEBUG,_F_,"pszEncryptedHash=%s",pszEncryptedHash));
 
-	// nom du fichier : swsso.ini -> swsso.xxx
+	// nom du fichier : swsso.ini -> swsso.chk
 	strcpy_s(szFilename,sizeof(szFilename),gszCfgFile);
 	p=strrchr(szFilename,'.');
 	if (p==NULL) { TRACE((TRACE_ERROR,_F_,"gszCfgFile=%s",gszCfgFile)); goto end; }
-	memcpy(p+1,"xxx",4);
-		
+	memcpy(p+1,"chk",4);
+
+	// écrit le hash chiffré dans le fichier chk
 	hf=CreateFile(szFilename,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-	if (hf==INVALID_HANDLE_VALUE)
-	{
-		TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFilename,GetLastError()));
-		goto end;
-	}
-	if (!WriteFile(hf,pszEncryptedHash,strlen(pszEncryptedHash),&dw,NULL))
-	{
-		TRACE((TRACE_ERROR,_F_,"WriteFile(%s,%ld)=%d",szFilename,len,GetLastError()));
-		goto end;
-	}
+	if (hf==INVALID_HANDLE_VALUE) { TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFilename,GetLastError())); goto end; }
+	if (!WriteFile(hf,pszEncryptedHash,strlen(pszEncryptedHash),&dw,NULL)) { TRACE((TRACE_ERROR,_F_,"WriteFile(%s,%ld)=%d",szFilename,strlen(pszEncryptedHash),GetLastError())); goto end; }
 
 	rc=0;
 end:
@@ -1803,17 +1805,61 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// CheckIniEncryptedHash()
+// CheckIniHash()
 //-----------------------------------------------------------------------------
-// 
+// Vérifie l'intégrité du fichier .ini (via le hash chiffré du fichier .chk)
 //-----------------------------------------------------------------------------
-int CheckIniEncryptedHash(void)
+int CheckIniHash(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
+	HANDLE hf=INVALID_HANDLE_VALUE; 
+	char szFilename[_MAX_PATH+1];
+	unsigned char bufHashValueFichierChk[HASH_LEN];
+	unsigned char bufHashValueCalcule[HASH_LEN];
+	BYTE AESKeyData[AES256_KEY_LEN];
+	char szEncryptedHash[192+1];
+	char *pszDecryptedHash=NULL;
+	char *p;
+	DWORD dw;
+
+	if (!gbCheckIniIntegrity) { rc=0; goto end; }
+	
+	// nom du fichier : swsso.ini -> swsso.chk
+	strcpy_s(szFilename,sizeof(szFilename),gszCfgFile);
+	p=strrchr(szFilename,'.');
+	if (p==NULL) { TRACE((TRACE_ERROR,_F_,"gszCfgFile=%s",gszCfgFile)); goto end; }
+	memcpy(p+1,"chk",4);
+		
+	// lit le hash chiffré dans le fichier swsso.chk
+	hf=CreateFile(szFilename,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hf==INVALID_HANDLE_VALUE) { TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFilename,GetLastError())); goto end; }
+	if (!ReadFile(hf,szEncryptedHash,192,&dw,NULL)) { TRACE((TRACE_ERROR,_F_,"ReadFile(%s)",gszCfgFile)); goto end; }
+	szEncryptedHash[192]=0;
+	
+	// déchiffre le hash
+	if (ghKey3==NULL) swCryptDeriveKey(gszUserName,&ghKey3,AESKeyData,TRUE);
+	pszDecryptedHash=swCryptDecryptString(szEncryptedHash,ghKey3);
+	if (pszDecryptedHash==NULL) goto end;
+
+	// decode base 64
+	if (swCryptDecodeBase64(pszDecryptedHash,(char*)bufHashValueFichierChk,HASH_LEN)!=0) goto end;
+	
+	// calcule le hash chiffré du fichier .ini
+	if (GetIniHash(bufHashValueCalcule)!=0) goto end;
+	
+	// compare
+	if (memcmp(bufHashValueCalcule,bufHashValueFichierChk,HASH_LEN)!=0)
+	{
+		TRACE_BUFFER((TRACE_ERROR,_F_,bufHashValueCalcule,HASH_LEN,   "Hash calculé :"));
+		TRACE_BUFFER((TRACE_ERROR,_F_,bufHashValueFichierChk,HASH_LEN,"Hash fichier :"));
+		goto end;
+	}
 	
 	rc=0;
 end:
+	if (hf!=INVALID_HANDLE_VALUE) CloseHandle(hf); 
+	if (pszDecryptedHash!=NULL) free(pszDecryptedHash);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

@@ -101,9 +101,9 @@ void RevealPasswordField(HWND w,BOOL bReveal);
 void ClipboardCopy(char *sz);
 void ClipboardDelete();
 int ExpandFileName(char *szInFileName,char *szOutFileName, int iBufSize);
-char *getIniEncryptedHash();
+int GetIniHash(unsigned char *pBufHashValue);
 int StoreIniEncryptedHash();
-int CheckIniEncryptedHash();
+int CheckIniHash();
 
 // comme RESEDIT est un peu merdique et me change la taille du séparateur quand il a envie
 // cette macro (à positionner dans WM_INITDIALOG) le replace correctement !

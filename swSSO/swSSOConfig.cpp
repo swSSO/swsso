@@ -911,6 +911,16 @@ int GetConfigHeader()
 	char szPwdProtection[9+1];
 	int rc=-1;
 	BOOL bCheckVersion;
+	HANDLE hf=INVALID_HANDLE_VALUE;
+	
+	// ISSUE#164 vérifie l'intégrité du fichier .ini. Il faut le faire avant de toucher au .ini
+	// Si le fichier .ini n'existe pas (cas de la première utilisation), on ne fait pas évidemment pas la vérification...
+	hf=CreateFile(gszCfgFile,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hf!=INVALID_HANDLE_VALUE) // le fichier existe
+	{	
+		CloseHandle(hf);
+		if (CheckIniHash()!=0) goto end;
+	}
 	
 	GetPrivateProfileString("swSSO","version","",gszCfgVersion,sizeof(gszCfgVersion),gszCfgFile);
 	TRACE((TRACE_INFO,_F_,"Version du fichier de configuration : %s",gszCfgVersion));
@@ -1010,6 +1020,7 @@ int AddComputerName(const char *szComputer)
 	strcat_s(buf2048,sizeof(buf2048),szComputer);
 	strcat_s(buf2048,sizeof(buf2048),":");
 	WritePrivateProfileString("swSSO","Computers",buf2048,gszCfgFile);
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -1080,6 +1091,7 @@ void SaveLastConfigUpdate()
 													localTime.wHour,localTime.wMinute,localTime.wSecond);
 	TRACE((TRACE_DEBUG,_F_,"gszLastConfigUpdate=%s",gszLastConfigUpdate));
 	WritePrivateProfileString("swSSO","lastConfigUpdate",gszLastConfigUpdate,gszCfgFile);
+	StoreIniEncryptedHash(); // ISSUE#164
 	TRACE((TRACE_LEAVE,_F_, "")); 
 }
 // ----------------------------------------------------------------------------------
@@ -1151,6 +1163,7 @@ int SaveConfigHeader()
 		WritePrivateProfileString("swSSO","lastADPwdChange",gszLastADPwdChange,gszCfgFile);
 		WritePrivateProfileString("swSSO","ADPwd",gszEncryptedADPwd,gszCfgFile);
 	}
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
@@ -1189,6 +1202,7 @@ int StoreMasterPwd(const char *szPwd)
 		WritePrivateProfileString("swSSO","pwdSalt",szPBKDF2PwdSalt,gszCfgFile);
 		WritePrivateProfileString("swSSO","pwdValue",szPBKDF2ConfigPwd,gszCfgFile);
 	}
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 end:
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
@@ -1237,6 +1251,7 @@ int DPAPIStoreMasterPwd(const char *szPwd)
 	swCryptEncodeBase64(DataOut.pbData,DataOut.cbData,pszBase64);
 
 	WritePrivateProfileString("swSSO",szKey,pszBase64,gszCfgFile);
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 end:
 	if (pszBase64!=NULL) free (pszBase64);
@@ -1314,6 +1329,7 @@ int GenWriteCheckSynchroValue(void)
 	swCryptEncodeBase64(bufSynchroValue,16+64+16,szSynchroValue);
 	// Ecrit dans le .ini
 	WritePrivateProfileString("swSSO","CheckSynchro",szSynchroValue,gszCfgFile);
+	StoreIniEncryptedHash(); // ISSUE#164
 	
 	rc=0;
 end:
@@ -1417,7 +1433,7 @@ int InitWindowsSSO(void)
 	memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
 	swCreateAESKeyFromKeyData(AESKeyData,&ghKey1);
 	if (GenWriteCheckSynchroValue()!=0) goto end;
-
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 end:
 	if (rc!=0) MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_MIGRATION),"swSSO",MB_OK | MB_ICONSTOP);
@@ -1508,7 +1524,7 @@ int MigrationWindowsSSO(void)
 	WritePrivateProfileString("swSSO",szKey,NULL,gszCfgFile);
 	// Et par contre on crée une nouvelle valeur CheckSynchro = aléa chiffré puis jeté
 	if (GenWriteCheckSynchroValue()!=0) goto end;
-
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 end:
 	if (rc!=0) MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_MIGRATION),"swSSO",MB_OK | MB_ICONSTOP);
@@ -1561,7 +1577,7 @@ int Migration093(HWND w,const char *szPwd)
 	if (swGenPBKDF2Salt()!=0) goto end;
 	
 	// dérive nouvelle clé
-	if(swCryptDeriveKey(szPwd,&ghKey2,AESKeyData)!=0) goto end;
+	if(swCryptDeriveKey(szPwd,&ghKey2,AESKeyData,FALSE)!=0) goto end;
 
 	// Transchiffrement tous les mots de passe secondaires et proxy de 3DES en AES
 	// parcours de la table des actions et transchiffrement
@@ -1607,7 +1623,7 @@ suite:
 	}
 		
 	// dérive le mot de passe dans la clé 1 pour la suite !
-	if(swCryptDeriveKey(szPwd,&ghKey1,AESKeyData)!=0) goto end;
+	if(swCryptDeriveKey(szPwd,&ghKey1,AESKeyData,FALSE)!=0) goto end;
 
 	// rechiffre tous les identifiants et sauvegarde tout :-)
 	if(SaveApplications()!=0) goto end;
@@ -1625,7 +1641,7 @@ suite:
 
 	// ISSUE#139 : stockage des recovery infos (avant c'était fait trop tôt, avant initialisation de AESKeyData)
 	RecoveryFirstUse(w,AESKeyData);
-
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 end:
 	if (rc!=0 && bBackupOK)
@@ -2257,6 +2273,7 @@ int SaveMasterPwdLastChange(void)
 	pszEncryptedTime=swCryptEncryptString(szTime,ghKey1);
 	if (pszEncryptedTime==NULL) goto end;
 	WritePrivateProfileString("swSSO","LastPwdChange",pszEncryptedTime,gszCfgFile);
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 end:
 	if (pszEncryptedTime!=NULL) free(pszEncryptedTime);
@@ -2345,13 +2362,13 @@ int ChangeMasterPwd(const char *szNewPwd)
 	if (swGenPBKDF2Salt()!=0) goto end;
 
 	// dérivation de ghKey2 à partir du nouveau mot de passe
-	if (swCryptDeriveKey(szNewPwd,&ghKey2,AESKeyData)!=0) goto end;
+	if (swCryptDeriveKey(szNewPwd,&ghKey2,AESKeyData,FALSE)!=0) goto end;
 
 	// Transchiffrement
 	if (swTranscrypt()!=0) goto end; 
 
 	// dérivation de ghKey1 à partir du nouveau mot de passe pour la suite
-	if(swCryptDeriveKey(szNewPwd,&ghKey1,AESKeyData)!=0) goto end;
+	if(swCryptDeriveKey(szNewPwd,&ghKey1,AESKeyData,FALSE)!=0) goto end;
 	
 	// enregistrement du nouveau mot maitre dans swSSO.ini
 	if(StoreMasterPwd(szNewPwd)!=0) goto end;
@@ -2441,6 +2458,7 @@ suite:
 			if (pszTranscryptedPwd==NULL) goto end;
 			// écriture dans le fichier ini
 			WritePrivateProfileString("swSSO",szItem,pszTranscryptedPwd,gszCfgFile);
+			StoreIniEncryptedHash(); // ISSUE#164
 		}
 		if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
 		if (pszTranscryptedPwd!=NULL) { free(pszTranscryptedPwd); pszTranscryptedPwd=NULL; }
@@ -2532,6 +2550,7 @@ static int CALLBACK ChangeApplicationPasswordDialogProc(HWND w,UINT msg,WPARAM w
 						free(pszEncryptedPassword);
 					}
 					WritePrivateProfileString(gptActions[iAction].szApplication,"pwdValue",gptActions[iAction].szPwdEncryptedValue,gszCfgFile);
+					StoreIniEncryptedHash(); // ISSUE#164
 					EndDialog(w,IDOK);
 					break;
 				}

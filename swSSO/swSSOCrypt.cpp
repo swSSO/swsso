@@ -475,7 +475,7 @@ end:
 //-----------------------------------------------------------------------------
 // Retour : 0 si OK
 //-----------------------------------------------------------------------------
-int swCryptDeriveKey(const char *pszMasterPwd,HCRYPTKEY *phKey,BYTE *pAESKeyData)
+int swCryptDeriveKey(const char *pszMasterPwd,HCRYPTKEY *phKey,BYTE *pAESKeyData,BOOL bForceOldDerivationFunction)
 {
 	TRACE((TRACE_ENTER,_F_,""));
 
@@ -489,7 +489,16 @@ int swCryptDeriveKey(const char *pszMasterPwd,HCRYPTKEY *phKey,BYTE *pAESKeyData
 	// création d'un hash
 	brc=CryptCreateHash(ghProv,CALG_SHA1,0,0,&hHash);           
 	if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptCreateHash()")); goto end; }
-	if (atoi(gszCfgVersion)<93)
+	if (bForceOldDerivationFunction)
+	{
+		// hash du mot de passe
+		brc=CryptHashData(hHash,(unsigned char*)pszMasterPwd,strlen(pszMasterPwd),0); 
+		if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptHashData()")); goto end; }
+		// dérivation
+		brc=CryptDeriveKey(ghProv,CALG_AES_256,hHash,0,phKey); 
+		TRACE((TRACE_INFO,_F_,"CryptDeriveKey(CALG_AES_256)"));
+	}
+	else if (atoi(gszCfgVersion)<93)
 	{
 		// hash du mot de passe
 		brc=CryptHashData(hHash,(unsigned char*)pszMasterPwd,strlen(pszMasterPwd),0); 

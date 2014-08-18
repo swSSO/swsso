@@ -68,7 +68,7 @@ int  swCryptDecryptDataAES256(unsigned char *iv, unsigned char *pData,DWORD lDat
 int  swCryptDecryptData3DES(unsigned char *iv, unsigned char *pData,DWORD lData,HCRYPTKEY hKey);
 
 int swCreateAESKeyFromKeyData(BYTE *pAESKeyData,HCRYPTKEY *phKey);
-int swCryptDeriveKey(const char *pszMasterPwd,HCRYPTKEY *phKey,BYTE *pAESKeyData);
+int swCryptDeriveKey(const char *pszMasterPwd,HCRYPTKEY *phKey,BYTE *pAESKeyData,BOOL bForceOldDerivationFunction);
 char *swCryptEncryptString(const char *pszSource,HCRYPTKEY hKey);
 char *swCryptDecryptString(const char *pszSource,HCRYPTKEY hKey);
 

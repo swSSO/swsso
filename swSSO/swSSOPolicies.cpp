@@ -70,6 +70,8 @@ BOOL gbShowMenu_AppPasswordMenu=FALSE;
 BOOL gbOldPwdAutoFill=FALSE;
 // ISSUE#140
 BOOL gbReactivateWithoutPwd=FALSE;
+// ISSUE#164
+BOOL gbCheckIniIntegrity=FALSE;					// ISSUE#164 - vérifie l'intégrité du fichier .ini
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -268,6 +270,11 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_UPLOAD_WITH_ID_PWD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowMenu_UploadWithIdPwd=(BOOL)dwValue; 
+
+		// ISSUE#164
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_CHECK_INI_INTEGRITY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbCheckIniIntegrity=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -526,6 +533,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbOldPwdAutoFill=%d"		        ,gbOldPwdAutoFill));
 	TRACE((TRACE_INFO,_F_,"gbReactivateWithoutPwd=%d"		,gbReactivateWithoutPwd));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_UploadWithIdPwd=%d"	,gbShowMenu_UploadWithIdPwd));
+	TRACE((TRACE_INFO,_F_,"gbCheckIniIntegrity=%d"			,gbCheckIniIntegrity));
 	TRACE((TRACE_INFO,_F_,"PASSWORD -------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));

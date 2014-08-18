@@ -73,6 +73,7 @@ extern int giBadPwdCount;
 
 extern HCRYPTKEY ghKey1;
 extern HCRYPTKEY ghKey2;
+extern HCRYPTKEY ghKey3;
 extern HWND gwAskPwd ; 
 
 extern const char gcszK1[8+1];

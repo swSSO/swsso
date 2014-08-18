@@ -82,6 +82,7 @@ int GetUserDomainAndComputer(void)
 		goto end;
 	}
 	TRACE((TRACE_INFO,_F_,"LookupAccountName(%s) pszRDN=%s",gszUserName,gpszRDN));
+
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));

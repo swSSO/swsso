@@ -466,7 +466,7 @@ int RecoveryChangeAESKeyData(BYTE *pAESKeyData)
 	strcpy_s(gszRecoveryInfos+5,sizeof(gszRecoveryInfos)-5,pszEncryptedData);
 	TRACE((TRACE_DEBUG,_F_,"gszRecoveryInfos=%s",gszRecoveryInfos));
 	WritePrivateProfileString("swSSO","recoveryInfos",gszRecoveryInfos,gszCfgFile);
-
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 end:
 	if (pszEncryptedData!=NULL) free(pszEncryptedData);
@@ -590,6 +590,7 @@ int RecoveryChallenge(HWND w)
 		if (pszKsData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwKsDataLen*2+1)); goto end; }
 		swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData);
 		WritePrivateProfileString("swSSO","recoveryRunning",pszKsData,gszCfgFile);
+		StoreIniEncryptedHash(); // ISSUE#164
 		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,0);
 		rc=0;
 	}
@@ -643,6 +644,7 @@ int RecoveryResponse(HWND w)
 	{
 		gbRecoveryRunning=FALSE;
 		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile);
+		StoreIniEncryptedHash(); // ISSUE#164
 		rc=-2;
 		goto end;
 	}

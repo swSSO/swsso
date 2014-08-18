@@ -563,6 +563,7 @@ static void SaveWindowPos(HWND w)
 	WritePrivateProfileString("swSSO","CollapsedCategs",buf2048,gszCfgFile);
 
 end:
+	StoreIniEncryptedHash(); // ISSUE#164
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -635,6 +636,12 @@ void TogglePasswordField(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	char szPwd[LEN_PWD+1];
+
+	if (giLastApplicationConfig!=-1)
+	{
+		if (gptActions[giLastApplicationConfig].bWithIdPwd) goto end; // 1.03 : loupe interdite sur mot de passe imposé
+	}
+
 	if (!gbShowPwd) // 0.96
 	{
 		if (AskPwd(w,FALSE)!=0) goto end;
@@ -1396,6 +1403,10 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 
 	// ISSUE#96 : 0.97
 	gptActions[giNbActions-1].bAddAccount=bKeepId;
+	
+	// 1.03
+	gptActions[giNbActions-1].bWithIdPwd=bKeepId?0:gptActions[iAction].bWithIdPwd;
+
 
 	ShowApplicationDetails(w,giNbActions-1);
 	rc=0;
@@ -1649,6 +1660,7 @@ int SaveCategories(void)
 		TRACE((TRACE_INFO,_F_,"id=%s label=%s",szCategId,gptCategories[i].szLabel));
 		WritePrivateProfileString("swSSO-Categories",szCategId,gptCategories[i].szLabel,gszCfgFile);
 	}
+	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 //end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -1805,6 +1817,9 @@ void ShowApplicationDetails(HWND w,int iAction)
 	giLastApplicationConfig=iAction;
 
 	if (gbShowGeneratedPwd) { gbShowGeneratedPwd=FALSE; gbShowPwd=FALSE; }
+
+	if (gptActions[iAction].bWithIdPwd) gbShowPwd=FALSE; // 1.03 : ne pas dévoiler les mots de passe imposés par le serveur
+
 	// déchiffrement mot de passe
 	SetDlgItemText(w,TB_PWD,"");
 	SetDlgItemText(w,TB_PWD_CLEAR,"");
@@ -1867,7 +1882,18 @@ void ShowApplicationDetails(HWND w,int iAction)
 	}
 	SetWindowText(w,buf2048);
 	// 0.93B7 ISSUE#10
-	MoveControls(w,GetDlgItem(w,TAB_CONFIG)); // marche pas : GetDlgItem(w,TAB_CONFIG)
+	MoveControls(w,GetDlgItem(w,TAB_CONFIG));
+
+	// 1.03 : empêche la modification ids et mdp si valeurs forcées par le serveur
+	if (gptActions[iAction].bWithIdPwd)
+	{
+		EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+		EnableWindow(GetDlgItem(w,TB_ID2),FALSE);
+		EnableWindow(GetDlgItem(w,TB_ID3),FALSE);
+		EnableWindow(GetDlgItem(w,TB_ID4),FALSE);
+		EnableWindow(GetDlgItem(w,TB_PWD),FALSE);
+	}
+
 end:
 	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -3028,6 +3054,7 @@ int LoadApplications(void)
 		gptActions[i].bSaved=TRUE; // 0.93B6 ISSUE#55
 		gptActions[i].iNbEssais=0; // 0.93B7
 		gptActions[i].bAddAccount=GetConfigBoolValue(p,"addAccount",FALSE,TRUE); // 0.97 ISSUE#86
+		gptActions[i].bWithIdPwd=GetConfigBoolValue(p,"bWithIdPwd",FALSE,TRUE); // 1.03
 		// 0.9X : gestion des changements de mot de passe sur les pages web
 		gptActions[i].bPwdChangeInfos=GetConfigBoolValue(p,"pwdChange",FALSE,FALSE);
 		if (gptActions[i].bPwdChangeInfos)
@@ -3210,7 +3237,7 @@ int SaveApplications(void)
 		}
 		// le plus beau sprintf de ma carrière... en espérant que le buffer soit assez grand ;-(
 		sprintf_s(tmpBuf,sizeof(tmpBuf),
-			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ndomainId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\n", //pwdChange=%s\r\n",
+			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ndomainId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\n", //pwdChange=%s\r\n",
 			gptActions[i].szApplication,
 			gptActions[i].iConfigId,
 			gptActions[i].iCategoryId,
@@ -3231,7 +3258,8 @@ int SaveApplications(void)
 			gptActions[i].szKBSim,
 			gptActions[i].szFullPathName,
 			*(gptActions[i].szLastUpload)==0?"":gptActions[i].szLastUpload,
-			gptActions[i].bAddAccount?"YES":"NO"); // 0.97 ISSUE#86
+			gptActions[i].bAddAccount?"YES":"NO", // 0.97 ISSUE#86
+			gptActions[i].bWithIdPwd?"YES":"NO"); // 1.03
 			//,	gptActions[i].bPwdChangeInfos?"YES":"NO");
 		if (!WriteFile(hf,tmpBuf,strlen(tmpBuf),&dw,NULL)) 
 		{ 
@@ -3266,8 +3294,8 @@ int SaveApplications(void)
 	}
 	// 0.85B6 : flush pour être sûr que le fichier est bien écrit sur le disque 
 	FlushFileBuffers(hf);
-
 	CloseHandle(hf); hf=INVALID_HANDLE_VALUE;
+	StoreIniEncryptedHash(); // ISSUE#164
 	SaveCategories();
 	rc=0;
 end:

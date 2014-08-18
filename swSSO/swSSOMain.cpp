@@ -56,6 +56,7 @@ HWND gwAskPwd=NULL ;       // anti ré-entrance fenêtre saisie pwd
 
 HCRYPTKEY ghKey1=NULL;
 HCRYPTKEY ghKey2=NULL;
+HCRYPTKEY ghKey3=NULL; // juste pour chiffrer le sceau du fichier .ini
 
 // Icones et pointeur souris
 HICON ghIconAltTab=NULL;
@@ -1326,7 +1327,7 @@ static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 						giPwdProtection=PP_ENCRYPTED;
 						// génère le sel qui sera pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
 						swGenPBKDF2Salt();
-						swCryptDeriveKey(szPwd1,&ghKey1,AESKeyData);
+						swCryptDeriveKey(szPwd1,&ghKey1,AESKeyData,FALSE);
 						StoreMasterPwd(szPwd1);
 						RecoveryChangeAESKeyData(AESKeyData);
 						// inscrit la date de dernier changement de mot de passe dans le .ini
@@ -1464,7 +1465,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (giPwdProtection==PP_WINDOWS && ghKey1!=NULL) // Cas de la demande de mot de passe "loupe" (TogglePasswordField) ou du déverrouillage
 					{
 						BYTE AESKeyData[AES256_KEY_LEN];
-						swCryptDeriveKey(szPwd,&ghKey2,AESKeyData);
+						swCryptDeriveKey(szPwd,&ghKey2,AESKeyData,FALSE);
 						SecureZeroMemory(szPwd,strlen(szPwd));
 						if (ReadVerifyCheckSynchroValue(ghKey2)==0)
 						{
@@ -1484,7 +1485,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							DPAPIStoreMasterPwd(szPwd);
 						}
 						BYTE AESKeyData[AES256_KEY_LEN];
-						swCryptDeriveKey(szPwd,&ghKey1,AESKeyData);
+						swCryptDeriveKey(szPwd,&ghKey1,AESKeyData,FALSE);
 						SecureZeroMemory(szPwd,strlen(szPwd));
 						// 0.90 : si une clé de recouvrement existe et les infos de recouvrement n'ont pas encore
 						//        été enregistrées dans le .ini (cas de la première utilisation après déploiement de la clé
@@ -1609,7 +1610,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 		if (CheckMasterPwd(szTemp)==0)
 		{
 			BYTE AESKeyData[AES256_KEY_LEN];
-			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData);
+			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData,FALSE);
 			ret=0;
 		}
 		else
@@ -1634,7 +1635,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 				// 0.90 : si une clé de recouvrement existe et les infos de recouvrement n'ont pas encore
 				//        été enregistrée dans le .ini (cas de la première utilisation après déploiement de la clé
 				BYTE AESKeyData[AES256_KEY_LEN];
-				swCryptDeriveKey(szPwd,&ghKey1,AESKeyData);
+				swCryptDeriveKey(szPwd,&ghKey1,AESKeyData,FALSE);
 				// ISSUE#139 : si on vient de faire la migration 093, on stocke une mauvaise clé et le recouvrement de mot de passe ne fonctionne pas !
 				if (*szPwdMigration093==0) // on n'est pas dans le cas de la migration, on peut stocker la clé, sinon on fait dans Migration093
 				{
@@ -1933,39 +1934,27 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	gwAskPwd=NULL; // 0.65 anti ré-entrance fenêtre saisie pwd
 	ghKey1=NULL;
 	ghKey2=NULL;
+	ghKey3=NULL;
 	time_t tNow,tLastPwdChange;
 	gbRecoveryRunning=FALSE;
 	gpSid=NULL;
 	gpszRDN=NULL;
 
-	
 	gSalts.bPBKDF2PwdSaltReady=FALSE;
 	gSalts.bPBKDF2KeySaltReady=FALSE;
 
-	if (strlen(lpCmdLine)>_MAX_PATH) { iError=-1; goto end; } // j'aime pas les petits malins ;-)
-
+	// ligne de commande
+	if (strlen(lpCmdLine)>_MAX_PATH) { iError=-1; goto end; } 
 	TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
 
+	// enregistrement des messages pour réception de paramètres en ligne de commande quand swSSO est déjà lancé
 	guiLaunchAppMsg=RegisterWindowMessage("swsso-launchapp");
-	if (guiLaunchAppMsg==0)
-	{
-		TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-launchapp)=%d",GetLastError()));
-		// peut-être pas la peine d'empêcher swsso de démarrer pour ça...
-	}
-	else
-	{
-		TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-launchapp) OK -> msg=0x%08lx",guiLaunchAppMsg));
-	}
+	if (guiLaunchAppMsg==0)	{ TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-launchapp)=%d",GetLastError())); }
+	else { TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-launchapp) OK -> msg=0x%08lx",guiLaunchAppMsg)); }
 	guiConnectAppMsg=RegisterWindowMessage("swsso-connectapp");
-	if (guiConnectAppMsg==0)
-	{
-		TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-connectapp)=%d",GetLastError()));
-		// peut-être pas la peine d'empêcher swsso de démarrer pour ça...
-	}
-	else
-	{
-		TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-connectapp) OK -> msg=0x%08lx",guiConnectAppMsg));
-	}
+	if (guiConnectAppMsg==0) { TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-connectapp)=%d",GetLastError())); }
+	else { TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-connectapp) OK -> msg=0x%08lx",guiConnectAppMsg)); }
+	
 	// 0.92 : récupération version OS pour traitements spécifiques Vista et/ou Seven
 	// Remarque : pas tout à fait juste, mais convient pour les postes de travail. A revoir pour serveurs.
 	ZeroMemory(&osvi,sizeof(OSVERSIONINFO));
@@ -1978,7 +1967,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		else if (osvi.dwMajorVersion==6 && osvi.dwMinorVersion==0) giOSVersion=OS_WINDOWS_VISTA;
 		else if (osvi.dwMajorVersion==5 && osvi.dwMinorVersion==1) giOSVersion=OS_WINDOWS_XP;
 	}
-	IsWow64Process(GetCurrentProcess(), &b64) ;
+	IsWow64Process(GetCurrentProcess(),&b64);
 	giOSBits=b64?OS_64:OS_32;
 	TRACE((TRACE_INFO,_F_,"giOSVersion=%d giOSBits=%d",giOSVersion,giOSBits));
 
@@ -1987,8 +1976,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	if (strnistr(lpCmdLine,"-launchapp",-1)!=NULL && guiLaunchAppMsg!=0) 
 	{
 		bLaunchApp=TRUE;
-		// supprime le paramètre -launchapp de la ligne de commande 
-		// pour traitement du path éventuellement spécifié pour le .ini
+		// supprime le paramètre -launchapp de la ligne de commande pour traitement du path éventuellement spécifié pour le .ini
 		lpCmdLine+=strlen("-launchapp");
 		if (*lpCmdLine==' ') lpCmdLine++;
 		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
@@ -2004,8 +1992,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		if (*lpCmdLine==' ') lpCmdLine++;
 		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
 	}
-
-
+	
 	// 0.42 vérif pas déjà lancé
 	hMutex=CreateMutex(NULL,TRUE,"swSSO.exe");
 	bAlreadyLaunched=(GetLastError()==ERROR_ALREADY_EXISTS);
@@ -2022,7 +2009,6 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente de connecter l'application en avant plan"));
 			PostMessage(HWND_BROADCAST,guiConnectAppMsg,0,0);
 		}
-
 		goto end;
 	}
 	
@@ -2031,18 +2017,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	{
 		len=GetCurrentDirectory(_MAX_PATH-10,gszCfgFile);
 		if (len==0) { iError=-1; goto end; }
-		if (gszCfgFile[len-1]!='\\')
-		{
-			gszCfgFile[len]='\\';
-			len++;
-		}
+		if (gszCfgFile[len-1]!='\\') { gszCfgFile[len]='\\'; len++; }
 		strcpy_s(gszCfgFile+len,_MAX_PATH+1,"swSSO.ini");
 	}
 	else 
 	{
-		// ISSUE#104 et ISSUE#109
-		ExpandFileName(lpCmdLine,gszCfgFile,_MAX_PATH+1);
-		//strcpy_s(gszCfgFile,_MAX_PATH+1,lpCmdLine);
+		ExpandFileName(lpCmdLine,gszCfgFile,_MAX_PATH+1); // ISSUE#104 et ISSUE#109
 	}
 	// inits Window et COM
 	InitCommonControls();
@@ -2065,47 +2045,41 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	// chargement des policies (password, global et enterprise)
 	LoadPolicies();
 
-	// lecture du header de la config (=lecture section swSSO = version et protection)
-	if (GetConfigHeader()!=0) 
-	{
-		iError=-2;
-		goto end;
-	}
-
-	// bienvenue (>0.51)
+	// lecture du header de la config (=lecture section swSSO)
+	if (GetConfigHeader()!=0) { iError=-2; goto end; }
+	
 	if (*gszCfgVersion==0) // version <0.50 ou premier lancement...
 	{
 		strcpy_s(gszCfgVersion,4,gcszCfgVersion);
-		// affichage boite de choix de protection mots de passe
-		if (gbPasswordChoiceLevel==PP_WINDOWS)
+		if (gbPasswordChoiceLevel==PP_WINDOWS) // MODE chainage mot de passe Windows, transparent pour l'utilisateur
 		{
 			if (InitWindowsSSO()) goto end;
 			giPwdProtection=PP_WINDOWS;
 			SaveConfigHeader();
 		}
-		else if (gcszK1[0]=='1')
+		else if (gcszK1[0]=='1') // MODE mot de passe maitre : affichage message bienvenue avec définition du mot de passe maitre
 		{
 			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SIMPLE_PWD_CHOICE),NULL,SimplePwdChoiceDialogProc)!=IDOK) goto end;
 		}
-		else
+		else // mode sans mot de passe
 		{
 			BYTE AESKeyData[AES256_KEY_LEN];
 			giPwdProtection=PP_ENCRYPTED;
-			// génère le sel qui sera pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
-			swGenPBKDF2Salt();
-			char szTemp[LEN_PWD+1];
+			swGenPBKDF2Salt(); // génère le sel qui sera pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
+			char szTemp[LEN_PWD+1]; // 4 morceaux de clé x 8 octets + nom d'utilisateur tronqué à 16 octets = 48
 			SecureZeroMemory(szTemp,LEN_PWD+1);
 			memcpy(szTemp,gcszK1,8);
 			memcpy(szTemp+8,gcszK2,8);
 			memcpy(szTemp+16,gcszK3,8);
 			memcpy(szTemp+24,gcszK4,8);
 			memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
-			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData);
+			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData,FALSE);
 			StoreMasterPwd(szTemp);
+			SecureZeroMemory(szTemp,LEN_PWD+1);
 			SaveConfigHeader();
 		}
 	}
-	else // 
+	else // ce n'est pas le premier lancement
 	{
 		// force la migration en SSO Windows si configuré en base de registre
 		if (gbPasswordChoiceLevel==PP_WINDOWS)
@@ -2114,47 +2088,40 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			giPwdProtection=PP_WINDOWS;
 		}
 askpwd:
-		if (giPwdProtection==PP_ENCRYPTED)
+		if (giPwdProtection==PP_ENCRYPTED) // MODE mot de passe maitre
 		{
 			// regarde s'il y a une réinit de mdp en cours
 			int ret=RecoveryResponse(NULL);
 			if (ret==0) // il y a eu une réinit et ça a bien marché :-)
 			{ 
-				// transchiffrement plus tard une fois que les configs sont chargées en mémoire
-				gbRecoveryRunning=TRUE;
+				gbRecoveryRunning=TRUE; // transchiffrement plus tard une fois que les configs sont chargées en mémoire
 			}
 			else if (ret==-2)  // pas de réinit
 			{
-				// ISSUE#147
-				// if (AskPwd(NULL,TRUE)!=0) goto end;
 				rc=AskPwd(NULL,TRUE);
-				if (rc==-1) // mauvais mot de passe
-					goto end;
-				else if (rc==-2) // mot de passe oublié
-					goto askpwd;
+				if (rc==-1) goto end; // mauvais mot de passe
+				else if (rc==-2) goto askpwd; // l'utilisateur a cliqué sur mot de passe oublié
 			}
 			else if (ret==-5)  // l'utilisateur a demandé de regénérer le challenge (ISSUE#121)
 			{
-				if (RecoveryChallenge(NULL)==0) 
-					goto askpwd;
-				else
-					goto askpwd; // je sais, c'est moche, mais c'est tellement plus simple...
+				RecoveryChallenge(NULL);
+				goto askpwd; // je sais, c'est moche, mais c'est tellement plus simple...
 			}
 			else // il y a eu une réinit et ça n'a pas marché :-(
 			{
 				goto end;
 			}
 		}
-		else if (giPwdProtection==PP_WINDOWS) // couplage mot de passe Windows
+		else if (giPwdProtection==PP_WINDOWS) // MODE mot de passe Windows
 		{
 			char szConfigHashedPwd[SALT_LEN*2+HASH_LEN*2+1];
 			int len;
 			
-			// Regarde si l'utilisateur utilisait un mot de passe avant de demander le couplage Windows
+			// Regarde si l'utilisateur utilisait un mot de passe maitre avant de demander le couplage Windows
 			GetPrivateProfileString("swSSO","pwdValue","",szConfigHashedPwd,sizeof(szConfigHashedPwd),gszCfgFile);
 			TRACE((TRACE_DEBUG,_F_,"pwdValue=%s",szConfigHashedPwd));
 			len=strlen(szConfigHashedPwd);
-			if (len==PBKDF2_PWD_LEN*2)
+			if (len==PBKDF2_PWD_LEN*2) // L'utilisateur a encore un mot de passe maitre mais doit passer en couplage Windows
 			{
 				char szPwd[LEN_PWD+1];
 				int ret=DPAPIGetMasterPwd(szPwd);
@@ -2176,8 +2143,7 @@ askpwd:
 				int ret=RecoveryResponse(NULL);
 				if (ret==0) // il y a eu une réinit et ça a bien marché :-)
 				{ 
-					// transchiffrement plus tard une fois que les configs sont chargées en mémoire
-					gbRecoveryRunning=TRUE;
+					gbRecoveryRunning=TRUE; // transchiffrement plus tard une fois que les configs sont chargées en mémoire
 				}
 				else if (ret==-2) // pas de réinit
 				{
@@ -2238,7 +2204,7 @@ askpwd:
 				// impose le changement de mot de passe
 				if (*szPwdMigration093==0) 
 				{
-					if (WindowChangeMasterPwd(TRUE) != 0) goto end;
+					if (WindowChangeMasterPwd(TRUE)!=0) goto end;
 				}
 				else
 				{
@@ -2248,10 +2214,9 @@ askpwd:
 		}
 	}
 
-
-	// 0.91 : propose à l'utilisateur de récupérer toutes les configurations disponibles sur le serveur
+	// 0.91 : propose à l'utilisateur de récupérer les configurations disponibles sur le serveur
 	TRACE((TRACE_DEBUG,_F_,"giNbActions=%d gbGetAllConfigsAtFirstStart=%d giDomainId=%d",giNbActions,gbGetAllConfigsAtFirstStart,giDomainId));
-	if (giNbActions==0 && gbGetAllConfigsAtFirstStart) 
+	if (giNbActions==0 && gbGetAllConfigsAtFirstStart) // CAS DU PREMIER LANCEMENT (ou encore aucune config enregistrée)
 	{
 		// 1.03 : récupère la liste des domaines (avant, était dans SelectDomain, mais doit être fait dans tous les cas pour alimenter le menu Upload)
 		if (GetDomains()!=0) 
@@ -2276,7 +2241,7 @@ askpwd:
 			GetAllConfigsFromServer();
 		}
 	}
-	else
+	else // CAS DES LANCEMENTS ULTERIEURS (avec configurations déjà enregistrées)
 	{
 		// 0.91 : si demandé, récupère les nouvelles configurations et/ou les configurations modifiées
 		if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
@@ -2298,6 +2263,7 @@ askpwd:
 		giNbCategories=1;
 		giNextCategId=1;
 		WritePrivateProfileString("swSSO-Categories","0",gptCategories[0].szLabel,gszCfgFile);
+		StoreIniEncryptedHash(); // ISSUE#164
 	}
 
 	// initialisation SSO Web (IE)
@@ -2376,7 +2342,7 @@ askpwd:
 		gbRecoveryRunning=FALSE;
 		// supprime le recovery running
 		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile);
-		// 
+		StoreIniEncryptedHash(); // ISSUE#164
 		MessageBox(NULL,GetString(giPwdProtection==PP_ENCRYPTED?IDS_RECOVERY_ENCRYPTED_OK:IDS_RECOVERY_WINDOWS_OK),"swSSO",MB_ICONINFORMATION | MB_OK);
 		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_SUCCESS,NULL,NULL,NULL,0);
 	}
@@ -2402,21 +2368,6 @@ askpwd:
 
 	// Si -launchapp, ouvre la fenêtre ShowAppNsites
 	if (bLaunchApp) ShowLaunchApp();
-
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	// JUSTE POUR TEST *******************************
-	StoreIniEncryptedHash();
 
 	// Ici on peut considérer que swSSO est bien démarré et que l'utilisateur est connecté
 	// Prise de la date de login pour les stats
@@ -2468,6 +2419,7 @@ end:
 	// on libère tout avant de terminer
 	swCryptDestroyKey(ghKey1);
 	swCryptDestroyKey(ghKey2);
+	swCryptDestroyKey(ghKey3);
 	swCryptTerm();
 	SSOWebTerm();
 	UnloadIcons();
