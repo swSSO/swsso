@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="102";	// 101 = 1.01
-const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1032";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 static HWND gwMain=NULL;
 
@@ -1867,7 +1867,7 @@ int SelectDomain(void)
 	else if (giNbDomains==1) // domaine commun -> renseigne le domaine commun
 	{
 		giDomainId=gtabDomains[0].iDomainId;
-		strcpy_s(gszDomainLabel,sizeof(gtabDomains),gtabDomains[0].szDomainLabel);
+		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),gtabDomains[0].szDomainLabel); // corrigé en 1.03 sizeof(gtabDomains) remplacé par sizeof(gszDomainLabel)
 		rc=1; goto end;
 	}
 	else if (giNbDomains==2) // domaine commun + 1 domaine spécifique -> renseigne le domaine spécifique

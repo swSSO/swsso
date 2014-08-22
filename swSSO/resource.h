@@ -102,7 +102,6 @@
 #define TB_NEW_PWD1                             1077
 #define TX_ID3_ID                               1078
 #define TB_NEW_PWD2                             1079
-#define TX_ID4_ID                               1080
 #define TX_PROXY                                1081
 #define CK_GET_CONFIG                           1082
 #define TX_ID3_TYPE                             1083
@@ -193,9 +192,13 @@
 #define IDS_CHANGE_PWD_OK                       40018
 #define IMG_KBSIM                               40018
 #define IDS_MENU_PORTAL                         40019
+#define TX_PWD_GROUP                            40019
 #define IDS_MENU_THIS_APPLI                     40020
+#define TX_ID4_ID                               40020
 #define IDS_CONFIG_NOT_FOUND                    40021
+#define TB_PWD_GROUP                            40021
 #define IDS_NEW_VERSION                         40022
+#define IMG_PWD_GROUP                           40022
 #define IDS_MENU_DEPLACER                       40023
 #define IDS_CONFIG_ALREADY_EXISTS               40024
 #define IDS_CONFIG_PROXY                        40025
@@ -325,3 +328,4 @@
 #define IDS_WARNING_AD_PWD                      40138
 #define IDS_MENU_UPLOADER_IDPWD                 40139
 #define IDS_MENU_UPLOADER_IDPWD_VERS            40140
+#define IDS_TIP_PWD_GROUP                       40141

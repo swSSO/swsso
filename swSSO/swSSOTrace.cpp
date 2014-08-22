@@ -41,7 +41,7 @@
 static char gszTraceFileName[_MAX_PATH+1];
 static int giTraceLevel=3;
 static DWORD gdwTraceFileSize=20000000; 
-static char gszTraceBuf[2048];
+static char gszTraceBuf[4096];
 HANDLE ghfTrace=INVALID_HANDLE_VALUE;
 
 static char gszTraceLevelLabel[5+1];

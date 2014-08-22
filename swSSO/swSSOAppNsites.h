@@ -106,8 +106,8 @@ typedef struct
 	BOOL bSaved;				// 0.93B6 ISSUE#55 : indique si la config a été "appliquée" depuis son ajout. Une config non bSaved apparait dans la fenêtre mais n'est pas exécutée
 	BOOL bAddAccount;			// 0.97B1 ISSUE#86 : permet de savoir que la config a été créée par ajout de compte
 	BOOL bWithIdPwd;			// 1.03 : permet de savoir que la config a été récupérée du serveur avec son id et mdp (donc interdit de voir et de modifier)
+	int  iPwdGroup;				// 1.03 : groupement des configurations pour changement mot de passe
 } T_ACTION;
-
 
 typedef struct 
 {

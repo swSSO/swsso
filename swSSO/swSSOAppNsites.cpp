@@ -166,7 +166,7 @@ typedef struct
 	int iTip;
 	int idString;
 } T_TIP;
-T_TIP gtip[40];
+T_TIP gtip[42];
 
 // ----------------------------------------------------------------------------------
 // InitTooltip()
@@ -218,7 +218,9 @@ static void InitTooltip(HWND w)
 	gtip[37].iTip=TB_KBSIM;      	gtip[37].idString=IDS_TIP_TB_KBSIM;
 	gtip[38].iTip=IMG_LOUPE;      	gtip[38].idString=IDS_TIP_LOUPE;
 	gtip[39].iTip=IMG_KBSIM;      	gtip[39].idString=IDS_TIP_TB_KBSIM;
-    gwTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL,
+    gtip[40].iTip=IMG_PWD_GROUP;    gtip[40].idString=IDS_TIP_PWD_GROUP;
+    gtip[41].iTip=TB_PWD_GROUP;     gtip[41].idString=IDS_TIP_PWD_GROUP;
+	gwTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL,
 							WS_POPUP | TTS_ALWAYSTIP /*| TTS_BALLOON*/,	
 							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
 							w,NULL,ghInstance,NULL);
@@ -229,7 +231,7 @@ static void InitTooltip(HWND w)
     ti.uFlags = TTF_SUBCLASS | TTF_IDISHWND ;
     ti.hinst = ghInstance;
 
-	for (i=0;i<40;i++)
+	for (i=0;i<42;i++)
 	{
 		ti.hwnd = w;
 	    ti.lpszText=GetString(gtip[i].idString);
@@ -335,6 +337,7 @@ void HideConfigControls(HWND w)
 		ShowWindow(GetDlgItem(w,TB_ID2_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID3_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID4_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TB_PWD_GROUP),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_PWD_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_VALIDATION),SW_HIDE);
 		ShowWindow(GetDlgItem(w,CB_TYPE),SW_HIDE);
@@ -347,6 +350,7 @@ void HideConfigControls(HWND w)
 		ShowWindow(GetDlgItem(w,TX_ID2_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_ID3_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_ID4_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_PWD_GROUP),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_PWD_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_VALIDATION),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_TYPE),SW_HIDE);
@@ -376,6 +380,7 @@ void DisableConfigControls(HWND w)
 		EnableWindow(GetDlgItem(w,TB_ID2_ID),FALSE);
 		EnableWindow(GetDlgItem(w,TB_ID3_ID),FALSE);
 		EnableWindow(GetDlgItem(w,TB_ID4_ID),FALSE);
+		EnableWindow(GetDlgItem(w,TB_PWD_GROUP),FALSE);
 		EnableWindow(GetDlgItem(w,TB_PWD_ID),FALSE);
 		EnableWindow(GetDlgItem(w,TB_VALIDATION),FALSE);
 		EnableWindow(GetDlgItem(w,CB_TYPE),FALSE);
@@ -414,6 +419,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 		SetDlgItemText(w,TB_ID2_ID,"");		EnableWindow(GetDlgItem(w,TB_ID2_ID),FALSE);
 		SetDlgItemText(w,TB_ID3_ID,"");		EnableWindow(GetDlgItem(w,TB_ID3_ID),FALSE);
 		SetDlgItemText(w,TB_ID4_ID,"");		EnableWindow(GetDlgItem(w,TB_ID4_ID),FALSE);
+		SetDlgItemText(w,TB_PWD_GROUP,"");	EnableWindow(GetDlgItem(w,TB_PWD_GROUP),FALSE);
 		SetDlgItemText(w,TB_PWD_ID,"");		EnableWindow(GetDlgItem(w,TB_PWD_ID),FALSE);
 		SetDlgItemText(w,TB_VALIDATION,"");	EnableWindow(GetDlgItem(w,TB_VALIDATION),FALSE);
 		SendMessage(GetDlgItem(w,CB_TYPE),CB_SETCURSEL,0,0);		EnableWindow(GetDlgItem(w,CB_TYPE),FALSE);
@@ -453,6 +459,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 				EnableWindow(GetDlgItem(w,TB_ID2_ID),FALSE);
 				EnableWindow(GetDlgItem(w,TB_ID3_ID),FALSE);
 				EnableWindow(GetDlgItem(w,TB_ID4_ID),FALSE);
+				EnableWindow(GetDlgItem(w,TB_PWD_GROUP),FALSE);
 				EnableWindow(GetDlgItem(w,CK_KBSIM),FALSE);
 				EnableWindow(GetDlgItem(w,TB_KBSIM),FALSE);
 				EnableWindow(GetDlgItem(w,PB_PARCOURIR),FALSE);
@@ -473,6 +480,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 				EnableWindow(GetDlgItem(w,TB_ID2_ID),FALSE);
 				EnableWindow(GetDlgItem(w,TB_ID3_ID),FALSE);
 				EnableWindow(GetDlgItem(w,TB_ID4_ID),FALSE);
+				EnableWindow(GetDlgItem(w,TB_PWD_GROUP),TRUE);
 				break;
 			case WINSSO:
 				EnableWindow(GetDlgItem(w,TB_ID2),TRUE);
@@ -489,6 +497,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 				EnableWindow(GetDlgItem(w,TB_ID2_ID),TRUE);   // 0.90B1 : FALSE -> TRUE
 				EnableWindow(GetDlgItem(w,TB_ID3_ID),TRUE);   // 0.90B1 : FALSE -> TRUE
 				EnableWindow(GetDlgItem(w,TB_ID4_ID),TRUE);   // 0.90B1 : FALSE -> TRUE
+				EnableWindow(GetDlgItem(w,TB_PWD_GROUP),TRUE);
 				break;
 			case WEBSSO:
 			case XEBSSO:
@@ -506,6 +515,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 				EnableWindow(GetDlgItem(w,TB_ID2_ID),TRUE);
 				EnableWindow(GetDlgItem(w,TB_ID3_ID),TRUE);
 				EnableWindow(GetDlgItem(w,TB_ID4_ID),TRUE);
+				EnableWindow(GetDlgItem(w,TB_PWD_GROUP),TRUE);
 				break;
 		}
 	}
@@ -1405,8 +1415,8 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 	gptActions[giNbActions-1].bAddAccount=bKeepId;
 	
 	// 1.03
-	gptActions[giNbActions-1].bWithIdPwd=bKeepId?0:gptActions[iAction].bWithIdPwd;
-
+	gptActions[giNbActions-1].bWithIdPwd=bKeepId?FALSE:gptActions[iAction].bWithIdPwd;
+	gptActions[giNbActions-1].iPwdGroup=bKeepId?-1:gptActions[iAction].iPwdGroup;
 
 	ShowApplicationDetails(w,giNbActions-1);
 	rc=0;
@@ -1811,6 +1821,7 @@ end:
 void ShowApplicationDetails(HWND w,int iAction)
 {
 	TRACE((TRACE_ENTER,_F_, "iAction=%d",iAction));
+	char szTmp[10+1];
 	gbIsChanging=TRUE;
 	
 	if (iAction>giNbActions) { TRACE((TRACE_ERROR,_F_,"iAction=%d ! (giNbActions=%d)",iAction,giNbActions)); goto end; }
@@ -1861,6 +1872,7 @@ void ShowApplicationDetails(HWND w,int iAction)
 	SetDlgItemText(w,TB_ID2_ID,gptActions[iAction].szId2Name);
 	SetDlgItemText(w,TB_ID3_ID,gptActions[iAction].szId3Name);
 	SetDlgItemText(w,TB_ID4_ID,gptActions[iAction].szId4Name);
+	sprintf_s(szTmp,sizeof(szTmp),"%d",gptActions[iAction].iPwdGroup);SetDlgItemText(w,TB_PWD_GROUP,szTmp);
 	SendMessage(GetDlgItem(w,CB_ID2_TYPE),CB_SETCURSEL,gptActions[iAction].id2Type,0);
 	SendMessage(GetDlgItem(w,CB_ID3_TYPE),CB_SETCURSEL,gptActions[iAction].id3Type,0);
 	SendMessage(GetDlgItem(w,CB_ID4_TYPE),CB_SETCURSEL,gptActions[iAction].id4Type,0);
@@ -1920,6 +1932,7 @@ void GetApplicationDetails(HWND w,int iAction)
 	// stocke en même temps les éventuelles nouvelles valeurs de config
 	BOOL bChanged=FALSE;
 	int iTmpType;
+	int iTmpPwdGroup;
 	BOOL bTmpChecked;
 
 	iTmpType=SendMessage(GetDlgItem(w,CB_TYPE),CB_GETCURSEL,0,0); 
@@ -1991,6 +2004,14 @@ void GetApplicationDetails(HWND w,int iAction)
 		TRACE((TRACE_DEBUG,_F_,"Chgt config %s (szId4Name : %s -> %s)",gptActions[iAction].szApplication,gptActions[iAction].szId4Name,buf2048));
 		bChanged=TRUE;
 		strcpy_s(gptActions[iAction].szId4Name,sizeof(gptActions[iAction].szId4Name),buf2048);
+	}
+	GetDlgItemText(w,TB_PWD_GROUP,buf2048,sizeof(buf2048));
+	iTmpPwdGroup=atoi(buf2048);
+	if (iTmpPwdGroup!=gptActions[iAction].iPwdGroup) 
+	{
+		TRACE((TRACE_DEBUG,_F_,"Chgt config %s (iPwdGroup : %d -> %d)",gptActions[iAction].szApplication,gptActions[iAction].iPwdGroup,iTmpPwdGroup));
+		bChanged=TRUE;
+		gptActions[iAction].iPwdGroup=iTmpPwdGroup;
 	}
 	GetDlgItemText(w,TB_PWD_ID,buf2048,sizeof(buf2048));
 	if (strcmp(buf2048,gptActions[iAction].szPwdName)!=0) 
@@ -2342,6 +2363,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	SendMessage(GetDlgItem(w,TB_ID2_ID),EM_LIMITTEXT,90,0);
 	SendMessage(GetDlgItem(w,TB_ID3_ID),EM_LIMITTEXT,90,0);
 	SendMessage(GetDlgItem(w,TB_ID4_ID),EM_LIMITTEXT,90,0);
+	SendMessage(GetDlgItem(w,TB_PWD_GROUP),EM_LIMITTEXT,2,0);
 	SendMessage(GetDlgItem(w,TB_PWD_ID),EM_LIMITTEXT,90,0);
 	SendMessage(GetDlgItem(w,TB_VALIDATION),EM_LIMITTEXT,90,0);
 	SendMessage(GetDlgItem(w,TB_KBSIM),EM_LIMITTEXT,LEN_KBSIM,0);
@@ -2368,7 +2390,8 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	SendDlgItemMessage(w, IMG_ID4_TYPE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
 	SendDlgItemMessage(w, IMG_ID4_ID, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
 	SendDlgItemMessage(w, IMG_KBSIM, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
-
+	SendDlgItemMessage(w, IMG_PWD_GROUP, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	
 	// Chargement de l'image list
 	TreeView_SetImageList(GetDlgItem(w,TV_APPLICATIONS),ghImageList,TVSIL_STATE);
 
@@ -2500,9 +2523,11 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,TX_ID2_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_ID3_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_ID4_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_PWD_GROUP),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID2_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID3_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID4_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TB_PWD_GROUP),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_ID2_TYPE),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_ID3_TYPE),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_ID4_TYPE),SW_HIDE);
@@ -2515,6 +2540,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_ID2_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_ID3_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_ID4_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_PWD_GROUP),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_TYPE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+35,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,CB_TYPE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+35-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_TITRE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+65,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
@@ -2606,6 +2632,9 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		SetWindowPos(GetDlgItem(w,TX_ID4_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+185,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TB_ID4_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+185-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,IMG_ID4_ID)	,NULL,rect.right-30,rect.bottom*1/3+185-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_PWD_GROUP)	,NULL,rect.right*2/5+25,rect.bottom*1/3+215,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_PWD_GROUP)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+215-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_PWD_GROUP),NULL,rect.right-30,rect.bottom*1/3+215-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 	}
 	HideConfigControls(w);
 	if (wToRefresh==NULL)
@@ -3055,8 +3084,10 @@ int LoadApplications(void)
 		gptActions[i].iNbEssais=0; // 0.93B7
 		gptActions[i].bAddAccount=GetConfigBoolValue(p,"addAccount",FALSE,TRUE); // 0.97 ISSUE#86
 		gptActions[i].bWithIdPwd=GetConfigBoolValue(p,"bWithIdPwd",FALSE,TRUE); // 1.03
-		// 0.9X : gestion des changements de mot de passe sur les pages web
+		gptActions[i].iPwdGroup=GetPrivateProfileInt(p,"pwdGroup",-1,gszCfgFile); // 1.03
 		gptActions[i].bPwdChangeInfos=GetConfigBoolValue(p,"pwdChange",FALSE,FALSE);
+#if 0
+		// 0.9X : gestion des changements de mot de passe sur les pages web
 		if (gptActions[i].bPwdChangeInfos)
 		{
 			TRACE((TRACE_INFO,_F_,"Une page de changement de mot de passe est déclarée pour cette application :"));
@@ -3102,6 +3133,7 @@ int LoadApplications(void)
 			gptActions[i].bPwdChangeInfos=FALSE;
 			gptActions[i].iNbEssais=0;
 		}
+#endif
 suite:
 		while(*p!=0) p++ ;
 		i++;
@@ -3237,7 +3269,7 @@ int SaveApplications(void)
 		}
 		// le plus beau sprintf de ma carrière... en espérant que le buffer soit assez grand ;-(
 		sprintf_s(tmpBuf,sizeof(tmpBuf),
-			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ndomainId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\n", //pwdChange=%s\r\n",
+			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ndomainId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
 			gptActions[i].szApplication,
 			gptActions[i].iConfigId,
 			gptActions[i].iCategoryId,
@@ -3259,7 +3291,8 @@ int SaveApplications(void)
 			gptActions[i].szFullPathName,
 			*(gptActions[i].szLastUpload)==0?"":gptActions[i].szLastUpload,
 			gptActions[i].bAddAccount?"YES":"NO", // 0.97 ISSUE#86
-			gptActions[i].bWithIdPwd?"YES":"NO"); // 1.03
+			gptActions[i].bWithIdPwd?"YES":"NO", // 1.03
+			gptActions[i].iPwdGroup); // 1.03
 			//,	gptActions[i].bPwdChangeInfos?"YES":"NO");
 		if (!WriteFile(hf,tmpBuf,strlen(tmpBuf),&dw,NULL)) 
 		{ 
@@ -3580,6 +3613,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case TX_ID2_ID:
 				case TX_ID3_ID:
 				case TX_ID4_ID:
+				case TX_PWD_GROUP:
 				case TX_ID2_TYPE:
 				case TX_ID3_TYPE:
 				case TX_ID4_TYPE:

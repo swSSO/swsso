@@ -59,8 +59,8 @@ HWND gTabExcludedHandles[MAX_EXCLUDED_HANDLES];
 int  giDomainId=1;						// 0.94B1 : gestion des domaines
 char gszDomainLabel[LEN_DOMAIN+1]="";
 BOOL gbDisplayChangeAppPwdDialog ; // ISSUE#107
-char gszLastADPwdChange[14+1]="";				// 1.03 : date de dernier changement de mdp dans l'AD, format AAAAMMJJHHMMSS
-char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1]; // 1.03 : valeur du mot de passe AD (fourni par l'utilisateur)
+char gszLastADPwdChange[14+1]="";					// 1.03 : date de dernier changement de mdp dans l'AD, format AAAAMMJJHHMMSS
+char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1]="";	// 1.03 : valeur du mot de passe AD (fourni par l'utilisateur)
 
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
@@ -2915,7 +2915,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploa
 														localTime.wHour,localTime.wMinute,localTime.wSecond);
 	TRACE((TRACE_DEBUG,_F_,"szLastModified=%s",szLastModified));
 
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%d",
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%d&pwdGroup=%d",
 				gszWebServiceAddress,
 				gptActions[iAction].iConfigId,
 				pszEncodedTitle,
@@ -2937,7 +2937,8 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploa
 				szCategLabel,
 				gptActions[iAction].szFullPathName,
 				szLastModified,
-				iDomainId); 
+				iDomainId,
+				gptActions[iAction].iPwdGroup); 
 	if (bUploadIdPwd)
 	{
 		strcat_s(szRequest,sizeof(szRequest),"&withIdPwd=1");
@@ -3049,11 +3050,16 @@ end:
 	<categId></categId>
 	<categLabel></categLabel>
 	<domainId></domainId>
+	<id1Value></domainId>
+	<id2Value></domainId>
+	<id3Value></domainId>
+	<id4Value></domainId>
+	<pwdValue></domainId>
 </app>
 */
 static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 {
-	TRACE((TRACE_ENTER,_F_, "bstrXML=%S",bstrXML));
+	TRACE((TRACE_ENTER,_F_, ""));
 
 	int rc=-1;
 	HRESULT hr;
@@ -3189,6 +3195,8 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 						gptActions[iAction].bConfigSent=TRUE;
 						gptActions[iAction].bSaved=FALSE; // 0.93B6 ISSUE#55
 						gptActions[iAction].iConfigId=iConfigId;
+						gptActions[iAction].bWithIdPwd=FALSE;
+						gptActions[iAction].iPwdGroup=-1;
 						TRACE((TRACE_DEBUG,_F_,"gptActions[iAction].iConfigId=%d",gptActions[iAction].iConfigId));
 						if (bGetAll) giNbActions++; // sinon à ne pas faire, sera fait dans AddAppplicationFromCurrentWindow !
 					}
@@ -3549,6 +3557,77 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					{
 						gptActions[ptiActions[i]].iDomainId=atoi(tmp);
 						TRACE((TRACE_DEBUG,_F_,"gptActions[%d].iDomainId=%d",ptiActions[i],gptActions[ptiActions[i]].iDomainId));
+					}
+				}
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"id1Value")) // nouveau v1.03
+			{
+				for (i=0;i<iReplaceExistingConfig;i++)
+				{
+					rc=StoreNodeValue(gptActions[ptiActions[i]].szId1Value,sizeof(gptActions[ptiActions[i]].szId1Value),pChildElement);
+					TRACE((TRACE_DEBUG,_F_, "id1Value=%s",gptActions[ptiActions[i]].szId1Value));
+					if (rc>0) { gptActions[ptiActions[i]].bWithIdPwd=TRUE; }
+				}
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"id2Value")) // nouveau v1.03
+			{
+				for (i=0;i<iReplaceExistingConfig;i++)
+				{
+					rc=StoreNodeValue(gptActions[ptiActions[i]].szId2Value,sizeof(gptActions[ptiActions[i]].szId2Value),pChildElement);
+					TRACE((TRACE_DEBUG,_F_, "id2Value=%s",gptActions[ptiActions[i]].szId2Value));
+					if (rc>0) { gptActions[ptiActions[i]].bWithIdPwd=TRUE; }
+				}
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"id3Value")) // nouveau v1.03
+			{
+				for (i=0;i<iReplaceExistingConfig;i++)
+				{
+					rc=StoreNodeValue(gptActions[ptiActions[i]].szId3Value,sizeof(gptActions[ptiActions[i]].szId3Value),pChildElement);
+					TRACE((TRACE_DEBUG,_F_, "id3Value=%s",gptActions[ptiActions[i]].szId3Value));
+					if (rc>0) { gptActions[ptiActions[i]].bWithIdPwd=TRUE; }
+				}
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"id4Value")) // nouveau v1.03
+			{
+				for (i=0;i<iReplaceExistingConfig;i++)
+				{
+					rc=StoreNodeValue(gptActions[ptiActions[i]].szId4Value,sizeof(gptActions[ptiActions[i]].szId4Value),pChildElement);
+					TRACE((TRACE_DEBUG,_F_, "id4Value=%s",gptActions[ptiActions[i]].szId4Value));
+					if (rc>0) { gptActions[ptiActions[i]].bWithIdPwd=TRUE; }
+				}
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"pwdValue")) // nouveau v1.03
+			{
+				char tmpPwd[LEN_PWD+1]="";
+				rc=StoreNodeValue(tmpPwd,sizeof(tmpPwd),pChildElement);
+				TRACE((TRACE_PWD,_F_, "pwdValue=%s",tmpPwd));
+				if (rc>0)
+				{
+					char *pszEncryptedPassword=NULL;
+					// chiffre le mot de passe
+					pszEncryptedPassword=swCryptEncryptString(tmpPwd,ghKey1);
+					SecureZeroMemory(tmpPwd,LEN_PWD+1);
+					if (pszEncryptedPassword!=NULL) 
+					{
+						// le stocke dans toutes les configs concernées
+						for (i=0;i<iReplaceExistingConfig;i++)
+						{
+							strcpy_s(gptActions[ptiActions[i]].szPwdEncryptedValue,sizeof(gptActions[ptiActions[i]].szPwdEncryptedValue),pszEncryptedPassword);
+							if (rc>0) { gptActions[ptiActions[i]].bWithIdPwd=TRUE; }
+						}
+					}
+				}
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"pwdGroup")) 
+			{
+				char tmp[10+1];
+				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
+				if (rc>0) 
+				{
+					for (i=0;i<iReplaceExistingConfig;i++)
+					{
+						gptActions[ptiActions[i]].iPwdGroup=atoi(tmp);
+						TRACE((TRACE_DEBUG,_F_,"gptActions[%d].iPwdGroup=%d",ptiActions[i],gptActions[ptiActions[i]].iPwdGroup));
 					}
 				}
 			}

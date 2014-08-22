@@ -60,5 +60,6 @@ CREATE TABLE IF NOT EXISTS `config` (
   `id3Value` varbinary(64) DEFAULT NULL,
   `id4Value` varbinary(64) DEFAULT NULL,
   `pwdValue` varbinary(64) DEFAULT NULL,
+  `pwdGroup` tinyint (1) DEFAULT -1,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;

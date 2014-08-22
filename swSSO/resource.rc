@@ -101,6 +101,7 @@ FONT 8, "Tahoma", 400, 0, 0
     ICON            "", IMG_ID3_ID, 243, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_ID4_TYPE, 264, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_ID4_ID, 283, 287, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_PWD_GROUP, 332, 286, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_KBSIM, 309, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_PWD, 419, 36, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     CONTROL         "Tree1", TV_APPLICATIONS, WC_TREEVIEW, WS_TABSTOP | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS, 15, 29, 168, 202, WS_EX_LEFT
@@ -146,11 +147,31 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Type 4ème identifiant", TX_ID4_TYPE, 211, 237, 70, 8, SS_LEFT, WS_EX_LEFT
     COMBOBOX        CB_ID4_TYPE, 282, 231, 140, 57, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST, WS_EX_LEFT
     LTEXT           "Nom 4ème identifiant", TX_ID4_ID, 211, 250, 67, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Groupe (mot de passe)", TX_PWD_GROUP, 213, 271, 74, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_ID4_ID, 283, 247, 128, 13, ES_AUTOHSCROLL, WS_EX_LEFT
+    EDITTEXT        TB_PWD_GROUP, 285, 270, 128, 13, ES_AUTOHSCROLL, WS_EX_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 7, 253, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "Annuler", IDCANCEL, 62, 253, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "&Appliquer", IDAPPLY, 121, 253, 50, 14, 0, WS_EX_LEFT
     ICON            "", IMG_LOUPE, 407, 36, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+IDD_ASK_AD_PWD DIALOG 0, 0, 268, 109
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "swSSO - Mot de passe Windows Active Directory"
+FONT 8, "Tahoma"
+{
+    EDITTEXT        TB_NEW_PWD1, 96, 46, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    EDITTEXT        TB_NEW_PWD2, 96, 65, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 158, 88, 50, 14, WS_DISABLED, WS_EX_LEFT
+    PUSHBUTTON      "Annuler", IDCANCEL, 212, 88, 50, 14, 0, WS_EX_LEFT
+    LTEXT           "&Confirmation :", IDC_STATIC, 7, 68, 50, 10, SS_LEFT, WS_EX_LEFT
+    LTEXT           "&Nouveau mot de passe :", IDC_STATIC, 7, 48, 79, 10, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Merci de saisir votre mot de passe d'ouverture de session Windows ci-dessous.", TX_FRAME, 47, 7, 211, 19, SS_LEFT, WS_EX_LEFT
+    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 256, 1, WS_EX_LEFT
 }
 
 
@@ -259,24 +280,6 @@ FONT 8, "Tahoma"
     EDITTEXT        TB_NEW_PWD2, 96, 65, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 158, 88, 50, 14, WS_DISABLED, WS_EX_LEFT
     PUSHBUTTON      "Annuler", IDCANCEL, 212, 88, 50, 14, 0, WS_EX_LEFT
-}
-
-
-
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-IDD_ASK_AD_PWD DIALOG 0, 0, 268, 109
-STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
-CAPTION "swSSO - Mot de passe Windows Active Directory"
-FONT 8, "Tahoma"
-{
-    EDITTEXT        TB_NEW_PWD1, 96, 46, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
-    EDITTEXT        TB_NEW_PWD2, 96, 65, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
-    DEFPUSHBUTTON   "OK", IDOK, 158, 88, 50, 14, WS_DISABLED, WS_EX_LEFT
-    PUSHBUTTON      "Annuler", IDCANCEL, 212, 88, 50, 14, 0, WS_EX_LEFT
-    LTEXT           "&Confirmation :", IDC_STATIC, 7, 68, 50, 10, SS_LEFT, WS_EX_LEFT
-    LTEXT           "&Nouveau mot de passe :", IDC_STATIC, 7, 48, 79, 10, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Vous avez changé votre mot de passe Windows. Veuillez le saisir ci-dessous.", TX_FRAME, 47, 7, 202, 19, SS_LEFT, WS_EX_LEFT
-    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 256, 1, WS_EX_LEFT
 }
 
 
@@ -468,7 +471,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Fichier de configuration :", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT, WS_EX_LEFT
     LTEXT           "Licence", TX_LICENCE, 7, 41, 28, 11, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Version 1.03 BETA 1 (08/2014)", TX_ABOUT, 47, 12, 86, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Version 1.03 BETA 2 (08/2014)", TX_ABOUT, 47, 12, 86, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Portail :", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1, WS_EX_LEFT
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1, WS_EX_LEFT
@@ -661,6 +664,7 @@ STRINGTABLE
     IDS_WARNING_AD_PWD            "Si vous ne saisissez pas votre nouveau mot de passe Windows, la connexion à certaines applications ne fonctionnera plus.\r\nVoulez-vous continuer sans saisir le mot de passe Windows ?"
     IDS_MENU_UPLOADER_IDPWD       "Uploader avec login et mdp"
     IDS_MENU_UPLOADER_IDPWD_VERS  "Uploader avec login et mdp vers..."
+    IDS_TIP_PWD_GROUP             "(Administrateur seulement) Regroupement de plusieurs configurations partageant le même mot de passe."
 }
 
 

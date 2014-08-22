@@ -78,6 +78,11 @@ else if ($_GET['action']=="getconfig")
 		$param_title="AES_DECRYPT(title,'"._AESPWD_."')";
 		$param_szFullPathName="AES_DECRYPT(szFullPathName,'"._AESPWD_."')";
 		$param_szName="AES_DECRYPT(szName,'"._AESPWD_."')";
+		$param_id1Value="AES_DECRYPT(id1Value,'"._AESPWD_."')";
+		$param_id2Value="AES_DECRYPT(id2Value,'"._AESPWD_."')";
+		$param_id3Value="AES_DECRYPT(id3Value,'"._AESPWD_."')";
+		$param_id4Value="AES_DECRYPT(id4Value,'"._AESPWD_."')";
+		$param_pwdValue="AES_DECRYPT(pwdValue,'"._AESPWD_."')";
 	}
 	else
 	{
@@ -85,13 +90,20 @@ else if ($_GET['action']=="getconfig")
 		$param_title="title";
 		$param_szFullPathName="szFullPathName";
 		$param_szName="szName";
+		$param_id1Value="id1Value";
+		$param_id2Value="id2Value";
+		$param_id3Value="id3Value";
+		$param_id4Value="id4Value";
+		$param_pwdValue="pwdValue";
 	}
 
 	// la liste des champs à retourner dans la structure XML est comune à TOUTES les requêtes
 	$columns="typeapp,".$param_title.",".$param_url.",id1Name,pwdName,id2Name,id2Type,id3Name,".
 			"id3Type,id4Name,id4Type,id5Name,id5Type,validateName,bKBSim,szKBSim,".
 			$param_szName.",".$param_szFullPathName.",categId,"._TABLE_PREFIX_."categ.label,".
-			_TABLE_PREFIX_."config.id,lastModified,active,"._TABLE_PREFIX_."config.domainId";
+			_TABLE_PREFIX_."config.id,lastModified,active,"._TABLE_PREFIX_."config.domainId,".
+			$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue.",pwdGroup";
+			
 	if ($_GET['debug']!="") echo $columns;
 	if ($_GET['debug']!="") echo "new=".$var_new." mod=".$var_mod." old=".$var_old;
 	
@@ -231,6 +243,12 @@ else if ($_GET['action']=="getconfig")
 			echo "<categId><![CDATA[".$ligne[18]."]]></categId>\n";
 			echo "<categLabel><![CDATA[".$ligne[19]."]]></categLabel>\n";
 			echo "<domainId><![CDATA[".$ligne[23]."]]></domainId>\n";
+			echo "<id1Value><![CDATA[".$ligne[24]."]]></id1Value>\n";
+			echo "<id2Value><![CDATA[".$ligne[25]."]]></id2Value>\n";
+			echo "<id3Value><![CDATA[".$ligne[26]."]]></id3Value>\n";
+			echo "<id4Value><![CDATA[".$ligne[27]."]]></id4Value>\n";
+			echo "<pwdValue><![CDATA[".$ligne[28]."]]></pwdValue>\n";
+			echo "<pwdGroup><![CDATA[".$ligne[29]."]]></pwdGroup>\n";
 			echo "</app>\n";
 			$i++;
 		}
@@ -276,6 +294,9 @@ else if ($_GET['action']=="putconfig")
 	$var_id3Value		=utf8_decode(myaddslashes($_GET['id3Value']));  // ajouté en 5.3 pour client 1.03
 	$var_id4Value		=utf8_decode(myaddslashes($_GET['id4Value']));  // ajouté en 5.3 pour client 1.03
 	$var_pwdValue		=utf8_decode(myaddslashes($_GET['pwdValue']));  // ajouté en 5.3 pour client 1.03
+	$var_pwdGroup		=utf8_decode(myaddslashes($_GET['pwdGroup']));  // ajouté en 5.3 pour client 1.03
+	
+	if ($var_pwdGroup=='') $var_pwdGroup=-1;
     
 	// V4 : gestion des catégories
 	// Ajoute la catégorie si n'existe pas ou met à jour le label
@@ -371,7 +392,8 @@ else if ($_GET['action']=="putconfig")
 									  "categId='".$var_categId."',".
 									  "domainId='".$var_domainId."',".
 									  "szFullPathName=".$param_szFullPathName.",".
-									  "lastModified='".$var_lastModified."' ".
+									  "lastModified='".$var_lastModified."',".
+									  "pwdGroup=".$var_pwdGroup.
 									  $szRequestionOptions." WHERE ".
 									  _TABLE_PREFIX_."config.id='".$var_configId."'";
 		
@@ -394,12 +416,12 @@ else if ($_GET['action']=="putconfig")
 		
 		$szRequest="insert into "._TABLE_PREFIX_."config (active,typeapp,title,url,id1Name,id1Type,pwdName,validateName,".
 	           "id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,id5Name,id5Type,bKBSim,szKBSim,szName,categId,domainId,".
-			   "szFullPathName,lastModified".$szRequestOptions1.") ".
+			   "szFullPathName,lastModified,pwdGroup".$szRequestOptions1.") ".
 	           "values (1,'".$var_typeapp."',".$param_title.",".$param_url.",'".$var_id1Name."','EDIT','".
 	           $var_pwdName."','".$var_validateName."','".$var_id2Name."','".$var_id2Type."','".
 	           $var_id3Name."','".$var_id3Type."','".$var_id4Name."','".$var_id4Type."','".
 	           $var_id5Name."','".$var_id5Type."',".$var_bKBSim.",'".$var_szKBSim."',".$param_szName.",'".
-	           $var_categId."',".$var_domainId.",".$param_szFullPathName.",'".$var_lastModified."'".$szRequestOptions2.")";
+	           $var_categId."',".$var_domainId.",".$param_szFullPathName.",'".$var_lastModified.",".$var_pwdGroup.$szRequestOptions2.")";
 		if ($_GET['debug']!="") echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
