@@ -38,7 +38,7 @@
 //-----------------------------------------------------------------------------
 int Install(void)
 {
-	int rc=0;
+	int rc=-1; // ISSUE#170
 	SC_HANDLE schSCManager=NULL;
     SC_HANDLE schService=NULL;
     char szPath[_MAX_PATH];
@@ -77,7 +77,7 @@ int Install(void)
         TRACE((TRACE_ERROR,_F_,"CreateService()=%d", GetLastError()));
         goto end;
     }
-    
+    rc=0;
 end:
 
     if (schService!=NULL) CloseServiceHandle(schService); 
@@ -93,7 +93,7 @@ end:
 //-----------------------------------------------------------------------------
 int Uninstall(void)
 {
-	int rc=0;
+	int rc=-1; // ISSUE#170
 	TRACE((TRACE_ENTER,_F_,""));
 	SC_HANDLE schSCManager=NULL;
     SC_HANDLE schService=NULL;
@@ -119,7 +119,7 @@ int Uninstall(void)
 		TRACE((TRACE_ERROR,_F_,"DeleteService()=%d",GetLastError()));
 		goto end;
 	}
-	 
+	rc=0;	 
 end:	
 	TRACE((TRACE_LEAVE,_F_,"rc=0x%08lx",rc));
 	return rc;
