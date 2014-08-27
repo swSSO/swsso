@@ -20,6 +20,7 @@
 #define IDI_HELP                                203
 #define IDI_LOUPE                               204
 #define IDD_ASK_AD_PWD                          206
+#define IDB_QUESTION                            208
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000

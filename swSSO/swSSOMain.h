@@ -45,6 +45,7 @@ extern HANDLE ghLogo;
 extern HANDLE ghLogoFondBlanc50;
 extern HANDLE ghLogoFondBlanc90;
 extern HANDLE ghLogoExclamation;
+extern HANDLE ghLogoQuestion;
 extern HCURSOR ghCursorHand;
 extern HCURSOR ghCursorWait;
 extern HIMAGELIST ghImageList;

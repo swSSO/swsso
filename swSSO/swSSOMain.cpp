@@ -68,6 +68,7 @@ HANDLE ghLogo=NULL;
 HANDLE ghLogoFondBlanc50=NULL;
 HANDLE ghLogoFondBlanc90=NULL;
 HANDLE ghLogoExclamation=NULL;
+HANDLE ghLogoQuestion=NULL;
 HCURSOR ghCursorHand=NULL; 
 HCURSOR ghCursorWait=NULL;
 HIMAGELIST ghImageList=NULL;
@@ -1228,6 +1229,8 @@ static int LoadIcons(void)
 	if (ghLogoFondBlanc90 == NULL) goto end;
 	ghLogoExclamation = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_EXCLAMATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 	if (ghLogoExclamation == NULL) goto end;
+	ghLogoQuestion = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_QUESTION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+	if (ghLogoQuestion == NULL) goto end;
 	ghCursorHand = (HCURSOR)LoadImage(ghInstance,
 					MAKEINTRESOURCE(IDC_CURSOR_HAND),
 					IMAGE_CURSOR,
@@ -1262,6 +1265,7 @@ static void UnloadIcons(void)
 	if (ghLogoFondBlanc50!=NULL) { DeleteObject(ghLogoFondBlanc50); ghLogoFondBlanc50=NULL; }
 	if (ghLogoFondBlanc90!=NULL) { DeleteObject(ghLogoFondBlanc90); ghLogoFondBlanc90=NULL; }
 	if (ghLogoExclamation != NULL) { DeleteObject(ghLogoExclamation); ghLogoExclamation = NULL; }
+	if (ghLogoQuestion != NULL) { DeleteObject(ghLogoQuestion); ghLogoQuestion = NULL; }
 	if (ghCursorHand != NULL) { DestroyCursor(ghCursorHand); ghCursorHand = NULL; }
 	if (ghCursorWait!=NULL) { DestroyCursor(ghCursorWait); ghCursorWait=NULL; }
 	if (ghImageList!=NULL) ImageList_Destroy(ghImageList);

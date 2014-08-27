@@ -108,6 +108,7 @@ int CheckIniHash();
 // comme RESEDIT est un peu merdique et me change la taille du séparateur quand il a envie
 // cette macro (à positionner dans WM_INITDIALOG) le replace correctement !
 #define MACRO_SET_SEPARATOR { RECT rect; GetClientRect(w,&rect); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,50,rect.right+1,2,FALSE); }
+#define MACRO_SET_SEPARATOR_75 { RECT rect; GetClientRect(w,&rect); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,75,rect.right+1,2,FALSE); }
 #define MACRO_SET_SEPARATOR_140 { RECT rect; GetClientRect(w,&rect); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,140,rect.right+1,2,FALSE); }
 #define MACRO_SET_SEPARATOR_90 { RECT rect; GetClientRect(w,&rect); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,90,rect.right+1,2,FALSE); }
 

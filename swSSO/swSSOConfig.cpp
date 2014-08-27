@@ -4100,6 +4100,7 @@ doConfig:
 				gptActions[giNbActions].bConfigSent=FALSE;
 				gptActions[giNbActions].bSaved=FALSE; // 0.93B6 ISSUE#55
 				gptActions[giNbActions].iDomainId=1; //  1.00 ISSUE#112
+				gptActions[giNbActions].iPwdGroup=-1;
 				if (iType==UNK)
 				{
 					// le UNK était utile dans la requete WEB pour récupérer configs WEB et XEB, maintenant il 

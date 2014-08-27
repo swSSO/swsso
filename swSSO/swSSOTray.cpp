@@ -537,6 +537,29 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// DrawQuestionBar()
+//-----------------------------------------------------------------------------
+// Affichage d'un bandeau blanc avec icone question
+//-----------------------------------------------------------------------------
+void DrawQuestionBar(HWND w)
+{
+	TRACE((TRACE_ENTER, _F_, "w=0x%08lx", w));
+
+	PAINTSTRUCT ps;
+	RECT rect;
+	HDC dc = NULL;
+
+	if (!GetClientRect(w, &rect)) { TRACE((TRACE_ERROR, _F_, "GetClientRect(0x%08lx)=%ld", w, GetLastError()));  goto end; }
+	dc = BeginPaint(w, &ps);
+	if (dc == NULL) { TRACE((TRACE_ERROR, _F_, "BeginPaint()=%ld", GetLastError())); goto end; }
+	if (!BitBlt(dc, 0, 0, rect.right, 75, 0, 0, 0, WHITENESS)) { TRACE((TRACE_ERROR, _F_, "BitBlt(WHITENESS)=%ld", GetLastError())); }
+	DrawBitmap(ghLogoQuestion, dc, 5, 15, 42, 42);
+end:
+	if (dc != NULL) EndPaint(w, &ps);
+	TRACE((TRACE_LEAVE, _F_, ""));
+}
+
+//-----------------------------------------------------------------------------
 // SaveNewAppPwdDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la fenêtre de mise en coffre du nouveau mot de passe d'une appli
@@ -556,7 +579,7 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			//gwChangeMasterPwd=w;
 			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
 			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
-			// limitation chamsp de saisie
+			// limitation champs de saisie
 			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,LEN_PWD,0);
 			SendMessage(GetDlgItem(w,TB_PWD_CLEAR),EM_LIMITTEXT,LEN_PWD,0);
 			// Avertissement en gras
@@ -676,8 +699,34 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 			TRACE((TRACE_INFO,_F_,"SM_CXSCREEN=%d SM_CYSCREEN=%d",cx,cy));
 			GetWindowRect(w,&rect);
 			SetWindowPos(w,NULL,cx-(rect.right-rect.left)-100,cy-(rect.bottom-rect.top)-100,0,0,SWP_NOSIZE | SWP_NOZORDER);
+			MACRO_SET_SEPARATOR_75;
+			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+			if (giRefreshTimer==giTimer) giRefreshTimer=11;
+			SetTimer(w,giRefreshTimer,200,NULL);
 			break;
 		}
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME1:
+				case TX_FRAME2:
+					SetBkMode((HDC)wp, TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
 		case WM_COMMAND:
 			switch (LOWORD(wp))
 			{
@@ -689,8 +738,15 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 				}
 			}
 			break;
+		case WM_PAINT:
+			DrawQuestionBar(w);
+			rc = TRUE;
+			break;
 		case WM_HELP:
 			Help();
+			break;
+		case WM_ACTIVATE:
+			InvalidateRect(w,NULL,FALSE);
 			break;
 	}
 	return rc;
@@ -752,11 +808,29 @@ int BeginChangeAppPassword(void)
 			// 3ème popup : demande à l'utilisateur de confirmer l'enregistrement du nouveau mot de passe
 			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_CONFIRM_NEW_APP_PWD),NULL,ConfirmNewAppPwdDialogProc)==IDOK)
 			{
-				// l'utilisateur a confirmé l'enregistrement, on chiffre le mot de passe et on l'enregistre
+				// L'utilisateur a confirmé l'enregistrement, on chiffre le mot de passe et on l'enregistre
+				// ISSUE#156 : change le mot de passe de toutes les applications du groupe (reconnues par le pwdGroup!=-1)
+				// commence par changer le mot de passe de l'application, comme en v1.02
 				pszEncryptedPassword=swCryptEncryptString(gszNewAppPwd,ghKey1);
-				SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
 				if (pszEncryptedPassword==NULL) goto end;
 				strcpy_s(gptActions[giLastApplicationSSO].szPwdEncryptedValue,sizeof(gptActions[giLastApplicationSSO].szPwdEncryptedValue),pszEncryptedPassword);
+				free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
+				pszEncryptedPassword=NULL;
+				if (gptActions[giLastApplicationSSO].iPwdGroup!=-1) // change les autres applis
+				{
+					int i;
+					for (i=0;i<giNbActions;i++)
+					{
+						if (gptActions[i].iPwdGroup==gptActions[giLastApplicationSSO].iPwdGroup)
+						{
+							pszEncryptedPassword=swCryptEncryptString(gszNewAppPwd,ghKey1);
+							if (pszEncryptedPassword==NULL) goto end;
+							strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
+							free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
+							pszEncryptedPassword=NULL;
+						}
+					}
+				}
 				// sauvegarde
 				SaveApplications();
 				// log
@@ -780,6 +854,7 @@ int BeginChangeAppPassword(void)
 	ClipboardDelete();
 
 end:
+	SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
 	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;

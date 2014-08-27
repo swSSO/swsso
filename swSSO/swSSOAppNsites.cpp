@@ -827,6 +827,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive)
 	// gptActions[giNbActions].bConfigOK=FALSE; // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 	gptActions[giNbActions].bConfigSent=FALSE;
 	gptActions[giNbActions].iDomainId=1;
+	gptActions[giNbActions].iPwdGroup=-1;
 
 	// si le clic-droit est fait sur une catégorie, on ajoute
 	// l'application dans la catégorie sélectionnée, sinon dans non classé
@@ -2414,6 +2415,13 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	
 	gbIsChanging=FALSE;
 	EnableWindow(GetDlgItem(w,IDAPPLY),FALSE); // ISSUE#114
+
+	if (gbEnableOption_ManualPutConfig && gbInternetManualPutConfig)
+	{
+		ShowWindow(GetDlgItem(w,TX_PWD_GROUP),SW_SHOW);
+		ShowWindow(GetDlgItem(w,TB_PWD_GROUP),SW_SHOW);
+		ShowWindow(GetDlgItem(w,IMG_PWD_GROUP),SW_SHOW);
+	}
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -2632,9 +2640,12 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		SetWindowPos(GetDlgItem(w,TX_ID4_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+185,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TB_ID4_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+185-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,IMG_ID4_ID)	,NULL,rect.right-30,rect.bottom*1/3+185-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_PWD_GROUP)	,NULL,rect.right*2/5+25,rect.bottom*1/3+215,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_PWD_GROUP)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+215-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_PWD_GROUP),NULL,rect.right-30,rect.bottom*1/3+215-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		if (gbEnableOption_ManualPutConfig && gbInternetManualPutConfig)
+		{
+			SetWindowPos(GetDlgItem(w,TX_PWD_GROUP)	,NULL,rect.right*2/5+25,rect.bottom*1/3+215,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD_GROUP)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+215-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD_GROUP),NULL,rect.right-30,rect.bottom*1/3+215-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		}
 	}
 	HideConfigControls(w);
 	if (wToRefresh==NULL)
