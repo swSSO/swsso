@@ -173,6 +173,12 @@ int swStat(void)
 	DWORD len, dw;
 	char *p;
 	
+	if (gLastLoginTime.wYear==0) // ISSUE#171
+	{ 
+		TRACE((TRACE_INFO,_F_,"gLastLoginTime=0, utilisateur non connecte --> ne génère pas de stat"));
+		rc=0; goto end; 
+	}
+
 	// nom du fichier : swsso.ini -> swsso.stat
 	strcpy_s(szFilename,sizeof(szFilename),gszCfgFile);
 	p=strrchr(szFilename,'.');

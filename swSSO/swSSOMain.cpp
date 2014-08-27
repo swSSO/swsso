@@ -1943,6 +1943,8 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	gSalts.bPBKDF2PwdSaltReady=FALSE;
 	gSalts.bPBKDF2KeySaltReady=FALSE;
 
+	gLastLoginTime.wYear=0; // ISSUE#171
+
 	// ligne de commande
 	if (strlen(lpCmdLine)>_MAX_PATH) { iError=-1; goto end; } 
 	TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
