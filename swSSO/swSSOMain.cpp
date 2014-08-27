@@ -104,7 +104,7 @@ char gszUserName[UNLEN+1]="";
 
 char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-const char gcszK1[]="_1111111";
+const char gcszK1[]="11111111";
 
 // 0.91 : pour choix de config (fenêtre ChooseConfig)
 typedef struct
@@ -2154,7 +2154,23 @@ askpwd:
 					goto end;
 				}
 			}
-			else // L'utilisateur a une vieille version de swSSO ou a un problème avec son .ini...
+			else if (len==296) // L'utilisateur a une vieille version de swSSO (ISSUE#172 : il faut migrer quand même)
+			{
+				char szPwd[LEN_PWD+1];
+				int ret=DPAPIGetMasterPwd(szPwd);
+				SecureZeroMemory(szPwd,LEN_PWD+1); // pas besoin du mdp, c'était juste pour savoir si la clé était présente et valide
+				if (ret!=0)
+				{
+					// N'affiche pas le message qui indique que le mot de passe maitre va être demandé une dernière fois
+					// si jamais l'utilisateur avait enregistré son mot de passe
+					MessageBox(NULL,GetString(IDS_INFO_WINDOWS_SSO_MIGRATION),"swSSO",MB_OK | MB_ICONINFORMATION);
+				}
+				giPwdProtection=PP_ENCRYPTED; // bidouille
+				if (AskPwd(NULL,TRUE)!=0) goto end;
+				giPwdProtection=PP_WINDOWS;
+				bMigrationWindowsSSO=TRUE; // On note de faire la migration (se fait plus tard une fois les configs chargées)
+			}
+			else // L'utilisateur a un problème avec son .ini...
 			{
 				TRACE((TRACE_ERROR,_F_,"len(pwdValue)=%d",len));
 				MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_VER),"swSSO",MB_OK | MB_ICONSTOP);
@@ -2309,7 +2325,10 @@ askpwd:
 
 	if (*szPwdMigration093!=0) 
 	{
+		int iSavePwdProtection=giPwdProtection; // ISSUE#172
+		giPwdProtection=PP_ENCRYPTED; // ISSUE#172
 		rc=Migration093(NULL,szPwdMigration093);
+		giPwdProtection=iSavePwdProtection; // ISSUE#172
 		SecureZeroMemory(szPwdMigration093,sizeof(szPwdMigration093));
 		if (rc!=0) goto end;
 	}
