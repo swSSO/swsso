@@ -72,7 +72,7 @@ static int  id2Type=0;
 static int  id3Type=0;
 static int  id4Type=0;
 
-static char szURL[128+1]; // TODO moche !!!
+static char szURL[LEN_URL+1]; // ISSUE#174 (remplacement de 128 par LEN_URL...)
 static char szFormName[90+1]; // TODO moche (on a déjà l'info dans la config)
 
 typedef struct 
