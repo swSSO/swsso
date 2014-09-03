@@ -2108,6 +2108,10 @@ askpwd:
 				if (rc==-1) goto end; // mauvais mot de passe
 				else if (rc==-2) goto askpwd; // l'utilisateur a cliqué sur mot de passe oublié
 			}
+			else if (ret==-1 || ret==-3)  // erreur ou format de response incorrect
+			{
+				goto askpwd;
+			}
 			else if (ret==-5)  // l'utilisateur a demandé de regénérer le challenge (ISSUE#121)
 			{
 				RecoveryChallenge(NULL);
@@ -2153,7 +2157,23 @@ askpwd:
 				}
 				else if (ret==-2) // pas de réinit
 				{
-					if (CheckWindowsPwd(&bMigrationWindowsSSO)!=0) goto end;
+					// ISSUE#165
+					rc=CheckWindowsPwd(&bMigrationWindowsSSO);
+					if (rc==-1) // erreur ou pas de recovery ou annulation de l'utilisateur dans le recovery
+						goto end;
+					else if(rc==-3) // l'utilisateur a cliqué sur continuer dans le recovery
+						goto askpwd;
+				}
+				else if (ret==-1 || ret==-3)  // erreur ou format de response incorrect
+				{
+					goto askpwd;
+				}
+				else if (ret==-5)  // ISSUE#165 // l'utilisateur a demandé de regénérer le challenge (ISSUE#121)
+				{
+					if (RecoveryChallenge(NULL)==0)
+						goto askpwd; // je sais, c'est moche, mais c'est tellement plus simple...
+					else
+						goto end;
 				}
 				else // il y a eu une réinit et ça n'a pas marché :-(
 				{

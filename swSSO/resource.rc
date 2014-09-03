@@ -628,7 +628,7 @@ STRINGTABLE
     IDS_ERROR_WINDOWS_SSO_LOGON   "Erreur au démarrage de swSSO.\r\nVeuillez redémarrer votre poste de travail avant de réessayer.\r\nSi le problème persiste, contactez votre support."
     IDS_ERROR_WINDOWS_SSO_VER     "Veuillez vous connecter une première fois avec votre mot de passe swSSO avant de demander l'intégration à votre compte Windows."
     IDS_SYNCHRO_PWD_OK            "La synchronisation avec votre mot de passe Windows a bien été réalisée."
-    IDS_ERROR_WINDOWS_SSO_LOGON2  "Erreur au démarrage de swSSO.\r\nSi vous avez perdu votre mot de passe Windows, cliquez sur OK pour démarrer la procédure de secours. Sinon, cliquez sur Annuler et contactez votre support."
+    IDS_ERROR_WINDOWS_SSO_LOGON2  "Erreur au démarrage de swSSO.\r\nCliquez sur OK pour démarrer la procédure de secours ou sur Annuler pour quitter swSSO."
     IDS_RECOVERY_ENCRYPTED_OK     "La procédure de réinitialisation de mot de passe est terminée, vous pouvez continuer à utiliser swSSO avec le nouveau mot de passe que vous avez défini."
     IDS_RECOVERY_WINDOWS_OK       "La procédure de secours est terminée !"
     IDS_RECOVERY_ERROR            "Une erreur est survenue, la procédure de secours a échoué."

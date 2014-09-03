@@ -1674,6 +1674,7 @@ end:
 //-----------------------------------------------------------------------------
 // Vérifie le mot de passe Windows et crée la clé de chiffrement des mdp
 // secondaires (ghKey1)
+// rc=0 OK, rc=-1 erreur ou annulation, rc=-3 recouvrement avec clic sur bouton continuer
 //-----------------------------------------------------------------------------
 int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 {
@@ -1783,7 +1784,11 @@ end:
 		{
 			if (MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_LOGON2),"swSSO",MB_OKCANCEL | MB_ICONEXCLAMATION)==IDOK)
 			{
-				RecoveryChallenge(NULL);
+				// ISSUE#165
+				if (RecoveryChallenge(NULL)==0) // 0=OK, -1=erreur, -2=l'utilisateur a annulé
+					rc=-3;
+				else 
+					rc=-1;
 			}
 		}
 	}

@@ -343,6 +343,8 @@ static int CALLBACK ResponseDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// init champ de saisie
 			SendMessage(GetDlgItem(w,TB_CHALLENGE),EM_LIMITTEXT,sizeof(gszFormattedResponse)-1,0);
 			SetFocus(GetDlgItem(w,TB_CHALLENGE));
+			// ISSUE#165
+			if (giPwdProtection==PP_WINDOWS) ShowWindow(GetDlgItem(w,PB_MDP_RETROUVE),SW_HIDE);
 			// titre en gras
 			SetTextBold(w,TX_FRAME);
 			SetWindowPos(w,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
