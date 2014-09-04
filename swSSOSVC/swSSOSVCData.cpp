@@ -239,7 +239,8 @@ int swWaitForMessage()
 					TRACE((TRACE_PWD,_F_,"tmpBufPwd=%s",tmpBufPwd));
 					if (swProtectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
 					// Vérifie qu'on n'a pas déjà ce mot de passe
-					if (memcmp(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN)==0)
+					// ISSUE#173 : vérifie aussi bufPasswordOld
+					if (memcmp(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN)==0 || memcmp(gUserData[iUserDataIndex].bufPasswordOld,tmpBufPwd,PWD_LEN)==0)
 					{
 						TRACE((TRACE_INFO,_F_,"ON A DEJA CE MOT DE PASSE, ON IGNORE"));
 					}

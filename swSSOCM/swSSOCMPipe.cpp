@@ -96,6 +96,9 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	SecureZeroMemory(usPassword.Buffer,usPassword.MaximumLength);
 	if (ret==0) { TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usPassword)=%d",GetLastError())); goto end; }
 	TRACE((TRACE_PWD,_F_,"bufPassword=%s",bufPassword));
+	// ISSUE#173
+	// Si le mot de passe est vide, on sort (cas du NPLogonNotify/lpPreviousAuthentInfo après changement de mot de passe)
+	if (*bufPassword==0) { TRACE((TRACE_INFO,_F_,"MOT DE PASSE VIDE, ON SORT (mais pas en erreur)")); rc=0; goto end; }
 	// Chiffre le mot de passe
 	if (swProtectMemoryInit()!=0) goto end;
 	// ISSUE#156 : remplacement de CRYPTPROTECTMEMORY_SAME_LOGON par CRYPTPROTECTMEMORY_CROSS_PROCESS

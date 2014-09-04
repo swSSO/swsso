@@ -59,19 +59,29 @@ DWORD APIENTRY NPLogonNotify(
 )
 {
 	UNREFERENCED_PARAMETER(lpLogon);
-	UNREFERENCED_PARAMETER(lpPreviousAuthentInfoType);
-	UNREFERENCED_PARAMETER(lpPreviousAuthentInfo);
 	UNREFERENCED_PARAMETER(lpStationName);
 	UNREFERENCED_PARAMETER(StationHandle);
 	UNREFERENCED_PARAMETER(lpLogonScript);
 	
 	TRACE((TRACE_ENTER,_F_,""));
-	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
-	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfo=0x%08lx",lpAuthentInfo));
+	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfoType=        0x%08lx",lpAuthentInfoType));
+	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfo=            0x%08lx",lpAuthentInfo));
+	TRACE((TRACE_DEBUG,_F_,"lpPreviousAuthentInfoType=0x%08lx",lpPreviousAuthentInfoType));
+	TRACE((TRACE_DEBUG,_F_,"lpPreviousAuthentInfo=    0x%08lx",lpPreviousAuthentInfo));
+
+	if (lpPreviousAuthentInfoType!=NULL && lpPreviousAuthentInfo!=NULL) // ISSUE#173 : traitement du changement de mot de passe à l'ouverture de session
+	{
+		// Construit et envoie la requête à SVC
+		TRACE((TRACE_INFO,_F_,"lpPreviousAuthentInfoType=%S",lpPreviousAuthentInfoType));
+		TRACE((TRACE_INFO,_F_,"lpPreviousAuthentInfo=0x%08lx",lpPreviousAuthentInfo));
+		if (swBuildAndSendRequest(lpPreviousAuthentInfoType,lpPreviousAuthentInfo)!=0) goto end;
+	}
 	
 	// Construit et envoie la requête à SVC
+	TRACE((TRACE_INFO,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
+	TRACE((TRACE_INFO,_F_,"lpAuthentInfo=0x%08lx",lpAuthentInfo));
 	if (swBuildAndSendRequest(lpAuthentInfoType,lpAuthentInfo)!=0) goto end;
-	
+
 end:
 	TRACE((TRACE_LEAVE,_F_,""));
 	return WN_SUCCESS;
@@ -87,20 +97,29 @@ DWORD APIENTRY NPPasswordChangeNotify(
   __in  DWORD dwChangeInfo
 )
 {
-	UNREFERENCED_PARAMETER(lpPreviousAuthentInfoType);
-	UNREFERENCED_PARAMETER(lpPreviousAuthentInfo);
 	UNREFERENCED_PARAMETER(lpStationName);
 	UNREFERENCED_PARAMETER(StationHandle);
 	UNREFERENCED_PARAMETER(dwChangeInfo);
 
 	TRACE((TRACE_ENTER,_F_,""));
+	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfoType=        0x%08lx",lpAuthentInfoType));
+	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfo=            0x%08lx",lpAuthentInfo));
+	TRACE((TRACE_DEBUG,_F_,"lpPreviousAuthentInfoType=0x%08lx",lpPreviousAuthentInfoType));
+	TRACE((TRACE_DEBUG,_F_,"lpPreviousAuthentInfo=    0x%08lx",lpPreviousAuthentInfo));
+	
+	if (lpPreviousAuthentInfoType!=NULL && lpPreviousAuthentInfo!=NULL) // ISSUE#173 : traitement du changement de mot de passe à l'ouverture de session
+	{
+		// Construit et envoie la requête à SVC
+		TRACE((TRACE_INFO,_F_,"lpPreviousAuthentInfoType=%S",lpPreviousAuthentInfoType));
+		TRACE((TRACE_INFO,_F_,"lpPreviousAuthentInfo=0x%08lx",lpPreviousAuthentInfo));
+		if (swBuildAndSendRequest(lpPreviousAuthentInfoType,lpPreviousAuthentInfo)!=0) goto end;
+	}
+
+	// Construit et envoie la requête à SVC
 	TRACE((TRACE_INFO,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
 	TRACE((TRACE_INFO,_F_,"lpAuthentInfo=0x%08lx",lpAuthentInfo));
-	TRACE((TRACE_INFO,_F_,"dwChangeInfo=0x%08lx",dwChangeInfo));
-	
-	// Construit et envoie la requête à SVC
 	if (swBuildAndSendRequest(lpAuthentInfoType,lpAuthentInfo)!=0) goto end;
-	
+
 end:
 	TRACE((TRACE_LEAVE,_F_,""));
 	return WN_SUCCESS;
