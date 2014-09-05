@@ -53,3 +53,4 @@
 int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo);
 int swPipeWrite(char *bufRequest,int lenRequest);
 
+

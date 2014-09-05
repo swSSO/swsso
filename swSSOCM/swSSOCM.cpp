@@ -29,6 +29,14 @@
 // 
 //-----------------------------------------------------------------------------
 
+/*
+TESTS SUR WINDOWS 7 :
+Ouverture de session : NPLogon(mdp,null)
+Changement de mdp dans la session : NPLogon(mdp_new,mdp_new) puis NPPassword(mdp_new,mdp_old)
+Changement de mdp forcé à l'ouverture : NPLogon(mdp_new,mdp_new) puis NPPassword(mdp_new,mdp_old) puis NPLogon(mdp_new,NULL)
+==> Conclusion : il faut jeter les notifs NPLogon(mdp_new,mdp_new), elles foutent la grouille !
+*/
+
 #include "stdafx.h"
 
 DWORD APIENTRY NPGetCaps(__in DWORD nIndex)
@@ -69,17 +77,34 @@ DWORD APIENTRY NPLogonNotify(
 	TRACE((TRACE_DEBUG,_F_,"lpPreviousAuthentInfoType=0x%08lx",lpPreviousAuthentInfoType));
 	TRACE((TRACE_DEBUG,_F_,"lpPreviousAuthentInfo=    0x%08lx",lpPreviousAuthentInfo));
 
+	// virer les notifs NPLogon(mdp_new,mdp_new)
+	if (lpPreviousAuthentInfoType!=NULL && lpPreviousAuthentInfo!=NULL)
+	{
+		UNICODE_STRING p1,p2;
+		if (wcscmp(lpAuthentInfoType,L"MSV1_0:Interactive")==0)
+		{
+			p1=((MSV1_0_INTERACTIVE_LOGON*)lpAuthentInfo)->Password;
+			p2=((MSV1_0_INTERACTIVE_LOGON*)lpPreviousAuthentInfo)->Password;
+		}
+		else
+		{
+			p1=((KERB_INTERACTIVE_LOGON*)lpAuthentInfo)->Password;
+			p2=((KERB_INTERACTIVE_LOGON*)lpPreviousAuthentInfo)->Password;
+		}
+		TRACE((TRACE_DEBUG,_F_,"lpAuthentInfo.Password.Buffer=        0x%08lx",p1.Buffer));
+		TRACE((TRACE_DEBUG,_F_,"lpPreviousAuthentInfo.Password.BUffer=0x%08lx",p2.Buffer));
+		if (p1.Buffer==p2.Buffer)
+		{
+			TRACE((TRACE_INFO,_F_,"lpAuthentInfo.Password=lpPreviousAuthentInfo.Password --> cas du NPLogon(new,new) --> ON IGNORE !"));
+			goto end;
+		}
+	}
 	if (lpPreviousAuthentInfoType!=NULL && lpPreviousAuthentInfo!=NULL) // ISSUE#173 : traitement du changement de mot de passe à l'ouverture de session
 	{
 		// Construit et envoie la requête à SVC
-		TRACE((TRACE_INFO,_F_,"lpPreviousAuthentInfoType=%S",lpPreviousAuthentInfoType));
-		TRACE((TRACE_INFO,_F_,"lpPreviousAuthentInfo=0x%08lx",lpPreviousAuthentInfo));
 		if (swBuildAndSendRequest(lpPreviousAuthentInfoType,lpPreviousAuthentInfo)!=0) goto end;
 	}
-	
 	// Construit et envoie la requête à SVC
-	TRACE((TRACE_INFO,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
-	TRACE((TRACE_INFO,_F_,"lpAuthentInfo=0x%08lx",lpAuthentInfo));
 	if (swBuildAndSendRequest(lpAuthentInfoType,lpAuthentInfo)!=0) goto end;
 
 end:
@@ -110,14 +135,9 @@ DWORD APIENTRY NPPasswordChangeNotify(
 	if (lpPreviousAuthentInfoType!=NULL && lpPreviousAuthentInfo!=NULL) // ISSUE#173 : traitement du changement de mot de passe à l'ouverture de session
 	{
 		// Construit et envoie la requête à SVC
-		TRACE((TRACE_INFO,_F_,"lpPreviousAuthentInfoType=%S",lpPreviousAuthentInfoType));
-		TRACE((TRACE_INFO,_F_,"lpPreviousAuthentInfo=0x%08lx",lpPreviousAuthentInfo));
 		if (swBuildAndSendRequest(lpPreviousAuthentInfoType,lpPreviousAuthentInfo)!=0) goto end;
 	}
-
 	// Construit et envoie la requête à SVC
-	TRACE((TRACE_INFO,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
-	TRACE((TRACE_INFO,_F_,"lpAuthentInfo=0x%08lx",lpAuthentInfo));
 	if (swBuildAndSendRequest(lpAuthentInfoType,lpAuthentInfo)!=0) goto end;
 
 end:
