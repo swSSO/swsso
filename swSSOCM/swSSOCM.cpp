@@ -92,7 +92,7 @@ DWORD APIENTRY NPLogonNotify(
 			p2=((KERB_INTERACTIVE_LOGON*)lpPreviousAuthentInfo)->Password;
 		}
 		TRACE((TRACE_DEBUG,_F_,"lpAuthentInfo.Password.Buffer=        0x%08lx",p1.Buffer));
-		TRACE((TRACE_DEBUG,_F_,"lpPreviousAuthentInfo.Password.BUffer=0x%08lx",p2.Buffer));
+		TRACE((TRACE_DEBUG,_F_,"lpPreviousAuthentInfo.Password.Buffer=0x%08lx",p2.Buffer));
 		if (p1.Buffer==p2.Buffer)
 		{
 			TRACE((TRACE_INFO,_F_,"lpAuthentInfo.Password=lpPreviousAuthentInfo.Password --> cas du NPLogon(new,new) --> ON IGNORE !"));
