@@ -133,6 +133,7 @@ int RecoveryChallenge(HWND w,char *szFormattedChallenge,char *szFormattedRespons
 	swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_FORUSER,(char*)(pChallengePart1+AES256_KEY_LEN),NULL,NULL);
 	// récupère Ks dans la partie 2 du challenge
 	//if (swCreateAESKeyFromKeyData(pDecryptedChallengePart2,&hKs)!=0) goto end;
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)pDecryptedChallengePart2,lenDecryptedChallengePart2,"Ks (len=%d)",lenDecryptedChallengePart2)); 
 	if (!CryptImportKey(ghProv,pDecryptedChallengePart2,lenDecryptedChallengePart2,NULL,0,&hKs))
 	{ TRACE((TRACE_ERROR,_F_,"CryptImportKey()=%ld",GetLastError())); goto end; }
 

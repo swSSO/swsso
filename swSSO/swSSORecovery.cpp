@@ -650,7 +650,13 @@ int RecoveryResponse(HWND w)
 		rc=-2;
 		goto end;
 	}
-	if (ret==PB_RECHALLENGE) { rc=-5; goto end; } // ISSUE#121
+	if (ret==PB_RECHALLENGE) // ISSUE#121
+	{ 
+		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile); // ISSUE#177
+		StoreIniEncryptedHash(); // ISSUE#164
+		rc=-5; 
+		goto end; 
+	} 
 	if (ret!=IDOK) { rc=-4; goto end; }
 
 	// vérifie le format de la response
