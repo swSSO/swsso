@@ -118,7 +118,7 @@ int GetLastADPwdChange(char *pszLastADPwdChange)
 	hr=pIADsADSystemInfo->get_UserName(&bstrUserDN);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pIADsADSystemInfo->get_UserName() hr=0x%08lx",hr)); goto end; }
 	pszUserDN=GetSZFromBSTR(bstrUserDN); if (pszUserDN==NULL) goto end;
-	TRACE((TRACE_ERROR,_F_,"pIADsADSystemInfo->get_UserName()=%s",pszUserDN));
+	TRACE((TRACE_INFO,_F_,"pIADsADSystemInfo->get_UserName()=%s",pszUserDN));
 	
 	// récupération de l'objet User dans l'AD
 	sizeUserRequest=10+strlen(pszUserDN);
@@ -135,7 +135,7 @@ int GetLastADPwdChange(char *pszLastADPwdChange)
 
 	// conversion pour stockage et comparaison format AAAAMMJJHHMMSS ex:20140730182514
 	VariantTimeToSystemTime(dateLastChange, &stLastChange);
-	sprintf_s(pszLastADPwdChange,14,"%04d%02d%02d%02d%02d%02d",
+	sprintf_s(pszLastADPwdChange,14+1,"%04d%02d%02d%02d%02d%02d",
 		(int)stLastChange.wYear,(int)stLastChange.wMonth,(int)stLastChange.wDay,
 		(int)stLastChange.wHour,(int)stLastChange.wMinute,(int)stLastChange.wSecond);
 	TRACE((TRACE_INFO,_F_,"LastAdPwdChange=%s",pszLastADPwdChange));
@@ -143,8 +143,11 @@ int GetLastADPwdChange(char *pszLastADPwdChange)
 	rc=0;
 end:
 	// BOUCHON TEST **************************************************
-	rc=0;
-	strcpy_s(pszLastADPwdChange,14+1,"20140501120000");
+	/*if (rc!=0)
+	{
+		rc=0;
+		strcpy_s(pszLastADPwdChange,14+1,"20140501120000");
+	}*/
 	// BOUCHON TEST **************************************************
 	if (bstrUserDN!=NULL) SysFreeString(bstrUserDN);
 	if (bstrUserRequest!=NULL) SysFreeString(bstrUserRequest);
