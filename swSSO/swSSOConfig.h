@@ -98,6 +98,9 @@ extern int gx,gy,gcx,gcy;			// 0.85 : positionnement de la fenêtre sites et appl
 extern int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; // 0.91 : positionnement de la fenêtre de lancement d'application
 
 extern BOOL gbDisplayChangeAppPwdDialog ; // ISSUE#107
+extern BOOL gbSSOInternetExplorer;			// ISSUE#176
+extern BOOL gbSSOFirefox;					// ISSUE#176
+extern BOOL gbSSOChrome;					// ISSUE#176
 
 #define LEN_DOMAIN 50
 extern int  giDomainId;						// 0.94B1 : gestion des domaines

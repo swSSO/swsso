@@ -21,10 +21,6 @@
 // Bitmap resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDB_QUESTION       BITMAP         ".\\question.bmp"
-
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDB_EXCLAMATION    BITMAP         ".\\exclamation.bmp"
 
 
@@ -42,6 +38,10 @@ IDB_LOGO_FONDBLANC90 BITMAP         "logo-90.bmp"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDB_LOUPE          BITMAP         "loupe.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDB_QUESTION       BITMAP         ".\\question.bmp"
 
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -476,7 +476,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Fichier de configuration :", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT, WS_EX_LEFT
     LTEXT           "Licence", TX_LICENCE, 7, 41, 28, 11, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Version 1.03 BETA 3 (08/2014)", TX_ABOUT, 47, 12, 86, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Version 1.03 BETA 3 (09/2014)", TX_ABOUT, 47, 12, 86, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Portail :", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1, WS_EX_LEFT
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1, WS_EX_LEFT
@@ -518,6 +518,22 @@ FONT 8, "Tahoma"
     CONTROL         "", IDC_SEP_PROXY, WC_STATIC, SS_ETCHEDHORZ, 75, 132, 238, 1, WS_EX_LEFT
     PUSHBUTTON      "&Tester la connexion", PB_TEST, 243, 175, 86, 14, 0, WS_EX_LEFT
     DEFPUSHBUTTON   "&J'ai de la chance ;-)", PB_CHANCE, 243, 193, 86, 14, 0, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+PSP_BROWSER DIALOG 0, 0, 338, 214
+STYLE DS_SETFONT | WS_CAPTION | WS_CHILDWINDOW | WS_DISABLED
+CAPTION "Navigateurs"
+FONT 8, "Tahoma"
+{
+    LTEXT           "Si vous ne souhaitez pas que swSSO gère les mots de passe pour certains navigateurs, vous pouvez les décocher ici. Sinon, veillez à bien désactiver l'enregistrement des mots de passe dans les options de votre navigateur.", TX_STATIC, 17, 79, 298, 30, SS_LEFT, WS_EX_LEFT
+    AUTOCHECKBOX    "&Chrome", CK_CHROME, 17, 61, 45, 8, 0, WS_EX_LEFT
+    CONTROL         "", IDC_SEP_SECURITE, WC_STATIC, SS_ETCHEDHORZ, 111, 14, 210, 1, WS_EX_LEFT
+    LTEXT           "Navigateurs gérés par swSSO", TX_BROWSER, 7, 10, 96, 8, SS_LEFT, WS_EX_LEFT
+    AUTOCHECKBOX    "&Firefox", CK_FIREFOX, 17, 43, 43, 8, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "&Internet Explorer", CK_IE, 17, 25, 76, 8, BS_MULTILINE, WS_EX_LEFT
 }
 
 

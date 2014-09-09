@@ -61,6 +61,9 @@ char gszDomainLabel[LEN_DOMAIN+1]="";
 BOOL gbDisplayChangeAppPwdDialog ; // ISSUE#107
 char gszLastADPwdChange[14+1]="";					// 1.03 : date de dernier changement de mdp dans l'AD, format AAAAMMJJHHMMSS
 char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1]="";	// 1.03 : valeur du mot de passe AD (fourni par l'utilisateur)
+BOOL gbSSOInternetExplorer=TRUE;		// ISSUE#176
+BOOL gbSSOFirefox=TRUE;					// ISSUE#176
+BOOL gbSSOChrome=TRUE;					// ISSUE#176
 
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
@@ -518,6 +521,90 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 }
 
 // ----------------------------------------------------------------------------------
+// PSPBrowserProc()
+// ----------------------------------------------------------------------------------
+// Dialog proc de l'onglet navigateurs
+// ----------------------------------------------------------------------------------
+static int CALLBACK PSPBrowserProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	int rc=FALSE;
+
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			int cx;
+			int cy;
+			RECT rect;
+			
+			if (gwPropertySheet==NULL) // nécessaire pour ne pas le faire à chaque premier affichage de l'onglet
+			{
+				gwPropertySheet=GetParent(w);
+				// icone ALT-TAB
+				SendMessage(gwPropertySheet,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab); 
+				SendMessage(gwPropertySheet,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+				// 0.53 positionnement de la fenêtre !
+				cx = GetSystemMetrics( SM_CXSCREEN );
+				cy = GetSystemMetrics( SM_CYSCREEN );
+				TRACE((TRACE_INFO,_F_,"SM_CXSCREEN=%d SM_CYSCREEN=%d",cx,cy));
+				GetWindowRect(gwPropertySheet,&rect);
+				SetWindowPos(gwPropertySheet,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
+			}	
+			// remplit avec les valeurs de config 
+			CheckDlgButton(w,CK_IE,gbSSOInternetExplorer?BST_CHECKED:BST_UNCHECKED);
+			CheckDlgButton(w,CK_FIREFOX,gbSSOFirefox?BST_CHECKED:BST_UNCHECKED);
+			CheckDlgButton(w,CK_CHROME,gbSSOChrome?BST_CHECKED:BST_UNCHECKED);
+			rc=FALSE;
+			break;
+
+		case WM_HELP:
+			Help();
+			break;
+
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_BROWSER:
+					SetTextColor((HDC)wp,RGB(0x20,0x20,0xFF)); 
+					break;
+			}
+			break;
+
+		case WM_NOTIFY:
+			switch (((NMHDR FAR *)lp)->code) 
+			{
+				case PSN_KILLACTIVE : // bouton OK ou appliquer
+					SetWindowLong(w,DWL_MSGRESULT,FALSE);
+					break;
+				case PSN_SETACTIVE  :
+					break;
+				case PSN_APPLY:
+					gbSSOInternetExplorer=IsDlgButtonChecked(w,CK_IE)==BST_CHECKED?TRUE:FALSE;
+					gbSSOFirefox=IsDlgButtonChecked(w,CK_FIREFOX)==BST_CHECKED?TRUE:FALSE;
+					gbSSOChrome=IsDlgButtonChecked(w,CK_CHROME)==BST_CHECKED?TRUE:FALSE;
+					SaveConfigHeader();
+					PropSheet_UnChanged(gwPropertySheet,w);
+					break;
+			}
+			break;
+		case WM_COMMAND:
+			if (HIWORD(wp)==EN_CHANGE) PropSheet_Changed(gwPropertySheet,w);
+			switch (LOWORD(wp))
+			{
+				case CK_IE:
+				case CK_FIREFOX:
+				case CK_CHROME:
+					PropSheet_Changed(gwPropertySheet,w);
+					break;
+			}
+			break;
+	}
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
 // IdAndPwdDialogProc()
 // ----------------------------------------------------------------------------------
 // Dialogproc de la boite de saisie des id/mdp d'une appli récupérée dans config centrale
@@ -783,7 +870,7 @@ int ShowConfig(void)
 		goto end;
 	}
 
-	HPROPSHEETPAGE hpsp[2];
+	HPROPSHEETPAGE hpsp[3];
 	PROPSHEETPAGE psp;
 	PROPSHEETHEADER psh;
 
@@ -808,13 +895,19 @@ int ShowConfig(void)
 		hpsp[0]=CreatePropertySheetPage(&psp);
 		if (hpsp[0]==NULL) goto end;
 
-		psp.pszTemplate=MAKEINTRESOURCE(PSP_ABOUT);
-		psp.pfnDlgProc=PSPAboutProc;
+		psp.pszTemplate=MAKEINTRESOURCE(PSP_BROWSER);
+		psp.pfnDlgProc=PSPBrowserProc;
 		psp.lParam=0;
 		hpsp[1]=CreatePropertySheetPage(&psp);
 		if (hpsp[1]==NULL) goto end;
 
-		psh.nPages=2;
+		psp.pszTemplate=MAKEINTRESOURCE(PSP_ABOUT);
+		psp.pfnDlgProc=PSPAboutProc;
+		psp.lParam=0;
+		hpsp[2]=CreatePropertySheetPage(&psp);
+		if (hpsp[2]==NULL) goto end;
+
+		psh.nPages=3;
 	}
 	else
 	{
@@ -984,6 +1077,10 @@ int GetConfigHeader()
 		GetPrivateProfileString("swSSO","lastADPwdChange","",gszLastADPwdChange,sizeof(gszLastADPwdChange),gszCfgFile);
 		GetPrivateProfileString("swSSO","ADPwd","",gszEncryptedADPwd,sizeof(gszEncryptedADPwd),gszCfgFile);
 	}
+	// ISSUE#176
+	gbSSOInternetExplorer=GetConfigBoolValue("swSSO","InternetExplorer",TRUE,TRUE);
+	gbSSOFirefox=GetConfigBoolValue("swSSO","Firefox",TRUE,TRUE);
+	gbSSOChrome=GetConfigBoolValue("swSSO","Chrome",TRUE,TRUE);
 
 	// REMARQUE : la config proxy est lue plus loin dans le démarrage du main, sinon la clé n'est pas disponible
 	//            pour déchiffrer le mot de passe proxy !
@@ -1163,6 +1260,11 @@ int SaveConfigHeader()
 		WritePrivateProfileString("swSSO","lastADPwdChange",gszLastADPwdChange,gszCfgFile);
 		WritePrivateProfileString("swSSO","ADPwd",gszEncryptedADPwd,gszCfgFile);
 	}
+	// ISSUE#176
+	WritePrivateProfileString("swSSO","InternetExplorer",gbSSOInternetExplorer?"YES":"NO",gszCfgFile);
+	WritePrivateProfileString("swSSO","Firefox",gbSSOFirefox?"YES":"NO",gszCfgFile);
+	WritePrivateProfileString("swSSO","Chrome",gbSSOChrome?"YES":"NO",gszCfgFile);
+
 	StoreIniEncryptedHash(); // ISSUE#164
 	rc=0;
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
