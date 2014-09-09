@@ -163,6 +163,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
  			TRACE((TRACE_INFO,_F_, "gMsgTaskbarRestart=%d",gMsgTaskbarRestart));
            break;
 		case WM_APP: 
+			if (gLastLoginTime.wYear==0) goto end; // utilisateur pas encore connecté (contrôle nécessaire suite à ISSUE#175)
 			switch(lp)
 			{
 				case WM_LBUTTONDBLCLK:

@@ -583,7 +583,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 	UNREFERENCED_PARAMETER(lp);
 	int i;
 	time_t tNow,tLastSSOOnThisWindow;
-	bool bDoSSO;
+	BOOL bDoSSO;
 	char *pszURL=NULL;
 	char *pszURL2=NULL;
 	char *pszURLBar=NULL;
@@ -924,7 +924,45 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			}
 		}
 		//------------------------------------------------------------------------------------------------------
-		if (bDoSSO) // on a déterminé que le SSO doit être tenté
+		if (bDoSSO) // on a déterminé que le SSO doit être tenté, mais peut-être pas en fonction de la config (ISSUE#176)
+		//------------------------------------------------------------------------------------------------------
+		{
+			if (gptActions[i].iType==POPSSO)
+			{
+				switch (iPopupType)
+				{
+					case POPUP_XP:
+					case POPUP_W7:
+						bDoSSO=gbSSOInternetExplorer;
+						break;
+					case POPUP_FIREFOX:
+						bDoSSO=gbSSOFirefox;
+						break;
+					case POPUP_CHROME:
+						bDoSSO=gbSSOChrome;
+						break;
+				}
+			}
+			else if (gptActions[i].iType==WEBSSO || gptActions[i].iType==XEBSSO)
+			{
+				switch (iBrowser)
+				{
+					case BROWSER_IE:
+					case BROWSER_MAXTHON:
+						bDoSSO=gbSSOInternetExplorer;
+						break;
+					case BROWSER_FIREFOX3:
+					case BROWSER_FIREFOX4:
+						bDoSSO=gbSSOFirefox;
+						break;
+					case BROWSER_CHROME:
+						bDoSSO=gbSSOChrome;
+						break;
+				}
+			}
+		}
+		//------------------------------------------------------------------------------------------------------
+		if (bDoSSO) // cette fois, c'est sûr, SSO doit être tenté
 		//------------------------------------------------------------------------------------------------------
 		{
 			TRACE((TRACE_INFO,_F_,"======= Fenêtre vérifiée OK et pas traitée récemment, on lance le SSO !"));
@@ -2039,6 +2077,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		iError=-1;
 		goto end;
 	}
+
 	// récupère username, computername, SID et domaine
 	if (GetUserDomainAndComputer()!=0) { iError=-1; goto end; }
 
@@ -2050,6 +2089,13 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	
 	// chargement des policies (password, global et enterprise)
 	LoadPolicies();
+
+	// création fenêtre technique (réception des messages) -- ISSUE#175 (était plus bas avant, juste avant le WTSRegister)
+	gwMain=CreateMainWindow();
+	if (gwMain==NULL) { iError=-1; goto end; }
+
+	// création icone systray -- ISSUE#175 (était plus bas avant, juste après le WTSRegister)
+	rcSystray=CreateSystray(gwMain);
 
 	// lecture du header de la config (=lecture section swSSO)
 	if (GetConfigHeader()!=0) { iError=-2; goto end; }
@@ -2316,10 +2362,6 @@ askpwd:
 	//        l'utilisateur de le saisir
 	if (gbUseADPasswordForAppLogin) CheckADPwdChange(); // ne doit pas être bloquant si échoue, car peut être lié à AD non joignable par ex.
 	
-	// création fenêtre technique (réception des messages)
-	gwMain=CreateMainWindow();
-	if (gwMain==NULL) { iError=-1; goto end; }
-	
 	// inscription pour réception des notifs de verrouillage de session
 	gbRegisterSessionNotification=WTSRegisterSessionNotification(gwMain,NOTIFY_FOR_THIS_SESSION);
 	TRACE((TRACE_DEBUG,_F_,"WTSRegisterSessionNotification() -> OK"));
@@ -2332,12 +2374,6 @@ askpwd:
 		giRegisterSessionNotificationTimer=SetTimer(NULL,0,15000,RegisterSessionNotificationTimerProc);
 		giNbRegisterSessionNotificationTries++;
 	}
-
-	// création icone systray
-	rcSystray=CreateSystray(gwMain);
-	// 0.71 - modif pour CMH : on ne sort plus en erreur
-	// si la création du systray échoue.
-	// if (rcSystray!=0) goto end;
 
 	// 0.80 si demandé, vérification des mises à jour sur internet
 	if (gbInternetCheckVersion) InternetCheckVersion();
