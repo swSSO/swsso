@@ -528,6 +528,8 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 				iAntiLoop++;
 			}
 			*/
+			Sleep(100); // ISSUE#163 (et autres problèmes, notamment identifiant saisi tronqué avec le reste dans le mot de passe)
+
 			hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accSelect(SELFLAG_TAKEFOCUS)=0x%08lx",hr)); } 
 			if ((*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0))

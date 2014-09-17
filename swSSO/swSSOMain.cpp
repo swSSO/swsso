@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="103";	// 101 = 1.01
-const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1041";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 static HWND gwMain=NULL;
 
@@ -2279,7 +2279,7 @@ askpwd:
 	// ISSUE#145 : si jamais on est en phase de migration, il faut le faire plus tard, après la migration
 	if (giPwdProtection==PP_ENCRYPTED)
 	{
-		if (giPwdPolicy_MaxAge!=0)
+		if (giPwdPolicy_MaxAge!=0 && !gbRecoveryRunning) // ISSUE#178 : ne pas demander le changement de mdp expiré si en cours de recouvrement !
 		{
 			time(&tNow);
 			tLastPwdChange=GetMasterPwdLastChange();
