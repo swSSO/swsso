@@ -33,7 +33,7 @@ include('util.php');
 //-----------------------------------------------------------------------------
 // WEBSERVICE5.PHP : Utilisé à partir de la version swSSO 0.94
 //                   (les versions précédentes utilisent webservice4.php)
-// VERSION INTERNE : 5.3
+// VERSION INTERNE : 5.4
 //------------------------------------------------------------------------------
 // Commandes : isalive, getversion, putconfig, getconfig et getdomains
 //------------------------------------------------------------------------------
@@ -421,7 +421,7 @@ else if ($_GET['action']=="putconfig")
 	           $var_pwdName."','".$var_validateName."','".$var_id2Name."','".$var_id2Type."','".
 	           $var_id3Name."','".$var_id3Type."','".$var_id4Name."','".$var_id4Type."','".
 	           $var_id5Name."','".$var_id5Type."',".$var_bKBSim.",'".$var_szKBSim."',".$param_szName.",'".
-	           $var_categId."',".$var_domainId.",".$param_szFullPathName.",'".$var_lastModified.",".$var_pwdGroup.$szRequestOptions2.")";
+	           $var_categId."',".$var_domainId.",".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.$szRequestOptions2.")";
 		if ($_GET['debug']!="") echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }

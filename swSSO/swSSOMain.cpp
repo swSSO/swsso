@@ -1639,7 +1639,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 	}
 
 	// mode de fonctionnement sans mot de passe
-	if (gcszK1[0]!='1')
+	if (gbNoMasterPwd && gcszK1[0]!='1')
 	{
 		char szTemp[LEN_PWD+1];
 		SecureZeroMemory(szTemp,LEN_PWD+1);
@@ -2109,7 +2109,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			giPwdProtection=PP_WINDOWS;
 			SaveConfigHeader();
 		}
-		else if (gcszK1[0]=='1') // MODE mot de passe maitre : affichage message bienvenue avec définition du mot de passe maitre
+		else if (!gbNoMasterPwd || gcszK1[0]=='1') // MODE mot de passe maitre : affichage message bienvenue avec définition du mot de passe maitre
 		{
 			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SIMPLE_PWD_CHOICE),NULL,SimplePwdChoiceDialogProc)!=IDOK) goto end;
 		}

@@ -70,6 +70,7 @@
 #define REGVALUE_SHOWMENU_UPLOAD_WITH_ID_PWD		"ShowUploadWithIdPwdMenu"
 // ISSUE#164
 #define REGVALUE_CHECK_INI_INTEGRITY				"CheckIniIntegrity"
+#define REGVALUE_NO_MASTER_PASSWORD					"NoMasterPwd"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -107,6 +108,7 @@ extern BOOL gbReactivateWithoutPwd;
 extern BOOL gbShowMenu_UploadWithIdPwd;				// 1.03 - active le menu "Uploader avec identifiant et mot de passe"
 // ISSUE#164
 extern BOOL gbCheckIniIntegrity;					// ISSUE#164 - vérifie l'intégrité du fichier .ini
+extern BOOL gbNoMasterPwd;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
