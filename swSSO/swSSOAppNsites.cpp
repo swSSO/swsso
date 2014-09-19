@@ -2501,6 +2501,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		}
 		ShowWindow(GetDlgItem(w,TB_PWD),gbShowPwd?SW_HIDE:SW_SHOW);
 		ShowWindow(GetDlgItem(w,TB_PWD_CLEAR),gbShowPwd?SW_SHOW:SW_HIDE);
+		SetWindowPos(GetDlgItem(w,CK_AUTO_LOCK),NULL,rect.right*2/5+25,115,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 	}
 	else // onglet sélectionné = identifiants complémentaires
 	{

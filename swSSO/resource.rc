@@ -88,6 +88,7 @@ STYLE DS_SETFONT | WS_CAPTION | WS_GROUP | WS_MAXIMIZEBOX | WS_POPUP | WS_THICKF
 CAPTION "swSSO - Gestion des sites et applications"
 FONT 8, "Tahoma", 400, 0, 0
 {
+    AUTOCHECKBOX    "&Ne pas cramer mon mot de passe", CK_AUTO_LOCK, 206, 89, 127, 8, WS_GROUP, WS_EX_LEFT
     ICON            "", IMG_ID, 418, 18, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_ID2, 415, 57, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_ID3, 417, 70, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
@@ -106,6 +107,7 @@ FONT 8, "Tahoma", 400, 0, 0
     ICON            "", IMG_ID4_TYPE, 264, 285, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_ID4_ID, 283, 287, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_PWD_GROUP, 332, 286, 21, 20, NOT WS_VISIBLE | SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
+    ICON            "", IMG_AUTO_LOCK, 357, 286, 21, 20, NOT WS_VISIBLE | SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_KBSIM, 309, 284, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_PWD, 419, 36, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     CONTROL         "Tree1", TV_APPLICATIONS, WC_TREEVIEW, WS_TABSTOP | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS, 15, 29, 168, 202, WS_EX_LEFT
@@ -492,6 +494,22 @@ FONT 8, "Tahoma", 400, 0, 0
 
 
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+PSP_BROWSER DIALOG 0, 0, 338, 214
+STYLE DS_SETFONT | WS_CAPTION | WS_CHILDWINDOW | WS_DISABLED
+CAPTION "Navigateurs"
+FONT 8, "Tahoma"
+{
+    LTEXT           "Si vous ne souhaitez pas que swSSO gère les mots de passe pour certains navigateurs, vous pouvez les décocher ici. Sinon, veillez à bien désactiver l'enregistrement des mots de passe dans les options de votre navigateur.", TX_STATIC, 17, 79, 298, 30, SS_LEFT, WS_EX_LEFT
+    AUTOCHECKBOX    "&Chrome", CK_CHROME, 17, 61, 45, 8, 0, WS_EX_LEFT
+    CONTROL         "", IDC_SEP_SECURITE, WC_STATIC, SS_ETCHEDHORZ, 111, 14, 210, 1, WS_EX_LEFT
+    LTEXT           "Navigateurs gérés par swSSO", TX_BROWSER, 7, 10, 96, 8, SS_LEFT, WS_EX_LEFT
+    AUTOCHECKBOX    "&Firefox", CK_FIREFOX, 17, 43, 43, 8, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "&Internet Explorer", CK_IE, 17, 25, 76, 8, BS_MULTILINE, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 PSP_INTERNET DIALOG 0, 0, 338, 214
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILDWINDOW | WS_DISABLED
 CAPTION "Options"
@@ -518,22 +536,6 @@ FONT 8, "Tahoma"
     CONTROL         "", IDC_SEP_PROXY, WC_STATIC, SS_ETCHEDHORZ, 75, 132, 238, 1, WS_EX_LEFT
     PUSHBUTTON      "&Tester la connexion", PB_TEST, 243, 175, 86, 14, 0, WS_EX_LEFT
     DEFPUSHBUTTON   "&J'ai de la chance ;-)", PB_CHANCE, 243, 193, 86, 14, 0, WS_EX_LEFT
-}
-
-
-
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-PSP_BROWSER DIALOG 0, 0, 338, 214
-STYLE DS_SETFONT | WS_CAPTION | WS_CHILDWINDOW | WS_DISABLED
-CAPTION "Navigateurs"
-FONT 8, "Tahoma"
-{
-    LTEXT           "Si vous ne souhaitez pas que swSSO gère les mots de passe pour certains navigateurs, vous pouvez les décocher ici. Sinon, veillez à bien désactiver l'enregistrement des mots de passe dans les options de votre navigateur.", TX_STATIC, 17, 79, 298, 30, SS_LEFT, WS_EX_LEFT
-    AUTOCHECKBOX    "&Chrome", CK_CHROME, 17, 61, 45, 8, 0, WS_EX_LEFT
-    CONTROL         "", IDC_SEP_SECURITE, WC_STATIC, SS_ETCHEDHORZ, 111, 14, 210, 1, WS_EX_LEFT
-    LTEXT           "Navigateurs gérés par swSSO", TX_BROWSER, 7, 10, 96, 8, SS_LEFT, WS_EX_LEFT
-    AUTOCHECKBOX    "&Firefox", CK_FIREFOX, 17, 43, 43, 8, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "&Internet Explorer", CK_IE, 17, 25, 76, 8, BS_MULTILINE, WS_EX_LEFT
 }
 
 

@@ -207,6 +207,8 @@
 #define IDS_NEW_VERSION                         40022
 #define IMG_PWD_GROUP                           40022
 #define IDS_MENU_DEPLACER                       40023
+#define IMG_AUTO_LOCK                           40023
+#define CK_AUTO_LOCK                            40024
 #define IDS_CONFIG_ALREADY_EXISTS               40024
 #define IDS_CONFIG_PROXY                        40025
 #define IDS_MENU_APPNSITES                      40026
