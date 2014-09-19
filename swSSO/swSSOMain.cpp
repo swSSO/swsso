@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="103";	// 101 = 1.01
-const char gcszCurrentBeta[]="1041";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1042";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 static HWND gwMain=NULL;
 
@@ -1504,19 +1504,49 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				{
 					char szPwd[LEN_PWD+1];
 					GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
-					if (giPwdProtection==PP_WINDOWS && ghKey1!=NULL) // Cas de la demande de mot de passe "loupe" (TogglePasswordField) ou du déverrouillage
+					if (giPwdProtection==PP_WINDOWS)
 					{
-						BYTE AESKeyData[AES256_KEY_LEN];
-						swCryptDeriveKey(szPwd,&ghKey2,AESKeyData,FALSE);
-						SecureZeroMemory(szPwd,strlen(szPwd));
-						if (ReadVerifyCheckSynchroValue(ghKey2)==0)
+						if (ghKey1!=NULL) // Cas de la demande de mot de passe "loupe" (TogglePasswordField) ou du déverrouillage
 						{
-							EndDialog(w,IDOK);
+							BYTE AESKeyData[AES256_KEY_LEN];
+							swCryptDeriveKey(szPwd,&ghKey2,AESKeyData,FALSE);
+							SecureZeroMemory(szPwd,strlen(szPwd));
+							if (ReadVerifyCheckSynchroValue(ghKey2)==0)
+							{
+								EndDialog(w,IDOK);
+							}
+							else
+							{
+								MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+								if (giBadPwdCount>5) PostQuitMessage(-1);
+								SetFocus(GetDlgItem(w,TB_PWD)); // ISSUE#182
+							}
 						}
-						else
+						else // cas du découplage (ISSUE#181)
 						{
-							MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
-							if (giBadPwdCount>5) PostQuitMessage(-1);
+							BYTE AESKeyData[AES256_KEY_LEN];
+							swCryptDeriveKey(szPwd,&ghKey2,AESKeyData,FALSE);
+							if (ReadVerifyCheckSynchroValue(ghKey2)==0)
+							{
+								BYTE AESKeyData[AES256_KEY_LEN];
+								giPwdProtection=PP_ENCRYPTED;
+								StoreMasterPwd(szPwd);
+								swCryptDeriveKey(szPwd,&ghKey1,AESKeyData,FALSE);
+								// enregistrement des infos de recouvrement dans swSSO.ini (mdp maitre + code RH)Kpub
+								RecoveryChangeAESKeyData(AESKeyData);
+								// inscrit la date de dernier changement de mot de passe dans le .ini
+								// cette valeur est chiffré par le (nouveau) mot de passe et écrite seulement si politique mdp définie
+								SaveMasterPwdLastChange();
+								SecureZeroMemory(szPwd,strlen(szPwd));
+								EndDialog(w,IDOK);
+							}
+							else
+							{
+								SecureZeroMemory(szPwd,strlen(szPwd));
+								MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+								if (giBadPwdCount>5) PostQuitMessage(-1);
+								SetFocus(GetDlgItem(w,TB_PWD)); // ISSUE#182
+							}
 						}
 					}
 					else if (CheckMasterPwd(szPwd)==0)
@@ -1534,6 +1564,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						// ISSUE#139 : si on vient de faire la migration 093, on stocke une mauvaise clé et le recouvrement de mot de passe ne fonctionne pas !
 						if (*szPwdMigration093==0) // on n'est pas dans le cas de la migration, on peut stocker la clé, sinon on fait dans Migration093
 						{
+							SetFocus(GetDlgItem(w,TB_PWD)); // ISSUE#182
 							RecoveryFirstUse(w,AESKeyData);
 						}
 						EndDialog(w,IDOK);
@@ -1552,6 +1583,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						// ISSUE#136 : le message en cas d'erreur devient générique suite à l'ajout du bouton mdp oublié
 						MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 						if (giBadPwdCount>5) PostQuitMessage(-1);
+						SetFocus(GetDlgItem(w,TB_PWD)); // ISSUE#182
 					}
 					break;
 				}
@@ -1576,6 +1608,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						EndDialog(w,-2);
 						//PostQuitMessage(-1); ISSUE#147
 					}
+					SetFocus(GetDlgItem(w,TB_PWD)); // ISSUE#182
 					break;
 				}
 			}
@@ -2136,36 +2169,61 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		// force la migration en SSO Windows si configuré en base de registre
 		if (gbPasswordChoiceLevel==PP_WINDOWS)
 		{
-			TRACE((TRACE_DEBUG,_F_,"PP_WINDOWS demandé en base de registre, on force la migration"));
 			giPwdProtection=PP_WINDOWS;
+		}
+		else if (gbPasswordChoiceLevel==PP_ENCRYPTED) // ISSUE#181 (découplage)
+		{
+			giPwdProtection=PP_ENCRYPTED;
 		}
 askpwd:
 		if (giPwdProtection==PP_ENCRYPTED) // MODE mot de passe maitre
 		{
-			// regarde s'il y a une réinit de mdp en cours
-			int ret=RecoveryResponse(NULL);
-			if (ret==0) // il y a eu une réinit et ça a bien marché :-)
-			{ 
-				gbRecoveryRunning=TRUE; // transchiffrement plus tard une fois que les configs sont chargées en mémoire
-			}
-			else if (ret==-2)  // pas de réinit
+			// Regarde si l'utilisateur utilisait le couplage Windows précédemment
+			char szSynchroValue[192+1]; // (16+64+16)*2+1 = 193
+			int len;
+			len=GetPrivateProfileString("swSSO","CheckSynchro","",szSynchroValue,sizeof(szSynchroValue),gszCfgFile);
+			if (len!=0) // ISSUE#181 (découplage) : l'utilisateur étant en PP_WINDOWS et passe PP_ENCRYPTED
 			{
+				// demande le mot de passe à l'utilisateur (pas le choix, pour hasher, il faut le connaitre)
+				// bidouille pour se retrouver dans le même cas que le clic sur la loupe et vérifier le mot de passe windows facilement...
+				giPwdProtection=PP_WINDOWS; // la remise à la bonne valeur se fait dans WM_COMMAND de PwdDialogProc
+				// initialisation des sels
+				if (swReadPBKDF2Salt()!=0) goto end;
+				// demande du mot de passe
 				rc=AskPwd(NULL,TRUE);
-				if (rc==-1) goto end; // mauvais mot de passe
-				else if (rc==-2) goto askpwd; // l'utilisateur a cliqué sur mot de passe oublié
+				if (rc!=0) goto end; // mauvais mot de passe
+				// mise à jour du .ini sans oublier le sceau
+				WritePrivateProfileString("swSSO","CheckSynchro",NULL,gszCfgFile); 
+				WritePrivateProfileString("swSSO","pwdProtection","ENCRYPTED",gszCfgFile);
+				StoreIniEncryptedHash(); // ISSUE#164
 			}
-			else if (ret==-1 || ret==-3)  // erreur ou format de response incorrect
+			else // L'utilisateur est déjà en mode PP_ENCRYPTED
 			{
-				goto askpwd;
-			}
-			else if (ret==-5)  // l'utilisateur a demandé de regénérer le challenge (ISSUE#121)
-			{
-				RecoveryChallenge(NULL);
-				goto askpwd; // je sais, c'est moche, mais c'est tellement plus simple...
-			}
-			else // il y a eu une réinit et ça n'a pas marché :-(
-			{
-				goto end;
+				// regarde s'il y a une réinit de mdp en cours
+				int ret=RecoveryResponse(NULL);
+				if (ret==0) // il y a eu une réinit et ça a bien marché :-)
+				{ 
+					gbRecoveryRunning=TRUE; // transchiffrement plus tard une fois que les configs sont chargées en mémoire
+				}
+				else if (ret==-2)  // pas de réinit
+				{
+					rc=AskPwd(NULL,TRUE);
+					if (rc==-1) goto end; // mauvais mot de passe
+					else if (rc==-2) goto askpwd; // l'utilisateur a cliqué sur mot de passe oublié
+				}
+				else if (ret==-1 || ret==-3)  // erreur ou format de response incorrect
+				{
+					goto askpwd;
+				}
+				else if (ret==-5)  // l'utilisateur a demandé de regénérer le challenge (ISSUE#121)
+				{
+					RecoveryChallenge(NULL);
+					goto askpwd; // je sais, c'est moche, mais c'est tellement plus simple...
+				}
+				else // il y a eu une réinit et ça n'a pas marché :-(
+				{
+					goto end;
+				}
 			}
 		}
 		else if (giPwdProtection==PP_WINDOWS) // MODE mot de passe Windows

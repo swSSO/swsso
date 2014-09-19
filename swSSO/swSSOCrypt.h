@@ -62,6 +62,7 @@ int swCryptDecodeBase64(const char *szSrcString,char *pDestData,int lenDestData)
 BOOL swIsPBKDF2KeySaltReady(void);
 BOOL swIsPBKDF2PwdSaltReady(void);
 int swGenPBKDF2Salt(void);
+int swReadPBKDF2Salt(void);
 
 int  swCryptEncryptData(unsigned char *iv,unsigned char *pData,DWORD lData,HCRYPTKEY hKey);
 int  swCryptDecryptDataAES256(unsigned char *iv, unsigned char *pData,DWORD lData,HCRYPTKEY hKey);

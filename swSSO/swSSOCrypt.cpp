@@ -414,6 +414,38 @@ end:
 	return rc;
 }
 
+
+//-----------------------------------------------------------------------------
+// swReadPBKDF2Salt()
+//-----------------------------------------------------------------------------
+// Lit les sels dans le .ini
+//-----------------------------------------------------------------------------
+int swReadPBKDF2Salt(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+
+	char szPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
+	
+	// Lecture du sel mot de passe
+	GetPrivateProfileString("swSSO","pwdSalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
+	if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) goto end;
+	swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
+	gSalts.bPBKDF2PwdSaltReady=TRUE;
+	TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,"gbufPBKDF2PwdSalt"));
+	// Lecture du sel dérivation de clé
+	GetPrivateProfileString("swSSO","keySalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
+	if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) goto end;
+	swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
+	gSalts.bPBKDF2KeySaltReady=TRUE;
+	TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gbufPBKDF2KeySalt"));
+
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
 //-----------------------------------------------------------------------------
 // swCreateAESKeyFromKeyData()
 //-----------------------------------------------------------------------------

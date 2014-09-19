@@ -1557,21 +1557,10 @@ int MigrationWindowsSSO(void)
 	char bufRequest[1024];
 	char bufResponse[1024];
 	DWORD dwLenResponse;
-	char szPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
 	char szKey[20+MAX_COMPUTERNAME_LENGTH+UNLEN+1]="";
 
-	// Lecture du sel mot de passe
-	GetPrivateProfileString("swSSO","pwdSalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
-	if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) goto end;
-	swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
-	gSalts.bPBKDF2PwdSaltReady=TRUE;
-	TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,"gbufPBKDF2PwdSalt"));
-	// Lecture du sel dérivation de clé
-	GetPrivateProfileString("swSSO","keySalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
-	if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) goto end;
-	swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
-	gSalts.bPBKDF2KeySaltReady=TRUE;
-	TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gbufPBKDF2KeySalt"));
+	// Lecture des sels
+	if (swReadPBKDF2Salt()!=0) goto end;
 
 	// Envoie les sels à swSSOSVC : V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
@@ -1785,21 +1774,10 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	char bufRequest[1024];
 	char bufResponse[1024];
 	DWORD dwLenResponse;
-	char szPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
 	int rc=-1;
 
-	// Lecture du sel mot de passe
-	GetPrivateProfileString("swSSO","pwdSalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
-	if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) goto end;
-	swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
-	gSalts.bPBKDF2PwdSaltReady=TRUE;
-	TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,"gbufPBKDF2PwdSalt"));
-	// Lecture du sel dérivation de clé
-	GetPrivateProfileString("swSSO","keySalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
-	if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) goto end;
-	swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
-	gSalts.bPBKDF2KeySaltReady=TRUE;
-	TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gbufPBKDF2KeySalt"));
+	// Lecture des sels
+	if (swReadPBKDF2Salt()!=0) goto end;
 
 	// Envoie les sels à swSSOSVC : V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
@@ -1913,7 +1891,6 @@ int CheckMasterPwd(const char *szPwd)
 	char szSalt[SALT_LEN*2+1];
 	char bufSalt[SALT_LEN];
 	
-	char szPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
 	char szPBKDF2ConfigPwd[PBKDF2_PWD_LEN*2+1];
 	BYTE PBKDF2ConfigPwd[PBKDF2_PWD_LEN];
 	BYTE PBKDF2UserPwd[PBKDF2_PWD_LEN];
@@ -1967,18 +1944,8 @@ int CheckMasterPwd(const char *szPwd)
 	else
 	{
 		// (le sel est désormais stocké à part pour simplifier le code)
-		// Lecture du sel mot de passe
-		GetPrivateProfileString("swSSO","pwdSalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
-		if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) goto end;
-		swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
-		gSalts.bPBKDF2PwdSaltReady=TRUE;
-		TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,"gbufPBKDF2PwdSalt"));
-		// Lecture du sel dérivation de clé
-		GetPrivateProfileString("swSSO","keySalt","",szPBKDF2Salt,sizeof(szPBKDF2Salt),gszCfgFile);
-		if (strlen(szPBKDF2Salt)!=PBKDF2_SALT_LEN*2) goto end;
-		swCryptDecodeBase64(szPBKDF2Salt,(char*)gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
-		gSalts.bPBKDF2KeySaltReady=TRUE;
-		TRACE_BUFFER((TRACE_DEBUG,_F_,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gbufPBKDF2KeySalt"));
+		// Lecture des sels
+		if (swReadPBKDF2Salt()!=0) goto end;
 		// Lecture du mot de passe
 		GetPrivateProfileString("swSSO","pwdValue","",szPBKDF2ConfigPwd,sizeof(szPBKDF2ConfigPwd),gszCfgFile);
 		if (strlen(szPBKDF2ConfigPwd)!=PBKDF2_PWD_LEN*2) goto end;
@@ -2368,7 +2335,7 @@ int SaveMasterPwdLastChange(void)
 	char szTime[16]; 
 	char *pszEncryptedTime=NULL; 
 
-	if (giPwdPolicy_MaxAge==0)
+	if (giPwdPolicy_MaxAge==0 && giPwdPolicy_MinAge==0)
 	{
 		TRACE((TRACE_INFO,_F_,"Pas de politique de changement de mot de passe"));
 		rc=0;
@@ -3022,7 +2989,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploa
 														localTime.wHour,localTime.wMinute,localTime.wSecond);
 	TRACE((TRACE_DEBUG,_F_,"szLastModified=%s",szLastModified));
 
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%d&pwdGroup=%d",
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%d&pwdGroup=%d&autoLock=%d",
 				gszWebServiceAddress,
 				gptActions[iAction].iConfigId,
 				pszEncodedTitle,
@@ -3045,7 +3012,8 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploa
 				gptActions[iAction].szFullPathName,
 				szLastModified,
 				iDomainId,
-				gptActions[iAction].iPwdGroup); 
+				gptActions[iAction].iPwdGroup,
+				gptActions[iAction].bAutoLock); 
 	if (bUploadIdPwd)
 	{
 		strcat_s(szRequest,sizeof(szRequest),"&withIdPwd=1");
@@ -3735,6 +3703,19 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					{
 						gptActions[ptiActions[i]].iPwdGroup=atoi(tmp);
 						TRACE((TRACE_DEBUG,_F_,"gptActions[%d].iPwdGroup=%d",ptiActions[i],gptActions[ptiActions[i]].iPwdGroup));
+					}
+				}
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"autoLock")) 
+			{
+				char tmp[10+1];
+				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
+				if (rc>0) 
+				{
+					for (i=0;i<iReplaceExistingConfig;i++)
+					{
+						gptActions[ptiActions[i]].bAutoLock=atoi(tmp);
+						TRACE((TRACE_DEBUG,_F_,"gptActions[%d].bAutoLock=%d",ptiActions[i],gptActions[ptiActions[i]].bAutoLock));
 					}
 				}
 			}
