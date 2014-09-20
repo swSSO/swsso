@@ -297,7 +297,9 @@ else if ($_GET['action']=="putconfig")
 	$var_pwdGroup		=utf8_decode(myaddslashes($_GET['pwdGroup']));  // ajouté en 5.3 pour client 1.03
 	$var_autoLock		=utf8_decode(myaddslashes($_GET['autoLock']));  // ajouté en 5.5 pour client 1.04
 	
-	if ($var_pwdGroup=='') $var_pwdGroup=-1;
+	if ($var_pwdGroup=='') $var_pwdGroup=-1;  // pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
+	if ($var_withIdPwd=='') $var_withIdPwd=0; // pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
+	if ($var_autoLock=='') $var_autoLock=1;   // pour compatibilité avec les clients <1.04 qui ne gèrent pas ce paramètre
     
 	// V4 : gestion des catégories
 	// Ajoute la catégorie si n'existe pas ou met à jour le label
