@@ -77,7 +77,7 @@ function showAll($active,$domain)
 	{
 		$szRequest="select id,".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
 				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
-				   ",categId,lastModified,domainId,pwdGroup,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
+				   ",categId,lastModified,domainId,pwdGroup,autoLock,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
 				   ",".$param_id4Value.",".$param_pwdValue.
 				   " from "._TABLE_PREFIX_."config where active=".$active." ".
 				   $szWhere." order by domainId,categId,id";
@@ -86,7 +86,7 @@ function showAll($active,$domain)
 	{
 		$szRequest="select id,".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
 				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
-				   ",categId,lastModified,domainId,pwdGroup from "._TABLE_PREFIX_."config where active=".$active." ".
+				   ",categId,lastModified,domainId,pwdGroup,autoLock from "._TABLE_PREFIX_."config where active=".$active." ".
 				   $szWhere." order by domainId,categId,id";
 	}
 	if ($_GET['debug']!="") echo $szRequest;
@@ -117,6 +117,7 @@ function showAll($active,$domain)
 	echo "<th>szFullPathName</th>";
 	echo "<th>lastModified</th>";
 	echo "<th>pwdGroup</th>";
+	echo "<th>autoLock</th>";
 	echo "<th>withIdPwd</th>";
 	echo "<th>id1Value</th>";
 	echo "<th>id2Value</th>";
@@ -151,14 +152,15 @@ function showAll($active,$domain)
 		if ($ligne[16]!="") echo "<td>".utf8_encode($ligne[16])."</td>"; else echo "<td align=center>-</td>";   // szFullPathName
 		if ($ligne[18]!="") echo "<td>".utf8_encode($ligne[18])."</td>"; else echo "<td align=center>-</td>";   // lastModified
 		if ($ligne[20]!="") echo "<td>".utf8_encode($ligne[20])."</td>"; else echo "<td align=center>-</td>";   // pwdGroup
+		if ($ligne[21]!="") echo "<td>".utf8_encode($ligne[21])."</td>"; else echo "<td align=center>-</td>";   // autoLock
 		if (_ENCRYPT_=="TRUE")
 		{
-			if ($ligne[21]!="") echo "<td>".utf8_encode($ligne[21])."</td>"; else echo "<td align=center>-</td>";   // withIdPwd
-			if ($ligne[22]!="") echo "<td>".utf8_encode($ligne[22])."</td>"; else echo "<td align=center>-</td>";   // id1Value
-			if ($ligne[23]!="") echo "<td>".utf8_encode($ligne[23])."</td>"; else echo "<td align=center>-</td>";   // id2Value
-			if ($ligne[24]!="") echo "<td>".utf8_encode($ligne[24])."</td>"; else echo "<td align=center>-</td>";   // id3Value
-			if ($ligne[25]!="") echo "<td>".utf8_encode($ligne[25])."</td>"; else echo "<td align=center>-</td>";   // id4Value
-			if ($ligne[26]!="") echo "<td>".utf8_encode($ligne[26])."</td>"; else echo "<td align=center>-</td>";   // pwdValue
+			if ($ligne[22]!="") echo "<td>".utf8_encode($ligne[22])."</td>"; else echo "<td align=center>-</td>";   // withIdPwd
+			if ($ligne[23]!="") echo "<td>".utf8_encode($ligne[23])."</td>"; else echo "<td align=center>-</td>";   // id1Value
+			if ($ligne[24]!="") echo "<td>".utf8_encode($ligne[24])."</td>"; else echo "<td align=center>-</td>";   // id2Value
+			if ($ligne[25]!="") echo "<td>".utf8_encode($ligne[25])."</td>"; else echo "<td align=center>-</td>";   // id3Value
+			if ($ligne[26]!="") echo "<td>".utf8_encode($ligne[26])."</td>"; else echo "<td align=center>-</td>";   // id4Value
+			if ($ligne[27]!="") echo "<td>".utf8_encode($ligne[27])."</td>"; else echo "<td align=center>-</td>";   // pwdValue
 		}
 		echo "</tr>";
 	}
