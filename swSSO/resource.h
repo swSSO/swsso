@@ -338,3 +338,4 @@
 #define IDS_MENU_UPLOADER_IDPWD                 40139
 #define IDS_MENU_UPLOADER_IDPWD_VERS            40140
 #define IDS_TIP_PWD_GROUP                       40141
+#define IDS_TIP_AUTO_LOCK                       40142

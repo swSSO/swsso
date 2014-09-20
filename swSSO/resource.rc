@@ -88,7 +88,7 @@ STYLE DS_SETFONT | WS_CAPTION | WS_GROUP | WS_MAXIMIZEBOX | WS_POPUP | WS_THICKF
 CAPTION "swSSO - Gestion des sites et applications"
 FONT 8, "Tahoma", 400, 0, 0
 {
-    AUTOCHECKBOX    "&Ne pas cramer mon mot de passe", CK_AUTO_LOCK, 206, 89, 127, 8, WS_GROUP, WS_EX_LEFT
+    AUTOCHECKBOX    "&Détecter les erreurs de connexion à cette application", CK_AUTO_LOCK, 17, 272, 180, 8, WS_GROUP, WS_EX_LEFT
     ICON            "", IMG_ID, 418, 18, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_ID2, 415, 57, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_ID3, 417, 70, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
@@ -688,6 +688,7 @@ STRINGTABLE
     IDS_MENU_UPLOADER_IDPWD       "Uploader avec login et mdp"
     IDS_MENU_UPLOADER_IDPWD_VERS  "Uploader avec login et mdp vers..."
     IDS_TIP_PWD_GROUP             "(Administrateur seulement) Regroupement de plusieurs configurations partageant le même mot de passe."
+    IDS_TIP_AUTO_LOCK             "Attention, en décochant cette case, vous autorisez swSSO à réessayer indéfiniment de vous connecter sur cette application (risque de blocage de votre compte si le mot de passe est incorrect)"
 }
 
 
@@ -729,4 +730,3 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
-

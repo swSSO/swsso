@@ -73,6 +73,8 @@ BOOL gbReactivateWithoutPwd=FALSE;
 // ISSUE#164
 BOOL gbCheckIniIntegrity=FALSE;					// ISSUE#164 - vérifie l'intégrité du fichier .ini
 BOOL gbNoMasterPwd=FALSE; 
+// ISSUE#180
+BOOL gbShowAutoLockOption=TRUE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -280,6 +282,11 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_NO_MASTER_PASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbNoMasterPwd=(BOOL)dwValue; 
+
+		// ISSUE#180
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOW_AUTO_LOCK_OPTION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowAutoLockOption=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -540,6 +547,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_UploadWithIdPwd=%d"	,gbShowMenu_UploadWithIdPwd));
 	TRACE((TRACE_INFO,_F_,"gbNoMasterPwd=%d"				,gbNoMasterPwd));
 	TRACE((TRACE_INFO,_F_,"gbCheckIniIntegrity=%d"			,gbCheckIniIntegrity));
+	TRACE((TRACE_INFO,_F_,"gbShowAutoLockOption=%d"			,gbShowAutoLockOption));
 	TRACE((TRACE_INFO,_F_,"PASSWORD -------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));

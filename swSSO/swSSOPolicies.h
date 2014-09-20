@@ -71,6 +71,8 @@
 // ISSUE#164
 #define REGVALUE_CHECK_INI_INTEGRITY				"CheckIniIntegrity"
 #define REGVALUE_NO_MASTER_PASSWORD					"NoMasterPwd"
+// ISSUE#180
+#define REGVALUE_SHOW_AUTO_LOCK_OPTION				"ShowAutoLockOption"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -109,6 +111,8 @@ extern BOOL gbShowMenu_UploadWithIdPwd;				// 1.03 - active le menu "Uploader av
 // ISSUE#164
 extern BOOL gbCheckIniIntegrity;					// ISSUE#164 - vérifie l'intégrité du fichier .ini
 extern BOOL gbNoMasterPwd;
+// ISSUE#180
+extern BOOL gbShowAutoLockOption;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
