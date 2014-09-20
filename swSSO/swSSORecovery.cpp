@@ -663,7 +663,10 @@ int RecoveryResponse(HWND w)
 	lenFormattedResponse=strlen(gszFormattedResponse);
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gszFormattedResponse,lenFormattedResponse,"gszFormattedResponse"));
 	// supprimer les éventuels espaces qui trainent à la fin
-	while (gszFormattedResponse[lenFormattedResponse-1]==' ') { lenFormattedResponse--; gszFormattedResponse[lenFormattedResponse]=0; }
+	// ISSUE#179 : et aussi les retours chariot
+	while (gszFormattedResponse[lenFormattedResponse-1]==' ' ||
+		   gszFormattedResponse[lenFormattedResponse-1]==0x0a ||
+		   gszFormattedResponse[lenFormattedResponse-1]==0x0d) { lenFormattedResponse--; gszFormattedResponse[lenFormattedResponse]=0; }
 	// vérifie les balises début et fin
 	if (memcmp(gszFormattedResponse,gcszBeginResponse,strlen(gcszBeginResponse))!=0)
 	{
