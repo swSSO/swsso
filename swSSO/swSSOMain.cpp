@@ -1481,6 +1481,12 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			{
 				ShowWindow(GetDlgItem(w,PB_MDP_OUBLIE),SW_HIDE);
 			}
+			// ISSUE#181
+			if (giPwdProtection==PP_WINDOWS && ghKey1==NULL) 
+			{
+				SetWindowPos(GetDlgItem(w,TX_FRAME),NULL,60,10,330,30,SWP_NOZORDER);
+				SetDlgItemText(w,TX_FRAME,GetString(IDS_DECOUPLAGE_WINDOWS));
+			}
 			MACRO_SET_SEPARATOR;
 			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
 			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
@@ -1544,8 +1550,12 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							{
 								SecureZeroMemory(szPwd,strlen(szPwd));
 								MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
-								if (giBadPwdCount>5) PostQuitMessage(-1);
 								SetFocus(GetDlgItem(w,TB_PWD)); // ISSUE#182
+								if (giBadPwdCount>5) 
+								{
+									PostQuitMessage(-1);
+									EndDialog(w,IDCANCEL);
+								}
 							}
 						}
 					}
