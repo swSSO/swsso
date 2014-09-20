@@ -3573,6 +3573,9 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					MoveControls(w,GetDlgItem(w,TAB_CONFIG)); // marche pas : GetDlgItem(w,TAB_CONFIG)
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
+				case CK_AUTO_LOCK:
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE);
+					break;
 				case TB_KBSIM:
 					break;
 				case PB_PARCOURIR:
