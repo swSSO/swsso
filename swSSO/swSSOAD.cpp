@@ -295,18 +295,32 @@ int CheckADPwdChange(void)
 	char szLastADPwdChange[14+1];
 	BOOL bAskADPwd=FALSE;
 	
-	// récupère la date de dernier changement dans l'AD
-	if (GetLastADPwdChange(szLastADPwdChange)!=0) goto end;
-
+	*szLastADPwdChange=0;
 	if (*gszLastADPwdChange==0) // pas de date de changement de mdp dans le .ini, il faut demander le mdp AD
 	{
 		TRACE((TRACE_INFO,_F_,"Pas lastADPwdChange dans le .ini, demande le mdp à l'utilisateur"));
 		bAskADPwd=TRUE;
+		// récupère la date de changement dans l'AD pour l'écrire dans le .ini
+		if (GetLastADPwdChange(szLastADPwdChange)==0) 
+		{
+			TRACE((TRACE_DEBUG,_F_,"lastADPwdChange dans l'AD    : %s",szLastADPwdChange));
+		} 
+		else // si AD non dispo, pas grave, on verra la prochaine fois
+		{
+			TRACE((TRACE_ERROR,_F_,"Impossible de récupérer LastADPwdChange dans l'AD"));
+		}
 	}
 	else // date de changement de mdp dans le .ini, compare avec la date de dernier changement dans l'AD
 	{
-		TRACE((TRACE_DEBUG,_F_,"lastADPwdChange dans le .ini : %s",gszLastADPwdChange));
-		TRACE((TRACE_DEBUG,_F_,"lastADPwdChange dans l'AD    : %s",szLastADPwdChange));
+		TRACE((TRACE_INFO,_F_,"lastADPwdChange dans le .ini : %s",gszLastADPwdChange));
+		// récupère la date de dernier changement dans l'AD
+		// si pas réussi à l'obtenir, pas grave, on garde le mdp connu localement, on verra la prochaine fois.
+		if (GetLastADPwdChange(szLastADPwdChange)!=0) 
+		{
+			TRACE((TRACE_ERROR,_F_,"Impossible de récupérer LastADPwdChange dans l'AD"));
+			goto end;
+		}
+		TRACE((TRACE_INFO,_F_,"lastADPwdChange dans l'AD    : %s",szLastADPwdChange));
 		if (strcmp(gszLastADPwdChange,szLastADPwdChange)<0) 
 		{
 			TRACE((TRACE_INFO,_F_,"Mot de passe changé dans l'AD, demande le mdp à l'utilisateur"));

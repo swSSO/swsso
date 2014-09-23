@@ -1004,14 +1004,23 @@ int GetConfigHeader()
 	char szPwdProtection[9+1];
 	int rc=-1;
 	BOOL bCheckVersion;
-	HANDLE hf=INVALID_HANDLE_VALUE;
 	
 	// ISSUE#164 vérifie l'intégrité du fichier .ini. Il faut le faire avant de toucher au .ini
 	// Si le fichier .ini n'existe pas (cas de la première utilisation), on ne fait pas évidemment pas la vérification...
-	hf=CreateFile(gszCfgFile,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-	if (hf!=INVALID_HANDLE_VALUE) // le fichier existe
-	{	
-		CloseHandle(hf);
+	// HANDLE hf=INVALID_HANDLE_VALUE;
+	// hf=CreateFile(gszCfgFile,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	// if (hf!=INVALID_HANDLE_VALUE) // le fichier existe
+	// {	
+	// 		CloseHandle(hf);
+	//		if (CheckIniHash()!=0) goto end;
+	// }
+	// Il ne faut pas non plus vérifier l'intégrité lorsque swSSO n'a jamais été lancé sinon impossible de fournir un .ini avec des options par défaut...
+	// Du coup on se base sur la présence des sels : sels présents on vérifie l'intégrité, sinon non.
+	// Si l'utilisateur supprime les sels pour faire sauter la vérification de l'intégrité, swSSO ne se lancera pas (impossible de se connecter sans sels)
+	char szTmpPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
+	GetPrivateProfileString("swSSO","pwdSalt","",szTmpPBKDF2Salt,sizeof(szTmpPBKDF2Salt),gszCfgFile);
+	if (strlen(szTmpPBKDF2Salt)==PBKDF2_SALT_LEN*2) 
+	{
 		if (CheckIniHash()!=0) goto end;
 	}
 	

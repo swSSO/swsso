@@ -1600,6 +1600,7 @@ int LoadCategories(void)
 	char szCategoryIds[8*NB_MAX_CATEGORIES+2];
 	char *pszCategId;
 	int iCategId,iCategIndex;
+	int iNbCollapsedCategories;
 
 	if (gptCategories!=NULL) { free(gptCategories); gptCategories=NULL; }
 	gptCategories=(T_CATEGORY*)malloc(sizeof(T_CATEGORY)*NB_MAX_CATEGORIES);
@@ -1626,7 +1627,9 @@ int LoadCategories(void)
 	}
 	giNbCategories=i;
 	// 0.92B4 : lit l'état collapsed / expanded dans "CollapsedCategs" dans section [swSSO]
-	for (i=0;i<HowManyCollapsedCategories();i++)
+	// 1.04 : optimisation (demande une seule fois HowManyCollapsedCategories)
+	iNbCollapsedCategories=HowManyCollapsedCategories();
+	for (i=0;i<iNbCollapsedCategories;i++)
 	{
 		// récup de la prochaine catégorie collapsée
 		pszCategId=GetNextCollapsedCategory();
