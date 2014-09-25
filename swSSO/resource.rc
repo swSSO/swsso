@@ -690,6 +690,7 @@ STRINGTABLE
     IDS_TIP_PWD_GROUP             "(Administrateur seulement) Regroupement de plusieurs configurations partageant le même mot de passe."
     IDS_TIP_AUTO_LOCK             "Attention, en décochant cette case, vous autorisez swSSO à réessayer indéfiniment de vous connecter sur cette application (risque de blocage de votre compte si le mot de passe est incorrect)"
     IDS_DECOUPLAGE_WINDOWS        "Votre mot de passe pour lancer swSSO est votre mot de passe Windows. Veuillez le saisir ci-dessous :"
+    IDS_PP_NOMASTERPWD            "AES-256 et PBKDF2 (sans mot de passe maître)"
 }
 
 
@@ -731,3 +732,4 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
+

@@ -163,10 +163,17 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 
 			// remplit avec les valeurs de config (c'était dans PSN_SETACTIVE avant... ???)
 			if (giPwdProtection==PP_ENCRYPTED)
-				SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_ENCRYPTED));
+			{
+				if (gbNoMasterPwd && gcszK1[0]!='1')
+					SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_NOMASTERPWD));
+				else
+					SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_ENCRYPTED));
+			}
 			else 
+			{
 				SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_WINDOWS));
-			
+			}
+
 			if (*gszCfgPortal==0) // pas de portail défini
 			{
 				if (gbEnableOption_Portal) // l'utilisateur a le droit de définir un portail

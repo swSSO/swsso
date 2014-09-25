@@ -68,7 +68,7 @@ void XXX(void)
 // globales globales
 T_CATEGORY *gptCategories=NULL;
 int giNbCategories=0;
-int giNextCategId=0;
+int giNextCategId=1; // ISSUE#184
 HWND gwAppNsites=NULL;
 
 // globales locales
@@ -1610,7 +1610,7 @@ int LoadCategories(void)
 	// premier tour pour compter le nombre de sections
 	p=szCategoryIds;
 	giNbCategories=0;
-	giNextCategId=0;
+	giNextCategId=1;
 	i=0;
 	while (*p!=0)
 	{
