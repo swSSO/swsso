@@ -75,6 +75,8 @@ BOOL gbCheckIniIntegrity=FALSE;					// ISSUE#164 - vérifie l'intégrité du fichie
 BOOL gbNoMasterPwd=FALSE; 
 // ISSUE#180
 BOOL gbShowAutoLockOption=TRUE;
+// ISSUE#183
+BOOL gbEnableOption_ShowBrowsers=TRUE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -287,6 +289,11 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOW_AUTO_LOCK_OPTION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowAutoLockOption=(BOOL)dwValue; 
+
+		// ISSUE#183
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWBROWSERS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_ShowBrowsers=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -548,6 +555,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbNoMasterPwd=%d"				,gbNoMasterPwd));
 	TRACE((TRACE_INFO,_F_,"gbCheckIniIntegrity=%d"			,gbCheckIniIntegrity));
 	TRACE((TRACE_INFO,_F_,"gbShowAutoLockOption=%d"			,gbShowAutoLockOption));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowBrowsers=%d"	,gbEnableOption_ShowBrowsers));
 	TRACE((TRACE_INFO,_F_,"PASSWORD -------------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));

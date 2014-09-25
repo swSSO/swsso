@@ -862,7 +862,7 @@ int ShowConfig(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc;
-	
+	int iPage;
 	if (gwPropertySheet!=NULL)
 	{
 		ShowWindow(gwPropertySheet,SW_SHOW);
@@ -885,40 +885,35 @@ int ShowConfig(void)
 
 	psh.hwndParent=HWND_DESKTOP;
 	psh.pszCaption="swSSO - Options";
-	psh.nStartPage=(gbEnableOption_ShowOptions?0:1);
-
+	//psh.nStartPage=(gbEnableOption_ShowOptions?0:1);
+	psh.nStartPage=0;
+	iPage=0;
 	if (gbEnableOption_ShowOptions)
 	{
 		psp.pszTemplate=MAKEINTRESOURCE(PSP_INTERNET);
 		psp.pfnDlgProc=PSPConfigurationProc;
 		psp.lParam=0;
-		hpsp[0]=CreatePropertySheetPage(&psp);
-		if (hpsp[0]==NULL) goto end;
-
+		hpsp[iPage]=CreatePropertySheetPage(&psp);
+		if (hpsp[iPage]==NULL) goto end;
+		iPage++;
+	}
+	if (gbEnableOption_ShowBrowsers)
+	{
 		psp.pszTemplate=MAKEINTRESOURCE(PSP_BROWSER);
 		psp.pfnDlgProc=PSPBrowserProc;
 		psp.lParam=0;
-		hpsp[1]=CreatePropertySheetPage(&psp);
-		if (hpsp[1]==NULL) goto end;
-
-		psp.pszTemplate=MAKEINTRESOURCE(PSP_ABOUT);
-		psp.pfnDlgProc=PSPAboutProc;
-		psp.lParam=0;
-		hpsp[2]=CreatePropertySheetPage(&psp);
-		if (hpsp[2]==NULL) goto end;
-
-		psh.nPages=3;
+		hpsp[iPage]=CreatePropertySheetPage(&psp);
+		if (hpsp[iPage]==NULL) goto end;
+		iPage++;
 	}
-	else
-	{
-		psp.pszTemplate=MAKEINTRESOURCE(PSP_ABOUT);
-		psp.pfnDlgProc=PSPAboutProc;
-		psp.lParam=0;
-		hpsp[0]=CreatePropertySheetPage(&psp);
-		if (hpsp[0]==NULL) goto end;
 
-		psh.nPages=1;
-	}
+	psp.pszTemplate=MAKEINTRESOURCE(PSP_ABOUT);
+	psp.pfnDlgProc=PSPAboutProc;
+	psp.lParam=0;
+	hpsp[iPage]=CreatePropertySheetPage(&psp);
+	if (hpsp[iPage]==NULL) goto end;
+
+	psh.nPages=iPage+1;
 	psh.phpage=hpsp;
 	
 	rc=PropertySheet(&psh);

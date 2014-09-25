@@ -73,6 +73,8 @@
 #define REGVALUE_NO_MASTER_PASSWORD					"NoMasterPwd"
 // ISSUE#180
 #define REGVALUE_SHOW_AUTO_LOCK_OPTION				"ShowAutoLockOption"
+// ISSUE#183
+#define REGVALUE_ENABLEOPTION_SHOWBROWSERS			"ShowBrowsers"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -113,6 +115,9 @@ extern BOOL gbCheckIniIntegrity;					// ISSUE#164 - vérifie l'intégrité du fichi
 extern BOOL gbNoMasterPwd;
 // ISSUE#180
 extern BOOL gbShowAutoLockOption;
+// ISSUE#183
+extern BOOL gbEnableOption_ShowBrowsers;
+
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
