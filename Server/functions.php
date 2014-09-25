@@ -118,12 +118,15 @@ function showAll($active,$domain)
 	echo "<th>lastModified</th>";
 	echo "<th>pwdGroup</th>";
 	echo "<th>autoLock</th>";
-	echo "<th>withIdPwd</th>";
-	echo "<th>id1Value</th>";
-	echo "<th>id2Value</th>";
-	echo "<th>id3Value</th>";
-	echo "<th>id4Value</th>";
-	echo "<th>pwdValue</th>";
+	if (_ENCRYPT_=="TRUE")
+	{
+		echo "<th>withIdPwd</th>";
+		echo "<th>id1Value</th>";
+		echo "<th>id2Value</th>";
+		echo "<th>id3Value</th>";
+		echo "<th>id4Value</th>";
+		echo "<th>pwdValue</th>";
+	}
 	echo "</tr>";
 	for ($i=0;$i<mysql_num_rows($req);$i++)
 	{
