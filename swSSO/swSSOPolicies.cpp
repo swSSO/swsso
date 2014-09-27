@@ -120,6 +120,22 @@ BOOL gbShowMenu_UploadWithIdPwd=FALSE;				// 1.03 - active le menu "Uploader ave
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
 int  giNbExcludedWindows=0;
 
+// REGKEY_DEFAULTINIVALUES
+BOOL gbSessionLock_DefaultValue=FALSE;				// 1.04
+BOOL gbInternetCheckVersion_DefaultValue=TRUE;		// 1.04
+BOOL gbInternetCheckBeta_DefaultValue=FALSE;		// 1.04
+BOOL gbInternetGetConfig_DefaultValue=FALSE;		// 1.04
+BOOL gbInternetManualPutConfig_DefaultValue=FALSE;	// 1.04
+char gszCfgPortal_DefaultValue[_MAX_PATH+1]="";		// 1.04
+BOOL gbLaunchTopMost_DefaultValue=FALSE;			// 1.04
+BOOL gbParseWindowsOnStart_DefaultValue=TRUE;		// 1.04
+int  giDomainId_DefaultValue=1;						// 1.04
+char gszDomainLabel_DefaultValue[LEN_DOMAIN+1]="";	// 1.04
+BOOL gbDisplayChangeAppPwdDialog_DefaultValue=TRUE;	// 1.04
+BOOL gbSSOInternetExplorer_DefaultValue=TRUE;		// 1.04
+BOOL gbSSOFirefox_DefaultValue=TRUE;				// 1.04
+BOOL gbSSOChrome_DefaultValue=TRUE;					// 1.04
+
 //-----------------------------------------------------------------------------
 // LoadPolicies()
 //-----------------------------------------------------------------------------
@@ -520,6 +536,74 @@ void LoadPolicies(void)
 		}
 		RegCloseKey(hKey);
 	}
+	//--------------------------------------------------------------
+	// DEFAULT INI VALUES
+	//--------------------------------------------------------------
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_DEFAULTINIVALUES,0,KEY_READ,&hKey);
+	if (rc==ERROR_SUCCESS)
+	{
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_SESSION_LOCK,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbSessionLock_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_CHECK_VERSION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbInternetCheckVersion_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_CHECK_BETA,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbInternetCheckBeta_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_GET_CONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbInternetGetConfig_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_PUT_CONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbInternetManualPutConfig_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_PORTAL,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+			strcpy_s(gszCfgPortal_DefaultValue,sizeof(gszCfgPortal_DefaultValue),szValue);
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_LAUNCH_TOPMOST,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbLaunchTopMost_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_PARSE_ON_START,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbParseWindowsOnStart_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_DOMAIN_ID,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giDomainId_DefaultValue=(int)dwValue; 
+		
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_DOMAIN_LABEL,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+			strcpy_s(gszDomainLabel_DefaultValue,sizeof(gszDomainLabel_DefaultValue),szValue);
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_DISPLAY_CHANGE_APP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbDisplayChangeAppPwdDialog_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_INTERNET_EXPLORER,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbSSOInternetExplorer_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_FIREFOX,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbSSOFirefox_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_CHROME,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbSSOChrome_DefaultValue=(BOOL)dwValue; 
+
+		RegCloseKey(hKey);
+	}
 
 #ifdef TRACES_ACTIVEES
 	int i;
@@ -556,7 +640,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbCheckIniIntegrity=%d"			,gbCheckIniIntegrity));
 	TRACE((TRACE_INFO,_F_,"gbShowAutoLockOption=%d"			,gbShowAutoLockOption));
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowBrowsers=%d"	,gbEnableOption_ShowBrowsers));
-	TRACE((TRACE_INFO,_F_,"PASSWORD -------------------"));
+	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinUpperCase=%d"		,giPwdPolicy_MinUpperCase));
@@ -588,11 +672,27 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbUseADPasswordForAppLogin=%d"		,gbUseADPasswordForAppLogin));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
-	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS ---------"));
+	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
 	for (i=0;i<giNbExcludedWindows;i++)
 	{
 		TRACE((TRACE_INFO,_F_,"%d=%s",i,gtabszExcludedWindows[i]));
 	}
+	TRACE((TRACE_INFO,_F_,"DEFAULT INI VALUES ---------"));
+	TRACE((TRACE_INFO,_F_,"gbSessionLock_DefaultValue=%d",gbSessionLock_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbInternetCheckVersion_DefaultValue=%d",gbInternetCheckVersion_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbInternetCheckBeta_DefaultValue=%d",gbInternetCheckBeta_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbInternetGetConfig_DefaultValue=%d",gbInternetGetConfig_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbInternetManualPutConfig_DefaultValue=%d",gbInternetManualPutConfig_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gszCfgPortal_DefaultValue=%s",gszCfgPortal_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbLaunchTopMost_DefaultValue=%d",gbLaunchTopMost_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbParseWindowsOnStart_DefaultValue=%d",gbParseWindowsOnStart_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"giDomainId_DefaultValue=%d",giDomainId_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gszDomainLabel_DefaultValue=%s",gszDomainLabel_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbDisplayChangeAppPwdDialog_DefaultValue=%d",gbDisplayChangeAppPwdDialog_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbSSOInternetExplorer_DefaultValue=%d",gbSSOInternetExplorer_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbSSOFirefox_DefaultValue=%d",gbSSOFirefox_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbSSOChrome_DefaultValue=%d",gbSSOChrome_DefaultValue));
+
 #endif
 
 	TRACE((TRACE_LEAVE,_F_, ""));

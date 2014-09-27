@@ -213,6 +213,39 @@ extern BOOL gbUseADPasswordForAppLogin;		// 1.03 - permet d'utiliser %ADPASSWORD
 extern char gtabszExcludedWindows[][LEN_EXCLUDED_WINDOW_TITLE+1];
 extern int  giNbExcludedWindows;
 
+//-----------------------------------------------------------------------------
+#define REGKEY_DEFAULTINIVALUES "SOFTWARE\\swSSO\\DefaultIniValues"
+//-----------------------------------------------------------------------------
+#define REGVALUE_DEFAULT_SESSION_LOCK			"sessionLock"
+#define REGVALUE_DEFAULT_CHECK_VERSION			"internetCheckVersion"
+#define REGVALUE_DEFAULT_CHECK_BETA				"internetCheckBeta"
+#define REGVALUE_DEFAULT_GET_CONFIG				"internetGetConfig"
+#define REGVALUE_DEFAULT_PUT_CONFIG				"internetManualPutConfig"
+#define REGVALUE_DEFAULT_PORTAL					"Portal"
+#define REGVALUE_DEFAULT_LAUNCH_TOPMOST			"LaunchTopMost"
+#define REGVALUE_DEFAULT_PARSE_ON_START			"parseWindowsOnStart"
+#define REGVALUE_DEFAULT_DOMAIN_ID				"domainId"
+#define REGVALUE_DEFAULT_DOMAIN_LABEL			"domainLabel"
+#define REGVALUE_DEFAULT_DISPLAY_CHANGE_APP		"displayChangeAppPwdDialog"
+#define REGVALUE_DEFAULT_INTERNET_EXPLORER		"InternetExplorer"
+#define REGVALUE_DEFAULT_FIREFOX				"Firefox"
+#define REGVALUE_DEFAULT_CHROME					"Chrome"
+
+extern BOOL gbSessionLock_DefaultValue;					// 1.04
+extern BOOL gbInternetCheckVersion_DefaultValue;		// 1.04
+extern BOOL gbInternetCheckBeta_DefaultValue;			// 1.04
+extern BOOL gbInternetGetConfig_DefaultValue;			// 1.04
+extern BOOL gbInternetManualPutConfig_DefaultValue;		// 1.04
+extern char gszCfgPortal_DefaultValue[];				// 1.04
+extern BOOL gbLaunchTopMost_DefaultValue;				// 1.04
+extern BOOL gbParseWindowsOnStart_DefaultValue;			// 1.04
+extern int  giDomainId_DefaultValue;					// 1.04
+extern char gszDomainLabel_DefaultValue[];				// 1.04
+extern BOOL gbDisplayChangeAppPwdDialog_DefaultValue;	// 1.04
+extern BOOL gbSSOInternetExplorer_DefaultValue;			// 1.04
+extern BOOL gbSSOFirefox_DefaultValue;					// 1.04
+extern BOOL gbSSOChrome_DefaultValue;					// 1.04
+
 // FONCTIONS PUBLIQUES
 void LoadPolicies(void);
 BOOL IsPasswordPolicyCompliant(const char *szPwd);

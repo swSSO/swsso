@@ -1039,19 +1039,26 @@ int GetConfigHeader()
 		goto end;
 	}
 
-	gbSessionLock=GetConfigBoolValue("swSSO","sessionLock",FALSE,TRUE);
-	// ISSUE#134
-	bCheckVersion=strcmp(gszServerAddress,"ws.swsso.fr")==0;
+	// ISSUE#185 : les valeurs par défaut sont désormais lues en base de registre dans swSSOPolicies
+	gbSessionLock=GetConfigBoolValue("swSSO","sessionLock",gbSessionLock_DefaultValue,TRUE);
+	bCheckVersion=gbInternetCheckVersion_DefaultValue;
+	if (bCheckVersion)
+	{
+		bCheckVersion=strcmp(gszServerAddress,"ws.swsso.fr")==0; 	// ISSUE#134
+	}
 	gbInternetCheckVersion=GetConfigBoolValue("swSSO","internetCheckVersion",bCheckVersion,TRUE);
-	gbInternetCheckBeta=GetConfigBoolValue("swSSO","internetCheckBeta",FALSE,TRUE);
-	//gbInternetGetConfig=GetConfigBoolValue("swSSO","internetGetConfig",TRUE,TRUE); ISSUE#63 : plus de serveur de config par défaut.
-	gbInternetGetConfig=GetConfigBoolValue("swSSO","internetGetConfig",FALSE,TRUE);
-	//gbInternetPutConfig=GetConfigBoolValue("swSSO","internetPutConfig",FALSE);
-	gbInternetManualPutConfig=GetConfigBoolValue("swSSO","internetManualPutConfig",FALSE,TRUE);
-
-	GetPrivateProfileString("swSSO","Portal","",gszCfgPortal,sizeof(gszCfgPortal),gszCfgFile);
-	giDomainId=GetPrivateProfileInt("swSSO","domainId",1,gszCfgFile); // 0.94B1 : gestion des domaines
-	GetPrivateProfileString("swSSO","domainLabel","",gszDomainLabel,sizeof(gszDomainLabel),gszCfgFile);
+	gbInternetCheckBeta=GetConfigBoolValue("swSSO","internetCheckBeta",gbInternetCheckBeta_DefaultValue,TRUE);
+	gbInternetGetConfig=GetConfigBoolValue("swSSO","internetGetConfig",gbInternetGetConfig_DefaultValue,TRUE);
+	gbInternetManualPutConfig=GetConfigBoolValue("swSSO","internetManualPutConfig",gbInternetManualPutConfig_DefaultValue,TRUE);
+	GetPrivateProfileString("swSSO","Portal",gszCfgPortal_DefaultValue,gszCfgPortal,sizeof(gszCfgPortal),gszCfgFile);
+	gbLaunchTopMost=GetConfigBoolValue("swSSO","LaunchTopMost",gbLaunchTopMost_DefaultValue,TRUE);
+	gbParseWindowsOnStart=GetConfigBoolValue("swSSO","parseWindowsOnStart",gbParseWindowsOnStart_DefaultValue,TRUE);// 0.93B4 ISSUE#50 (?)
+	giDomainId=GetPrivateProfileInt("swSSO","domainId",giDomainId_DefaultValue,gszCfgFile); // 0.94B1 : gestion des domaines
+	GetPrivateProfileString("swSSO","domainLabel",gszDomainLabel_DefaultValue,gszDomainLabel,sizeof(gszDomainLabel),gszCfgFile);
+	gbDisplayChangeAppPwdDialog=GetConfigBoolValue("swSSO","displayChangeAppPwdDialog",gbDisplayChangeAppPwdDialog_DefaultValue,TRUE); // ISSUE#107
+	gbSSOInternetExplorer=GetConfigBoolValue("swSSO","InternetExplorer",gbSSOInternetExplorer_DefaultValue,TRUE); // ISSUE#176
+	gbSSOFirefox=GetConfigBoolValue("swSSO","Firefox",gbSSOFirefox_DefaultValue,TRUE); // ISSUE#176
+	gbSSOChrome=GetConfigBoolValue("swSSO","Chrome",gbSSOChrome_DefaultValue,TRUE); // ISSUE#176
 
 	gx=GetPrivateProfileInt("swSSO","x",-1,gszCfgFile);
 	gy=GetPrivateProfileInt("swSSO","y",-1,gszCfgFile);
@@ -1061,7 +1068,6 @@ int GetConfigHeader()
 	gy2=GetPrivateProfileInt("swSSO","y2",-1,gszCfgFile);
 	gcx2=GetPrivateProfileInt("swSSO","cx2",-1,gszCfgFile);
 	gcy2=GetPrivateProfileInt("swSSO","cy2",-1,gszCfgFile);
-	gbLaunchTopMost=GetConfigBoolValue("swSSO","LaunchTopMost",FALSE,TRUE);
 	GetPrivateProfileString("swSSO","lastConfigUpdate","",gszLastConfigUpdate,sizeof(gszLastConfigUpdate),gszCfgFile);
 	
 	// lecture des recovery infos
@@ -1076,22 +1082,12 @@ int GetConfigHeader()
 		TRACE((TRACE_DEBUG,_F_,"recoveryInfosKeyId=%04d",giRecoveryInfosKeyId));
 	}
 
-	// 0.93B4 ISSUE#50 (?)
-	gbParseWindowsOnStart=GetConfigBoolValue("swSSO","parseWindowsOnStart",TRUE,TRUE);
-
-	// ISSUE#107
-	gbDisplayChangeAppPwdDialog=GetConfigBoolValue("swSSO","displayChangeAppPwdDialog",TRUE,TRUE);
-
 	// 1.03 : lecture de la date de dernier changement mot de passe AD
 	if (gbUseADPasswordForAppLogin)
 	{
 		GetPrivateProfileString("swSSO","lastADPwdChange","",gszLastADPwdChange,sizeof(gszLastADPwdChange),gszCfgFile);
 		GetPrivateProfileString("swSSO","ADPwd","",gszEncryptedADPwd,sizeof(gszEncryptedADPwd),gszCfgFile);
 	}
-	// ISSUE#176
-	gbSSOInternetExplorer=GetConfigBoolValue("swSSO","InternetExplorer",TRUE,TRUE);
-	gbSSOFirefox=GetConfigBoolValue("swSSO","Firefox",TRUE,TRUE);
-	gbSSOChrome=GetConfigBoolValue("swSSO","Chrome",TRUE,TRUE);
 
 	// REMARQUE : la config proxy est lue plus loin dans le démarrage du main, sinon la clé n'est pas disponible
 	//            pour déchiffrer le mot de passe proxy !
