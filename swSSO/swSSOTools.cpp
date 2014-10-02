@@ -1357,15 +1357,31 @@ void LastDetect_UntagAllWindows(void)
 void LastDetect_RemoveUntaggedWindows(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	int i;
+	int i,j;
 
 	for (i=0;i<MAX_NB_LAST_DETECT;i++)
 	{
 		if (gTabLastDetect[i].tag==0 && gTabLastDetect[i].wLastDetect!=NULL)
 		{
 			TRACE((TRACE_DEBUG,_F_,"Removing : 0x%08lx",gTabLastDetect[i].wLastDetect));
+
+			// ISSUE#187 : pour les pages web, il faut réinitialiser le tLastSSO de toutes les actions qui
+			// ont été traitées dans cette fenêtre puisqu'elle a disparu.
+			for (j=0;j<giNbActions;j++)
+			{
+				if (gptActions[j].iType==WEBSSO || gptActions[j].iType==XEBSSO)
+				{
+					if (gptActions[j].wLastSSO==gTabLastDetect[i].wLastDetect)
+					{
+						TRACE((TRACE_DEBUG,_F_,"Réinitialisation du tLastSSO de l'action '%s'",gptActions[j].szApplication));
+						gptActions[j].tLastSSO=-1;
+					}
+				}
+			}
+			
 			gTabLastDetect[i].tLastDetect=-1;
 			gTabLastDetect[i].wLastDetect=NULL;
+
 		}
 	}
 	TRACE((TRACE_LEAVE,_F_, ""));
