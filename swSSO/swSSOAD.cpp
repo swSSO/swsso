@@ -213,14 +213,14 @@ static int CALLBACK AskADPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case IDOK:
 				{
 					char szNewPwd1[LEN_PWD+1];
-					char *gpszEncryptedADPwd=NULL;
+					char *pszEncryptedADPwd=NULL;
 					GetDlgItemText(w,TB_NEW_PWD1,szNewPwd1,sizeof(szNewPwd1));
 					// chiffrement du mot de passe AD
-					gpszEncryptedADPwd=swCryptEncryptString(szNewPwd1,ghKey1);
-					if (gpszEncryptedADPwd!=NULL)
+					pszEncryptedADPwd=swCryptEncryptString(szNewPwd1,ghKey1);
+					if (pszEncryptedADPwd!=NULL)
 					{
-						strcpy_s(gszEncryptedADPwd,sizeof(gszEncryptedADPwd),gpszEncryptedADPwd);
-						free(gpszEncryptedADPwd);
+						strcpy_s(gszEncryptedADPwd,sizeof(gszEncryptedADPwd),pszEncryptedADPwd);
+						free(pszEncryptedADPwd);
 					}
 					SecureZeroMemory(szNewPwd1,strlen(szNewPwd1));
 					// Remarque : l'enregistrement dans le .ini en retour de la fonction avec SaveConfigHeader()
@@ -296,37 +296,41 @@ int CheckADPwdChange(void)
 	BOOL bAskADPwd=FALSE;
 	
 	*szLastADPwdChange=0;
-	if (*gszLastADPwdChange==0) // pas de date de changement de mdp dans le .ini, il faut demander le mdp AD
+	
+	// récupère la date de changement dans l'AD
+	if (GetLastADPwdChange(szLastADPwdChange)==0) 
 	{
-		TRACE((TRACE_INFO,_F_,"Pas lastADPwdChange dans le .ini, demande le mdp à l'utilisateur"));
-		bAskADPwd=TRUE;
-		// récupère la date de changement dans l'AD pour l'écrire dans le .ini
-		if (GetLastADPwdChange(szLastADPwdChange)==0) 
-		{
-			TRACE((TRACE_DEBUG,_F_,"lastADPwdChange dans l'AD    : %s",szLastADPwdChange));
-		} 
-		else // si AD non dispo, pas grave, on verra la prochaine fois
-		{
-			TRACE((TRACE_ERROR,_F_,"Impossible de récupérer LastADPwdChange dans l'AD"));
-		}
-	}
-	else // date de changement de mdp dans le .ini, compare avec la date de dernier changement dans l'AD
-	{
-		TRACE((TRACE_INFO,_F_,"lastADPwdChange dans le .ini : %s",gszLastADPwdChange));
-		// récupère la date de dernier changement dans l'AD
-		// si pas réussi à l'obtenir, pas grave, on garde le mdp connu localement, on verra la prochaine fois.
-		if (GetLastADPwdChange(szLastADPwdChange)!=0) 
-		{
-			TRACE((TRACE_ERROR,_F_,"Impossible de récupérer LastADPwdChange dans l'AD"));
-			goto end;
-		}
 		TRACE((TRACE_INFO,_F_,"lastADPwdChange dans l'AD    : %s",szLastADPwdChange));
-		if (strcmp(gszLastADPwdChange,szLastADPwdChange)<0) 
+	} 
+	else // si AD non dispo, pas grave, on verra la prochaine fois
+	{
+		TRACE((TRACE_ERROR,_F_,"Impossible de récupérer la date de dernier changement de mdp dans l'AD"));
+	}
+
+	if (*gszEncryptedADPwd==0) // pas de mot de passe AD stocké dans le .ini, on le demande
+	{
+		TRACE((TRACE_INFO,_F_,"Pas de mot de passe AD dans le .ini, le demande à l'utilisateur"));
+		bAskADPwd=TRUE;
+	}
+	else // mot de passe stocké dans le .ini, il faut regarder la date de changement dans l'AD
+	{
+		if (*gszLastADPwdChange==0) // pas de date de changement de mdp dans le .ini : c'est qu'on a demandé le mot de passe AD 
+			                        // mais qu'on n'a pas pu joindre l'AD pour avoir la date. Dans ce cas, essaie de récupérer la date dans l'AD
+									// mais on ne redemande pas le mot de passe.
 		{
-			TRACE((TRACE_INFO,_F_,"Mot de passe changé dans l'AD, demande le mdp à l'utilisateur"));
-			bAskADPwd=TRUE;// date de changement .ini antérieure à date changement AD 
+			TRACE((TRACE_INFO,_F_,"Mot de passe AD dans le .ini, mais pas la date de dernier changement"));
+		}
+		else
+		{
+			TRACE((TRACE_INFO,_F_,"lastADPwdChange dans le .ini : %s",gszLastADPwdChange));
+			if (strcmp(gszLastADPwdChange,szLastADPwdChange)<0) // date de changement .ini antérieure à date changement AD, on demande le mdp
+			{
+				TRACE((TRACE_INFO,_F_,"Mot de passe changé dans l'AD, demande le mdp à l'utilisateur"));
+				bAskADPwd=TRUE;
+			}
 		}
 	}
+	
 	if (bAskADPwd) // demande le mot de passe AD à l'utilisateur et le stocke dans le .ini
 	{
 		if (AskADPwd()!=0) goto end;

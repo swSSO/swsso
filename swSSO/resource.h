@@ -341,3 +341,4 @@
 #define IDS_TIP_AUTO_LOCK                       40142
 #define IDS_DECOUPLAGE_WINDOWS                  40143
 #define IDS_PP_NOMASTERPWD                      40144
+#define IDS_MENU_MDP_WINDOWS                    40145

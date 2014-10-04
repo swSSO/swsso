@@ -602,7 +602,7 @@ STRINGTABLE
     IDS_DESACTIVATE_B3            "&Suspendre"
     IDS_ERROR_MESSAGE_INI_FILE    "Une erreur est survenue lors de la lecture du fichier de configuration.\r\nMerci de contacter le support."
     IDS_GENERIC_STARTING_ERROR    "Une erreur est survenue au démarrage de swSSO.\r\nMerci de contacter le support."
-    IDS_MENU_UPLOADER             "Uploader"
+    IDS_MENU_UPLOADER             "Publier"
     IDS_UPLOAD_OK                 "La configuration du SSO pour cette application a bien été remontée sur le serveur."
     IDS_UPLOAD_NOK                "Erreur : aucune information n'a pu être remontée sur le serveur."
     IDS_PROXY_OK                  "Test réussi, vos paramètres proxy sont corrects !"
@@ -635,7 +635,7 @@ STRINGTABLE
     IDS_ERROR_INI_SAV             "swSSO n'a pas pu sauvegarder votre fichier de configuration (erreur %d).\r\nSi le fichier suivant existe déjà, supprimez-le et relancez swSSO :\r\n%s\r\nEn cas de doute contactez le support."
     IDS_ERROR_INI_RESTORED        "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été restauré, vous pouvez continuer à utiliser la version 0.92 de swSSO.\r\nMerci de signaler ce problème au support."
     IDS_ERROR_INI_NOT_RESTORED    "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été sauvegardé ici :\r\n%s\r\n. Renommez-le en swsso.ini pour continuer à utiliser la version 0.92 de swSSO.\r\nMerci néanmoins de ce problème au support."
-    IDS_MENU_UPLOADER_VERS        "Uploader vers..."
+    IDS_MENU_UPLOADER_VERS        "Publier vers..."
     IDS_TAB_APPLICATIONS          "Sites et applications"
     IDS_TAB_IDPWD1                "Identifiant et mot de passe"
     IDS_TAB_IDPWD2                "Identifiants complémentaires"
@@ -685,12 +685,13 @@ STRINGTABLE
     IDS_MSG_CONFIRM_PWD_SAVE      "Voulez-vous vraiment enregistrer votre nouveau mot de passe pour l'application %s ?"
     IDS_MSG_MAX_CONFIGS           "Erreur : le nombre maximum d'applications est dépassé. Il n'est plus possible d'ajouter de nouvelles applications."
     IDS_WARNING_AD_PWD            "Si vous ne saisissez pas votre nouveau mot de passe Windows, la connexion à certaines applications ne fonctionnera plus.\r\nVoulez-vous continuer sans saisir le mot de passe Windows ?"
-    IDS_MENU_UPLOADER_IDPWD       "Uploader avec login et mdp"
-    IDS_MENU_UPLOADER_IDPWD_VERS  "Uploader avec login et mdp vers..."
+    IDS_MENU_UPLOADER_IDPWD       "Publier avec login et mdp"
+    IDS_MENU_UPLOADER_IDPWD_VERS  "Publier avec login et mdp vers..."
     IDS_TIP_PWD_GROUP             "(Administrateur seulement) Regroupement de plusieurs configurations partageant le même mot de passe."
     IDS_TIP_AUTO_LOCK             "Attention, en décochant cette case, vous autorisez swSSO à réessayer indéfiniment de vous connecter sur cette application (risque de blocage de votre compte si le mot de passe est incorrect)"
     IDS_DECOUPLAGE_WINDOWS        "Votre mot de passe pour lancer swSSO est votre mot de passe Windows. Veuillez le saisir ci-dessous :"
     IDS_PP_NOMASTERPWD            "AES-256 et PBKDF2 (sans mot de passe maître)"
+    IDS_MENU_MDP_WINDOWS          "&Mot de passe Windows..."
 }
 
 
@@ -732,4 +733,3 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
-

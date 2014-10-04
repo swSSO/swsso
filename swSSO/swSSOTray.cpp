@@ -79,8 +79,9 @@ static void ShowContextMenu(HWND w)
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_APPNSITES,GetString(IDS_MENU_APPNSITES));
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PROPRIETES,GetString(IDS_MENU_PROP));
-	if ((giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) || *gszCfgPortal!=0) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+	if ((giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) || *gszCfgPortal!=0 || gbUseADPasswordForAppLogin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	if (giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_MDP,GetString(IDS_MENU_MDP));
+	if (gbUseADPasswordForAppLogin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_MDP_WINDOWS,GetString(IDS_MENU_MDP_WINDOWS));
 	if (*gszCfgPortal!=0) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PORTAL,GetString(IDS_MENU_PORTAL));
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	if (gbSSOActif)
@@ -251,6 +252,16 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						SSOActivate(w);
 					}
 					WindowChangeMasterPwd(FALSE);
+					break;
+				case TRAY_MENU_MDP_WINDOWS:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_MDP_WINDOWS"));
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
+					{
+						if (AskPwd(NULL,TRUE)!=0) goto end;
+						SSOActivate(w);
+					}
+					AskADPwd();
+					SaveConfigHeader();
 					break;
 				case TRAY_MENU_PORTAL:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_PORTAL"));
