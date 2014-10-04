@@ -407,7 +407,7 @@ end:
 // Mot de passe = 3ème child du 3ème niveau
 // Bouton OK = 4ème child du 1er niveau
 //-----------------------------------------------------------------------------
-void FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
+int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 {
 	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d",w,iAction));
 
@@ -417,7 +417,7 @@ void FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 	IDispatch *pIDispatch=NULL;
 	long lFirstLevelChildCount, lSecondLevelChildCount;
 	VARIANT index;
-	int rc;
+	int rc=-1;
 	VARIANT vtSelf;
 	vtSelf.vt=VT_I4;
 	vtSelf.lVal=CHILDID_SELF;
@@ -518,12 +518,13 @@ void FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 
 	Sleep(20);
 	KBSimEx(w,"[ENTER]","","","","","");
-
+	rc=0;
 end:
 	if (pIDispatch!=NULL) pIDispatch->Release(); 
 	if (pLevel1Child!=NULL) pLevel1Child->Release();
 	if (pLevel2Child!=NULL) pLevel2Child->Release();
-	TRACE((TRACE_LEAVE,_F_, ""));
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc; // ISSUE#188
 }
 
 //-----------------------------------------------------------------------------
@@ -679,7 +680,8 @@ int SSOWindows(HWND w,int iAction,int iPopupType)
 	{
 		pAccessible=GetW7PopupIAccessible(w);
 		if (pAccessible==NULL) { TRACE((TRACE_ERROR,_F_,"Impossible de trouver un pointeur iAccessible sur cette popup")); goto end; }
-		FillW7PopupFields(w,iAction,pAccessible);
+		rc=FillW7PopupFields(w,iAction,pAccessible);
+		if (rc!=0) goto end;
 	}
 	else // traitement des autres fenêtres (inchangé en 0.60)
 	{

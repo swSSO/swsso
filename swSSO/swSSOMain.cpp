@@ -1082,13 +1082,15 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			{
 				case WINSSO: 
 				case POPSSO: 
-					SSOWindows(w,i,iPopupType);
-					// repositionne tLastDetect et wLastDetect
-					//time(&gptActions[i].tLastDetect);
-					//gptActions[i].wLastDetect=w;
-					time(&gptActions[i].tLastSSO);
-					gptActions[i].wLastSSO=w;
-					LastDetect_AddOrUpdateWindow(w);
+					if (SSOWindows(w,i,iPopupType)==0) // ISSUE#188
+					{
+						// repositionne tLastDetect et wLastDetect
+						//time(&gptActions[i].tLastDetect);
+						//gptActions[i].wLastDetect=w;
+						time(&gptActions[i].tLastSSO);
+						gptActions[i].wLastSSO=w;
+						LastDetect_AddOrUpdateWindow(w);
+					}
 					break;
 				case WEBSSO: 
 					// pas de break, c'est volontaire !
