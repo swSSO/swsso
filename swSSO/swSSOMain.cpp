@@ -2401,13 +2401,13 @@ askpwd:
 	}
 	else // CAS DES LANCEMENTS ULTERIEURS (avec configurations déjà enregistrées)
 	{
+		// 1.03 : récupère la liste des domaines (doit être fait dans tous les cas pour alimenter le menu Upload)
+		// mais si échoue, ne doit pas être bloquant ni générer de message d'erreur (mode déconnecté)
+		// Pour ne pas générer une requête inutile, on ne fait que pour les utilisateurs qui ont le droit d'utiliser le menu upload
+		if (gbInternetManualPutConfig) GetDomains();
 		// 0.91 : si demandé, récupère les nouvelles configurations et/ou les configurations modifiées
 		if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
 		{
-			// 1.03 : récupère la liste des domaines (doit être fait dans tous les cas pour alimenter le menu Upload)
-			// mais si échoue, ne doit pas être bloquant ni générer de message d'erreur (mode déconnecté)
-			// Pour ne pas générer une requête inutile, on ne fait que pour les utilisateurs qui ont le droit d'utiliser le menu upload
-			if (gbInternetManualPutConfig) GetDomains();
 			GetNewOrModifiedConfigsFromServer();
 		}
 	}
