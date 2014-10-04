@@ -22,6 +22,7 @@
 #define IDD_ASK_AD_PWD                          206
 #define IDB_QUESTION                            208
 #define PSP_BROWSER                             210
+#define IDD_PUBLISH_TO                          212
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000
@@ -151,6 +152,7 @@
 #define IMG_ID                                  40000
 #define PB_MDP_OUBLIE                           40000
 #define PB_RECHALLENGE                          40000
+#define PB_TOUT                                 40000
 #define TX_FRAME1                               40000
 #define CK_IE                                   40001
 #define CK_NPMECA                               40001
@@ -158,6 +160,7 @@
 #define IDS_DEFAULT_PORTAL                      40001
 #define IMG_PWD                                 40001
 #define PB_MDP_RETROUVE                         40001
+#define PB_RIEN                                 40001
 #define CK_FIREFOX                              40002
 #define IDS_COMBOTYPE1                          40002
 #define IMG_ID2                                 40002

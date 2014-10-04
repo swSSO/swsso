@@ -126,17 +126,17 @@ static int giSetForegroundTimer=20;
 #define MENU_SUPPRIMER  50005
 #define MENU_AJOUTER_APPLI	50006
 #define MENU_AJOUTER_CATEG	50007
-#define MENU_UPLOADER   50008
-#define MENU_UPLOADER_ID_PWD   50009
+#define MENU_PUBLISH   50008
+#define MENU_PUBLISH_ID_PWD   50009
 #define MENU_DUPLIQUER   50010
 #define MENU_IMPORTER   50011
 #define MENU_EXPORTER   50012
 #define MENU_CHANGER_IDS 50013
 #define MENU_LANCER_APPLI 50014
 #define MENU_AJOUTER_COMPTE 50015
+#define MENU_PUBLISH_TO   50016
+#define MENU_PUBLISH_ID_PWD_TO   50017
 #define SUBMENU_CATEG			50100
-#define SUBMENU_UPLOAD			50200
-#define SUBMENU_UPLOAD_ID_PWD	50300
 
 #define TYPE_APPLICATION	1
 #define TYPE_CATEGORY		2
@@ -255,6 +255,60 @@ static void TermTooltip(void)
 		DestroyWindow(gwTip);
 		gwTip=NULL;
 	}
+}
+
+//-----------------------------------------------------------------------------
+// PublishToDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la fenêtre de publication vers les domaines
+//-----------------------------------------------------------------------------
+static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
+	UNREFERENCED_PARAMETER(lp);
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			// icone ALT-TAB
+			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
+			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+				{
+					EndDialog(w,IDOK);
+					break;
+				}
+				case IDCANCEL:
+					EndDialog(w,IDCANCEL);
+					break;
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+	}
+	return rc;
+}
+//-----------------------------------------------------------------------------
+// PublishTo()
+//-----------------------------------------------------------------------------
+// Affiche la fenêtre de publication vers les domaines et fait l'upload
+//-----------------------------------------------------------------------------
+int PublishTo(HWND w,BOOL bPWithIdPwd)
+{
+	UNREFERENCED_PARAMETER(bPWithIdPwd);
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	
+	if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_PUBLISH_TO),w,PublishToDialogProc)!=IDOK) goto end;
+
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
 }
 
 //-----------------------------------------------------------------------------
@@ -1711,18 +1765,6 @@ static void TVShowContextMenu(HWND w)
 
 	hMenu=CreatePopupMenu(); if (hMenu==NULL) goto end;
 
-	// Construction des sous-menus upload et upload avec id et mdp vers domaine
-	if (giNbDomains>1)
-	{
-		hSubMenuUpload=CreatePopupMenu(); if (hSubMenuUpload==NULL) goto end;
-		hSubMenuUploadIdPwd=CreatePopupMenu(); if (hSubMenuUploadIdPwd==NULL) goto end;
-		for (i=0;i<giNbDomains;i++) 
-		{
-			InsertMenu(hSubMenuUpload, (UINT)-1, MF_BYPOSITION,SUBMENU_UPLOAD+i,gtabDomains[i].szDomainLabel);
-			InsertMenu(hSubMenuUploadIdPwd, (UINT)-1, MF_BYPOSITION,SUBMENU_UPLOAD_ID_PWD+i,gtabDomains[i].szDomainLabel);
-		}
-	}
-	
 	hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
 	if (hItem==NULL) { TRACE((TRACE_INFO,_F_,"TreeView_GetSelection()->NULL"));goto end;}
 	
@@ -1749,16 +1791,16 @@ static void TVShowContextMenu(HWND w)
 		{
 			if (bAddSeparator) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 			if (giNbDomains>1)
-				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_POPUP,(UINT_PTR)hSubMenuUpload,GetString(IDS_MENU_UPLOADER_VERS));
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_TO,GetString(IDS_MENU_UPLOADER_VERS));
 			else
-				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER,GetString(IDS_MENU_UPLOADER));
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH,GetString(IDS_MENU_UPLOADER));
 			bAddSeparator=TRUE;
 			if (gbShowMenu_UploadWithIdPwd)
 			{
 				if (giNbDomains>1)
-					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_POPUP,(UINT_PTR)hSubMenuUploadIdPwd,GetString(IDS_MENU_UPLOADER_IDPWD_VERS));
+					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_ID_PWD_TO,GetString(IDS_MENU_UPLOADER_IDPWD_VERS));
 				else
-					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_ID_PWD,GetString(IDS_MENU_UPLOADER_IDPWD));
+					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_ID_PWD,GetString(IDS_MENU_UPLOADER_IDPWD));
 			}
 		}
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
@@ -1800,16 +1842,16 @@ static void TVShowContextMenu(HWND w)
 		{
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 			if (giNbDomains>1)
-				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_POPUP,(UINT_PTR)hSubMenuUpload,GetString(IDS_MENU_UPLOADER_VERS));
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_TO,GetString(IDS_MENU_UPLOADER_VERS));
 			else
-				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER,GetString(IDS_MENU_UPLOADER));
+				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH,GetString(IDS_MENU_UPLOADER));
 			bAddSeparator=TRUE;
 			if (gbShowMenu_UploadWithIdPwd)
 			{
 				if (giNbDomains>1)
-					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_POPUP,(UINT_PTR)hSubMenuUploadIdPwd,GetString(IDS_MENU_UPLOADER_IDPWD_VERS));
+					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_ID_PWD_TO,GetString(IDS_MENU_UPLOADER_IDPWD_VERS));
 				else
-					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_UPLOADER_ID_PWD,GetString(IDS_MENU_UPLOADER_IDPWD));
+					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_ID_PWD,GetString(IDS_MENU_UPLOADER_IDPWD));
 			}
 		}
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
@@ -3554,13 +3596,19 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case MENU_LANCER_APPLI:
 					LaunchSelectedApp(w);
 					break;
-				case MENU_UPLOADER:
+				case MENU_PUBLISH:
 					UploadConfig(w,1,FALSE);
 					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
-				case MENU_UPLOADER_ID_PWD:
+				case MENU_PUBLISH_ID_PWD:
 					UploadConfig(w,1,TRUE);
 					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
+					break;
+				case MENU_PUBLISH_TO:
+					if (PublishTo(gwAppNsites,FALSE)==0) EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
+					break;
+				case MENU_PUBLISH_ID_PWD_TO:
+					if (PublishTo(gwAppNsites,TRUE)==0) EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
 				case IMG_LOUPE:
 					if (HIWORD(wp)==0) TogglePasswordField(w);
@@ -3618,20 +3666,6 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						HTREEITEM hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
 						MoveApp(w,hItem,LOWORD(wp)-SUBMENU_CATEG);
 						if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
-					}
-					if (LOWORD(wp)>=SUBMENU_UPLOAD && LOWORD(wp)<SUBMENU_UPLOAD+50) 
-					{
-						int iDomain=LOWORD(wp)-SUBMENU_UPLOAD;
-						TRACE((TRACE_DEBUG,_F_,"Upload vers domaine #%d (id=%d,label=%s)",iDomain,gtabDomains[iDomain].iDomainId,gtabDomains[iDomain].szDomainLabel));
-						UploadConfig(w,gtabDomains[iDomain].iDomainId,FALSE);
-						EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
-					}
-					if (LOWORD(wp)>=SUBMENU_UPLOAD_ID_PWD && LOWORD(wp)<SUBMENU_UPLOAD_ID_PWD+50)
-					{
-						int iDomain=LOWORD(wp)-SUBMENU_UPLOAD_ID_PWD;
-						TRACE((TRACE_DEBUG,_F_,"Upload avec id et mdp vers domaine #%d (id=%d,label=%s)",iDomain,gtabDomains[iDomain].iDomainId,gtabDomains[iDomain].szDomainLabel));
-						UploadConfig(w,gtabDomains[iDomain].iDomainId,TRUE);
-						EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					}
 					break;
 			}

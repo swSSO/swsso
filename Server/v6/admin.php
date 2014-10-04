@@ -245,7 +245,7 @@ else if ($_GET['action']=="menu"._MENUSUFFIX_)
 			echo "<br/>+ <a href=./admin.php?action=showcategories"._READSUFFIX_."&domain=".$var_domain.">Cat&eacute;gories</a>"; 
 			echo "<br/>+ <a href=./admin.php?action=showdomains"._READSUFFIX_.">Ajouter ou supprimer un domaine</a>";
 			if (_STATS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=showstats"._READSUFFIX_.">Statistiques</a>";      
-			echo "<br/>+ <a href=./webservice5.php?action=isalive>Test \"isalive\"</a>";   
+			echo "<br/>+ <a href=./webservice6.php?action=isalive>Test \"isalive\"</a>";   
 			if (_ENCRYPT_=="TRUE")
 				echo "<br/><br/>Chiffrement : activ&eacute;";
 			else
