@@ -1,0 +1,65 @@
+-- -----------------------------------------------------------------------------
+-- 
+--                                   swSSO
+-- 
+--        SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
+-- 
+--                 Copyright (C) 2004-2013 - Sylvain WERDEFROY
+-- 
+-- 							 http://www.swsso.fr
+--                    
+--                              sylvain@swsso.fr
+-- 
+-- -----------------------------------------------------------------------------
+--  
+--   This file is part of swSSO.
+--   
+--   swSSO is free software: you can redistribute it and/or modify
+--   it under the terms of the GNU General Public License as published by
+--   the Free Software Foundation, either version 3 of the License, or
+--   (at your option) any later version.
+-- 
+--   swSSO is distributed in the hope that it will be useful,
+--   but WITHOUT ANY WARRANTY; without even the implied warranty of
+--   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--   GNU General Public License for more details.
+-- 
+--   You should have received a copy of the GNU General Public License
+--   along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
+--  
+-- ------------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `config` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  `typeapp` varchar(3) COLLATE utf8_unicode_ci NOT NULL,
+  `title` varbinary(128) NOT NULL,
+  `url` varbinary(272) DEFAULT NULL,
+  `id1Name` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `id1Type` varchar(5) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `id2Name` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `id2Type` varchar(5) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `id3Name` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `id3Type` varchar(5) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `id4Name` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `id4Type` varchar(5) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `id5Name` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `id5Type` varchar(5) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `pwdName` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `validateName` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `bKBSim` tinyint(1) NOT NULL DEFAULT '0',
+  `szKBSim` varchar(400) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `szName` varbinary(64) DEFAULT NULL,
+  `szFullPathName` varbinary(272) DEFAULT NULL,
+  `categId` int(11) NOT NULL DEFAULT '0',
+  `lastModified` datetime DEFAULT NULL,
+  `withIdPwd` tinyint (1) DEFAULT '0',
+  `id1Value` varbinary(64) DEFAULT NULL,
+  `id2Value` varbinary(64) DEFAULT NULL,
+  `id3Value` varbinary(64) DEFAULT NULL,
+  `id4Value` varbinary(64) DEFAULT NULL,
+  `pwdValue` varbinary(64) DEFAULT NULL,
+  `pwdGroup` tinyint (1) DEFAULT '-1',
+  `autoLock` tinyint (1) DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
