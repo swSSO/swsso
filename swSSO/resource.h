@@ -168,6 +168,7 @@
 #define IDB_COPIER                              40003
 #define IDS_COMBOTYPE2                          40003
 #define IMG_ID3                                 40003
+#define LV_DOMAINS                              40003
 #define TX_STATIC                               40003
 #define IDS_COMBOTYPE3                          40004
 #define IMG_ID4                                 40004

@@ -258,6 +258,100 @@ static void TermTooltip(void)
 }
 
 //-----------------------------------------------------------------------------
+// PublishToMoveControls()
+//-----------------------------------------------------------------------------
+// Repositionne les contrôles suite à redimensionnement de la fenêtre
+//-----------------------------------------------------------------------------
+static void PublishToMoveControls(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	
+	RECT rect;
+	GetClientRect(w,&rect);
+
+	SetWindowPos(GetDlgItem(w,IDOK),NULL,rect.right-84,rect.top+10,0,0,SWP_NOSIZE | SWP_NOZORDER);
+	SetWindowPos(GetDlgItem(w,IDCANCEL),NULL,rect.right-84,rect.top+40,0,0,SWP_NOSIZE | SWP_NOZORDER);
+	SetWindowPos(GetDlgItem(w,PB_TOUT),NULL,rect.right-84,rect.bottom-60,0,0,SWP_NOSIZE | SWP_NOZORDER);
+	SetWindowPos(GetDlgItem(w,PB_RIEN),NULL,rect.right-84,rect.bottom-30,0,0,SWP_NOSIZE | SWP_NOZORDER);
+	SetWindowPos(GetDlgItem(w,LV_DOMAINS),NULL,0,0,rect.right-104,rect.bottom-18,SWP_NOMOVE | SWP_NOZORDER);
+
+	//InvalidateRect(w,NULL,FALSE);
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// PublishToSavePosition()
+//-----------------------------------------------------------------------------
+// Sauvegarde position/taille de la fenêtre publishTo
+//-----------------------------------------------------------------------------
+static void PublishToSavePosition(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	RECT rect;
+	char s[8+1];
+
+	if (IsIconic(w)) goto end;
+	GetWindowRect(w,&rect);
+	gx3=rect.left;
+	gy3=rect.top;
+	gcx3=rect.right-rect.left;
+	gcy3=rect.bottom-rect.top;
+	wsprintf(s,"%d",gx3);  WritePrivateProfileString("swSSO","x3",s,gszCfgFile);
+	wsprintf(s,"%d",gy3);  WritePrivateProfileString("swSSO","y3",s,gszCfgFile);
+	wsprintf(s,"%d",gcx3); WritePrivateProfileString("swSSO","cx3",s,gszCfgFile);
+	wsprintf(s,"%d",gcy3); WritePrivateProfileString("swSSO","cy3",s,gszCfgFile);
+
+end:
+	StoreIniEncryptedHash(); // ISSUE#164
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// PublishToOnInitDialog()
+//-----------------------------------------------------------------------------
+// WM_INIT_DIALOG de la fenêtre de publication vers les domaines
+//-----------------------------------------------------------------------------
+void PublishToOnInitDialog(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	LVITEM lvi;
+	int i;
+	
+	// icone ALT-TAB
+	SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab); 
+	SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+
+	// Positionnement et dimensionnement de la fenêtre (si shift enfoncée à l'ouverture, retaillage et repositionnement par défaut)
+	if ((gx3!=-1 && gy3!=-1 && gcx3!=-1 && gcy3!=-1) && HIBYTE(GetAsyncKeyState(VK_SHIFT))==0) 
+	{
+		SetWindowPos(w,NULL,gx3,gy3,gcx3,gcy3,SWP_NOZORDER);
+	}
+	else // position par défaut (centrée sur fenêtre appNsites)
+	{
+		SetWindowPos(w,NULL,gx+100,gy+100,0,0,SWP_NOSIZE | SWP_NOZORDER);
+	}
+	PublishToMoveControls(w);
+	
+	// affichage de la liste des domaines
+	ListView_SetExtendedListViewStyle(GetDlgItem(w,LV_DOMAINS),LVS_EX_CHECKBOXES);
+
+	lvi.mask=LVIF_TEXT | LVIF_PARAM;
+
+	for (i=0;i<giNbDomains;i++)
+	{
+		lvi.iItem=i;
+		lvi.iSubItem=0;
+		lvi.pszText=gtabDomains[i].szDomainLabel;
+		lvi.lParam=gtabDomains[i].iDomainId;
+		ListView_InsertItem(GetDlgItem(w,LV_DOMAINS),&lvi);
+	}
+
+	// coche les checkbox des domaines correspondant à la config
+	ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),1,TRUE);
+
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+//-----------------------------------------------------------------------------
 // PublishToDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la fenêtre de publication vers les domaines
@@ -269,25 +363,51 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	switch (msg)
 	{
 		case WM_INITDIALOG:
-			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
-			// icone ALT-TAB
-			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
-			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			PublishToOnInitDialog(w);
+			break;
 		case WM_COMMAND:
 			switch (LOWORD(wp))
 			{
 				case IDOK:
-				{
+					PublishToSavePosition(w);
 					EndDialog(w,IDOK);
 					break;
-				}
 				case IDCANCEL:
+					PublishToSavePosition(w);
 					EndDialog(w,IDCANCEL);
+					break;
+				case PB_TOUT:
+					break;
+				case PB_RIEN:
 					break;
 			}
 			break;
 		case WM_HELP:
 			Help();
+			break;
+		case WM_SIZE:			
+			PublishToMoveControls(w);
+			break;
+		case WM_SIZING:
+			{
+				RECT *pRectNewSize=(RECT*)lp;
+				TRACE((TRACE_DEBUG,_F_,"RectNewSize=%d,%d,%d,%d",pRectNewSize->top,pRectNewSize->left,pRectNewSize->bottom,pRectNewSize->right));
+				if (pRectNewSize->right-pRectNewSize->left < 379)  pRectNewSize->right=pRectNewSize->left+379;
+				if (pRectNewSize->bottom-pRectNewSize->top < 284)  pRectNewSize->bottom=pRectNewSize->top+284;
+				rc=TRUE;
+			}
+			break;
+		case WM_NOTIFY:
+			switch (((NMHDR FAR *)lp)->code) 
+			{
+				case LVN_ITEMCHANGED: 
+					LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lp; 
+					if (pnmv->uNewState & LVIS_SELECTED)
+					{
+						ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,TRUE);
+					}
+					break;
+			}
 			break;
 	}
 	return rc;
@@ -589,7 +709,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 //-----------------------------------------------------------------------------
 // SaveWindowPos()
 //-----------------------------------------------------------------------------
-// 
+// Sauvegarde position/taille/collapse de la fenêtre appNsites
 //-----------------------------------------------------------------------------
 static void SaveWindowPos(HWND w)
 {

@@ -67,6 +67,7 @@ BOOL gbSSOChrome=TRUE;					// ISSUE#176
 
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
+int gx3,gy3,gcx3,gcy3; 		// positionnement de la fenêtre publishto
 char gszLastConfigUpdate[14+1]; 		// 0.91 : date (AAAAMMJJHHMMSS) de dernière mise à jour des configurations depuis le serveur
 HWND gwPropertySheet=NULL;
 
@@ -1068,6 +1069,13 @@ int GetConfigHeader()
 	gy2=GetPrivateProfileInt("swSSO","y2",-1,gszCfgFile);
 	gcx2=GetPrivateProfileInt("swSSO","cx2",-1,gszCfgFile);
 	gcy2=GetPrivateProfileInt("swSSO","cy2",-1,gszCfgFile);
+	if (gbInternetManualPutConfig)
+	{
+		gx3=GetPrivateProfileInt("swSSO","x3",-1,gszCfgFile);
+		gy3=GetPrivateProfileInt("swSSO","y3",-1,gszCfgFile);
+		gcx3=GetPrivateProfileInt("swSSO","cx3",-1,gszCfgFile);
+		gcy3=GetPrivateProfileInt("swSSO","cy3",-1,gszCfgFile);
+	}
 	GetPrivateProfileString("swSSO","lastConfigUpdate","",gszLastConfigUpdate,sizeof(gszLastConfigUpdate),gszCfgFile);
 	
 	// lecture des recovery infos
