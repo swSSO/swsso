@@ -400,11 +400,20 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		case WM_NOTIFY:
 			switch (((NMHDR FAR *)lp)->code) 
 			{
-				case LVN_ITEMCHANGED: 
+				/*case LVN_ITEMCHANGED: 
 					LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lp; 
 					if (pnmv->uNewState & LVIS_SELECTED)
 					{
-						ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,TRUE);
+						BOOL b=ListView_GetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem);
+						ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,!b);
+					}
+					break;*/
+				case NM_CLICK :
+					LPNMITEMACTIVATE pnmv = (LPNMITEMACTIVATE)lp;
+					/*if (pnmv->uNewState & LVIS_SELECTED)*/
+					{
+						BOOL b=ListView_GetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem);
+						ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,!b);
 					}
 					break;
 			}
