@@ -87,7 +87,7 @@ function showAll($active,$domain)
 				   ",categId,lastModified,".$szDomainField.",pwdGroup,autoLock,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
 				   ",".$param_id4Value.",".$param_pwdValue.
 				   " from "._TABLE_PREFIX_."config".$szDomainTable." where active=".$active." ".
-				   $szWhere." order by id";
+				   $szWhere." group by id order by id";
 	}	
 	else
 	{
@@ -95,7 +95,7 @@ function showAll($active,$domain)
 				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
 				   ",categId,lastModified,".$szDomainField.",pwdGroup,autoLock".
 				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."configs_domains where active=".$active." ".
-				   $szWhere." order by id";
+				   $szWhere." group by id order by id";
 	}
 	if ($_GET['debug']!="") echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
