@@ -123,7 +123,7 @@ int giLastApplicationSSO=-1;		// dernière application sur laquelle le SSO a été 
 int giLastApplicationConfig=-1; // dernière application utilisée (soit SSO soit config)
 SYSTEMTIME gLastLoginTime; // ISSUE#106
 
-T_DOMAIN gtabDomains[50];
+T_DOMAIN gtabDomains[100];
 int giNbDomains=0;
 
 
@@ -1836,100 +1836,6 @@ static int CALLBACK SelectDomainDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	return rc;
 }
 
-//-----------------------------------------------------------------------------
-// GetDomains()
-//-----------------------------------------------------------------------------
-// Récupère la liste des domaines disponibles sur le serveur
-//-----------------------------------------------------------------------------
-int GetDomains(void)
-{
-	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=-1;
-	char szRequest[255+1];
-	char *pszResult=NULL;
-	BSTR bstrXML=NULL;
-	HRESULT hr;
-	IXMLDOMDocument *pDoc=NULL;
-	IXMLDOMNode		*pRoot=NULL;
-	IXMLDOMNode		*pNode=NULL;
-	IXMLDOMNode		*pChildApp=NULL;
-	IXMLDOMNode		*pChildElement=NULL;
-	IXMLDOMNode		*pNextChildApp=NULL;
-	IXMLDOMNode		*pNextChildElement=NULL;
-	VARIANT_BOOL	vbXMLLoaded=VARIANT_FALSE;
-	BSTR bstrNodeName=NULL;
-	char tmp[10];
-
-	giNbDomains=0;
-
-	// requete le serveur pour obtenir la liste des domaines
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getdomains",gszWebServiceAddress);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(szRequest,8,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
-	bstrXML=GetBSTRFromSZ(pszResult);
-	if (bstrXML==NULL) goto end;
-
-	// analyse le contenu XML retourné
-	hr = CoCreateInstance(CLSID_DOMDocument30, NULL, CLSCTX_INPROC_SERVER, IID_IXMLDOMDocument,(void**)&pDoc);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(IID_IXMLDOMDocument)=0x%08lx",hr)); goto end; }
-	hr = pDoc->loadXML(bstrXML,&vbXMLLoaded);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML()=0x%08lx",hr)); goto end; }
-	if (vbXMLLoaded==VARIANT_FALSE) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML() returned FALSE")); goto end; }
-	hr = pDoc->QueryInterface(IID_IXMLDOMNode, (void **)&pRoot);
-	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"pXMLDoc->QueryInterface(IID_IXMLDOMNode)=0x%08lx",hr)); goto end;	}
-	hr=pRoot->get_firstChild(&pNode);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pRoot->get_firstChild(&pNode)")); goto end; }
-	hr=pNode->get_firstChild(&pChildApp);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildApp)")); goto end; }
-	while (pChildApp!=NULL) 
-	{
-		TRACE((TRACE_DEBUG,_F_,"<domain>"));
-		hr=pChildApp->get_firstChild(&pChildElement);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildElement)")); goto end; }
-		while (pChildElement!=NULL) 
-		{
-			hr=pChildElement->get_nodeName(&bstrNodeName);
-			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeName()")); goto end; }
-			TRACE((TRACE_DEBUG,_F_,"<%S>",bstrNodeName));
-			
-			if (CompareBSTRtoSZ(bstrNodeName,"id")) 
-			{
-				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
-				gtabDomains[giNbDomains].iDomainId=atoi(tmp);
-			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"label")) 
-			{
-				StoreNodeValue(gtabDomains[giNbDomains].szDomainLabel,sizeof(gtabDomains[giNbDomains].szDomainLabel),pChildElement);
-			}
-			// rechercher ses frères et soeurs
-			pChildElement->get_nextSibling(&pNextChildElement);
-			pChildElement->Release();
-			pChildElement=pNextChildElement;
-		} // while(pChild!=NULL)
-		// rechercher ses frères et soeurs
-		pChildApp->get_nextSibling(&pNextChildApp);
-		pChildApp->Release();
-		pChildApp=pNextChildApp;
-		TRACE((TRACE_DEBUG,_F_,"</domain>"));
-		giNbDomains++;
-	} // while(pNode!=NULL)
-	gtabDomains[giNbDomains].iDomainId=-1;
-
-#ifdef TRACES_ACTIVEES
-	int trace_i;
-	for (trace_i=0;trace_i<giNbDomains;trace_i++)
-	{
-		TRACE((TRACE_INFO,_F_,"Domaine %d : id=%d label=%s",trace_i,gtabDomains[trace_i].iDomainId,gtabDomains[trace_i].szDomainLabel));
-	}
-#endif
-	rc=0;
-end:
-	if (bstrXML!=NULL) SysFreeString(bstrXML);
-	if (bstrNodeName!=NULL) SysFreeString(bstrNodeName);
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
-}
 
 //-----------------------------------------------------------------------------
 // SelectDomain()
@@ -2377,10 +2283,10 @@ askpwd:
 	if (giNbActions==0 && gbGetAllConfigsAtFirstStart) // CAS DU PREMIER LANCEMENT (ou encore aucune config enregistrée)
 	{
 		// 1.03 : récupère la liste des domaines (avant, était dans SelectDomain, mais doit être fait dans tous les cas pour alimenter le menu Upload)
-		if (GetDomains()!=0) 
+		giNbDomains=GetDomains(TRUE,0,gtabDomains);
+		if (giNbDomains==0)
 		{ 
 			MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); 
-			giNbDomains=0;
 		}
 		if (giDomainId==1 && giNbDomains!=0) // domaine non renseigné dans le .ini 
 		{
@@ -2404,7 +2310,10 @@ askpwd:
 		// 1.03 : récupère la liste des domaines (doit être fait dans tous les cas pour alimenter le menu Upload)
 		// mais si échoue, ne doit pas être bloquant ni générer de message d'erreur (mode déconnecté)
 		// Pour ne pas générer une requête inutile, on ne fait que pour les utilisateurs qui ont le droit d'utiliser le menu upload
-		if (gbInternetManualPutConfig) GetDomains();
+		if (gbInternetManualPutConfig) 
+		{
+			giNbDomains=GetDomains(TRUE,0,gtabDomains);
+		}
 		// 0.91 : si demandé, récupère les nouvelles configurations et/ou les configurations modifiées
 		if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
 		{

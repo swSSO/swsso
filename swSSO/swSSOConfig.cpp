@@ -2932,9 +2932,9 @@ end:
 // ----------------------------------------------------------------------------------
 // Retour : 0=OK, -1=erreur, -2=configuration ignorée
 // ----------------------------------------------------------------------------------
-int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploadIdPwd)
+int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds,BOOL bUploadIdPwd)
 {
-	TRACE((TRACE_ENTER,_F_, "iAction=%d iDomainId=%d bUploadIdPwd=%d",iAction,iDomainId,bUploadIdPwd));
+	TRACE((TRACE_ENTER,_F_, "iAction=%d pszDomainIds=%s bUploadIdPwd=%d",iAction,pszDomainIds,bUploadIdPwd));
 
 	char szType[3+1];
 	int rc=-1;
@@ -3004,7 +3004,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploa
 														localTime.wHour,localTime.wMinute,localTime.wSecond);
 	TRACE((TRACE_DEBUG,_F_,"szLastModified=%s",szLastModified));
 
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%d&pwdGroup=%d&autoLock=%d",
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%s&pwdGroup=%d&autoLock=%d",
 				gszWebServiceAddress,
 				gptActions[iAction].iConfigId,
 				pszEncodedTitle,
@@ -3026,7 +3026,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploa
 				szCategLabel,
 				gptActions[iAction].szFullPathName,
 				szLastModified,
-				iDomainId,
+				pszDomainIds,
 				gptActions[iAction].iPwdGroup,
 				gptActions[iAction].bAutoLock); 
 	if (bUploadIdPwd)
@@ -3637,6 +3637,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					SaveCategories();
 				}
 			}
+			/*
 			else if (CompareBSTRtoSZ(bstrNodeName,"domainId")) 
 			{
 				char tmp[10+1];
@@ -3649,7 +3650,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 						TRACE((TRACE_DEBUG,_F_,"gptActions[%d].iDomainId=%d",ptiActions[i],gptActions[ptiActions[i]].iDomainId));
 					}
 				}
-			}
+			}*/
 			else if (CompareBSTRtoSZ(bstrNodeName,"id1Value")) // nouveau v1.03
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
@@ -4202,7 +4203,7 @@ doConfig:
 				gptActions[giNbActions].bAutoLock=TRUE;
 				gptActions[giNbActions].bConfigSent=FALSE;
 				gptActions[giNbActions].bSaved=FALSE; // 0.93B6 ISSUE#55
-				gptActions[giNbActions].iDomainId=1; //  1.00 ISSUE#112
+				// gptActions[giNbActions].iDomainId=1; //  1.00 ISSUE#112
 				gptActions[giNbActions].iPwdGroup=-1;
 				if (iType==UNK)
 				{
@@ -4534,6 +4535,109 @@ void InternetCheckVersion()
 end:
 	if (pszResult!=NULL) free(pszResult);
 	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// GetDomains()
+//-----------------------------------------------------------------------------
+// Récupère la liste des domaines disponibles sur le serveur
+// Si bAllDomains = true : retourne tous les domaines
+// Sinon retourne les domaines auxquels la config iConfigId est attachée
+//-----------------------------------------------------------------------------
+// Retour : nb de domaines lus, 0 si aucun (y/c si erreur de lecture)
+//-----------------------------------------------------------------------------
+int GetDomains(BOOL bAllDomains,int iConfigId,T_DOMAIN *pgtabDomain)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=0;
+	char szRequest[512+1];
+	char *pszResult=NULL;
+	BSTR bstrXML=NULL;
+	HRESULT hr;
+	IXMLDOMDocument *pDoc=NULL;
+	IXMLDOMNode		*pRoot=NULL;
+	IXMLDOMNode		*pNode=NULL;
+	IXMLDOMNode		*pChildApp=NULL;
+	IXMLDOMNode		*pChildElement=NULL;
+	IXMLDOMNode		*pNextChildApp=NULL;
+	IXMLDOMNode		*pNextChildElement=NULL;
+	VARIANT_BOOL	vbXMLLoaded=VARIANT_FALSE;
+	BSTR bstrNodeName=NULL;
+	char tmp[10];
+
+	// requete le serveur pour obtenir la liste des domaines
+	if (bAllDomains)
+	{
+		sprintf_s(szRequest,sizeof(szRequest),"%s?action=getdomains",gszWebServiceAddress);
+	}
+	else
+	{
+		sprintf_s(szRequest,sizeof(szRequest),"%s?action=getconfigdomains&configId=%d",gszWebServiceAddress,iConfigId);
+	}
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
+	pszResult=HTTPRequest(szRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	bstrXML=GetBSTRFromSZ(pszResult);
+	if (bstrXML==NULL) goto end;
+
+	// analyse le contenu XML retourné
+	hr = CoCreateInstance(CLSID_DOMDocument30, NULL, CLSCTX_INPROC_SERVER, IID_IXMLDOMDocument,(void**)&pDoc);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(IID_IXMLDOMDocument)=0x%08lx",hr)); goto end; }
+	hr = pDoc->loadXML(bstrXML,&vbXMLLoaded);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML()=0x%08lx",hr)); goto end; }
+	if (vbXMLLoaded==VARIANT_FALSE) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML() returned FALSE")); goto end; }
+	hr = pDoc->QueryInterface(IID_IXMLDOMNode, (void **)&pRoot);
+	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"pXMLDoc->QueryInterface(IID_IXMLDOMNode)=0x%08lx",hr)); goto end;	}
+	hr=pRoot->get_firstChild(&pNode);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pRoot->get_firstChild(&pNode)")); goto end; }
+	hr=pNode->get_firstChild(&pChildApp);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildApp)")); goto end; }
+	while (pChildApp!=NULL) 
+	{
+		TRACE((TRACE_DEBUG,_F_,"<domain>"));
+		hr=pChildApp->get_firstChild(&pChildElement);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildElement)")); goto end; }
+		while (pChildElement!=NULL) 
+		{
+			hr=pChildElement->get_nodeName(&bstrNodeName);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeName()")); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"<%S>",bstrNodeName));
+			
+			if (CompareBSTRtoSZ(bstrNodeName,"id")) 
+			{
+				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
+				pgtabDomain[rc].iDomainId=atoi(tmp);
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"label")) 
+			{
+				StoreNodeValue(pgtabDomain[rc].szDomainLabel,sizeof(pgtabDomain[rc].szDomainLabel),pChildElement);
+			}
+			// rechercher ses frères et soeurs
+			pChildElement->get_nextSibling(&pNextChildElement);
+			pChildElement->Release();
+			pChildElement=pNextChildElement;
+		} // while(pChild!=NULL)
+		// rechercher ses frères et soeurs
+		pChildApp->get_nextSibling(&pNextChildApp);
+		pChildApp->Release();
+		pChildApp=pNextChildApp;
+		TRACE((TRACE_DEBUG,_F_,"</domain>"));
+		rc++;
+	} // while(pNode!=NULL)
+	pgtabDomain[rc].iDomainId=-1;
+
+#ifdef TRACES_ACTIVEES
+	int trace_i;
+	for (trace_i=0;trace_i<rc;trace_i++)
+	{
+		TRACE((TRACE_INFO,_F_,"Domaine %d : id=%d label=%s",trace_i,pgtabDomain[trace_i].iDomainId,pgtabDomain[trace_i].szDomainLabel));
+	}
+#endif
+end:
+	if (bstrXML!=NULL) SysFreeString(bstrXML);
+	if (bstrNodeName!=NULL) SysFreeString(bstrNodeName);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
 }
 
 

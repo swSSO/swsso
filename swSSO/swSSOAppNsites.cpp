@@ -315,8 +315,12 @@ void PublishToOnInitDialog(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	LVITEM lvi;
-	int i;
-	
+	int i,j;
+	T_DOMAIN tabConfigDomains[100];
+	int iNbDomains;
+	HCURSOR hCursorOld=NULL;
+	hCursorOld=SetCursor(ghCursorWait);
+
 	// icone ALT-TAB
 	SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab); 
 	SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
@@ -335,8 +339,11 @@ void PublishToOnInitDialog(HWND w)
 	// affichage de la liste des domaines
 	ListView_SetExtendedListViewStyle(GetDlgItem(w,LV_DOMAINS),LVS_EX_CHECKBOXES);
 
-	lvi.mask=LVIF_TEXT | LVIF_PARAM;
+	// récupère la liste des domaines auxquels la config est rattachée
 
+	iNbDomains=GetDomains(FALSE,XXXXXXXXX,tabConfigDomains); // TODO récupérer la config sélectionnée et si c'est une categ ne pas cocher les cases
+	
+	lvi.mask=LVIF_TEXT | LVIF_PARAM;
 	for (i=0;i<giNbDomains;i++)
 	{
 		lvi.iItem=i;
@@ -344,21 +351,62 @@ void PublishToOnInitDialog(HWND w)
 		lvi.pszText=gtabDomains[i].szDomainLabel;
 		lvi.lParam=gtabDomains[i].iDomainId;
 		ListView_InsertItem(GetDlgItem(w,LV_DOMAINS),&lvi);
+		for (j=0;j<iNbDomains;j++)
+		{
+			if (gtabDomains[i].iDomainId==tabConfigDomains[j].iDomainId) 
+			{
+				ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),i,TRUE);
+			}
+		}
+
 	}
-
-	// coche les checkbox des domaines correspondant à la config
-	ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),1,TRUE);
-
+	if (hCursorOld!=NULL) SetCursor(hCursorOld);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
+
+//-----------------------------------------------------------------------------
+// LVCheckAllDomains()
+//-----------------------------------------------------------------------------
+// Coche / décoche tous les domaines
+//-----------------------------------------------------------------------------
+void LVCheckAllDomains(HWND w,BOOL bChecked)
+{
+	TRACE((TRACE_ENTER,_F_, "bChecked=%d",bChecked));
+	int i;
+	for (i=0;i<ListView_GetItemCount(GetDlgItem(w,LV_DOMAINS));i++)
+	{
+		ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),i,bChecked);
+	}
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// PublishConfigToDomains()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+int PublishConfigToDomains(HWND w,BOOL bWithIdPwd)
+{
+	UNREFERENCED_PARAMETER(w);
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	
+	UploadConfig(gwAppNsites,"1,2,3",bWithIdPwd); // TODO !!!!!!!!!!!!!!!!
+
+	rc=0;
+//end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+
 //-----------------------------------------------------------------------------
 // PublishToDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la fenêtre de publication vers les domaines
 //-----------------------------------------------------------------------------
-static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp) // lp=bWithIdPwd
 {
-	UNREFERENCED_PARAMETER(lp);
 	int rc=FALSE;
 	switch (msg)
 	{
@@ -369,16 +417,21 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			switch (LOWORD(wp))
 			{
 				case IDOK:
-					PublishToSavePosition(w);
-					EndDialog(w,IDOK);
+					if (PublishConfigToDomains(w,lp)==0) // lp=bWithIdPwd
+					{
+						PublishToSavePosition(w);
+						EndDialog(w,IDOK);
+					}
 					break;
 				case IDCANCEL:
 					PublishToSavePosition(w);
 					EndDialog(w,IDCANCEL);
 					break;
 				case PB_TOUT:
+					LVCheckAllDomains(w,TRUE);
 					break;
 				case PB_RIEN:
+					LVCheckAllDomains(w,FALSE);
 					break;
 			}
 			break;
@@ -432,7 +485,7 @@ int PublishTo(HWND w,BOOL bPWithIdPwd)
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 	
-	if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_PUBLISH_TO),w,PublishToDialogProc)!=IDOK) goto end;
+	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_PUBLISH_TO),w,PublishToDialogProc,bPWithIdPwd)!=IDOK) goto end;
 
 	rc=0;
 end:
@@ -1018,7 +1071,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive)
 	gptActions[giNbActions].bAutoLock=TRUE;
 	// gptActions[giNbActions].bConfigOK=FALSE; // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 	gptActions[giNbActions].bConfigSent=FALSE;
-	gptActions[giNbActions].iDomainId=1;
+	// gptActions[giNbActions].iDomainId=1;
 	gptActions[giNbActions].iPwdGroup=-1;
 
 	// si le clic-droit est fait sur une catégorie, on ajoute
@@ -2070,7 +2123,8 @@ void ShowApplicationDetails(HWND w,int iAction)
 		time_t t;
 		if (gptActions[iAction].tLastSSO==-1) t=-1;
 		else t=time(NULL)-gptActions[iAction].tLastSSO;
-		wsprintf(buf2048,"swSSO [id=%d | i=%d | categ=%d | domain=%d | t=%ld]",gptActions[iAction].iConfigId,iAction,gptActions[iAction].iCategoryId,gptActions[iAction].iDomainId,t);
+		// wsprintf(buf2048,"swSSO [id=%d | i=%d | categ=%d | domain=%d | t=%ld]",gptActions[iAction].iConfigId,iAction,gptActions[iAction].iCategoryId,gptActions[iAction].iDomainId,t);
+		wsprintf(buf2048,"swSSO [id=%d | i=%d | categ=%d | t=%ld]",gptActions[iAction].iConfigId,iAction,gptActions[iAction].iCategoryId,t);
 	}
 	else
 	{
@@ -2965,9 +3019,9 @@ end:
 // auquel cas l'ensemble des configurations de la catégories sont remontées 
 // sur le serveur
 //-----------------------------------------------------------------------------
-void UploadConfig(HWND w, int iDomainId,BOOL bUploadIdPwd)
+void UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
 {
-	TRACE((TRACE_ENTER,_F_, "iDomainId=%d bUploadIdPwd=%d",iDomainId,bUploadIdPwd));
+	TRACE((TRACE_ENTER,_F_, "pszDomainIds=%s bUploadIdPwd=%d",pszDomainIds,bUploadIdPwd));
 
 	HTREEITEM hItem,hParentItem,hNextApp;
 	int iAction,iCategoryId;
@@ -2978,7 +3032,7 @@ void UploadConfig(HWND w, int iDomainId,BOOL bUploadIdPwd)
 	int iNbConfigIgnored=0;
 	int iOldCategoryId=-1;
 	int iNewCategoryId=-1;
-
+	
 	hCursorOld=SetCursor(ghCursorWait);
 	hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
 	hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),hItem);
@@ -2993,12 +3047,12 @@ void UploadConfig(HWND w, int iDomainId,BOOL bUploadIdPwd)
 			iAction=TVItemGetLParam(w,hNextApp); 
 			if (iAction==-1 || iAction>=giNbActions) { rc=-1; goto end; }
 			TRACE((TRACE_INFO,_F_,"Upload config n°%d (%s)",iAction,gptActions[iAction].szApplication));
-			rc=PutConfigOnServer(iAction,&iNewCategoryId,iDomainId,bUploadIdPwd);
+			rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds,bUploadIdPwd);
 			TVUpdateItemState(w,hNextApp,iAction);
 			if (rc==0) iNbConfigUploaded++;
 			else if (rc==-2) { iNbConfigIgnored++; rc=0; }
 			else goto end;
-			gptActions[iAction].iDomainId=iDomainId;
+			// gptActions[iAction].iDomainId=iDomainId;
 			hNextApp=TreeView_GetNextSibling(GetDlgItem(w,TV_APPLICATIONS),hNextApp);
 		}
 		sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_MULTI_UPLOAD_OK),iNbConfigUploaded,iNbConfigIgnored);
@@ -3009,9 +3063,9 @@ void UploadConfig(HWND w, int iDomainId,BOOL bUploadIdPwd)
 		if (iAction==-1 || iAction>=giNbActions) goto end;
 		TRACE((TRACE_INFO,_F_,"Upload config n°%d (%s)",iAction,gptActions[iAction].szApplication));
 		iOldCategoryId=gptActions[iAction].iCategoryId;
-		rc=PutConfigOnServer(iAction,&iNewCategoryId,iDomainId,bUploadIdPwd);
+		rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds,bUploadIdPwd);
 		TVUpdateItemState(w,hItem,iAction);
-		gptActions[iAction].iDomainId=iDomainId;
+		// gptActions[iAction].iDomainId=iDomainId;
 		strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_UPLOAD_OK));
 	}
 	// 0.91 : il faut écrire le configId dans le .ini, sinon si l'utilisateur annule on le perd...
@@ -3253,8 +3307,10 @@ int LoadApplications(void)
 		// nouvelle IHM : identifiants des catégories
 		gptActions[i].iCategoryId=GetPrivateProfileInt(p,"categoryId",0,gszCfgFile);
 		TRACE((TRACE_INFO,_F_,"Config[%d] => categ=%d",i,gptActions[i].iCategoryId));
+		/*
 		gptActions[i].iDomainId=GetPrivateProfileInt(p,"domainId",1,gszCfgFile);
 		TRACE((TRACE_INFO,_F_,"Config[%d] => domain=%d",i,gptActions[i].iDomainId));
+		*/
 
 		gptActions[i].bActive=GetConfigBoolValue(p,"active",FALSE,TRUE);
 		gptActions[i].bAutoLock=GetConfigBoolValue(p,"autoLock",FALSE,TRUE);
@@ -3484,11 +3540,11 @@ int SaveApplications(void)
 		}
 		// le plus beau sprintf de ma carrière... en espérant que le buffer soit assez grand ;-(
 		sprintf_s(tmpBuf,sizeof(tmpBuf),
-			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ndomainId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
+			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
 			gptActions[i].szApplication,
 			gptActions[i].iConfigId,
 			gptActions[i].iCategoryId,
-			gptActions[i].iDomainId,
+			// gptActions[i].iDomainId,
 			gptActions[i].szTitle,
 			gptActions[i].szURL,
 			gptActions[i].szId1Name,
@@ -3726,11 +3782,11 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					LaunchSelectedApp(w);
 					break;
 				case MENU_PUBLISH:
-					UploadConfig(w,1,FALSE);
+					UploadConfig(w,"1",FALSE);
 					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
 				case MENU_PUBLISH_ID_PWD:
-					UploadConfig(w,1,TRUE);
+					UploadConfig(w,"1",TRUE);
 					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
 				case MENU_PUBLISH_TO:

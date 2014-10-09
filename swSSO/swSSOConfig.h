@@ -52,7 +52,8 @@ int WindowChangeMasterPwd(BOOL bForced);
 void SavePortal();
 int AddApplicationFromCurrentWindow(void);
 void ReactivateApplicationFromCurrentWindow(void);
-int PutConfigOnServer(int iAction,int *piNewCategoryId,int iDomainId,BOOL bUploadIdPwd);
+void UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd);
+int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds,BOOL bUploadIdPwd);
 int InternetCheckProxyParams(HWND w);
 void InternetCheckVersion();
 int GetProxyConfig(const char *szComputerName, BOOL *pbInternetUseProxy, char *szProxyURL,char *szProxyUser,char *szProxyPwd);
@@ -104,8 +105,15 @@ extern BOOL gbSSOFirefox;					// ISSUE#176
 extern BOOL gbSSOChrome;					// ISSUE#176
 
 #define LEN_DOMAIN 50
+typedef struct 
+{
+	int iDomainId;
+	char szDomainLabel[LEN_DOMAIN+1];
+}
+T_DOMAIN;
 extern int  giDomainId;						// 0.94B1 : gestion des domaines
 extern char gszDomainLabel[LEN_DOMAIN+1];
+int GetDomains(BOOL bAllDomains, int iConfigId,T_DOMAIN *pgtabDomain);
 
 extern BOOL gbParseWindowsOnStart;  // 0.93B4 : parse / ne parse pas les fenêtres ouvertes au lancement de SSO
 #define MAX_EXCLUDED_HANDLES 500

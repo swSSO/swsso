@@ -81,7 +81,7 @@ typedef struct
 	char szPwdEncryptedValue[LEN_ENCRYPTED_AES256+1];	// 0.65B3 mot de passe chiffré et encodé en faux base64 
 	char szValidateName[90+1];   // id du bouton valider ou nom du formulaire Web
 	int  iCategoryId;
-	int  iDomainId;
+	// int  iDomainId; // supprimé en 1.05 : on ne conserve plus localement l'appartenance de la config à un domaine
 	int  iType;		// WINSSO | WEBSSO | POPSSO | WEBPWD | XEBSSO
 	int  id2Type;	// EDIT | COMBO
 	int  id3Type;	// EDIT | COMBO

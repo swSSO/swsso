@@ -94,12 +94,6 @@ extern char szPwdMigration093[]; // stockage temporaire du mot de passe pour mig
 extern int giLastApplicationSSO;   
 extern int giLastApplicationConfig;
 
-typedef struct 
-{
-	int iDomainId;
-	char szDomainLabel[LEN_DOMAIN+1];
-}
-T_DOMAIN;
 extern T_DOMAIN gtabDomains[];
 extern int giNbDomains;
 
