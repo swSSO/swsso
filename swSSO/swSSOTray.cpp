@@ -845,6 +845,7 @@ int BeginChangeAppPassword(void)
 				}
 				// sauvegarde
 				SaveApplications();
+				if (gwAppNsites!=NULL) ShowAppNsites(giLastApplicationConfig,FALSE); // ISSUE#192
 				// log
 				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CHANGE_APP_PWD,gptActions[giLastApplicationSSO].szApplication,gptActions[giLastApplicationSSO].szId1Value,NULL,0);
 				// fini !
