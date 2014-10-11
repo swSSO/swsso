@@ -487,20 +487,24 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		case WM_NOTIFY:
 			switch (((NMHDR FAR *)lp)->code) 
 			{
-				/*case LVN_ITEMCHANGED: 
-					LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lp; 
-					if (pnmv->uNewState & LVIS_SELECTED)
+				case LVN_ITEMCHANGED: 
 					{
-						BOOL b=ListView_GetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem);
-						ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,!b);
+						LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lp; 
+						TRACE((TRACE_DEBUG,_F_,"LVN_ITEMCHANGED: item=%d uchanged=%d unewstate=%d",pnmv->iItem,pnmv->uChanged,pnmv->uNewState));
 					}
-					break;*/
-				case NM_CLICK :
-					LPNMITEMACTIVATE pnmv = (LPNMITEMACTIVATE)lp;
-					/*if (pnmv->uNewState & LVIS_SELECTED)*/
+					break;
+				case NM_CLICK:
 					{
+						LPNMITEMACTIVATE pnmv = (LPNMITEMACTIVATE)lp;
+						TRACE((TRACE_DEBUG,_F_,"NM_CLICK: item=%d uchanged=%d unewstate=%d",pnmv->iItem,pnmv->uChanged,pnmv->uNewState));
+						
+						UINT itemState=ListView_GetItemState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,LVIS_SELECTED);
 						BOOL b=ListView_GetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem);
-						ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,!b);
+						if (itemState & LVIS_SELECTED)
+						{
+							ListView_SetItemState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,0,LVIS_SELECTED);
+							ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,!b);
+						}
 						if (pnmv->iItem==0) // domaine commun --> si coché décoche tout le reste
 						{
 							if (!b) LVCheckAllDomains(w,FALSE,FALSE);
@@ -510,9 +514,7 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							if (!b) ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),0,FALSE);
 						}
 					}
-					
 					break;
-					// TODO : griser et décocher tous les autres si commun coché
 			}
 			break;
 	}
@@ -3137,7 +3139,7 @@ int UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
 	//        Je n'ai pas de meilleure idée qu'une sauvegarde complète (il n'est pas possible de retrouver
 	//        de manière certaine la section à modifier)
 	//        Il faut aussi écrire le bConfigSent à TRUE
-	//        Il faut aussi écrire le categId... du coup la sauvegarde complète va bien !
+	//        Il faut aussi écrire le categId... et aussi bWithIdPwd... du coup la sauvegarde complète va bien !
 	SaveApplications();
 	BackupAppsNcategs();
 
