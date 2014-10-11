@@ -1551,6 +1551,7 @@ int InitWindowsSSO(void)
 	swCreateAESKeyFromKeyData(AESKeyData,&ghKey1);
 	if (GenWriteCheckSynchroValue()!=0) goto end;
 	StoreIniEncryptedHash(); // ISSUE#164
+	RecoveryFirstUse(NULL,AESKeyData); // ISSUE#194
 	rc=0;
 end:
 	if (rc!=0) MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_MIGRATION),"swSSO",MB_OK | MB_ICONSTOP);
