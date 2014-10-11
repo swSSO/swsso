@@ -1790,6 +1790,8 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	char bufResponse[1024];
 	DWORD dwLenResponse;
 	int rc=-1;
+	BOOL bMustReopenSession=FALSE;
+	BOOL bMustReboot=FALSE;
 
 	// Lecture des sels
 	if (swReadPBKDF2Salt()!=0) goto end;
@@ -1804,6 +1806,7 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
+		bMustReboot=TRUE;
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
 	}
 	// TODO un jour : analyser la réponse
@@ -1817,10 +1820,12 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
+		bMustReboot=TRUE;
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
 	}
 	if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
 	{
+		bMustReopenSession=TRUE;
 		TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld",dwLenResponse)); goto end;
 	}
 	// Crée la clé de chiffrement des mots de passe secondaires
@@ -1870,7 +1875,15 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 end:
 	if (rc!=0) 
 	{
-		if (gpRecoveryKeyValue==NULL || *gszRecoveryInfos==0)
+		if (bMustReboot) // ISSUE#186
+		{
+			MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_LOGON),"swSSO",MB_OK | MB_ICONSTOP);
+		}
+		else if (bMustReopenSession) // ISSUE#186
+		{
+			MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_LOGON3),"swSSO",MB_OK | MB_ICONSTOP);
+		}
+		else if (gpRecoveryKeyValue==NULL || *gszRecoveryInfos==0)
 		{
 			MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_LOGON),"swSSO",MB_OK | MB_ICONSTOP);
 		}

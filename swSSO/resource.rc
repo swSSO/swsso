@@ -708,6 +708,7 @@ STRINGTABLE
     IDS_DECOUPLAGE_WINDOWS        "Votre mot de passe pour lancer swSSO est votre mot de passe Windows. Veuillez le saisir ci-dessous :"
     IDS_PP_NOMASTERPWD            "AES-256 et PBKDF2 (sans mot de passe maître)"
     IDS_MENU_MDP_WINDOWS          "&Mot de passe Windows..."
+    IDS_ERROR_WINDOWS_SSO_LOGON3  "Erreur au démarrage de swSSO.\r\nVeuillez fermer et rouvrir votre session Windows.\r\nSi le problème persiste, contactez votre support."
 }
 
 
