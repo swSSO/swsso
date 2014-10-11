@@ -306,36 +306,13 @@ else if ($_GET['action']=="putconfig")
 	if ($var_autoLock=='') $var_autoLock=1;   // pour compatibilité avec les clients <1.04 qui ne gèrent pas ce paramètre
     
 	// V6 : gestion des domaines multiples, exemple : $var_domainId=1,3,5
-	// Si la configuration existe déjà, supprime toutes les associations dans la table configs_domains puis ajoute les nouvelles
+	// Si la configuration existe déjà, supprime toutes les associations dans la table configs_domains
 	if ($var_configId!="0")
 	{
-		// suppression
 		$szRequest="delete from "._TABLE_PREFIX_."configs_domains where configId=".$var_configId;
 		if ($_GET['debug']!="") echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-		// ajout
-		$tok = strtok($var_domainId,",");
-		$bFirst=1;
-		$szRequest="";
-		while ($tok !== false) {
-			if ($bFirst==0)
-				$szRequest=$szRequest.",";
-			else
-			{
-				$szRequest="insert into "._TABLE_PREFIX_."configs_domains (configId,domainId) values ";
-				$bFirst=0;
-			}
-			$szRequest=$szRequest."(".$var_configId.",".$tok.") ";
-			$tok = strtok(",");
-		}
-		if ($szRequest!="")
-		{
-			$szRequest=$szRequest.";";
-			if ($_GET['debug']!="") echo $szRequest;
-			$result=mysql_query($szRequest,$cnx);
-			if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-		}
 	}
 	
 	// V4 : gestion des catégories
@@ -343,7 +320,6 @@ else if ($_GET['action']=="putconfig")
 	if ($var_categId!="" AND $var_categLabel!="") // ne fait rien si pas d'info categorie remontée
 	{
 		$szRequest="update "._TABLE_PREFIX_."categ set label='".$var_categLabel."' WHERE id='".$var_categId."'";
-		if ($var_domainId!=-1) $szRequest=$szRequest." and domainId='".$var_domainId."'";
 		if ($_GET['debug']!="") echo $szRequest;
     	$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -358,7 +334,7 @@ else if ($_GET['action']=="putconfig")
 			$var_categId=$max[0];
 			if ($var_categId==0) $var_categId=10000; else $var_categId=$var_categId+1;
 			// incrément et ajout de la catégorie
-			$szRequest="insert into "._TABLE_PREFIX_."categ (id,label,domainId) values ('".$var_categId."','".$var_categLabel."','".$var_domainId."')";
+			$szRequest="insert into "._TABLE_PREFIX_."categ (id,label) values ('".$var_categId."','".$var_categLabel."')";
 			if ($_GET['debug']!="") echo $szRequest;
 	    	$result=mysql_query($szRequest,$cnx);
 			if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -430,7 +406,6 @@ else if ($_GET['action']=="putconfig")
 									  "szKBSim='".$var_szKBSim."',".
 									  "szName=".$param_szName.",".
 									  "categId='".$var_categId."',".
-									  "domainId='".$var_domainId."',".
 									  "szFullPathName=".$param_szFullPathName.",".
 									  "lastModified='".$var_lastModified."',".
 									  "pwdGroup=".$var_pwdGroup.",".
@@ -456,17 +431,42 @@ else if ($_GET['action']=="putconfig")
 		}
 		
 		$szRequest="insert into "._TABLE_PREFIX_."config (active,typeapp,title,url,id1Name,id1Type,pwdName,validateName,".
-	           "id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,id5Name,id5Type,bKBSim,szKBSim,szName,categId,domainId,".
+	           "id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,id5Name,id5Type,bKBSim,szKBSim,szName,categId,".
 			   "szFullPathName,lastModified,pwdGroup,autoLock".$szRequestOptions1.") ".
 	           "values (1,'".$var_typeapp."',".$param_title.",".$param_url.",'".$var_id1Name."','EDIT','".
 	           $var_pwdName."','".$var_validateName."','".$var_id2Name."','".$var_id2Type."','".
 	           $var_id3Name."','".$var_id3Type."','".$var_id4Name."','".$var_id4Type."','".
 	           $var_id5Name."','".$var_id5Type."',".$var_bKBSim.",'".$var_szKBSim."',".$param_szName.",'".
-	           $var_categId."',".$var_domainId.",".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.",".$var_autoLock.$szRequestOptions2.")";
+	           $var_categId."',".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.",".$var_autoLock.$szRequestOptions2.")";
 		if ($_GET['debug']!="") echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 		$var_configId=mysql_insert_id(); // id passé en paramètre si !=0, nouvel id sinon
+	}
+	// V6 : gestion des domaines multiples, exemple : $var_domainId=1,3,5
+	// A ce stade, la config a été ajoutée ou mise à jour, on a son id dans $var_configId, 
+	// il faut maintenant mettre à jour les associations dans configs_domains
+	$tok = strtok($var_domainId,",");
+	$bFirst=1;
+	$szRequest="";
+	while ($tok !== false) 
+	{
+		if ($bFirst==0)
+			$szRequest=$szRequest.",";
+		else
+		{
+			$szRequest="insert into "._TABLE_PREFIX_."configs_domains (configId,domainId) values ";
+			$bFirst=0;
+		}
+		$szRequest=$szRequest."(".$var_configId.",".$tok.") ";
+		$tok = strtok(",");
+	}
+	if ($szRequest!="")
+	{
+		$szRequest=$szRequest.";";
+		if ($_GET['debug']!="") echo $szRequest;
+		$result=mysql_query($szRequest,$cnx);
+		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 	}
 	dbClose($cnx);
 	echo "OK:".$var_configId.":".$var_categId;

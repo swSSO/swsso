@@ -73,7 +73,7 @@ function showAll($active,$domain)
 	{
 		$szWhere=$szWhere." AND config.id=configs_domains.configId AND configs_domains.domainId=".$domain;
 		$szDomainField="configs_domains.domainId";
-		$szDomainTable=_TABLE_PREFIX_.",configs_domains";
+		$szDomainTable=","._TABLE_PREFIX_."configs_domains";
 	}
 	else
 	{
@@ -82,19 +82,19 @@ function showAll($active,$domain)
 	}
 	if (_ENCRYPT_=="TRUE")
 	{
-		$szRequest="select id,".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
+		$szRequest="select config.id,".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
 				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
-				   ",categId,lastModified,".$szDomainField.",pwdGroup,autoLock,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
+				   ",categId,lastModified,".$szDomainField.",pwdGroup,autoLock,categ.label,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
 				   ",".$param_id4Value.",".$param_pwdValue.
-				   " from "._TABLE_PREFIX_."config".$szDomainTable." where active=".$active." ".
+				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ".$szDomainTable." where active=".$active." AND categId=categ.id ".
 				   $szWhere." group by id order by id";
 	}	
 	else
 	{
-		$szRequest="select id,".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
+		$szRequest="select config.id,".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
 				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
-				   ",categId,lastModified,".$szDomainField.",pwdGroup,autoLock".
-				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."configs_domains where active=".$active." ".
+				   ",categId,lastModified,".$szDomainField.",pwdGroup,autoLock,categ.label".
+				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ".$szDomainTable." where active=".$active." AND categId=categ.id ".
 				   $szWhere." group by id order by id";
 	}
 	if ($_GET['debug']!="") echo $szRequest;
@@ -146,7 +146,7 @@ function showAll($active,$domain)
 		else
 			echo "<td><a href=\"./admin.php?action=deleteconfig"._WRITESUFFIX_."&id=".$ligne[0]."&active=".$active."\" ".
 				" onclick=\"return confirm('Confirmez-vous la suppression de ".utf8_encode($ligne[1])." [".$ligne[0]."] ?');\">".$ligne[0]."</a></td>";
-		if ($ligne[17]!="") echo "<td>".utf8_encode($ligne[17])."</td>"; else echo "<td align=center>-</td>";   // categId
+		if ($ligne[17]!="") echo "<td>".utf8_encode($ligne[22]."(".$ligne[17].")")."</td>"; else echo "<td align=center>-</td>";   // categId
 		if ($ligne[19]!="") // domainId
 		{
 			if ($ligne[19]!="-1")
@@ -155,16 +155,17 @@ function showAll($active,$domain)
 			}
 			else
 			{
-				$szRequestDomains="select domainId from configs_domains where configs_domains.configId=".$ligne[0];
+				$szRequestDomains="select label,domainId from domains,configs_domains where domains.id=configs_domains.domainId and configs_domains.configId=".$ligne[0]." order by domainId";
 				$reqDomains=mysql_query($szRequestDomains,$cnx);
 				if (!$reqDomains) { dbError($cnx,$szRequestDomains); dbClose($cnx); return; }
 				$szDomainsList="";
 				for ($j=0;$j<mysql_num_rows($reqDomains);$j++)
 				{
-					if ($j!=0) $szDomainsList = $szDomainsList.",";
+					if ($j!=0) $szDomainsList = $szDomainsList."<br/>";
 					$ligneDomain=mysql_fetch_row($reqDomains);
-					$szDomainsList = $szDomainsList.$ligneDomain[0];
+					$szDomainsList = $szDomainsList.$ligneDomain[0]."(".$ligneDomain[1].")";
 				}
+				if ($szDomainsList=="") $szDomainsList="-";
 				echo "<td>".utf8_encode($szDomainsList)."</td>";  
 			}
 		}
@@ -186,12 +187,12 @@ function showAll($active,$domain)
 		if ($ligne[21]!="") echo "<td>".utf8_encode($ligne[21])."</td>"; else echo "<td align=center>-</td>";   // autoLock
 		if (_ENCRYPT_=="TRUE")
 		{
-			if ($ligne[22]!="") echo "<td>".utf8_encode($ligne[22])."</td>"; else echo "<td align=center>-</td>";   // withIdPwd
-			if ($ligne[23]!="") echo "<td>".utf8_encode($ligne[23])."</td>"; else echo "<td align=center>-</td>";   // id1Value
-			if ($ligne[24]!="") echo "<td>".utf8_encode($ligne[24])."</td>"; else echo "<td align=center>-</td>";   // id2Value
-			if ($ligne[25]!="") echo "<td>".utf8_encode($ligne[25])."</td>"; else echo "<td align=center>-</td>";   // id3Value
-			if ($ligne[26]!="") echo "<td>".utf8_encode($ligne[26])."</td>"; else echo "<td align=center>-</td>";   // id4Value
-			if ($ligne[27]!="") echo "<td>".utf8_encode($ligne[27])."</td>"; else echo "<td align=center>-</td>";   // pwdValue
+			if ($ligne[23]!="") echo "<td>".utf8_encode($ligne[23])."</td>"; else echo "<td align=center>-</td>";   // withIdPwd
+			if ($ligne[24]!="") echo "<td>".utf8_encode($ligne[24])."</td>"; else echo "<td align=center>-</td>";   // id1Value
+			if ($ligne[25]!="") echo "<td>".utf8_encode($ligne[25])."</td>"; else echo "<td align=center>-</td>";   // id2Value
+			if ($ligne[26]!="") echo "<td>".utf8_encode($ligne[26])."</td>"; else echo "<td align=center>-</td>";   // id3Value
+			if ($ligne[27]!="") echo "<td>".utf8_encode($ligne[27])."</td>"; else echo "<td align=center>-</td>";   // id4Value
+			if ($ligne[28]!="") echo "<td>".utf8_encode($ligne[28])."</td>"; else echo "<td align=center>-</td>";   // pwdValue
 		}
 		echo "</tr>";
 	}

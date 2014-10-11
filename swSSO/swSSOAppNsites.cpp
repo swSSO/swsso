@@ -168,6 +168,16 @@ typedef struct
 } T_TIP;
 T_TIP gtip[44];
 
+typedef struct
+{
+	BOOL bPWithIdPwd;
+	BOOL bCateg;
+	int iCategoryId;
+	int iAction;
+} T_PUBLISH_STRUCT;
+T_PUBLISH_STRUCT gtPublish;
+
+
 // ----------------------------------------------------------------------------------
 // InitTooltip()
 // ----------------------------------------------------------------------------------
@@ -338,11 +348,12 @@ void PublishToOnInitDialog(HWND w)
 	
 	// affichage de la liste des domaines
 	ListView_SetExtendedListViewStyle(GetDlgItem(w,LV_DOMAINS),LVS_EX_CHECKBOXES);
-
-	// récupère la liste des domaines auxquels la config est rattachée
-
-	iNbDomains=GetDomains(FALSE,XXXXXXXXX,tabConfigDomains); // TODO récupérer la config sélectionnée et si c'est une categ ne pas cocher les cases
-	
+		
+	// récupère la liste des domaines auxquels la config est rattachée (si c'est une categ on ne coche rien)
+	if (!gtPublish.bCateg)
+	{
+		iNbDomains=GetDomains(FALSE,gptActions[gtPublish.iAction].iConfigId,tabConfigDomains); 
+	}
 	lvi.mask=LVIF_TEXT | LVIF_PARAM;
 	for (i=0;i<giNbDomains;i++)
 	{
@@ -351,14 +362,16 @@ void PublishToOnInitDialog(HWND w)
 		lvi.pszText=gtabDomains[i].szDomainLabel;
 		lvi.lParam=gtabDomains[i].iDomainId;
 		ListView_InsertItem(GetDlgItem(w,LV_DOMAINS),&lvi);
-		for (j=0;j<iNbDomains;j++)
+		if (!gtPublish.bCateg)
 		{
-			if (gtabDomains[i].iDomainId==tabConfigDomains[j].iDomainId) 
+			for (j=0;j<iNbDomains;j++)
 			{
-				ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),i,TRUE);
+				if (gtabDomains[i].iDomainId==tabConfigDomains[j].iDomainId) 
+				{
+					ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),i,TRUE);
+				}
 			}
 		}
-
 	}
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -369,11 +382,12 @@ void PublishToOnInitDialog(HWND w)
 //-----------------------------------------------------------------------------
 // Coche / décoche tous les domaines
 //-----------------------------------------------------------------------------
-void LVCheckAllDomains(HWND w,BOOL bChecked)
+void LVCheckAllDomains(HWND w,BOOL bChecked,BOOL bCommun)
 {
 	TRACE((TRACE_ENTER,_F_, "bChecked=%d",bChecked));
 	int i;
-	for (i=0;i<ListView_GetItemCount(GetDlgItem(w,LV_DOMAINS));i++)
+	if (bCommun) ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),0,FALSE);
+	for (i=1;i<ListView_GetItemCount(GetDlgItem(w,LV_DOMAINS));i++)
 	{
 		ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),i,bChecked);
 	}
@@ -385,27 +399,47 @@ void LVCheckAllDomains(HWND w,BOOL bChecked)
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-int PublishConfigToDomains(HWND w,BOOL bWithIdPwd)
+int PublishConfigToDomains(HWND w)
 {
 	UNREFERENCED_PARAMETER(w);
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	
-	UploadConfig(gwAppNsites,"1,2,3",bWithIdPwd); // TODO !!!!!!!!!!!!!!!!
+	char szDomainIds[1024];
+	char szDomainId[10];
+	int i;
+	int iNbDomains;
+	LVITEM lvitem;
 
-	rc=0;
+	*szDomainIds=0;
+	iNbDomains=ListView_GetItemCount(GetDlgItem(w,LV_DOMAINS));
+	for (i=0;i<iNbDomains;i++)
+	{
+		if (ListView_GetCheckState(GetDlgItem(w,LV_DOMAINS),i))
+		{
+			lvitem.mask=LVIF_PARAM;
+			lvitem.iItem=i;
+			lvitem.iSubItem=0;
+			if (ListView_GetItem(GetDlgItem(w,LV_DOMAINS),&lvitem))
+			{
+				sprintf_s(szDomainId,sizeof(szDomainId),"%d,",lvitem.lParam);
+				strcat_s(szDomainIds,sizeof(szDomainIds),szDomainId);
+			}
+		}
+	}
+	// récupère la liste des domaines cochés
+	rc=UploadConfig(gwAppNsites,szDomainIds,gtPublish.bPWithIdPwd);
+
 //end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
-
 
 //-----------------------------------------------------------------------------
 // PublishToDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la fenêtre de publication vers les domaines
 //-----------------------------------------------------------------------------
-static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp) // lp=bWithIdPwd
+static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
 	switch (msg)
@@ -417,7 +451,7 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp) // 
 			switch (LOWORD(wp))
 			{
 				case IDOK:
-					if (PublishConfigToDomains(w,lp)==0) // lp=bWithIdPwd
+					if (PublishConfigToDomains(w)==0) 
 					{
 						PublishToSavePosition(w);
 						EndDialog(w,IDOK);
@@ -428,10 +462,10 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp) // 
 					EndDialog(w,IDCANCEL);
 					break;
 				case PB_TOUT:
-					LVCheckAllDomains(w,TRUE);
+					LVCheckAllDomains(w,TRUE,TRUE);
 					break;
 				case PB_RIEN:
-					LVCheckAllDomains(w,FALSE);
+					LVCheckAllDomains(w,FALSE,TRUE);
 					break;
 			}
 			break;
@@ -467,8 +501,18 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp) // 
 					{
 						BOOL b=ListView_GetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem);
 						ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,!b);
+						if (pnmv->iItem==0) // domaine commun --> si coché décoche tout le reste
+						{
+							if (!b) LVCheckAllDomains(w,FALSE,FALSE);
+						}
+						else // autre domaine coché, décoche commun
+						{
+							if (!b) ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),0,FALSE);
+						}
 					}
+					
 					break;
+					// TODO : griser et décocher tous les autres si commun coché
 			}
 			break;
 	}
@@ -484,8 +528,27 @@ int PublishTo(HWND w,BOOL bPWithIdPwd)
 	UNREFERENCED_PARAMETER(bPWithIdPwd);
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
+	HTREEITEM hItem,hParentItem;
 	
-	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_PUBLISH_TO),w,PublishToDialogProc,bPWithIdPwd)!=IDOK) goto end;
+	gtPublish.bPWithIdPwd=bPWithIdPwd;
+	
+	// Récupère l'élément sélectionné et regarde si c'est une config ou une catégorie
+	hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
+	hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),hItem);
+	if (hParentItem==NULL) // c'est une catégorie 
+	{
+		gtPublish.bCateg=TRUE;
+		gtPublish.iCategoryId=TVItemGetLParam(w,hItem);
+		if (gtPublish.iCategoryId==-1) goto end;
+	}
+	else // c'est une config
+	{
+		gtPublish.bCateg=FALSE;
+		gtPublish.iAction=TVItemGetLParam(w,hItem); 
+		if (gtPublish.iAction==-1 || gtPublish.iAction>=giNbActions) goto end;	
+	}
+
+	if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_PUBLISH_TO),w,PublishToDialogProc)!=IDOK) goto end;
 
 	rc=0;
 end:
@@ -2134,8 +2197,8 @@ void ShowApplicationDetails(HWND w,int iAction)
 	// 0.93B7 ISSUE#10
 	MoveControls(w,GetDlgItem(w,TAB_CONFIG));
 
-	// 1.03 : empêche la modification ids et mdp si valeurs forcées par le serveur
-	if (gptActions[iAction].bWithIdPwd)
+	// 1.03 : empêche la modification ids et mdp si valeurs forcées par le serveur (sauf pour l'admin !)
+	if (gptActions[iAction].bWithIdPwd && !gbInternetManualPutConfig)
 	{
 		EnableWindow(GetDlgItem(w,TB_ID),FALSE);
 		EnableWindow(GetDlgItem(w,TB_ID2),FALSE);
@@ -3019,7 +3082,7 @@ end:
 // auquel cas l'ensemble des configurations de la catégories sont remontées 
 // sur le serveur
 //-----------------------------------------------------------------------------
-void UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
+int UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
 {
 	TRACE((TRACE_ENTER,_F_, "pszDomainIds=%s bUploadIdPwd=%d",pszDomainIds,bUploadIdPwd));
 
@@ -3052,7 +3115,7 @@ void UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
 			if (rc==0) iNbConfigUploaded++;
 			else if (rc==-2) { iNbConfigIgnored++; rc=0; }
 			else goto end;
-			// gptActions[iAction].iDomainId=iDomainId;
+			gptActions[iAction].bWithIdPwd=bUploadIdPwd;
 			hNextApp=TreeView_GetNextSibling(GetDlgItem(w,TV_APPLICATIONS),hNextApp);
 		}
 		sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_MULTI_UPLOAD_OK),iNbConfigUploaded,iNbConfigIgnored);
@@ -3065,9 +3128,10 @@ void UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
 		iOldCategoryId=gptActions[iAction].iCategoryId;
 		rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds,bUploadIdPwd);
 		TVUpdateItemState(w,hItem,iAction);
-		// gptActions[iAction].iDomainId=iDomainId;
+		gptActions[iAction].bWithIdPwd=bUploadIdPwd;
 		strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_UPLOAD_OK));
 	}
+	
 	// 0.91 : il faut écrire le configId dans le .ini, sinon si l'utilisateur annule on le perd...
 	//        mais il ne faut pas écrire betement (risque d'écrire dans une section renommée, cf. swSSOCOnfig.cpp)
 	//        Je n'ai pas de meilleure idée qu'une sauvegarde complète (il n'est pas possible de retrouver
@@ -3092,6 +3156,7 @@ end:
 	else 
 		MessageBox(w,GetString(IDS_UPLOAD_NOK),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
 }
 // ----------------------------------------------------------------------------------
 // LoadApplicationIdX()

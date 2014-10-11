@@ -4628,7 +4628,7 @@ int GetDomains(BOOL bAllDomains,int iConfigId,T_DOMAIN *pgtabDomain)
 
 #ifdef TRACES_ACTIVEES
 	int trace_i;
-	for (trace_i=0;trace_i<rc;trace_i++)
+	for (trace_i=0;trace_i<rc-1;trace_i++)
 	{
 		TRACE((TRACE_INFO,_F_,"Domaine %d : id=%d label=%s",trace_i,pgtabDomain[trace_i].iDomainId,pgtabDomain[trace_i].szDomainLabel));
 	}
