@@ -2380,9 +2380,28 @@ void GetApplicationDetails(HWND w,int iAction)
 	if (*szPassword!=0) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 	{
 		pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
-		SecureZeroMemory(szPassword,strlen(szPassword));
 		if (pszEncryptedPassword==NULL) goto end;
 		strcpy_s(gptActions[iAction].szPwdEncryptedValue,sizeof(gptActions[iAction].szPwdEncryptedValue),pszEncryptedPassword);
+		
+		// ISSUE#191 : changement des mots de passe de toutes les applications du groupe
+		free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
+		pszEncryptedPassword=NULL;
+		if (gptActions[iAction].iPwdGroup!=-1) // change les autres applis
+		{
+			int i;
+			for (i=0;i<giNbActions;i++)
+			{
+				if (gptActions[i].iPwdGroup==gptActions[iAction].iPwdGroup)
+				{
+					pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
+					if (pszEncryptedPassword==NULL) goto end;
+					strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
+					free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
+					pszEncryptedPassword=NULL;
+				}
+			}
+		}
+		SecureZeroMemory(szPassword,strlen(szPassword));
 	}
 	else
 	{
