@@ -35,6 +35,7 @@
 
 #include "stdafx.h"
 static int giRefreshTimer=10;
+static BOOL gbWarningIfNoADPwd=FALSE;
 
 //-----------------------------------------------------------------------------
 // GetUserDomainAndComputer() 
@@ -230,7 +231,14 @@ static int CALLBACK AskADPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case IDCANCEL:
 					// demande à l'utilisateur de confirmer qu'il veut vraiment annuler, car s'il ne fournit pas son
 					// nouveau mdp AD, le SSO sur les applications utilisant ce mdp ne fonctionnera pas !
-					if (MessageBox(NULL,GetString(IDS_WARNING_AD_PWD),"swSSO",MB_YESNO | MB_ICONEXCLAMATION)==IDYES) EndDialog(w,IDCANCEL);
+					if (gbWarningIfNoADPwd)
+					{
+						 if (MessageBox(NULL,GetString(IDS_WARNING_AD_PWD),"swSSO",MB_YESNO | MB_ICONEXCLAMATION)==IDYES) EndDialog(w,IDCANCEL);
+					}
+					else
+					{
+						EndDialog(w,IDCANCEL);
+					}
 					break;
 				case TB_NEW_PWD1:
 				case TB_NEW_PWD2:
@@ -271,11 +279,12 @@ static int CALLBACK AskADPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 //-----------------------------------------------------------------------------
 // Demande à l'utilisateur de saisir son mot de passe AD
 //-----------------------------------------------------------------------------
-int AskADPwd(void)
+int AskADPwd(BOOL bWarningIfNoADPwd)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 	
+	gbWarningIfNoADPwd=bWarningIfNoADPwd;
 	if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_ASK_AD_PWD),NULL,AskADPwdDialogProc)==IDOK) rc=0;
 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -333,7 +342,7 @@ int CheckADPwdChange(void)
 	
 	if (bAskADPwd) // demande le mot de passe AD à l'utilisateur et le stocke dans le .ini
 	{
-		if (AskADPwd()!=0) goto end;
+		if (AskADPwd(TRUE)!=0) goto end;
 		strcpy_s(gszLastADPwdChange,sizeof(gszLastADPwdChange),szLastADPwdChange);
 		SaveConfigHeader();
 	}

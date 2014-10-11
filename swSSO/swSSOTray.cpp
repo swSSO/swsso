@@ -260,7 +260,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
 					}
-					AskADPwd();
+					AskADPwd(FALSE);
 					SaveConfigHeader();
 					break;
 				case TRAY_MENU_PORTAL:

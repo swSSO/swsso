@@ -33,6 +33,6 @@
 
 int GetUserDomainAndComputer(void);
 int GetLastADPwdChange(char *pszLastADPwdChange);
-int AskADPwd(void);
+int AskADPwd(BOOL bWarningIfNoADPwd);
 int CheckADPwdChange();
 char *GetDecryptedPwd(char *szPwdEncryptedValue);
