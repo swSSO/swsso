@@ -33,7 +33,7 @@ include('functions.php');
 // 
 //-----------------------------------------------------------------------------
 
-$title="<title>swSSO - Serveur de configuration v1.04</title>";
+$title="<title>swSSO - Serveur de configuration (v6.0)</title>";
 
 // ------------------------------------------------------------
 // showall : génère une page html avec l'ensemble des configs actives

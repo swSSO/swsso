@@ -360,6 +360,11 @@ else if ($_GET['action']=="putconfig")
 	}
 
 	// En fonction de la configuration (chiffrement ou pas), prépare les paramètres de la requête SQL
+	$param_id1Value="";
+	$param_id2Value="";
+	$param_id3Value="";
+	$param_id4Value="";
+	$param_pwdValue="";
 	if (_ENCRYPT_=="TRUE")
 	{
 		$param_url=           "AES_ENCRYPT('".$var_url."','"._AESPWD_."')";
@@ -426,7 +431,7 @@ else if ($_GET['action']=="putconfig")
 									  "lastModified='".$var_lastModified."',".
 									  "pwdGroup=".$var_pwdGroup.",".
 									  "autoLock=".$var_autoLock.
-									  $szRequestionOptions." WHERE ".
+									  $szRequestOptions." WHERE ".
 									  _TABLE_PREFIX_."config.id='".$var_configId."'";
 		
 		if (isset($_GET["debug"])) echo $szRequest;
@@ -452,7 +457,7 @@ else if ($_GET['action']=="putconfig")
 	           "values (1,'".$var_typeapp."',".$param_title.",".$param_url.",'".$var_id1Name."','EDIT','".
 	           $var_pwdName."','".$var_validateName."','".$var_id2Name."','".$var_id2Type."','".
 	           $var_id3Name."','".$var_id3Type."','".$var_id4Name."','".$var_id4Type."','".
-	           $var_bKBSim.",'".$var_szKBSim."',".$param_szName.",'".
+	           $var_bKBSim."','".$var_szKBSim."',".$param_szName.",'".
 	           $var_categId."',".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.",".$var_autoLock.$szRequestOptions2.")";
 		if (isset($_GET["debug"])) echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
