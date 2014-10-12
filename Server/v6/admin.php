@@ -41,7 +41,7 @@ $title="<title>swSSO - Serveur de configuration v1.04</title>";
 if ($_GET['action']=="showall"._READSUFFIX_)
 {
 	$var_domain=utf8_decode(addslashes($_GET['domain']));
-	showAll(1,$var_domain);
+	showAll(1,$var_domain,$title);
 }
 // ------------------------------------------------------------
 // showold : génère une page html avec l'ensemble des configs archivées
@@ -50,7 +50,7 @@ if ($_GET['action']=="showall"._READSUFFIX_)
 else if ($_GET['action']=="showold"._READSUFFIX_)
 {
 	$var_domain=utf8_decode(addslashes($_GET['domain']));
-	showAll(0,$var_domain);
+	showAll(0,$var_domain,$title);
 }
 // ------------------------------------------------------------
 // showlogs : génère une page html avec les logs
@@ -58,23 +58,23 @@ else if ($_GET['action']=="showold"._READSUFFIX_)
 else if ($_GET['action']=="showlogs"._READSUFFIX_)
 {
 	$var_domain=utf8_decode(addslashes($_GET['domain']));
-	$var_result=utf8_decode(addslashes($_GET['result']));
-	showLogs($var_domain,$var_result);
+	$var_result="";
+	if (isset($_GET["result"])) $var_result=utf8_decode(addslashes($_GET['result']));
+	showLogs($var_domain,$var_result,$title);
 }
 // ------------------------------------------------------------
 // showcategories : génère une page html avec liste des catégories
 // ------------------------------------------------------------
 else if ($_GET['action']=="showcategories"._READSUFFIX_)
 {
-	$var_domain=utf8_decode(addslashes($_GET['domain']));
-	showCategories($var_domain);
+	showCategories($title);
 }
 // ------------------------------------------------------------
 // showdomains : génère une page html avec liste des domaines
 // ------------------------------------------------------------
 else if ($_GET['action']=="showdomains"._READSUFFIX_)
 {
-	showDomains();
+	showDomains($title);
 }
 // ------------------------------------------------------------
 // deletelogs : suppression des logs
@@ -168,7 +168,7 @@ else if ($_GET['action']=="archiveconfig"._WRITESUFFIX_)
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
 	dbClose($cnx);
-	showAll($var_active,$var_domain);
+	showAll($var_active,$var_domain,$title);
 }
 // ------------------------------------------------------------
 // deleteconfig : suppression définitive d'une configuration
@@ -188,7 +188,7 @@ else if ($_GET['action']=="deleteconfig"._WRITESUFFIX_)
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
 	dbClose($cnx);
-	showAll($var_active,$var_domain);
+	showAll($var_active,$var_domain,$title);
 }
 // ------------------------------------------------------------
 // deletecateg : suppression définitive d'une configuration
@@ -207,7 +207,7 @@ else if ($_GET['action']=="deletecateg"._WRITESUFFIX_)
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
 	dbClose($cnx);
-	showCategories(var_domain);
+	showCategories(var_domain,$title);
 }
 // ------------------------------------------------------------
 // deletedomain : suppression définitive d'un domain
@@ -224,7 +224,7 @@ else if ($_GET['action']=="deletedomain"._WRITESUFFIX_)
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
 	dbClose($cnx);
-	showDomains();
+	showDomains($title);
 }
 // ------------------------------------------------------------
 // MENU
@@ -236,13 +236,22 @@ else if ($_GET['action']=="menu"._MENUSUFFIX_)
 	echo $title;
 	if (_SHOWMENU_=="TRUE")
 	{
-		$var_domain=utf8_decode(myaddslashes($_GET['domain'])); 
-		if ($var_domain=="") // menu principal
+		if(isset($_GET["domain"])) 
+		{
+			$var_domain=utf8_decode(myaddslashes($_GET['domain'])); 
+			echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > Gestion du domaine ".getDomainLabel(null,$var_domain)."</b><br/>";
+			echo "<br/>+ <a href=./admin.php?action=showall"._READSUFFIX_."&domain=".$var_domain.">Configurations actives</a>";      
+			echo "<br/>+ <a href=./admin.php?action=showold"._READSUFFIX_."&domain=".$var_domain.">Configurations archiv&eacute;es</a>";      
+			if (_LOGS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=showlogs"._READSUFFIX_."&domain=".$var_domain.">Logs</a>";      
+			if (_LOGS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=deletelogs"._WRITESUFFIX_."&domain=".$var_domain.">Effacer les logs</a>";   
+			echo "</font>";
+		}
+		else
 		{
 			echo "<font face=verdana size=2><b>Menu principal</b><br/>";
 			echo "<br/>+ G&eacute;rer mes domaines";
 			menuShowDomains();
-			echo "<br/>+ <a href=./admin.php?action=showcategories"._READSUFFIX_."&domain=".$var_domain.">Cat&eacute;gories</a>"; 
+			echo "<br/>+ <a href=./admin.php?action=showcategories"._READSUFFIX_.">Cat&eacute;gories</a>"; 
 			echo "<br/>+ <a href=./admin.php?action=showdomains"._READSUFFIX_.">Ajouter ou supprimer un domaine</a>";
 			if (_STATS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=showstats"._READSUFFIX_.">Statistiques</a>";      
 			echo "<br/>+ <a href=./webservice6.php?action=isalive>Test \"isalive\"</a>";   
@@ -250,15 +259,6 @@ else if ($_GET['action']=="menu"._MENUSUFFIX_)
 				echo "<br/><br/>Chiffrement : activ&eacute;";
 			else
 				echo "<br/><br/>Chiffrement : non activ&eacute;";
-			echo "</font>";
-		}
-		else // menu du domaine
-		{
-			echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > Gestion du domaine ".getDomainLabel(null,$var_domain)."</b><br/>";
-			echo "<br/>+ <a href=./admin.php?action=showall"._READSUFFIX_."&domain=".$var_domain.">Configurations actives</a>";      
-			echo "<br/>+ <a href=./admin.php?action=showold"._READSUFFIX_."&domain=".$var_domain.">Configurations archiv&eacute;es</a>";      
-			if (_LOGS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=showlogs"._READSUFFIX_."&domain=".$var_domain.">Logs</a>";      
-			if (_LOGS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=deletelogs"._WRITESUFFIX_."&domain=".$var_domain.">Effacer les logs</a>";   
 			echo "</font>";
 		}
 	}

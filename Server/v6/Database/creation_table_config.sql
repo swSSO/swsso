@@ -43,8 +43,6 @@ CREATE TABLE IF NOT EXISTS `config` (
   `id3Type` varchar(5) COLLATE utf8_unicode_ci DEFAULT NULL,
   `id4Name` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
   `id4Type` varchar(5) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `id5Name` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `id5Type` varchar(5) COLLATE utf8_unicode_ci DEFAULT NULL,
   `pwdName` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
   `validateName` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
   `bKBSim` tinyint(1) NOT NULL DEFAULT '0',

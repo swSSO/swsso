@@ -58,16 +58,27 @@ else if ($_GET['action']=="getconfig")
 	$cnx=dbConnect();
 	if (!$cnx) return;
 
-	$var_title			=utf8_decode(myaddslashes($_GET['title'])); 
-	$var_url  			=utf8_decode(myaddslashes($_GET['url']));
-	$var_ids  			=utf8_decode(myaddslashes($_GET['ids']));  	// liste d'ids de config
-	$var_new			=utf8_decode(myaddslashes($_GET['new']));	// retourne configs non comprises dans la liste & active=1
-	$var_mod			=utf8_decode(myaddslashes($_GET['mod']));	// retourne configs comprises dans la liste & active=1
-	$var_old			=utf8_decode(myaddslashes($_GET['old'])); 	// retourne configs comprises dans la liste & active=0
-	$var_modifiedSince	=utf8_decode(myaddslashes($_GET['date']));	// date à partir de laquelle on veut récupérer les configs
-	$var_type			=utf8_decode(myaddslashes($_GET['type']));  // 0.92B6 : type de la config recherchée (WIN, POP, WEB ou XEB) ou chaine vide sinon
-	$var_version		=utf8_decode(myaddslashes($_GET['version'])); // 0.92B8 : version client swsso (format 0928)
-	$var_domainId		=utf8_decode(myaddslashes($_GET['domainId'])); // 0.94 domaine 
+	$var_title			="";
+	$var_url  			="";
+	$var_ids  			="";
+	$var_new			="";
+	$var_mod			="";
+	$var_old			="";
+	$var_modifiedSince	="";
+	$var_type			="";
+	$var_version		="";
+	$var_domainId		="";
+
+	if (isset($_GET["title"]))		$var_title			=utf8_decode(myaddslashes($_GET['title'])); 
+	if (isset($_GET["url"]))		$var_url  			=utf8_decode(myaddslashes($_GET['url']));
+	if (isset($_GET["ids"]))		$var_ids  			=utf8_decode(myaddslashes($_GET['ids']));  	// liste d'ids de config
+	if (isset($_GET["new"]))		$var_new			=utf8_decode(myaddslashes($_GET['new']));	// retourne configs non comprises dans la liste & active=1
+	if (isset($_GET["mod"]))		$var_mod			=utf8_decode(myaddslashes($_GET['mod']));	// retourne configs comprises dans la liste & active=1
+	if (isset($_GET["old"]))		$var_old			=utf8_decode(myaddslashes($_GET['old'])); 	// retourne configs comprises dans la liste & active=0
+	if (isset($_GET["date"]))		$var_modifiedSince	=utf8_decode(myaddslashes($_GET['date']));	// date à partir de laquelle on veut récupérer les configs
+	if (isset($_GET["type"]))		$var_type			=utf8_decode(myaddslashes($_GET['type']));  // 0.92B6 : type de la config recherchée (WIN, POP, WEB ou XEB) ou chaine vide sinon
+	if (isset($_GET["version"]))	$var_version		=utf8_decode(myaddslashes($_GET['version'])); // 0.92B8 : version client swsso (format 0928)
+	if (isset($_GET["domainId"]))	$var_domainId		=utf8_decode(myaddslashes($_GET['domainId'])); // 0.94 domaine 
 	
 	if ($var_new=="") $var_new="0";
 	if ($var_mod=="") $var_mod="0";
@@ -95,7 +106,7 @@ else if ($_GET['action']=="getconfig")
 
 	// la liste des champs à retourner dans la structure XML est comune à TOUTES les requêtes mais dépend de chiffré ou non
 	$columns="typeapp,".$param_title.",".$param_url.",id1Name,pwdName,id2Name,id2Type,id3Name,".
-			"id3Type,id4Name,id4Type,id5Name,id5Type,validateName,bKBSim,szKBSim,".
+			"id3Type,id4Name,id4Type,validateName,bKBSim,szKBSim,".
 			$param_szName.",".$param_szFullPathName.",categId,"._TABLE_PREFIX_."categ.label,".
 			_TABLE_PREFIX_."config.id,lastModified,active,"._TABLE_PREFIX_."configs_domains.domainId,pwdGroup,autoLock";
 			
@@ -104,8 +115,8 @@ else if ($_GET['action']=="getconfig")
 		$columns=$columns.",".$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue;
 	}
 				
-	if ($_GET['debug']!="") echo $columns;
-	if ($_GET['debug']!="") echo "new=".$var_new." mod=".$var_mod." old=".$var_old;
+	if (isset($_GET["debug"])) echo $columns;
+	if (isset($_GET["debug"])) echo "new=".$var_new." mod=".$var_mod." old=".$var_old;
 	
 	// si titre vide, c'est une récupération de l'ensemble des configs au démarrage
 	if ($var_title=="")
@@ -144,6 +155,7 @@ else if ($_GET['action']=="getconfig")
 		$szRequest= "select ".$columns." from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ,"._TABLE_PREFIX_."configs_domains ".
 					"where "._TABLE_PREFIX_."categ.id="._TABLE_PREFIX_."config.categId AND lastModified>".$var_modifiedSince." ".
 					$conditions." ".
+					"group by "._TABLE_PREFIX_."config.id ".
 					"order by "._TABLE_PREFIX_."config.id desc, lastModified desc";
 	}
 	else // titre non vide, c'est une requête suite à un clic droit / ajouter cette application
@@ -164,6 +176,7 @@ else if ($_GET['action']=="getconfig")
 						"  (left (".$param_title.",1)='*' and right(".$param_title.",1)='*' and locate(substr(".$param_title.",2,char_length(".$param_title.")-2),'".$var_title."')<>0) OR ". 
 						"  (".$param_title."='".$var_title."')) ".
 						$conditions.
+						"group by "._TABLE_PREFIX_."config.id ".
 						"order by "._TABLE_PREFIX_."config.id desc, lastModified desc";
 		}
 		else
@@ -196,10 +209,11 @@ else if ($_GET['action']=="getconfig")
 						"  (".$param_url."='".$var_url."'))".
 						" ".$szTypeCondition." ".
 						$conditions.
+						"group by "._TABLE_PREFIX_."config.id ".
 						"order by typeapp desc, "._TABLE_PREFIX_."config.id desc, lastModified desc LIMIT 1";
 		}
 	}
-	if ($_GET['debug']!="") echo $szRequest;
+	if (isset($_GET["debug"])) echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
@@ -222,9 +236,9 @@ else if ($_GET['action']=="getconfig")
 		while($ligne=mysql_fetch_row($req))
 		{
 			echo "<app num=\"".$i."\">\n";
-			echo "<configId>$ligne[20]</configId>\n";
-			echo "<active>$ligne[22]</active>\n";
-			echo "<lastModified>$ligne[21]</lastModified>\n";
+			echo "<configId>$ligne[18]</configId>\n";
+			echo "<active>$ligne[20]</active>\n";
+			echo "<lastModified>$ligne[19]</lastModified>\n";
 			echo "<type>".$ligne[0]."</type>\n";
 			echo "<title><![CDATA[".$ligne[1]."]]></title>\n";
 			echo "<url><![CDATA[".$ligne[2]."]]></url>\n";
@@ -236,23 +250,21 @@ else if ($_GET['action']=="getconfig")
 			echo "<id3Type>".$ligne[8]."</id3Type>\n";
 			echo "<id4Name>".$ligne[9]."</id4Name>\n";
 			echo "<id4Type>".$ligne[10]."</id4Type>\n";
-			echo "<id5Name>".$ligne[11]."</id5Name>\n";
-			echo "<id5Type>".$ligne[12]."</id5Type>\n";
-			echo "<validateName>".$ligne[13]."</validateName>\n";
-			echo "<bKBSim>".$ligne[14]."</bKBSim>\n";
-			echo "<szKBSim><![CDATA[".$ligne[15]."]]></szKBSim>\n";
-			echo "<szName><![CDATA[".$ligne[16]."]]></szName>\n";
-			echo "<szFullPathName><![CDATA[".$ligne[17]."]]></szFullPathName>\n";
-			echo "<categId><![CDATA[".$ligne[18]."]]></categId>\n";
-			echo "<categLabel><![CDATA[".$ligne[19]."]]></categLabel>\n";
-			echo "<domainId><![CDATA[".$ligne[23]."]]></domainId>\n";
-			echo "<pwdGroup><![CDATA[".$ligne[24]."]]></pwdGroup>\n";
-			echo "<autoLock><![CDATA[".$ligne[25]."]]></autoLock>\n";
-			echo "<id1Value><![CDATA[".$ligne[26]."]]></id1Value>\n";
-			echo "<id2Value><![CDATA[".$ligne[27]."]]></id2Value>\n";
-			echo "<id3Value><![CDATA[".$ligne[28]."]]></id3Value>\n";
-			echo "<id4Value><![CDATA[".$ligne[29]."]]></id4Value>\n";
-			echo "<pwdValue><![CDATA[".$ligne[30]."]]></pwdValue>\n";
+			echo "<validateName>".$ligne[11]."</validateName>\n";
+			echo "<bKBSim>".$ligne[12]."</bKBSim>\n";
+			echo "<szKBSim><![CDATA[".$ligne[13]."]]></szKBSim>\n";
+			echo "<szName><![CDATA[".$ligne[14]."]]></szName>\n";
+			echo "<szFullPathName><![CDATA[".$ligne[15]."]]></szFullPathName>\n";
+			echo "<categId><![CDATA[".$ligne[16]."]]></categId>\n";
+			echo "<categLabel><![CDATA[".$ligne[17]."]]></categLabel>\n";
+			echo "<domainId><![CDATA[".$ligne[21]."]]></domainId>\n";
+			echo "<pwdGroup><![CDATA[".$ligne[22]."]]></pwdGroup>\n";
+			echo "<autoLock><![CDATA[".$ligne[23]."]]></autoLock>\n";
+			if (isset($ligne[24])) echo "<id1Value><![CDATA[".$ligne[24]."]]></id1Value>\n";
+			if (isset($ligne[25])) echo "<id2Value><![CDATA[".$ligne[25]."]]></id2Value>\n";
+			if (isset($ligne[26])) echo "<id3Value><![CDATA[".$ligne[26]."]]></id3Value>\n";
+			if (isset($ligne[27])) echo "<id4Value><![CDATA[".$ligne[27]."]]></id4Value>\n";
+			if (isset($ligne[28])) echo "<pwdValue><![CDATA[".$ligne[28]."]]></pwdValue>\n";
 			echo "</app>\n";
 			$i++;
 		}
@@ -282,8 +294,6 @@ else if ($_GET['action']=="putconfig")
     $var_id3Type		=utf8_decode(myaddslashes($_GET['id3Type']));
     $var_id4Name		=utf8_decode(myaddslashes($_GET['id4Name']));
     $var_id4Type		=utf8_decode(myaddslashes($_GET['id4Type']));
-    $var_id5Name		=utf8_decode(myaddslashes($_GET['id5Name']));
-    $var_id5Type		=utf8_decode(myaddslashes($_GET['id5Type']));
     $var_bKBSim			=utf8_decode(myaddslashes($_GET['bKBSim'])); 
     $var_szKBSim		=utf8_decode(myaddslashes($_GET['szKBSim']));
     $var_szName			=utf8_decode(myaddslashes($_GET['szName']));
@@ -292,14 +302,22 @@ else if ($_GET['action']=="putconfig")
     $var_szFullPathName =utf8_decode(myaddslashes($_GET['szFullPathName']));
     $var_lastModified   =utf8_decode(myaddslashes($_GET['lastModified']));
 	$var_domainId		=utf8_decode(myaddslashes($_GET['domainId']));
-	$var_withIdPwd		=utf8_decode(myaddslashes($_GET['withIdPwd'])); // ajouté en 5.3 pour client 1.03
-	$var_id1Value		=utf8_decode(myaddslashes($_GET['id1Value']));  // ajouté en 5.3 pour client 1.03
-	$var_id2Value		=utf8_decode(myaddslashes($_GET['id2Value']));  // ajouté en 5.3 pour client 1.03
-	$var_id3Value		=utf8_decode(myaddslashes($_GET['id3Value']));  // ajouté en 5.3 pour client 1.03
-	$var_id4Value		=utf8_decode(myaddslashes($_GET['id4Value']));  // ajouté en 5.3 pour client 1.03
-	$var_pwdValue		=utf8_decode(myaddslashes($_GET['pwdValue']));  // ajouté en 5.3 pour client 1.03
-	$var_pwdGroup		=utf8_decode(myaddslashes($_GET['pwdGroup']));  // ajouté en 5.3 pour client 1.03
-	$var_autoLock		=utf8_decode(myaddslashes($_GET['autoLock']));  // ajouté en 5.5 pour client 1.04
+	$var_withIdPwd	="";
+	$var_id1Value	="";
+	$var_id2Value	="";
+	$var_id3Value	="";
+	$var_id4Value	="";
+	$var_pwdValue	="";
+	$var_pwdGroup	="";
+	$var_autoLock	="";
+	if (isset($_GET["withIdPwd"]))	$var_withIdPwd	=utf8_decode(myaddslashes($_GET['withIdPwd'])); // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["id1Value"])) 	$var_id1Value	=utf8_decode(myaddslashes($_GET['id1Value']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["id2Value"])) 	$var_id2Value	=utf8_decode(myaddslashes($_GET['id2Value']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["id3Value"])) 	$var_id3Value	=utf8_decode(myaddslashes($_GET['id3Value']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["id4Value"])) 	$var_id4Value	=utf8_decode(myaddslashes($_GET['id4Value']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["pwdValue"])) 	$var_pwdValue	=utf8_decode(myaddslashes($_GET['pwdValue']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["pwdGroup"])) 	$var_pwdGroup	=utf8_decode(myaddslashes($_GET['pwdGroup']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["autoLock"])) 	$var_autoLock	=utf8_decode(myaddslashes($_GET['autoLock']));  // ajouté en 5.5 pour client 1.04
 	
 	if ($var_pwdGroup=='') $var_pwdGroup=-1;  // pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
 	if ($var_withIdPwd=='') $var_withIdPwd=0; // pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
@@ -310,7 +328,7 @@ else if ($_GET['action']=="putconfig")
 	if ($var_configId!="0")
 	{
 		$szRequest="delete from "._TABLE_PREFIX_."configs_domains where configId=".$var_configId;
-		if ($_GET['debug']!="") echo $szRequest;
+		if (isset($_GET["debug"])) echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 	}
@@ -320,14 +338,14 @@ else if ($_GET['action']=="putconfig")
 	if ($var_categId!="" AND $var_categLabel!="") // ne fait rien si pas d'info categorie remontée
 	{
 		$szRequest="update "._TABLE_PREFIX_."categ set label='".$var_categLabel."' WHERE id='".$var_categId."'";
-		if ($_GET['debug']!="") echo $szRequest;
+		if (isset($_GET["debug"])) echo $szRequest;
     	$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 		if (mysql_affected_rows()==0) // la catégorie n'existe pas, on la crée
 		{
 			// lecture du dernier categId affecté
 			$szRequest="select max(id) from "._TABLE_PREFIX_."categ";
-			if ($_GET['debug']!="") echo $szRequest;
+			if (isset($_GET["debug"])) echo $szRequest;
 	    	$result=mysql_query($szRequest,$cnx);
 			if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 			$max=mysql_fetch_row($result);
@@ -335,7 +353,7 @@ else if ($_GET['action']=="putconfig")
 			if ($var_categId==0) $var_categId=10000; else $var_categId=$var_categId+1;
 			// incrément et ajout de la catégorie
 			$szRequest="insert into "._TABLE_PREFIX_."categ (id,label) values ('".$var_categId."','".$var_categLabel."')";
-			if ($_GET['debug']!="") echo $szRequest;
+			if (isset($_GET["debug"])) echo $szRequest;
 	    	$result=mysql_query($szRequest,$cnx);
 			if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 		}
@@ -400,8 +418,6 @@ else if ($_GET['action']=="putconfig")
 									  "id3Type='".$var_id3Type."',".
 									  "id4Name='".$var_id4Name."',".
 									  "id4Type='".$var_id4Type."',".
-									  "id5Name='".$var_id5Name."',".
-									  "id5Type='".$var_id5Type."',".
 									  "bKBSim='".$var_bKBSim."',".
 									  "szKBSim='".$var_szKBSim."',".
 									  "szName=".$param_szName.",".
@@ -413,7 +429,7 @@ else if ($_GET['action']=="putconfig")
 									  $szRequestionOptions." WHERE ".
 									  _TABLE_PREFIX_."config.id='".$var_configId."'";
 		
-		if ($_GET['debug']!="") echo $szRequest;
+		if (isset($_GET["debug"])) echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 		
@@ -431,14 +447,14 @@ else if ($_GET['action']=="putconfig")
 		}
 		
 		$szRequest="insert into "._TABLE_PREFIX_."config (active,typeapp,title,url,id1Name,id1Type,pwdName,validateName,".
-	           "id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,id5Name,id5Type,bKBSim,szKBSim,szName,categId,".
+	           "id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,bKBSim,szKBSim,szName,categId,".
 			   "szFullPathName,lastModified,pwdGroup,autoLock".$szRequestOptions1.") ".
 	           "values (1,'".$var_typeapp."',".$param_title.",".$param_url.",'".$var_id1Name."','EDIT','".
 	           $var_pwdName."','".$var_validateName."','".$var_id2Name."','".$var_id2Type."','".
 	           $var_id3Name."','".$var_id3Type."','".$var_id4Name."','".$var_id4Type."','".
-	           $var_id5Name."','".$var_id5Type."',".$var_bKBSim.",'".$var_szKBSim."',".$param_szName.",'".
+	           $var_bKBSim.",'".$var_szKBSim."',".$param_szName.",'".
 	           $var_categId."',".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.",".$var_autoLock.$szRequestOptions2.")";
-		if ($_GET['debug']!="") echo $szRequest;
+		if (isset($_GET["debug"])) echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 		$var_configId=mysql_insert_id(); // id passé en paramètre si !=0, nouvel id sinon
@@ -464,7 +480,7 @@ else if ($_GET['action']=="putconfig")
 	if ($szRequest!="")
 	{
 		$szRequest=$szRequest.";";
-		if ($_GET['debug']!="") echo $szRequest;
+		if (isset($_GET["debug"])) echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 	}
@@ -501,7 +517,7 @@ else if ($_GET['action']=="getdomains")
 	if (!$cnx) return;
 	
 	$szRequest= "select id,label from "._TABLE_PREFIX_."domains order by label";
-	if ($_GET['debug']!="") echo $szRequest;
+	if (isset($_GET["debug"])) echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
@@ -540,7 +556,7 @@ else if ($_GET['action']=="getconfigdomains")
 	$szRequest= "select configs_domains.domainId,domains.label ".
 			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."domains where ".
 			"configId=".$var_configId." and configs_domains.domainId=domains.id order by configs_domains.domainId";
-	if ($_GET['debug']!="") echo $szRequest;
+	if (isset($_GET["debug"])) echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 

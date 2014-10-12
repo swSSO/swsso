@@ -1,5 +1,4 @@
 <?php
-include('variables.php');
 //-----------------------------------------------------------------------------
 //
 //                                  swSSO
@@ -34,7 +33,7 @@ include('variables.php');
 // ------------------------------------------------------------
 // showAll -> appelé par showall et showold 
 // ------------------------------------------------------------
-function showAll($active,$domain)
+function showAll($active,$domain,$title)
 {
 	$cnx=dbConnect();
 	if (!$cnx) return;
@@ -69,6 +68,7 @@ function showAll($active,$domain)
 	else
 		echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > <a href=./admin.php?action=menu"._MENUSUFFIX_."&domain=".$domain.">Gestion du domaine ".getDomainLabel($cnx,$domain)."</a> > Liste des configurations archiv&eacute;s</b><br/><br/>";
 
+	$szWhere="";
 	if ($domain!=0)
 	{
 		$szWhere=$szWhere." AND config.id=configs_domains.configId AND configs_domains.domainId=".$domain;
@@ -97,7 +97,7 @@ function showAll($active,$domain)
 				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ".$szDomainTable." where active=".$active." AND categId=categ.id ".
 				   $szWhere." group by id order by id";
 	}
-	if ($_GET['debug']!="") echo $szRequest;
+	if (isset($_GET["debug"])) echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 	echo "<html>";
@@ -233,7 +233,7 @@ function getDomainLabel($cnx,$id)
 // ------------------------------------------------------------
 // showCategories 
 // ------------------------------------------------------------
-function showCategories($domain)
+function showCategories($title)
 {
 	$cnx=dbConnect();
 	if (!$cnx) return;
@@ -244,7 +244,7 @@ function showCategories($domain)
 
 	echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > Liste des cat&eacute;gories</b><br/><br/>";
 	
-	$szRequest="select id,label from "._TABLE_PREFIX_."categ ".$szWhere." order by id";      
+	$szRequest="select id,label from "._TABLE_PREFIX_."categ order by id";      
 
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -276,7 +276,7 @@ function showCategories($domain)
 // ------------------------------------------------------------
 // showLogs 
 // ------------------------------------------------------------
-function showLogs($domain,$result)
+function showLogs($domain,$result,$title)
 {
 	$cnx=dbConnect();
 	if (!$cnx) return;
@@ -286,6 +286,7 @@ function showLogs($domain,$result)
 	echo $title;
 	echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > <a href=./admin.php?action=menu"._MENUSUFFIX_."&domain=".$domain.">Gestion du domaine ".getDomainLabel($cnx,$domain)."</a> > Logs</b><br/><br/>";
 
+	$szWhere="";
 	if ($domain!=0)
 	{
 		$szWhere="WHERE domainId=".$domain;
@@ -320,7 +321,7 @@ function showLogs($domain,$result)
 // ------------------------------------------------------------
 // showDomains 
 // ------------------------------------------------------------
-function showDomains()
+function showDomains($title)
 {
 	$cnx=dbConnect();
 	if (!$cnx) return;
@@ -330,10 +331,10 @@ function showDomains()
 	echo $title;
 
 	echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > Gestion des domaines</b><br/><br/>";
-	
-	$var_new=utf8_decode(addslashes($_GET['new']));
-	if ($var_new!="")
+
+	if (isset($_GET["new"]))
 	{
+		$var_new=utf8_decode(addslashes($_GET['new']));
 		$szRequest="insert into "._TABLE_PREFIX_."domains (label) values ('".$var_new."')";
 		$req=mysql_query($szRequest,$cnx);
 		if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
