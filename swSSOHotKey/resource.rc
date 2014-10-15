@@ -1,0 +1,13 @@
+#ifdef SW_64BITS
+#define PRODUCT_NAME "swSSOHotKey x64" 
+#define PRODUCT_NAME_TRACE "swSSOHotKey x64 (traces)"
+#else
+#define PRODUCT_NAME "swSSOHotKey x86"
+#define PRODUCT_NAME_TRACE "swSSOHotKey x86 (traces)"
+#endif
+#define EXECUTABLE_NAME "swSSOHotKey.dll"
+#define EXECUTABLE_NAME_TRACE "swSSOHotKey.dll"
+#include <windows.h>
+#include <commctrl.h>
+#include <richedit.h>
+#include "..\swssocommonfiles\versioninfo.rc"

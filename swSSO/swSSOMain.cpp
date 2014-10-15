@@ -126,6 +126,7 @@ SYSTEMTIME gLastLoginTime; // ISSUE#106
 T_DOMAIN gtabDomains[100];
 int giNbDomains=0;
 
+BOOL gbWillTerminate=FALSE;
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES

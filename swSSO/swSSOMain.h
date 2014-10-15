@@ -128,4 +128,4 @@ extern T_LAST_DETECT gTabLastDetect[];
 int AskPwd(HWND wParent,BOOL bUseDPAPI);
 int LaunchTimer(void);
 
-
+extern BOOL gbWillTerminate;

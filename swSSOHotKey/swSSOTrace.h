@@ -28,25 +28,31 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// swSSOTray.h
+// swSSOTrace.h
 //-----------------------------------------------------------------------------
 
-HWND CreateMainWindow(void);
-int  CreateSystray(HWND wMain);
-void DestroySystray(HWND wMain);
-void SSOActivate(HWND w);
+#define TRACE_ERROR		1 // erreurs
+#define TRACE_ENTER		2 // entrée de fonction
+#define TRACE_LEAVE		3 // sortie de fonction
+#define TRACE_INFO		4 // infos
+#define TRACE_DEBUG     5 // pour debug : très verbeux !
+#define TRACE_PWD		6 // encore pire, trace des mots de passe
 
-extern unsigned int gMsgTaskbarRestart;
+#ifdef TRACES_ACTIVEES
+#define TRACE_OPEN() swTraceOpen();
+#define TRACE(zzz) swTraceWrite zzz
+#define TRACE_BUFFER(zzz) swTraceWriteBuffer zzz
+#define TRACE_CLOSE() swTraceClose();
+#else
+#define TRACE_OPEN()
+#define TRACE(zzz)
+#define TRACE_BUFFER(zzz)
+#define TRACE_CLOSE()
+#endif
 
-#define TRAY_MENU_ACTIVER    1
-#define TRAY_MENU_PROPRIETES 2
-#define TRAY_MENU_QUITTER    3
-#define TRAY_MENU_MDP		4
-#define TRAY_MENU_PORTAL		5
-#define TRAY_MENU_THIS_APPLI	6
-#define TRAY_MENU_APPNSITES  7
-#define TRAY_MENU_SSO_NOW	8
-#define TRAY_MENU_LAUNCH_APP 9
-#define TRAY_MENU_CHANGEAPPPWD 10
-#define TRAY_MENU_MDP_WINDOWS 11
-#define TRAY_PASTE_PASSWORD 99
+#define _F_ __FUNCTION__
+void swTraceOpen(void);
+void swTraceClose(void);
+void swTraceWrite(int iLevel,char *szFunction,char *szTrace, ...);
+void swTraceWriteBuffer(int iLevel,char *szFunction,unsigned char *pBuffer,int lenBuffer,const char *szTrace, ...);
+

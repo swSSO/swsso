@@ -2377,7 +2377,7 @@ void GetApplicationDetails(HWND w,int iAction)
 
 	GetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,szPassword,sizeof(szPassword));
 
-	if (*szPassword!=0) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
+	if (*szPassword!=0)
 	{
 		pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
 		if (pszEncryptedPassword==NULL) goto end;
@@ -2388,11 +2388,13 @@ void GetApplicationDetails(HWND w,int iAction)
 		pszEncryptedPassword=NULL;
 		if (gptActions[iAction].iPwdGroup!=-1) // change les autres applis
 		{
+			TRACE((TRACE_DEBUG,_F_,"Changement mot de passe groupé induit par appli %s",gptActions[iAction].szApplication));
 			int i;
 			for (i=0;i<giNbActions;i++)
 			{
 				if (gptActions[i].iPwdGroup==gptActions[iAction].iPwdGroup)
 				{
+					TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli %s induit par appli %s",gptActions[i].szApplication,gptActions[iAction].szApplication));
 					pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
 					if (pszEncryptedPassword==NULL) goto end;
 					strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
@@ -3387,6 +3389,10 @@ int LoadApplications(void)
 		// 0.50
 		// 0.65B3 on ne déchiffre plus qu'à l'utilisation !
 		GetPrivateProfileString(p,"pwdValue","",gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),gszCfgFile);
+		if (*gptActions[i].szPwdEncryptedValue==0) 
+		{
+			TRACE((TRACE_INFO,_F_,"Mot de passe vide pour appli %s",gptActions[i].szApplication));
+		}
 		GetPrivateProfileString(p,"validateName","",gptActions[i].szValidateName,sizeof(gptActions[i].szValidateName),gszCfgFile);
 		// 0.80 : renommage de <SANSNOM> en [SANSNOM] pour compatibilité XML...
 		if (strcmp(gptActions[i].szValidateName,gcszFormNoName1)==0) strcpy_s(gptActions[i].szValidateName,sizeof(gptActions[i].szValidateName),gcszFormNoName2);
@@ -3702,7 +3708,7 @@ end:
 //-----------------------------------------------------------------------------
 static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
-	TRACE((TRACE_DEBUG,_F_,"msg=0x%08lx LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",msg,LOWORD(wp),HIWORD(wp),lp));
+	// TRACE((TRACE_DEBUG,_F_,"msg=0x%08lx LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",msg,LOWORD(wp),HIWORD(wp),lp));
 	int rc=FALSE;
 	switch (msg)
 	{

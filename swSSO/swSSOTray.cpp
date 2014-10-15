@@ -305,7 +305,12 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_QUITTER:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_QUITTER"));
+					gbWillTerminate=TRUE;
 					PostQuitMessage(0);
+					break;
+				case TRAY_PASTE_PASSWORD:
+					TRACE((TRACE_INFO,_F_, "TRAY_PASTE_PASSWORD"));
+					MessageBox(NULL,"TRAY_PASTE_PASSWORD","",MB_OK);
 					break;
 			}
 			break;
@@ -571,6 +576,55 @@ end:
 	TRACE((TRACE_LEAVE, _F_, ""));
 }
 
+HINSTANCE ghinstHotKeyDLL=NULL; 
+HHOOK hHookKeyboard=NULL;
+
+//-----------------------------------------------------------------------------
+// InstallHotKey()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+int InstallHotKey(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	HOOKPROC hookproc=NULL;
+
+	ghinstHotKeyDLL=LoadLibrary("swSSOHotKey.dll"); 
+	if (ghinstHotKeyDLL==NULL)  { TRACE((TRACE_ERROR, _F_, "LoadLibrary(swSSOHotKey.dll)", GetLastError())); goto end; }
+
+	hookproc=(HOOKPROC)GetProcAddress(ghinstHotKeyDLL,"KeyboardProc"); 
+	if (hookproc==NULL) { TRACE((TRACE_ERROR, _F_, "GetProcAddress(KeyboardProc)", GetLastError())); goto end; }
+
+	hHookKeyboard=SetWindowsHookEx(WH_KEYBOARD,hookproc,ghinstHotKeyDLL,0);
+	if (hHookKeyboard==NULL) { TRACE((TRACE_ERROR, _F_, "SetWindowsHookEx(WH_KEYBOARD)", GetLastError())); goto end; }
+
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// UninstallHotKey()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+int UninstallHotKey(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	
+	if (hHookKeyboard!=NULL) { UnhookWindowsHookEx(hHookKeyboard); hHookKeyboard=NULL; }
+
+	if (ghinstHotKeyDLL!=NULL) { FreeLibrary(ghinstHotKeyDLL); ghinstHotKeyDLL=NULL; }
+
+	rc=0;
+//end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
 //-----------------------------------------------------------------------------
 // SaveNewAppPwdDialogProc()
 //-----------------------------------------------------------------------------
@@ -779,6 +833,8 @@ int BeginChangeAppPassword(void)
 	
 	if (giLastApplicationSSO==-1) goto end; // ne peut pas se produire en théorie puisque le menu systray n'est affiché que si !=1
 
+	if (InstallHotKey()!=0) goto end;
+
 	// déchiffre le mot de passe de l'application, essaie de le saisir et le copie dans le presse papier
 	if ((*gptActions[giLastApplicationSSO].szPwdEncryptedValue!=0))
 	{
@@ -815,10 +871,10 @@ int BeginChangeAppPassword(void)
 	while (!bDone)
 	{
 		// 2ème popup : demande à l'utilisateur de saisir son nouveau mot de passe et lui permet de le copier dans le presse papier
-		if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SAVE_NEW_APP_PWD),NULL,SaveNewAppPwdDialogProc)==IDOK)
+		if ((DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SAVE_NEW_APP_PWD),NULL,SaveNewAppPwdDialogProc)==IDOK) && !gbWillTerminate) // ISSUE#196
 		{
 			// 3ème popup : demande à l'utilisateur de confirmer l'enregistrement du nouveau mot de passe
-			if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_CONFIRM_NEW_APP_PWD),NULL,ConfirmNewAppPwdDialogProc)==IDOK)
+			if ((DialogBox(ghInstance,MAKEINTRESOURCE(IDD_CONFIRM_NEW_APP_PWD),NULL,ConfirmNewAppPwdDialogProc)==IDOK) && !gbWillTerminate)
 			{
 				// L'utilisateur a confirmé l'enregistrement, on chiffre le mot de passe et on l'enregistre
 				// ISSUE#156 : change le mot de passe de toutes les applications du groupe (reconnues par le pwdGroup!=-1)
@@ -867,6 +923,7 @@ int BeginChangeAppPassword(void)
 	ClipboardDelete();
 
 end:
+	UninstallHotKey();
 	SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
 	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));

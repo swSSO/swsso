@@ -233,7 +233,7 @@ static int CALLBACK AskADPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					// nouveau mdp AD, le SSO sur les applications utilisant ce mdp ne fonctionnera pas !
 					if (gbWarningIfNoADPwd)
 					{
-						 if (MessageBox(NULL,GetString(IDS_WARNING_AD_PWD),"swSSO",MB_YESNO | MB_ICONEXCLAMATION)==IDYES) EndDialog(w,IDCANCEL);
+						 if (MessageBox(w,GetString(IDS_WARNING_AD_PWD),"swSSO",MB_YESNO | MB_ICONEXCLAMATION)==IDYES) EndDialog(w,IDCANCEL);
 					}
 					else
 					{

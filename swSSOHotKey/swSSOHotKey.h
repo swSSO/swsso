@@ -28,25 +28,10 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// swSSOTray.h
-//-----------------------------------------------------------------------------
 
-HWND CreateMainWindow(void);
-int  CreateSystray(HWND wMain);
-void DestroySystray(HWND wMain);
-void SSOActivate(HWND w);
+#ifdef SWSSOHOTKEY_EXPORTS
+#define SWSSOHOTKEY_API __declspec(dllexport)
+#else
+#define SWSSOHOTKEY_API __declspec(dllimport)
+#endif
 
-extern unsigned int gMsgTaskbarRestart;
-
-#define TRAY_MENU_ACTIVER    1
-#define TRAY_MENU_PROPRIETES 2
-#define TRAY_MENU_QUITTER    3
-#define TRAY_MENU_MDP		4
-#define TRAY_MENU_PORTAL		5
-#define TRAY_MENU_THIS_APPLI	6
-#define TRAY_MENU_APPNSITES  7
-#define TRAY_MENU_SSO_NOW	8
-#define TRAY_MENU_LAUNCH_APP 9
-#define TRAY_MENU_CHANGEAPPPWD 10
-#define TRAY_MENU_MDP_WINDOWS 11
-#define TRAY_PASTE_PASSWORD 99

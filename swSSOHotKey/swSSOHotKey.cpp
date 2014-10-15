@@ -28,25 +28,41 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// swSSOTray.h
+
+#include "stdafx.h"
+
 //-----------------------------------------------------------------------------
-
-HWND CreateMainWindow(void);
-int  CreateSystray(HWND wMain);
-void DestroySystray(HWND wMain);
-void SSOActivate(HWND w);
-
-extern unsigned int gMsgTaskbarRestart;
-
-#define TRAY_MENU_ACTIVER    1
-#define TRAY_MENU_PROPRIETES 2
-#define TRAY_MENU_QUITTER    3
-#define TRAY_MENU_MDP		4
-#define TRAY_MENU_PORTAL		5
-#define TRAY_MENU_THIS_APPLI	6
-#define TRAY_MENU_APPNSITES  7
-#define TRAY_MENU_SSO_NOW	8
-#define TRAY_MENU_LAUNCH_APP 9
-#define TRAY_MENU_CHANGEAPPPWD 10
-#define TRAY_MENU_MDP_WINDOWS 11
+// KeyboardProc()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+SWSSOHOTKEY_API LRESULT CALLBACK KeyboardProc(int code,WPARAM wp,LPARAM lp)
+{
+	TRACE((TRACE_ENTER,_F_, "code=%d wp=0x%08lx lp=0x%08lx",code,wp,lp));
+	
+	if (code==HC_ACTION)
+	{
+		int np = (lp & 0x8000);
+		int nCtrl = GetKeyState(VK_CONTROL) & 0x8000;
+		int nAlt = GetKeyState(VK_MENU) & 0x8000;
+		
+		if (wp == 0x4C && np==0 && nCtrl!=0 && nAlt!=0)
+		{
+			TRACE((TRACE_INFO,_F_,"Combinaison coller mot de passe"));
+			// cherche fenêtre technique swSSO et lui envoie un message
+			HWND w=FindWindow("swSSOClass","swSSOTray");
+			if (w==NULL)
+			{
+				TRACE((TRACE_ERROR,_F_,"swSSO window not found"));
+				goto end;
+			}
 #define TRAY_PASTE_PASSWORD 99
+			TRACE((TRACE_DEBUG,_F_,"PostMessage to HWND=0x%08lx",w));
+			PostMessage(w,WM_APP, 0, MAKELONG(TRAY_PASTE_PASSWORD,0));
+		}
+	}
+
+end:
+	TRACE((TRACE_LEAVE,_F_, ""));
+	return CallNextHookEx(NULL, code, wp, lp);
+}
