@@ -42,6 +42,12 @@ static int giRefreshTimer=10;
 
 char gszNewAppPwd[LEN_PWD+1];
 
+static char *gpszClipboardPassword=NULL;
+
+HWND gwPopChangeAppPwdDialogProc=NULL;
+HWND gwSaveNewAppPwdDialogProc=NULL;
+HWND gwConfirmNewAppPwdDialogProc=NULL;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -301,7 +307,14 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_CHANGEAPPPWD: // ISSUE#107
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_CHANGEAPPPWD"));
-					BeginChangeAppPassword();
+					if (gwPopChangeAppPwdDialogProc!=NULL)
+						SetForegroundWindow(gwPopChangeAppPwdDialogProc);
+					else if (gwSaveNewAppPwdDialogProc!=NULL)
+						SetForegroundWindow(gwSaveNewAppPwdDialogProc);
+					else if (gwConfirmNewAppPwdDialogProc)
+						SetForegroundWindow(gwConfirmNewAppPwdDialogProc);
+					else 
+						BeginChangeAppPassword();
 					break;
 				case TRAY_MENU_QUITTER:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_QUITTER"));
@@ -309,8 +322,11 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					PostQuitMessage(0);
 					break;
 				case TRAY_PASTE_PASSWORD:
-					TRACE((TRACE_INFO,_F_, "TRAY_PASTE_PASSWORD"));
-					MessageBox(NULL,"TRAY_PASTE_PASSWORD","",MB_OK);
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_PASTE_PASSWORD gpszClipboardPassword=0x%08lx",gpszClipboardPassword));
+					if (AskPwd(NULL,FALSE)==0)
+					{
+						if (gpszClipboardPassword!=NULL) KBSim(FALSE,0,gpszClipboardPassword,TRUE);
+					}
 					break;
 			}
 			break;
@@ -470,6 +486,7 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
 			if (giRefreshTimer==giTimer) giRefreshTimer=11;
 			SetTimer(w,giRefreshTimer,200,NULL);
+			gwPopChangeAppPwdDialogProc=w;
 			break;
 		case WM_TIMER:
 			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
@@ -524,6 +541,9 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			break;
 		case WM_ACTIVATE:
 			InvalidateRect(w,NULL,FALSE);
+			break;
+		case WM_DESTROY:
+			gwPopChangeAppPwdDialogProc=NULL;
 			break;
 	}
 	return rc;
@@ -662,6 +682,7 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
 			if (giRefreshTimer==giTimer) giRefreshTimer=11;
 			SetTimer(w,giRefreshTimer,200,NULL);
+			gwSaveNewAppPwdDialogProc=w;
 			break;
 		case WM_TIMER:
 			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
@@ -732,6 +753,9 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		case WM_ACTIVATE:
 			InvalidateRect(w,NULL,FALSE);
 			break;
+		case WM_DESTROY:
+			gwSaveNewAppPwdDialogProc=NULL;
+			break;
 	}
 	return rc;
 }
@@ -770,6 +794,7 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
 			if (giRefreshTimer==giTimer) giRefreshTimer=11;
 			SetTimer(w,giRefreshTimer,200,NULL);
+			gwConfirmNewAppPwdDialogProc=w;
 			break;
 		}
 		case WM_TIMER:
@@ -814,9 +839,13 @@ static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM 
 		case WM_ACTIVATE:
 			InvalidateRect(w,NULL,FALSE);
 			break;
+		case WM_DESTROY:
+			gwConfirmNewAppPwdDialogProc=NULL;
+			break;
 	}
 	return rc;
 }
+
 
 //-----------------------------------------------------------------------------
 // BeginChangeAppPassword()
@@ -835,14 +864,12 @@ int BeginChangeAppPassword(void)
 
 	if (InstallHotKey()!=0) goto end;
 
-	// déchiffre le mot de passe de l'application, essaie de le saisir et le copie dans le presse papier
+	// déchiffre le mot de passe de l'application, essaie de le saisir (si configuré) et le garde en mémoire pour que l'utilisateur puisse le coller
 	if ((*gptActions[giLastApplicationSSO].szPwdEncryptedValue!=0))
 	{
-		char *pszPassword=swCryptDecryptString(gptActions[giLastApplicationSSO].szPwdEncryptedValue,ghKey1);
-		if (pszPassword!=NULL) 
+		gpszClipboardPassword=swCryptDecryptString(gptActions[giLastApplicationSSO].szPwdEncryptedValue,ghKey1);
+		if (gpszClipboardPassword!=NULL) 
 		{
-			// copie le mot de passedans le presse-papier
-			ClipboardCopy(pszPassword);
 			// si remplissage de l'ancien mot de passe demandé et que la fenêtre est toujours présente
 			if (gbOldPwdAutoFill && gptActions[giLastApplicationSSO].wLastSSO!=NULL && IsWindow(gptActions[giLastApplicationSSO].wLastSSO))
 			{
@@ -850,11 +877,9 @@ int BeginChangeAppPassword(void)
 				SetForegroundWindow(gptActions[giLastApplicationSSO].wLastSSO);
 				// saisie à l'aveugle de l'ancien mot de passe, en espérant que ce soit le champ avec le focus...
 				TRACE((TRACE_INFO,_F_,"Fenetre 0x%08lx tjs presente, saisie de l'ancien mdp",gptActions[giLastApplicationSSO].wLastSSO));
-				KBSim(FALSE,200,pszPassword,TRUE);	
+				KBSim(FALSE,200,gpszClipboardPassword,TRUE);	
 				bOldPwdFillDone=1;
 			}
-			SecureZeroMemory(pszPassword,strlen(pszPassword));
-			free(pszPassword);
 		}
 	}
 	
@@ -867,7 +892,6 @@ int BeginChangeAppPassword(void)
 			goto end;
 		}
 	}
-
 	while (!bDone)
 	{
 		// 2ème popup : demande à l'utilisateur de saisir son nouveau mot de passe et lui permet de le copier dans le presse papier
@@ -923,6 +947,15 @@ int BeginChangeAppPassword(void)
 	ClipboardDelete();
 
 end:
+	gwPopChangeAppPwdDialogProc=NULL;
+	gwSaveNewAppPwdDialogProc=NULL;
+	gwConfirmNewAppPwdDialogProc=NULL;
+	if (gpszClipboardPassword!=NULL)
+	{
+		SecureZeroMemory(gpszClipboardPassword,strlen(gpszClipboardPassword));
+		free(gpszClipboardPassword);
+		gpszClipboardPassword=NULL;
+	}
 	UninstallHotKey();
 	SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
 	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);

@@ -40,13 +40,15 @@ SWSSOHOTKEY_API LRESULT CALLBACK KeyboardProc(int code,WPARAM wp,LPARAM lp)
 {
 	TRACE((TRACE_ENTER,_F_, "code=%d wp=0x%08lx lp=0x%08lx",code,wp,lp));
 	
-	if (code==HC_ACTION)
+	if (code==HC_ACTION && (lp & 0x80000000))
 	{
 		int np = (lp & 0x8000);
-		int nCtrl = GetKeyState(VK_CONTROL) & 0x8000;
-		int nAlt = GetKeyState(VK_MENU) & 0x8000;
+		// int nLWin=GetKeyState(VK_LWIN) & 0x8000;
+		 int nCtrl = GetKeyState(VK_CONTROL) & 0x8000;
+		 int nAlt = GetKeyState(VK_MENU) & 0x8000;
 		
-		if (wp == 0x4C && np==0 && nCtrl!=0 && nAlt!=0)
+		if (wp == 0x56 && np==0 && nCtrl!=0 && nAlt!=0)
+		//if (wp == 0x56 && np==0 && nLWin!=0)
 		{
 			TRACE((TRACE_INFO,_F_,"Combinaison coller mot de passe"));
 			// cherche fenêtre technique swSSO et lui envoie un message
@@ -57,8 +59,13 @@ SWSSOHOTKEY_API LRESULT CALLBACK KeyboardProc(int code,WPARAM wp,LPARAM lp)
 				goto end;
 			}
 #define TRAY_PASTE_PASSWORD 99
+			// il faut relacher les touches sinon la saisie se passe mal ensuite !
+			// keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); 
+			// keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); 
+			// keybd_event(VK_LWIN,LOBYTE(MapVirtualKey(VK_LWIN,0)),KEYEVENTF_KEYUP,0); 
+
 			TRACE((TRACE_DEBUG,_F_,"PostMessage to HWND=0x%08lx",w));
-			PostMessage(w,WM_APP, 0, MAKELONG(TRAY_PASTE_PASSWORD,0));
+			PostMessage(w,WM_COMMAND,MAKEWORD(TRAY_PASTE_PASSWORD,0),0);
 		}
 	}
 
