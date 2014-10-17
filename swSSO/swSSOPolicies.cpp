@@ -136,6 +136,8 @@ BOOL gbSSOInternetExplorer_DefaultValue=TRUE;		// 1.04
 BOOL gbSSOFirefox_DefaultValue=TRUE;				// 1.04
 BOOL gbSSOChrome_DefaultValue=TRUE;					// 1.04
 
+char gszPastePwd_Text[100];
+
 //-----------------------------------------------------------------------------
 // LoadPolicies()
 //-----------------------------------------------------------------------------
@@ -159,6 +161,7 @@ void LoadPolicies(void)
 	strcpy_s(gszErrorServerConfigNotFound,sizeof(gszErrorServerConfigNotFound),GetString(IDS_CONFIG_NOT_FOUND));
 	*gszLogFileName=0;
 	*gszWelcomeMessage=0;
+	*gszPastePwd_Text=0;
 
 	//--------------------------------------------------------------
 	// GLOBAL POLICY
@@ -604,7 +607,21 @@ void LoadPolicies(void)
 
 		RegCloseKey(hKey);
 	}
+	//--------------------------------------------------------------
+	// REGKEY_HOTKEY
+	//--------------------------------------------------------------
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_HOTKEY,0,KEY_READ,&hKey);
+	if (rc==ERROR_SUCCESS)
+	{
+	
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_PASTEPWD_TEXT,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+			strcpy_s(gszPastePwd_Text,sizeof(gszPastePwd_Text),szValue);
 
+		RegCloseKey(hKey);
+	}
 #ifdef TRACES_ACTIVEES
 	int i;
 	TRACE((TRACE_INFO,_F_,"GLOBAL POLICY --------------"));
@@ -692,7 +709,8 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbSSOInternetExplorer_DefaultValue=%d",gbSSOInternetExplorer_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"gbSSOFirefox_DefaultValue=%d",gbSSOFirefox_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"gbSSOChrome_DefaultValue=%d",gbSSOChrome_DefaultValue));
-
+	TRACE((TRACE_INFO,_F_,"REGKEY_HOTKEY ---------"));
+	TRACE((TRACE_INFO,_F_,"gszPastePwd_Text=%s",gszPastePwd_Text));
 #endif
 
 	TRACE((TRACE_LEAVE,_F_, ""));

@@ -673,8 +673,8 @@ STRINGTABLE
     IDS_PP_WINDOWS                "AES-256 et PBKDF2 (mot de passe Windows)"
     IDS_PLEASE_ENTER_WINDOWS_PASSWORD "Veuillez saisir ci-dessous votre mot de passe Windows :"
     IDS_MENU_CHANGEAPPPWD         "Changer le mot de passe de cette application"
-    IDS_MSG_CHANGE_APP_PWD_1      "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V."
-    IDS_MSG_CHANGE_APP_PWD_2      "L'ancien mot de passe a été copié dans le presse-papier. Si nécessaire, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V."
+    IDS_MSG_CHANGE_APP_PWD_1      "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison %s"
+    IDS_MSG_CHANGE_APP_PWD_2      "Si nécessaire, vous pouvez coller l'ancien mot de passe dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison %s"
     IDS_TIP_TB_ID                 "Votre identifiant pour cette application"
     IDS_TIP_TB_PWD                "Votre mot de passe pour cette application. Cliquez sur la loupe pour le révéler."
     IDS_TIP_CB_TYPE               "Type de la fenêtre : choisir 'Site Web (configuration simplifiée)' pour configurer un site Internet ou une application Intranet"
@@ -710,6 +710,7 @@ STRINGTABLE
     IDS_PP_NOMASTERPWD            "AES-256 et PBKDF2 (sans mot de passe maître)"
     IDS_MENU_MDP_WINDOWS          "&Mot de passe Windows..."
     IDS_ERROR_WINDOWS_SSO_LOGON3  "Erreur au démarrage de swSSO.\r\nVeuillez fermer et rouvrir votre session Windows.\r\nSi le problème persiste, contactez votre support."
+    IDS_MSG_CHANGE_APP_PWD_3      "Collez ensuite ce mot de passe dans les champs ""nouveau mot de passe"" de l'application avec la combinaison %s"
 }
 
 

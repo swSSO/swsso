@@ -28,35 +28,22 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
+// swSSOPolicies.h
+//-----------------------------------------------------------------------------
 
-#include "stdafx.h"
+//-----------------------------------------------------------------------------
+#define REGKEY_HOTKEY "SOFTWARE\\swSSO\\HotKey"
+//-----------------------------------------------------------------------------
+#define REGVALUE_PASTEPWD_CTRL	"PastePwd_Ctrl"
+#define REGVALUE_PASTEPWD_ALT 	"PastePwd_Alt"
+#define REGVALUE_PASTEPWD_SHIFT	"PastePwd_Shift"
+#define REGVALUE_PASTEPWD_WIN	"PastePwd_Win"
+#define REGVALUE_PASTEPWD_KEY	"PastePwd_Key"
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-					 )
-{
-	UNREFERENCED_PARAMETER(hModule);
-	UNREFERENCED_PARAMETER(ul_reason_for_call);
-	UNREFERENCED_PARAMETER(lpReserved);
+extern int giPastePwd_Ctrl;
+extern int giPastePwd_Alt;
+extern int giPastePwd_Shift;
+extern int giPastePwd_Win;
+extern int giPastePwd_Key;
 
-	switch (ul_reason_for_call)
-	{
-		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
-			TRACE_OPEN();
-			TRACE((TRACE_ENTER,_F_,"ATTACH"));
-			LoadPolicies();
-			TRACE((TRACE_LEAVE,_F_,"ATTACH"));
-			break;
-		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH:
-			TRACE((TRACE_ENTER,_F_,"DETACH"));
-			
-			TRACE((TRACE_LEAVE,_F_,"DETACH"));
-			TRACE_CLOSE();
-			break;
-	}
-	return TRUE;
-}
-
+void LoadPolicies(void);

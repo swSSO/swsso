@@ -260,14 +260,27 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					WindowChangeMasterPwd(FALSE);
 					break;
 				case TRAY_MENU_MDP_WINDOWS:
+					char szLastADPwdChange[14+1];
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_MDP_WINDOWS"));
 					if (!gbSSOActif && !gbReactivateWithoutPwd)
 					{
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
 					}
-					AskADPwd(FALSE);
-					SaveConfigHeader();
+					if (AskADPwd(FALSE)==0)
+					{
+						*szLastADPwdChange=0;
+						if (GetLastADPwdChange(szLastADPwdChange)==0) 
+						{
+							TRACE((TRACE_INFO,_F_,"lastADPwdChange dans l'AD    : %s",szLastADPwdChange));
+							strcpy_s(gszLastADPwdChange,sizeof(gszLastADPwdChange),szLastADPwdChange);
+						} 
+						else // si AD non dispo, pas grave, on verra la prochaine fois
+						{
+							TRACE((TRACE_ERROR,_F_,"Impossible de récupérer la date de dernier changement de mdp dans l'AD"));
+						}
+						SaveConfigHeader();
+					}
 					break;
 				case TRAY_MENU_PORTAL:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_PORTAL"));
@@ -323,10 +336,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_PASTE_PASSWORD:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_PASTE_PASSWORD gpszClipboardPassword=0x%08lx",gpszClipboardPassword));
-					if (AskPwd(NULL,FALSE)==0)
-					{
-						if (gpszClipboardPassword!=NULL) KBSim(FALSE,0,gpszClipboardPassword,TRUE);
-					}
+					if (gpszClipboardPassword!=NULL) KBSim(FALSE,0,gpszClipboardPassword,TRUE);
 					break;
 			}
 			break;
@@ -460,7 +470,9 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 	switch (msg)
 	{
 		case WM_INITDIALOG:
+		{
 			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			char szMsg[1024];
 			int cx;
 			int cy;
 			RECT rect;
@@ -473,7 +485,8 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			SetDlgItemText(w,TX_ID,gptActions[giLastApplicationSSO].szId1Value);
 			SetDlgItemText(w,TX_APP_NAME,gptActions[giLastApplicationSSO].szApplication);
 			// affiche un message différent si la saisie automatique du mot de passe n'a pas été faite ou n'était pas demandée
-			SetDlgItemText(w,TX_FRAME2,GetString(lp==1?IDS_MSG_CHANGE_APP_PWD_1:IDS_MSG_CHANGE_APP_PWD_2));
+			wsprintf(szMsg,GetString(lp==1?IDS_MSG_CHANGE_APP_PWD_1:IDS_MSG_CHANGE_APP_PWD_2),gszPastePwd_Text);
+			SetDlgItemText(w,TX_FRAME2,szMsg);
 			// positionnement en bas à droite de l'écran, près de l'icone swSSO
 			cx = GetSystemMetrics( SM_CXSCREEN );
 			cy = GetSystemMetrics( SM_CYSCREEN );
@@ -488,6 +501,7 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			SetTimer(w,giRefreshTimer,200,NULL);
 			gwPopChangeAppPwdDialogProc=w;
 			break;
+		}
 		case WM_TIMER:
 			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
 			if (giRefreshTimer==(int)wp) 
@@ -516,7 +530,6 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			switch (LOWORD(wp))
 			{
 				case IDOK:
-				{
 					// L'utilisateur ne veut plus voir le message
 					if (IsDlgButtonChecked(w,CK_VIEW))
 					{
@@ -525,11 +538,9 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 					}
 					EndDialog(w,IDOK);
 					break;
-				}
 				case IDCANCEL:
-				{
 					EndDialog(w,IDCANCEL);
-				}
+					break;
 			}
 			break;
 		case WM_HELP:
@@ -597,7 +608,7 @@ end:
 }
 
 HINSTANCE ghinstHotKeyDLL=NULL; 
-HHOOK hHookKeyboard=NULL;
+HHOOK ghHookKeyboard=NULL;
 
 //-----------------------------------------------------------------------------
 // InstallHotKey()
@@ -616,8 +627,8 @@ int InstallHotKey(void)
 	hookproc=(HOOKPROC)GetProcAddress(ghinstHotKeyDLL,"KeyboardProc"); 
 	if (hookproc==NULL) { TRACE((TRACE_ERROR, _F_, "GetProcAddress(KeyboardProc)", GetLastError())); goto end; }
 
-	hHookKeyboard=SetWindowsHookEx(WH_KEYBOARD,hookproc,ghinstHotKeyDLL,0);
-	if (hHookKeyboard==NULL) { TRACE((TRACE_ERROR, _F_, "SetWindowsHookEx(WH_KEYBOARD)", GetLastError())); goto end; }
+	ghHookKeyboard=SetWindowsHookEx(WH_KEYBOARD,hookproc,ghinstHotKeyDLL,0);
+	if (ghHookKeyboard==NULL) { TRACE((TRACE_ERROR, _F_, "SetWindowsHookEx(WH_KEYBOARD)", GetLastError())); goto end; }
 
 	rc=0;
 end:
@@ -635,7 +646,7 @@ int UninstallHotKey(void)
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 	
-	if (hHookKeyboard!=NULL) { UnhookWindowsHookEx(hHookKeyboard); hHookKeyboard=NULL; }
+	if (ghHookKeyboard!=NULL) { UnhookWindowsHookEx(ghHookKeyboard); ghHookKeyboard=NULL; }
 
 	if (ghinstHotKeyDLL!=NULL) { FreeLibrary(ghinstHotKeyDLL); ghinstHotKeyDLL=NULL; }
 
@@ -658,6 +669,8 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	switch (msg)
 	{
 		case WM_INITDIALOG:
+		{
+			char szMsg[1024];
 			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
 			int cx;
 			int cy;
@@ -668,6 +681,9 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// limitation champs de saisie
 			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,LEN_PWD,0);
 			SendMessage(GetDlgItem(w,TB_PWD_CLEAR),EM_LIMITTEXT,LEN_PWD,0);
+			// personnalise le message avec la bonne combinaison de touche
+			wsprintf(szMsg,GetString(IDS_MSG_CHANGE_APP_PWD_3),gszPastePwd_Text);
+			SetDlgItemText(w,TX_FRAME2,szMsg);
 			// Avertissement en gras
 			SetTextBold(w, TX_FRAME3);
 			// positionnement en bas à droite de l'écran, près de l'icone swSSO
@@ -684,6 +700,7 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			SetTimer(w,giRefreshTimer,200,NULL);
 			gwSaveNewAppPwdDialogProc=w;
 			break;
+		}
 		case WM_TIMER:
 			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
 			if (giRefreshTimer==(int)wp) 
@@ -723,10 +740,11 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				}
 				case IDB_COPIER:
 				{
-					char szPwd[LEN_PWD+1];
-					GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,szPwd,LEN_PWD+1);
-					ClipboardCopy(szPwd);
-					SecureZeroMemory(szPwd,LEN_PWD+1);
+					gpszClipboardPassword=(char*)malloc(LEN_PWD+1);
+					if (gpszClipboardPassword!=NULL)
+					{
+						GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,gpszClipboardPassword,LEN_PWD+1);
+					}
 					break;
 				}
 				case TB_PWD:
@@ -859,8 +877,11 @@ int BeginChangeAppPassword(void)
 	BOOL bDone=FALSE;
 	char *pszEncryptedPassword=NULL;
 	BOOL bOldPwdFillDone=0;
-	
+	int ret;
+		
 	if (giLastApplicationSSO==-1) goto end; // ne peut pas se produire en théorie puisque le menu systray n'est affiché que si !=1
+
+	if (AskPwd(NULL,FALSE)!=0) goto end;
 
 	if (InstallHotKey()!=0) goto end;
 
@@ -886,7 +907,8 @@ int BeginChangeAppPassword(void)
 	// 1ère popup : informe l'utilisateur que son mot de passe a été copié dans le presse papier
 	if (gbDisplayChangeAppPwdDialog)
 	{
-		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_POP_CHANGE_APP_PWD),NULL,PopChangeAppPwdDialogProc,bOldPwdFillDone)==IDCANCEL) 
+		ret=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_POP_CHANGE_APP_PWD),NULL,PopChangeAppPwdDialogProc,bOldPwdFillDone);
+		if (ret==IDCANCEL)
 		{
 			TRACE((TRACE_INFO,_F_,"Annulation par l'utilisateur"));
 			goto end;
@@ -950,12 +972,7 @@ end:
 	gwPopChangeAppPwdDialogProc=NULL;
 	gwSaveNewAppPwdDialogProc=NULL;
 	gwConfirmNewAppPwdDialogProc=NULL;
-	if (gpszClipboardPassword!=NULL)
-	{
-		SecureZeroMemory(gpszClipboardPassword,strlen(gpszClipboardPassword));
-		free(gpszClipboardPassword);
-		gpszClipboardPassword=NULL;
-	}
+	if (gpszClipboardPassword!=NULL) { SecureZeroMemory(gpszClipboardPassword,strlen(gpszClipboardPassword)); free(gpszClipboardPassword); gpszClipboardPassword=NULL; }
 	UninstallHotKey();
 	SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
 	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);

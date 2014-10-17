@@ -246,6 +246,12 @@ extern BOOL gbSSOInternetExplorer_DefaultValue;			// 1.04
 extern BOOL gbSSOFirefox_DefaultValue;					// 1.04
 extern BOOL gbSSOChrome_DefaultValue;					// 1.04
 
+//-----------------------------------------------------------------------------
+#define REGKEY_HOTKEY "SOFTWARE\\swSSO\\HotKey"
+//-----------------------------------------------------------------------------
+#define REGVALUE_PASTEPWD_TEXT	"PastePwd_Text"
+extern char gszPastePwd_Text[];
+
 // FONCTIONS PUBLIQUES
 void LoadPolicies(void);
 BOOL IsPasswordPolicyCompliant(const char *szPwd);

@@ -347,3 +347,4 @@
 #define IDS_PP_NOMASTERPWD                      40144
 #define IDS_MENU_MDP_WINDOWS                    40145
 #define IDS_ERROR_WINDOWS_SSO_LOGON3            40146
+#define IDS_MSG_CHANGE_APP_PWD_3                40147

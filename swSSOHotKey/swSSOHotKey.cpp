@@ -42,13 +42,15 @@ SWSSOHOTKEY_API LRESULT CALLBACK KeyboardProc(int code,WPARAM wp,LPARAM lp)
 	
 	if (code==HC_ACTION && (lp & 0x80000000))
 	{
-		int np = (lp & 0x8000);
-		// int nLWin=GetKeyState(VK_LWIN) & 0x8000;
-		 int nCtrl = GetKeyState(VK_CONTROL) & 0x8000;
-		 int nAlt = GetKeyState(VK_MENU) & 0x8000;
+		int iCtrl,iAlt,iShift,iWin;
 		
-		if (wp == 0x56 && np==0 && nCtrl!=0 && nAlt!=0)
-		//if (wp == 0x56 && np==0 && nLWin!=0)
+		iCtrl=(giPastePwd_Ctrl==1)	 ? GetKeyState(VK_CONTROL) & 0x8000 : 1;
+		iAlt=(giPastePwd_Alt==1)	 ? GetKeyState(VK_MENU) & 0x8000 : 1;
+		iShift=(giPastePwd_Shift==1) ? GetKeyState(VK_SHIFT) & 0x8000 : 1;
+		iWin=(giPastePwd_Win==1)	 ? GetKeyState(VK_LWIN) & 0x8000 : 1;
+
+		TRACE((TRACE_DEBUG,_F_,"iCtrl=%d iAlt=%d iShift=%d iWin=%d",iCtrl,iAlt,iShift,iWin));
+		if (wp==(WPARAM)giPastePwd_Key && ((lp & 0x8000)==0) && iCtrl && iAlt && iShift && iWin)
 		{
 			TRACE((TRACE_INFO,_F_,"Combinaison coller mot de passe"));
 			// cherche fenêtre technique swSSO et lui envoie un message
@@ -60,9 +62,10 @@ SWSSOHOTKEY_API LRESULT CALLBACK KeyboardProc(int code,WPARAM wp,LPARAM lp)
 			}
 #define TRAY_PASTE_PASSWORD 99
 			// il faut relacher les touches sinon la saisie se passe mal ensuite !
-			// keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); 
-			// keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); 
-			// keybd_event(VK_LWIN,LOBYTE(MapVirtualKey(VK_LWIN,0)),KEYEVENTF_KEYUP,0); 
+			if (iCtrl==0x8000) keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); 
+			if (iAlt==0x8000) keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); 
+			if (iShift==0x8000) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0); 
+			if (iWin==0x8000) keybd_event(VK_LWIN,LOBYTE(MapVirtualKey(VK_LWIN,0)),KEYEVENTF_KEYUP,0); 
 
 			TRACE((TRACE_DEBUG,_F_,"PostMessage to HWND=0x%08lx",w));
 			PostMessage(w,WM_COMMAND,MAKEWORD(TRAY_PASTE_PASSWORD,0),0);

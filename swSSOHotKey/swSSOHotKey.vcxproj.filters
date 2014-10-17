@@ -30,6 +30,9 @@
     <ClInclude Include="swSSOTrace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="swSSOPolicies.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -42,6 +45,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="swSSOTrace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOPolicies.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

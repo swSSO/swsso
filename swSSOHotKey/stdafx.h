@@ -38,5 +38,6 @@
 // Windows Header Files:
 #include <windows.h>
 #include "swSSOTrace.h"
+#include "swSSOPolicies.h"
 #include "swSSOHotKey.h"
 
