@@ -173,6 +173,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_SERVER_PORT						"ServerPort"
 #define REGVALUE_SERVER_HTTPS						"ServerHTTPS"
 #define REGVALUE_USE_AD_PASSWORD					"UseADPassword"
+#define REGVALUE_DISPLAY_WINDOWS_PASSWORD_CHANGE	"DisplayWindowsPasswordChange"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -203,6 +204,7 @@ extern int  giMaxConfigs;					// 1.01 : nb max de configurations - ISSUE#149
 extern BOOL gbServerHTTPS;					// 1.03 - ISSUE#162
 extern int  giServerPort;					// 1.03 - ISSUE#162
 extern BOOL gbUseADPasswordForAppLogin;		// 1.03 - permet d'utiliser %ADPASSWORD% dans le champ mot de passe (n'utilise pas (encore) swSSOCM --> le mdp AD est demandé à l'utilisateur)
+extern BOOL gbDisplayWindowsPasswordChange; // 1.05 - affiche / masque le message affiché lors du changement de mot de passe windows (en mode chaîné)
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

@@ -174,3 +174,5 @@ $RECYCLE.BIN/
 *.stat
 /Documentation/Release Notes/swSSO.1.03.odt
 /swSSO/swSSO.ini
+/swSSOHotKey/Debug/swSSOHotKey.tlog
+/swSSOHotKey/Debug

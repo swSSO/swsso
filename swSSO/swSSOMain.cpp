@@ -38,8 +38,8 @@
 #include "ISimpleDOMDocument_i.c"
 
 // Un peu de globales...
-const char gcszCurrentVersion[]="104";	// 101 = 1.01
-const char gcszCurrentBeta[]="1051";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentVersion[]="105";	// 101 = 1.01
+const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 static HWND gwMain=NULL;
 
@@ -154,9 +154,13 @@ static void CALLBACK TimerProc(HWND w,UINT msg,UINT idEvent,DWORD dwTime)
 	{
 		TRACE((TRACE_INFO,_F_,"WaitForSingleObject : swsso-pwdchange event received"));
 		if (ChangeWindowsPwd()==0)
-			MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+		{
+			if (gbDisplayWindowsPasswordChange) MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+		}
 		else
+		{
 			MessageBox(w,GetString(IDS_CHANGE_PWD_FAILED),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+		}
 	}
 
 	if (gbSSOActif) 

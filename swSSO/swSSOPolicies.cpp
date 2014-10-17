@@ -77,6 +77,7 @@ BOOL gbNoMasterPwd=FALSE;
 BOOL gbShowAutoLockOption=TRUE;
 // ISSUE#183
 BOOL gbEnableOption_ShowBrowsers=TRUE;
+BOOL gbShowMenu_UploadWithIdPwd=FALSE;			// 1.03 - active le menu "Uploader avec identifiant et mot de passe"
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -114,7 +115,7 @@ int  giMaxConfigs=500;						// 1.01 : nb max de configurations - ISSUE#149
 BOOL gbServerHTTPS=FALSE;						// 1.03 - ISSUE#162
 int  giServerPort=INTERNET_DEFAULT_HTTP_PORT;	// 1.03 - ISSUE#162
 BOOL gbUseADPasswordForAppLogin=FALSE;			// 1.03 - permet d'utiliser %ADPASSWORD% dans le champ mot de passe (n'utilise pas (encore) swSSOCM --> le mdp AD est demandé à l'utilisateur)
-BOOL gbShowMenu_UploadWithIdPwd=FALSE;				// 1.03 - active le menu "Uploader avec identifiant et mot de passe"
+BOOL gbDisplayWindowsPasswordChange=TRUE;	// 1.05 - affiche / masque le message affiché lors du changement de mot de passe windows (en mode chaîné)
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -513,6 +514,10 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_USE_AD_PASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbUseADPasswordForAppLogin=(BOOL)dwValue; 
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DISPLAY_WINDOWS_PASSWORD_CHANGE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbDisplayWindowsPasswordChange=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -687,6 +692,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbStat=%d"							,gbStat));
 	TRACE((TRACE_INFO,_F_,"giMaxConfigs=%d"						,giMaxConfigs));
 	TRACE((TRACE_INFO,_F_,"gbUseADPasswordForAppLogin=%d"		,gbUseADPasswordForAppLogin));
+	TRACE((TRACE_INFO,_F_,"gbDisplayWindowsPasswordChange=%d"	,gbDisplayWindowsPasswordChange));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
