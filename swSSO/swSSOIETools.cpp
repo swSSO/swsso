@@ -36,7 +36,7 @@
 #include "stdafx.h"
 
 static HWND gwW7PopupChild;
-const char gcszK4[]="44444444";
+char gcszK4[]="44444444";
 
 //***********************************************************************************
 //                             FONCTIONS PRIVEES

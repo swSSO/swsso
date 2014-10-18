@@ -39,7 +39,7 @@
 static DWORD gdwHTTPResultFactor=2048; // 2 Ko octets par config
 static int giRefreshTimer=10;
 char gszRes[512];
-const char gcszK3[]="33333333";
+char gcszK3[]="33333333";
 WCHAR gwcTmp1_512[512+1];
 WCHAR gwcTmp2_512[512+1];
 char gszComputedValue[256+1];

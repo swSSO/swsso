@@ -84,7 +84,7 @@ BOOL gbDontAskId2,gbDontAskId3,gbDontAskId4;
 static char *gpNextComputerName=NULL;
 static char *gpComputerNameContext=NULL;
 
-const char gcszK2[]="22222222";
+char gcszK2[]="22222222";
 
 static int giRefreshTimer=10;
 
@@ -160,7 +160,12 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			if (!gbEnableOption_OpenIni) ShowWindow(GetDlgItem(w,PB_OUVRIR),SW_HIDE);
 			if (!gbEnableOption_Portal)  ShowWindow(GetDlgItem(w,PB_PARCOURIR),SW_HIDE);
 
-			if (giDomainId!=1) SetWindowText(GetDlgItem(w,TX_DOMAIN),gszDomainLabel);
+			if (giDomainId==-1)
+				SetWindowText(GetDlgItem(w,TX_DOMAIN),"Tous");
+			else if (giDomainId==1) 
+				SetWindowText(GetDlgItem(w,TX_DOMAIN),"Commun"); 
+			else 
+				SetWindowText(GetDlgItem(w,TX_DOMAIN),gszDomainLabel);
 
 			// remplit avec les valeurs de config (c'était dans PSN_SETACTIVE avant... ???)
 			if (giPwdProtection==PP_ENCRYPTED)

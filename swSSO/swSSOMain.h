@@ -77,10 +77,10 @@ extern HCRYPTKEY ghKey2;
 extern HCRYPTKEY ghKey3;
 extern HWND gwAskPwd ; 
 
-extern const char gcszK1[8+1];
-extern const char gcszK2[8+1];
-extern const char gcszK3[8+1];
-extern const char gcszK4[8+1];
+extern char gcszK1[8+1];
+extern char gcszK2[8+1];
+extern char gcszK3[8+1];
+extern char gcszK4[8+1];
 
 extern SID *gpSid;
 extern char *gpszRDN;

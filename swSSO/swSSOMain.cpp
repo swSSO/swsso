@@ -105,7 +105,7 @@ char gszUserName[UNLEN+1]="";
 
 char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-const char gcszK1[]="11111111";
+char gcszK1[]="11111111";
 
 // 0.91 : pour choix de config (fenêtre ChooseConfig)
 typedef struct
@@ -2055,7 +2055,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 
 	// lecture du header de la config (=lecture section swSSO)
 	if (GetConfigHeader()!=0) { iError=-2; goto end; }
-	
+
 	if (*gszCfgVersion==0) // version <0.50 ou premier lancement...
 	{
 		strcpy_s(gszCfgVersion,4,gcszCfgVersion);
@@ -2293,21 +2293,30 @@ askpwd:
 		{ 
 			MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); 
 		}
-		if (giDomainId==1 && giNbDomains!=0) // domaine non renseigné dans le .ini 
+		if (gbInternetManualPutConfig) // 1.05 : on ne demande pas à l'admin quel est son domaine, il doit pouvoir tous les gérer
 		{
-			int ret= SelectDomain();
-			// ret:  0 - OK, l'utilisateur a choisi, le domaine est renseigné dans giDomainId et gszDomainLabel
-			//    :  1 - Il n'y avait qu'un seul domaine, l'utilisateur n'a rien vu mais le domaine est bien renseigné
-			//    :  2 - L'utilisateur a annulé
-			//    : -1 - Erreur (serveur non disponible, ...)
-			if (ret==0 || ret==1) GetAllConfigsFromServer();
-			else if (ret==2) goto end;
-			else if (ret==-1) { MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); }
-		}
-		// 0.92 / ISSUE#26 : n'affiche pas la demande si gbDisplayConfigsNotifications=FALSE
-		else if (!gbDisplayConfigsNotifications || MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS),"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES) 
-		{
+			giDomainId=-1;
+			SaveConfigHeader();
 			GetAllConfigsFromServer();
+		}
+		else
+		{
+			if (giDomainId==1 && giNbDomains!=0) // domaine non renseigné dans le .ini 
+			{
+				int ret= SelectDomain();
+				// ret:  0 - OK, l'utilisateur a choisi, le domaine est renseigné dans giDomainId et gszDomainLabel
+				//    :  1 - Il n'y avait qu'un seul domaine, l'utilisateur n'a rien vu mais le domaine est bien renseigné
+				//    :  2 - L'utilisateur a annulé
+				//    : -1 - Erreur (serveur non disponible, ...)
+				if (ret==0 || ret==1) GetAllConfigsFromServer();
+				else if (ret==2) goto end;
+				else if (ret==-1) { MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); }
+			}
+			// 0.92 / ISSUE#26 : n'affiche pas la demande si gbDisplayConfigsNotifications=FALSE
+			else if (!gbDisplayConfigsNotifications || MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS),"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES) 
+			{
+				GetAllConfigsFromServer();
+			}
 		}
 	}
 	else // CAS DES LANCEMENTS ULTERIEURS (avec configurations déjà enregistrées)
