@@ -127,6 +127,7 @@ T_DOMAIN gtabDomains[100];
 int giNbDomains=0;
 
 BOOL gbWillTerminate=FALSE;
+BOOL gbAdmin=FALSE;
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -1258,7 +1259,7 @@ static int LoadIcons(void)
 					0,
 					LR_DEFAULTSIZE);
 	if (ghIconAltTab==NULL) goto end;
-	ghIconSystrayActive=(HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDI_SYSTRAY_ACTIVE),IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
+	ghIconSystrayActive=(HICON)LoadImage(ghInstance, gbAdmin ? MAKEINTRESOURCE(IDI_SYSTRAY_ADMIN_ACTIVE):MAKEINTRESOURCE(IDI_SYSTRAY_ACTIVE),IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
 	if (ghIconSystrayActive==NULL) goto end;
 	ghIconSystrayInactive=(HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDI_SYSTRAY_INACTIVE), IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
 	if (ghIconSystrayInactive==NULL) goto end;
@@ -1992,9 +1993,31 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		if (*lpCmdLine==' ') lpCmdLine++;
 		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
 	}
+	// ISSUE#205 : mode admin
+	if (strnistr(lpCmdLine,"/admin",-1)!=NULL) 
+	{
+		gbAdmin=TRUE;
+		// supprime le paramètre de la ligne de commande 
+		// pour traitement du path éventuellement spécifié pour le .ini
+		lpCmdLine+=strlen("/admin");
+		if (*lpCmdLine==' ') lpCmdLine++;
+		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
+	}
+	else if (strnistr(lpCmdLine,"-admin",-1)!=NULL) 
+	{
+		gbAdmin=TRUE;
+		// supprime le paramètre de la ligne de commande 
+		// pour traitement du path éventuellement spécifié pour le .ini
+		lpCmdLine+=strlen("-admin");
+		if (*lpCmdLine==' ') lpCmdLine++;
+		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
+	}
 	
 	// 0.42 vérif pas déjà lancé
-	hMutex=CreateMutex(NULL,TRUE,"swSSO.exe");
+	if (gbAdmin)
+		hMutex=CreateMutex(NULL,TRUE,"swSSO.exe[admin]");
+	else
+		hMutex=CreateMutex(NULL,TRUE,"swSSO.exe");
 	bAlreadyLaunched=(GetLastError()==ERROR_ALREADY_EXISTS);
 	if (bAlreadyLaunched)
 	{
@@ -2434,12 +2457,14 @@ askpwd:
 		}
 	}
 
-	if (LaunchTimer()!=0)
+	if (!gbAdmin)
 	{
-		iError=-1;
-		goto end;
+		if (LaunchTimer()!=0)
+		{
+			iError=-1;
+			goto end;
+		}
 	}
-
 	// Si -launchapp, ouvre la fenêtre ShowAppNsites
 	if (bLaunchApp) ShowLaunchApp();
 

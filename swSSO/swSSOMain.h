@@ -129,3 +129,4 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI);
 int LaunchTimer(void);
 
 extern BOOL gbWillTerminate;
+extern BOOL gbAdmin;
