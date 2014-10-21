@@ -495,7 +495,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Fichier de configuration :", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT, WS_EX_LEFT
     LTEXT           "Licence", TX_LICENCE, 7, 41, 28, 11, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Version 1.05 (18/10/2014)", TX_ABOUT, 47, 12, 120, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Version 1.06 BETA 1 (10/2014)", TX_ABOUT, 47, 12, 120, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Portail :", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1, WS_EX_LEFT
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1, WS_EX_LEFT
@@ -678,8 +678,8 @@ STRINGTABLE
     IDS_TIP_TB_ID                 "Votre identifiant pour cette application"
     IDS_TIP_TB_PWD                "Votre mot de passe pour cette application. Cliquez sur la loupe pour le révéler."
     IDS_TIP_CB_TYPE               "Type de la fenêtre : choisir 'Site Web (configuration simplifiée)' pour configurer un site Internet ou une application Intranet"
-    IDS_TIP_TB_TITRE              "Titre complet ou début du titre de la fenêtre. Les caractères joker type '*' sont acceptés en début et/ou fin de chaîne. Exemples : *titre, titre*, *titre*"
-    IDS_TIP_TB_URL                "URL complète ou partielle de l'application. Le caractère joker '*' est accepté à la fin uniquement et permet d'indiquer que seul le début de l'URL est fourni. Exemple : http://www.google.fr/*"
+    IDS_TIP_TB_TITRE              "Titre complet ou partiel de la fenêtre. Le caractère joker '*' est accepté en début et/ou milieu et/ou fin de chaîne. Exemples : *titre, titre*, *titre*, ti*re"
+    IDS_TIP_TB_URL                "URL complète ou partielle de l'application. Le caractère joker '*' est accepté en début et/ou milieu et/ou fin. Exemples : *google.fr, *g*gle.f*, http://www.google.*"
     IDS_TIP_TB_ID_ID              "En configuration simplifiée : position relative du champ identifiant par rapport au champ mot de passe. Exemple : -1 si le champ identifiant se trouve juste avant le champ mot de passe."
     IDS_TIP_TB_PWD_ID             "En configuration simplifiée : position absolue du champ mot de passe. En général, il n'y a qu'un seul champ de mot de passe et la valeur 1 convient."
     IDS_TIP_TB_VALIDATION         "En configuration simplifiée : séquence de simulation de frappe clavier à exécuter pour valider la saisie. Exemple : [ENTER]"
@@ -740,6 +740,10 @@ IDI_LOUPE          ICON           ".\\loupe-8bits.ico"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_SYSTRAY_ACTIVE ICON           "SystrayActive.ico"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_SYSTRAY_ADMIN_ACTIVE ICON           ".\\SystrayAdminActive.ico"
 
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL

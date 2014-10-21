@@ -23,6 +23,7 @@
 #define IDB_QUESTION                            208
 #define PSP_BROWSER                             210
 #define IDD_PUBLISH_TO                          212
+#define IDI_SYSTRAY_ADMIN_ACTIVE                214
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000
