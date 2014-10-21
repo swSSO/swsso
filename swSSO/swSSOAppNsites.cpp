@@ -667,6 +667,15 @@ void HideConfigControls(HWND w)
 		ShowWindow(GetDlgItem(w,TX_LANCEMENT),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_LANCEMENT),SW_HIDE);
 		ShowWindow(GetDlgItem(w,PB_PARCOURIR),SW_HIDE);
+		// ISSUE#199
+		ShowWindow(GetDlgItem(w,IMG_TYPE)	  ,SW_HIDE); 
+		ShowWindow(GetDlgItem(w,IMG_TITRE)	  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_URL)	  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID_ID)	  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_PWD_ID)	  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_VALIDATION),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_KBSIM)     ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_LANCEMENT) ,SW_HIDE);
 	}	
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
