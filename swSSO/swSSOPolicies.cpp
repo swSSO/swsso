@@ -167,7 +167,7 @@ void LoadPolicies(void)
 	//--------------------------------------------------------------
 	// GLOBAL POLICY
 	//--------------------------------------------------------------
-	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_GLOBAL_POLICY,0,KEY_READ,&hKey);
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_GLOBAL_POLICY_ADMIN:REGKEY_GLOBAL_POLICY,0,KEY_READ,&hKey);
 	if (rc==ERROR_SUCCESS)
 	{
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
@@ -321,7 +321,7 @@ void LoadPolicies(void)
 	//--------------------------------------------------------------
 	// PASSWORD POLICY
 	//--------------------------------------------------------------
-	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_PASSWORD_POLICY,0,KEY_READ,&hKey);
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_PASSWORD_POLICY_ADMIN:REGKEY_PASSWORD_POLICY,0,KEY_READ,&hKey);
 	if (rc==ERROR_SUCCESS)
 	{
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
@@ -376,7 +376,7 @@ void LoadPolicies(void)
 	//--------------------------------------------------------------
 	// ENTERPRISE OPTIONS
 	//--------------------------------------------------------------
-	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_ENTERPRISE_OPTIONS,0,KEY_READ,&hKey);
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_ENTERPRISE_OPTIONS_ADMIN:REGKEY_ENTERPRISE_OPTIONS,0,KEY_READ,&hKey);
 	if (rc==ERROR_SUCCESS)
 	{
 		dwValueType=REG_SZ;
@@ -525,7 +525,7 @@ void LoadPolicies(void)
 	//--------------------------------------------------------------
 	giNbExcludedWindows=0;
 	ZeroMemory(gtabszExcludedWindows,sizeof(gtabszExcludedWindows));
-	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_EXCLUDEDWINDOWS,0,KEY_READ,&hKey);
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_EXCLUDEDWINDOWS_ADMIN:REGKEY_EXCLUDEDWINDOWS,0,KEY_READ,&hKey);
 	if (rc==ERROR_SUCCESS)
 	{
 		char sz[2+1];
@@ -547,7 +547,7 @@ void LoadPolicies(void)
 	//--------------------------------------------------------------
 	// DEFAULT INI VALUES
 	//--------------------------------------------------------------
-	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_DEFAULTINIVALUES,0,KEY_READ,&hKey);
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_DEFAULTINIVALUES_ADMIN:REGKEY_DEFAULTINIVALUES,0,KEY_READ,&hKey);
 	if (rc==ERROR_SUCCESS)
 	{
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
@@ -615,7 +615,7 @@ void LoadPolicies(void)
 	//--------------------------------------------------------------
 	// REGKEY_HOTKEY
 	//--------------------------------------------------------------
-	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_HOTKEY,0,KEY_READ,&hKey);
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_HOTKEY_ADMIN:REGKEY_HOTKEY,0,KEY_READ,&hKey);
 	if (rc==ERROR_SUCCESS)
 	{
 	
@@ -629,6 +629,10 @@ void LoadPolicies(void)
 	}
 #ifdef TRACES_ACTIVEES
 	int i;
+	if (gbAdmin)
+	{
+		TRACE((TRACE_INFO,_F_,"Lecture dans les clés ADMIN --------------"));
+	}
 	TRACE((TRACE_INFO,_F_,"GLOBAL POLICY --------------"));
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_Portal=%d"		,gbEnableOption_Portal));
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowOptions=%d"	,gbEnableOption_ShowOptions));

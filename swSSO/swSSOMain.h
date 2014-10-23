@@ -130,3 +130,5 @@ int LaunchTimer(void);
 
 extern BOOL gbWillTerminate;
 extern BOOL gbAdmin;
+
+extern HBRUSH ghRedBrush;

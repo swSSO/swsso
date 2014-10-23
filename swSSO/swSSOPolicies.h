@@ -33,6 +33,7 @@
 
 //-----------------------------------------------------------------------------
 #define REGKEY_GLOBAL_POLICY "SOFTWARE\\swSSO\\GlobalPolicy"
+#define REGKEY_GLOBAL_POLICY_ADMIN "SOFTWARE\\swSSOAdmin\\GlobalPolicy"
 //-----------------------------------------------------------------------------
 #define REGVALUE_ENABLEOPTION_PORTAL				"SavePortal"
 #define REGVALUE_ENABLEOPTION_VIEWINI				"ViewConfigFilePath"
@@ -121,6 +122,7 @@ extern BOOL gbEnableOption_ShowBrowsers;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
+#define REGKEY_PASSWORD_POLICY_ADMIN "SOFTWARE\\swSSOAdmin\\PasswordPolicy"
 //-----------------------------------------------------------------------------
 #define REGVALUE_PASSWORD_POLICY_MINLENGTH			"MinLength"
 #define REGVALUE_PASSWORD_POLICY_MINLETTERS			"MinLetters"
@@ -148,6 +150,7 @@ extern int giPwdPolicy_MinRules;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_ENTERPRISE_OPTIONS "SOFTWARE\\swSSO\\EnterpriseOptions"
+#define REGKEY_ENTERPRISE_OPTIONS_ADMIN "SOFTWARE\\swSSOAdmin\\EnterpriseOptions"
 //-----------------------------------------------------------------------------
 #define REGVALUE_SERVER_ADDRESS						"ServerAddress"
 #define REGVALUE_WEBSERVICE_ADDRESS					"WebServiceAddress"
@@ -208,6 +211,7 @@ extern BOOL gbDisplayWindowsPasswordChange; // 1.05 - affiche / masque le messag
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"
+#define REGKEY_EXCLUDEDWINDOWS_ADMIN "SOFTWARE\\swSSOAdmin\\ExcludedWindows"
 //-----------------------------------------------------------------------------
 #define LEN_EXCLUDED_WINDOW_TITLE	200
 #define MAX_EXCLUDED_WINDOWS		25   // ISSUE#154
@@ -217,6 +221,7 @@ extern int  giNbExcludedWindows;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_DEFAULTINIVALUES "SOFTWARE\\swSSO\\DefaultIniValues"
+#define REGKEY_DEFAULTINIVALUES_ADMIN "SOFTWARE\\swSSOAdmin\\DefaultIniValues"
 //-----------------------------------------------------------------------------
 #define REGVALUE_DEFAULT_SESSION_LOCK			"sessionLock"
 #define REGVALUE_DEFAULT_CHECK_VERSION			"internetCheckVersion"
@@ -250,6 +255,7 @@ extern BOOL gbSSOChrome_DefaultValue;					// 1.04
 
 //-----------------------------------------------------------------------------
 #define REGKEY_HOTKEY "SOFTWARE\\swSSO\\HotKey"
+#define REGKEY_HOTKEY_ADMIN "SOFTWARE\\swSSOAdmin\\HotKey"
 //-----------------------------------------------------------------------------
 #define REGVALUE_PASTEPWD_TEXT	"PastePwd_Text"
 extern char gszPastePwd_Text[];

@@ -127,7 +127,6 @@ static int giSetForegroundTimer=20;
 #define MENU_AJOUTER_APPLI	50006
 #define MENU_AJOUTER_CATEG	50007
 #define MENU_PUBLISH   50008
-#define MENU_PUBLISH_ID_PWD   50009
 #define MENU_DUPLIQUER   50010
 #define MENU_IMPORTER   50011
 #define MENU_EXPORTER   50012
@@ -135,7 +134,6 @@ static int giSetForegroundTimer=20;
 #define MENU_LANCER_APPLI 50014
 #define MENU_AJOUTER_COMPTE 50015
 #define MENU_PUBLISH_TO   50016
-#define MENU_PUBLISH_ID_PWD_TO   50017
 #define SUBMENU_CATEG			50100
 
 #define TYPE_APPLICATION	1
@@ -170,7 +168,6 @@ T_TIP gtip[44];
 
 typedef struct
 {
-	BOOL bPWithIdPwd;
 	BOOL bCateg;
 	int iCategoryId;
 	int iAction;
@@ -411,6 +408,8 @@ int PublishConfigToDomains(HWND w)
 	LVITEM lvitem;
 
 	*szDomainIds=0;
+
+	// récupère la liste des domaines cochés
 	iNbDomains=ListView_GetItemCount(GetDlgItem(w,LV_DOMAINS));
 	for (i=0;i<iNbDomains;i++)
 	{
@@ -426,10 +425,8 @@ int PublishConfigToDomains(HWND w)
 			}
 		}
 	}
-	// récupère la liste des domaines cochés
-	rc=UploadConfig(gwAppNsites,szDomainIds,gtPublish.bPWithIdPwd);
+	rc=UploadConfig(gwAppNsites,szDomainIds);
 
-//end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -525,14 +522,11 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 //-----------------------------------------------------------------------------
 // Affiche la fenêtre de publication vers les domaines et fait l'upload
 //-----------------------------------------------------------------------------
-int PublishTo(HWND w,BOOL bPWithIdPwd)
+int PublishTo(HWND w)
 {
-	UNREFERENCED_PARAMETER(bPWithIdPwd);
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 	HTREEITEM hItem,hParentItem;
-	
-	gtPublish.bPWithIdPwd=bPWithIdPwd;
 	
 	// Récupère l'élément sélectionné et regarde si c'est une config ou une catégorie
 	hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
@@ -968,7 +962,9 @@ void TogglePasswordField(HWND w)
 
 	if (giLastApplicationConfig!=-1)
 	{
-		if (gptActions[giLastApplicationConfig].bWithIdPwd) goto end; // 1.03 : loupe interdite sur mot de passe imposé
+		// 1.03 : loupe interdite sur mot de passe imposé
+		// 1.05 : sauf pour l'admin !
+		if ((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_PWD) && !gbInternetManualPutConfig) goto end; 
 	}
 
 	if (!gbShowPwd) // 0.96
@@ -1735,7 +1731,7 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 	gptActions[giNbActions-1].bAddAccount=bKeepId;
 	
 	// 1.03
-	gptActions[giNbActions-1].bWithIdPwd=bKeepId?FALSE:gptActions[iAction].bWithIdPwd;
+	gptActions[giNbActions-1].iWithIdPwd=bKeepId?0:gptActions[iAction].iWithIdPwd;
 	gptActions[giNbActions-1].iPwdGroup=bKeepId?-1:gptActions[iAction].iPwdGroup;
 
 	ShowApplicationDetails(w,giNbActions-1);
@@ -2051,13 +2047,6 @@ static void TVShowContextMenu(HWND w)
 			else
 				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH,GetString(IDS_MENU_UPLOADER));
 			bAddSeparator=TRUE;
-			if (gbShowMenu_UploadWithIdPwd)
-			{
-				if (giNbDomains>1)
-					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_ID_PWD_TO,GetString(IDS_MENU_UPLOADER_IDPWD_VERS));
-				else
-					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_ID_PWD,GetString(IDS_MENU_UPLOADER_IDPWD));
-			}
 		}
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
@@ -2102,13 +2091,6 @@ static void TVShowContextMenu(HWND w)
 			else
 				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH,GetString(IDS_MENU_UPLOADER));
 			bAddSeparator=TRUE;
-			if (gbShowMenu_UploadWithIdPwd)
-			{
-				if (giNbDomains>1)
-					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_ID_PWD_TO,GetString(IDS_MENU_UPLOADER_IDPWD_VERS));
-				else
-					InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_PUBLISH_ID_PWD,GetString(IDS_MENU_UPLOADER_IDPWD));
-			}
 		}
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
@@ -2140,7 +2122,9 @@ void ShowApplicationDetails(HWND w,int iAction)
 
 	if (gbShowGeneratedPwd) { gbShowGeneratedPwd=FALSE; gbShowPwd=FALSE; }
 
-	if (gptActions[iAction].bWithIdPwd) gbShowPwd=FALSE; // 1.03 : ne pas dévoiler les mots de passe imposés par le serveur
+	// 1.03 : ne pas dévoiler les mots de passe imposés par le serveur
+	// 1.05 : sauf pour l'admin
+	if ((gptActions[iAction].iWithIdPwd & CONFIG_WITH_PWD) && !gbInternetManualPutConfig) gbShowPwd=FALSE;
 
 	// déchiffrement mot de passe
 	SetDlgItemText(w,TB_PWD,"");
@@ -2209,13 +2193,13 @@ void ShowApplicationDetails(HWND w,int iAction)
 	MoveControls(w,GetDlgItem(w,TAB_CONFIG));
 
 	// 1.03 : empêche la modification ids et mdp si valeurs forcées par le serveur (sauf pour l'admin !)
-	if (gptActions[iAction].bWithIdPwd && !gbInternetManualPutConfig)
+	if (!gbInternetManualPutConfig)
 	{
-		EnableWindow(GetDlgItem(w,TB_ID),FALSE);
-		EnableWindow(GetDlgItem(w,TB_ID2),FALSE);
-		EnableWindow(GetDlgItem(w,TB_ID3),FALSE);
-		EnableWindow(GetDlgItem(w,TB_ID4),FALSE);
-		EnableWindow(GetDlgItem(w,TB_PWD),FALSE);
+		EnableWindow(GetDlgItem(w,TB_ID), ((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_ID1)==0));
+		EnableWindow(GetDlgItem(w,TB_ID2),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_ID2)==0));
+		EnableWindow(GetDlgItem(w,TB_ID3),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_ID3)==0));
+		EnableWindow(GetDlgItem(w,TB_ID4),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_ID4)==0));
+		EnableWindow(GetDlgItem(w,TB_PWD),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_PWD)==0));
 	}
 
 end:
@@ -2638,7 +2622,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 
 	// Positionnement et dimensionnement de la fenêtre
 	// ISSUE#1 : si Alt enfoncée à l'ouverture, retaillage et repositionnement par défaut
-	if ((gx!=-1 && gy!=-1 && gcx!=-1 && gcy!=-1) && HIBYTE(GetAsyncKeyState(VK_MENU))==0) 
+	if ((gx!=-1 && gy!=-1 && gcx!=-1 && gcy!=-1 && gcx>=560 && (gcy>=540+(gbAdmin?50:0))) && HIBYTE(GetAsyncKeyState(VK_MENU))==0) 
 	{
 		SetWindowPos(w,NULL,gx,gy,gcx,gcy,SWP_NOZORDER);
 	}
@@ -2646,6 +2630,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	{
 		cx = GetSystemMetrics( SM_CXSCREEN );
 		cy = GetSystemMetrics( SM_CYSCREEN );
+		SetWindowPos(w,NULL,0,0,560,540+(gbAdmin?50:0),SWP_NOMOVE | SWP_NOZORDER);
 		GetWindowRect(w,&rect);
 		SetWindowPos(w,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
 	}
@@ -2765,6 +2750,9 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	// ISSUE#180
 	ShowWindow(GetDlgItem(w,CK_AUTO_LOCK),gbShowAutoLockOption?SW_SHOW:SW_HIDE);
 	ShowWindow(GetDlgItem(w,IMG_AUTO_LOCK),gbShowAutoLockOption?SW_SHOW:SW_HIDE);
+
+	if (gbAdmin) { SetTextBold(w,TX_MODE_ADMIN); ShowWindow(GetDlgItem(w,TX_MODE_ADMIN),SW_SHOW); }
+
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -2785,6 +2773,27 @@ void ClearApplicationDetails(HWND w)
 }
 
 //-----------------------------------------------------------------------------
+// DrawAdminBar()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void DrawAdminBar(HWND w)
+{
+	PAINTSTRUCT ps;
+	RECT rect;
+	HDC dc=NULL;
+	if (GetClientRect(w,&rect))
+	{
+		dc=BeginPaint(w,&ps);
+		if (dc!=NULL)
+		{
+			BitBlt(dc,10,10,rect.right-20,20,0,0,0,WHITENESS);
+			if (dc!=NULL) EndPaint(w,&ps);
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
 // MoveControls()
 //-----------------------------------------------------------------------------
 // Repositionne les contrôles suite à redimensionnement de la fenêtre
@@ -2797,6 +2806,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 	RECT rectKBSim;
 	GetClientRect(w,&rect);
 	int yPosAutoLock;
+	int yOffset=gbAdmin?30:0;
 
 	RECT rectTabConfig;
 	rectTabConfig.left=rect.right*2/5+15;
@@ -2804,17 +2814,19 @@ static void MoveControls(HWND w,HWND wToRefresh)
 	rectTabConfig.right=rectTabConfig.left+rect.right*3/5-20;
 	rectTabConfig.bottom=rectTabConfig.top+rect.bottom*2/3-30;
 
+	if (gbAdmin) SetWindowPos(GetDlgItem(w,TX_MODE_ADMIN),NULL,10,5,rect.right-20,30,SWP_NOZORDER);
+		
 	// OK, Annuler et Appliquer
 	SetWindowPos(GetDlgItem(w,IDOK),NULL,rect.right-242,rect.bottom-30,0,0,SWP_NOSIZE | SWP_NOZORDER);
 	SetWindowPos(GetDlgItem(w,IDCANCEL),NULL,rect.right-162,rect.bottom-30,0,0,SWP_NOSIZE | SWP_NOZORDER);
 	SetWindowPos(GetDlgItem(w,IDAPPLY),NULL,rect.right-82,rect.bottom-30,0,0,SWP_NOSIZE | SWP_NOZORDER);
 	
 	// TabControl de gauche (liste des applications)
-	SetWindowPos(GetDlgItem(w,TAB_APPLICATIONS),NULL,10,10,rect.right*2/5,rect.bottom-45,SWP_NOZORDER);
-	SetWindowPos(GetDlgItem(w,TV_APPLICATIONS),NULL,20,40,rect.right*2/5-20,rect.bottom-85,SWP_NOZORDER);
+	SetWindowPos(GetDlgItem(w,TAB_APPLICATIONS),NULL,10,10+yOffset,rect.right*2/5,rect.bottom-45,SWP_NOZORDER);
+	SetWindowPos(GetDlgItem(w,TV_APPLICATIONS),NULL,20,40+yOffset,rect.right*2/5-20,rect.bottom-85,SWP_NOZORDER);
 	
 	// TabControl haut droite (identifiants et mot de passe)
-	SetWindowPos(GetDlgItem(w,TAB_IDPWD),NULL,rect.right*2/5+15,10,rect.right*3/5-20,rect.bottom*1/3-20,SWP_NOZORDER);
+	SetWindowPos(GetDlgItem(w,TAB_IDPWD),NULL,rect.right*2/5+15,10+yOffset,rect.right*3/5-20,rect.bottom*1/3-20,SWP_NOZORDER);
 	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_IDPWD))==0) // onglet sélectionné = identifiant et mot de passe
 	{
 		ShowWindow(GetDlgItem(w,TX_ID2),SW_HIDE);
@@ -2826,22 +2838,22 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_ID2),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_ID3),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_ID4),SW_HIDE);
-		SetWindowPos(GetDlgItem(w,TX_ID)   ,NULL,rect.right*2/5+25,50,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_PWD)  ,NULL,rect.right*2/5+25,80,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID)   ,NULL,rect.right*2/5+25+80,47,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID)  ,NULL,rect.right-30,49,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID)   ,NULL,rect.right*2/5+25,50+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_PWD)  ,NULL,rect.right*2/5+25,80+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID)   ,NULL,rect.right*2/5+25+80,47+yOffset,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID)  ,NULL,rect.right-30,49+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		if (gbEnableOption_ShowPassword)
 		{
-			SetWindowPos(GetDlgItem(w,IMG_LOUPE),NULL,rect.right-52,79,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_PWD)      ,NULL,rect.right*2/5+25+80,77,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_PWD_CLEAR),NULL,rect.right*2/5+25+80,77,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_LOUPE),NULL,rect.right-52,79+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD)      ,NULL,rect.right*2/5+25+80,77+yOffset,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD_CLEAR),NULL,rect.right*2/5+25+80,77+yOffset,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 		else
 		{
 			ShowWindow(GetDlgItem(w,IMG_LOUPE),SW_HIDE);
-			SetWindowPos(GetDlgItem(w,TB_PWD)  ,NULL,rect.right*2/5+25+80,77,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD)  ,NULL,rect.right*2/5+25+80,77+yOffset,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 		ShowWindow(GetDlgItem(w,TB_PWD),gbShowPwd?SW_HIDE:SW_SHOW);
 		ShowWindow(GetDlgItem(w,TB_PWD_CLEAR),gbShowPwd?SW_SHOW:SW_HIDE);
@@ -2856,20 +2868,20 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_ID)   ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_PWD)  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_LOUPE),SW_HIDE);
-		SetWindowPos(GetDlgItem(w,TX_ID2),NULL,rect.right*2/5+25,50,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID3),NULL,rect.right*2/5+25,80,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID4),NULL,rect.right*2/5+25,110,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID2),NULL,rect.right*2/5+25+80,47,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID3),NULL,rect.right*2/5+25+80,77,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID4),NULL,rect.right*2/5+25+80,107,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID2),NULL,rect.right-30,49,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID3),NULL,rect.right-30,79,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID4),NULL,rect.right-30,109,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID2),NULL,rect.right*2/5+25,50+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID3),NULL,rect.right*2/5+25,80+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID4),NULL,rect.right*2/5+25,110+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID2),NULL,rect.right*2/5+25+80,47+yOffset,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID3),NULL,rect.right*2/5+25+80,77+yOffset,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID4),NULL,rect.right*2/5+25+80,107+yOffset,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID2),NULL,rect.right-30,49+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID3),NULL,rect.right-30,79+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID4),NULL,rect.right-30,109+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 
 	}
 
 	// TabControl bas droite (config)
-	SetWindowPos(GetDlgItem(w,TAB_CONFIG),NULL,rect.right*2/5+15,rect.bottom*1/3-5,rect.right*3/5-20,rect.bottom*2/3-30,SWP_NOZORDER);
+	SetWindowPos(GetDlgItem(w,TAB_CONFIG),NULL,rect.right*2/5+15,rect.bottom*1/3-5+yOffset,rect.right*3/5-20,rect.bottom*2/3-30-yOffset,SWP_NOZORDER);
 	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==0) // onglet sélectionné = configuration
 	{
 		ShowWindow(GetDlgItem(w,TX_ID2_ID),SW_HIDE);
@@ -2895,18 +2907,18 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_ID4_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_PWD_GROUP),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_AUTO_LOCK),SW_HIDE);
-		SetWindowPos(GetDlgItem(w,TX_TYPE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+35,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,CB_TYPE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+35-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_TITRE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+65,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_TITRE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+65-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_URL)		,NULL,rect.right*2/5+25,rect.bottom*1/3+95,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_URL)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+95-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,CK_KBSIM)		,NULL,rect.right*2/5+25,rect.bottom*1/3+125,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_TYPE)		,NULL,rect.right-30,rect.bottom*1/3+35-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_TITRE)	,NULL,rect.right-30,rect.bottom*1/3+65-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_URL)		,NULL,rect.right-30,rect.bottom*1/3+95-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_TYPE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+35+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,CB_TYPE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+35-3+yOffset,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_TITRE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+65+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_TITRE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+65-3+yOffset,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_URL)		,NULL,rect.right*2/5+25,rect.bottom*1/3+95+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_URL)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+95-3+yOffset,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,CK_KBSIM)		,NULL,rect.right*2/5+25,rect.bottom*1/3+125+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_TYPE)		,NULL,rect.right-30,rect.bottom*1/3+35-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_TITRE)	,NULL,rect.right-30,rect.bottom*1/3+65-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_URL)		,NULL,rect.right-30,rect.bottom*1/3+95-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		GetClientRect(GetDlgItem(w,CK_KBSIM),&rectKBSim);
-		SetWindowPos(GetDlgItem(w,IMG_KBSIM)	,NULL,rectTabConfig.left+rectKBSim.right+15,rect.bottom*1/3+125,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_KBSIM)	,NULL,rectTabConfig.left+rectKBSim.right+15,rect.bottom*1/3+125+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		if (IsDlgButtonChecked(w,CK_KBSIM)==BST_CHECKED)
 		{
 			ShowWindow(GetDlgItem(w,TX_ID_ID)	  ,SW_HIDE);
@@ -2918,27 +2930,27 @@ static void MoveControls(HWND w,HWND wToRefresh)
 			ShowWindow(GetDlgItem(w,IMG_ID_ID)	  ,SW_HIDE);
 			ShowWindow(GetDlgItem(w,IMG_PWD_ID)	  ,SW_HIDE);
 			ShowWindow(GetDlgItem(w,IMG_VALIDATION),SW_HIDE);
-			SetWindowPos(GetDlgItem(w,TB_KBSIM)		,NULL,rect.right*2/5+25,rect.bottom*1/3+155-3,rect.right*3/5-40,80,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_KBSIM)		,NULL,rect.right*2/5+25,rect.bottom*1/3+155-3+yOffset,rect.right*3/5-40,80,SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 		else
 		{
-			SetWindowPos(GetDlgItem(w,TX_ID_ID)		,NULL,rect.right*2/5+25,rect.bottom*1/3+155,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TX_PWD_ID)    ,NULL,rect.right*2/5+25,rect.bottom*1/3+185,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TX_VALIDATION),NULL,rect.right*2/5+25,rect.bottom*1/3+215,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_ID_ID)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+155-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_ID_ID)	,NULL,rect.right-30,rect.bottom*1/3+155-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_PWD_ID)	,NULL,rect.right*2/5+25+110,rect.bottom*1/3+185-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_PWD_ID)	,NULL,rect.right-30,rect.bottom*1/3+185-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_VALIDATION),NULL,rect.right*2/5+25+110,rect.bottom*1/3+215-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_VALIDATION),NULL,rect.right-30,rect.bottom*1/3+215-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TX_ID_ID)		,NULL,rect.right*2/5+25,rect.bottom*1/3+155+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TX_PWD_ID)    ,NULL,rect.right*2/5+25,rect.bottom*1/3+185+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TX_VALIDATION),NULL,rect.right*2/5+25,rect.bottom*1/3+215+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_ID_ID)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+155-3+yOffset,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_ID_ID)	,NULL,rect.right-30,rect.bottom*1/3+155-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD_ID)	,NULL,rect.right*2/5+25+110,rect.bottom*1/3+185-3+yOffset,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD_ID)	,NULL,rect.right-30,rect.bottom*1/3+185-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_VALIDATION),NULL,rect.right*2/5+25+110,rect.bottom*1/3+215-3+yOffset,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_VALIDATION),NULL,rect.right-30,rect.bottom*1/3+215-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			ShowWindow(GetDlgItem(w,TB_KBSIM),SW_HIDE);
 		}
 		if (gbShowMenu_LaunchApp)
 		{
-			SetWindowPos(GetDlgItem(w,TX_LANCEMENT),NULL,rect.right*2/5+25,rect.bottom*1/3+245,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_LANCEMENT),NULL,rect.right*2/5+25+110,rect.bottom*1/3+245-3,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_LANCEMENT),NULL,rect.right-30,rect.bottom*1/3+245-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,PB_PARCOURIR),NULL,rect.right-72,rect.bottom*1/3+267,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TX_LANCEMENT),NULL,rect.right*2/5+25,rect.bottom*1/3+245+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_LANCEMENT),NULL,rect.right*2/5+25+110,rect.bottom*1/3+245-3+yOffset,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_LANCEMENT),NULL,rect.right-30,rect.bottom*1/3+245-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,PB_PARCOURIR),NULL,rect.right-92,rect.bottom*1/3+267+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 	}
 	else // onglet sélectionné = champs complémentaires
@@ -2968,36 +2980,36 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_VALIDATION),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_KBSIM)     ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_LANCEMENT) ,SW_HIDE);
-		SetWindowPos(GetDlgItem(w,TX_ID2_TYPE)	,NULL,rect.right*2/5+25,rect.bottom*1/3+35,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,CB_ID2_TYPE)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+35-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID2_TYPE)	,NULL,rect.right-30,rect.bottom*1/3+35-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID2_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+65,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID2_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+65-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID2_ID)	,NULL,rect.right-30,rect.bottom*1/3+65-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID3_TYPE)	,NULL,rect.right*2/5+25,rect.bottom*1/3+95,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,CB_ID3_TYPE)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+95-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID3_TYPE)	,NULL,rect.right-30,rect.bottom*1/3+95-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID3_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+125,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID3_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+125-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID3_ID)	,NULL,rect.right-30,rect.bottom*1/3+125-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID4_TYPE)	,NULL,rect.right*2/5+25,rect.bottom*1/3+155,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,CB_ID4_TYPE)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+155-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID4_TYPE)	,NULL,rect.right-30,rect.bottom*1/3+155-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_ID4_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+185,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TB_ID4_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+185-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,IMG_ID4_ID)	,NULL,rect.right-30,rect.bottom*1/3+185-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID2_TYPE)	,NULL,rect.right*2/5+25,rect.bottom*1/3+35+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,CB_ID2_TYPE)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+35-3+yOffset,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID2_TYPE)	,NULL,rect.right-30,rect.bottom*1/3+35-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID2_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+65+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID2_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+65-3+yOffset,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID2_ID)	,NULL,rect.right-30,rect.bottom*1/3+65-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID3_TYPE)	,NULL,rect.right*2/5+25,rect.bottom*1/3+95+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,CB_ID3_TYPE)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+95-3+yOffset,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID3_TYPE)	,NULL,rect.right-30,rect.bottom*1/3+95-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID3_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+125+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID3_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+125-3+yOffset,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID3_ID)	,NULL,rect.right-30,rect.bottom*1/3+125-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID4_TYPE)	,NULL,rect.right*2/5+25,rect.bottom*1/3+155+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,CB_ID4_TYPE)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+155-3+yOffset,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID4_TYPE)	,NULL,rect.right-30,rect.bottom*1/3+155-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_ID4_ID)	,NULL,rect.right*2/5+25,rect.bottom*1/3+185+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TB_ID4_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+185-3+yOffset,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,IMG_ID4_ID)	,NULL,rect.right-30,rect.bottom*1/3+185-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		yPosAutoLock=215;
 		if (gbEnableOption_ManualPutConfig && gbInternetManualPutConfig)
 		{
-			SetWindowPos(GetDlgItem(w,TX_PWD_GROUP)	,NULL,rect.right*2/5+25,rect.bottom*1/3+215,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_PWD_GROUP)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+215-3,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_PWD_GROUP),NULL,rect.right-30,rect.bottom*1/3+215-1,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TX_PWD_GROUP)	,NULL,rect.right*2/5+25,rect.bottom*1/3+215+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD_GROUP)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+215-3+yOffset,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD_GROUP),NULL,rect.right-30,rect.bottom*1/3+215-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			yPosAutoLock=245;
 		}
 		if (gbShowAutoLockOption) // ISSUE#180
 		{
-			SetWindowPos(GetDlgItem(w,CK_AUTO_LOCK)	,NULL,rect.right*2/5+25,rect.bottom*1/3+yPosAutoLock,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_AUTO_LOCK),NULL,rect.right-30,rect.bottom*1/3+yPosAutoLock-2,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,CK_AUTO_LOCK)	,NULL,rect.right*2/5+25,rect.bottom*1/3+yPosAutoLock+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_AUTO_LOCK),NULL,rect.right-30,rect.bottom*1/3+yPosAutoLock-2+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 	}
 	HideConfigControls(w);
@@ -3109,14 +3121,14 @@ end:
 //-----------------------------------------------------------------------------
 // UploadConfig()
 //-----------------------------------------------------------------------------
-// Uploade la configuration sélectionnée sur le serveur
+// Uploade la configuration (ou les configurations de la catégorie) sélectionnée sur le serveur
 // Nouveau en 0.91 : le menu upload est proposée aussi sur les catégories, 
 // auquel cas l'ensemble des configurations de la catégories sont remontées 
 // sur le serveur
 //-----------------------------------------------------------------------------
-int UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
+int UploadConfig(HWND w, char *pszDomainIds)
 {
-	TRACE((TRACE_ENTER,_F_, "pszDomainIds=%s bUploadIdPwd=%d",pszDomainIds,bUploadIdPwd));
+	TRACE((TRACE_ENTER,_F_, "pszDomainIds=%s",pszDomainIds));
 
 	HTREEITEM hItem,hParentItem,hNextApp;
 	int iAction,iCategoryId;
@@ -3142,12 +3154,11 @@ int UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
 			iAction=TVItemGetLParam(w,hNextApp); 
 			if (iAction==-1 || iAction>=giNbActions) { rc=-1; goto end; }
 			TRACE((TRACE_INFO,_F_,"Upload config n°%d (%s)",iAction,gptActions[iAction].szApplication));
-			rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds,bUploadIdPwd);
+			rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds);
 			TVUpdateItemState(w,hNextApp,iAction);
 			if (rc==0) iNbConfigUploaded++;
 			else if (rc==-2) { iNbConfigIgnored++; rc=0; }
 			else goto end;
-			gptActions[iAction].bWithIdPwd=bUploadIdPwd;
 			hNextApp=TreeView_GetNextSibling(GetDlgItem(w,TV_APPLICATIONS),hNextApp);
 		}
 		sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_MULTI_UPLOAD_OK),iNbConfigUploaded,iNbConfigIgnored);
@@ -3158,9 +3169,8 @@ int UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
 		if (iAction==-1 || iAction>=giNbActions) goto end;
 		TRACE((TRACE_INFO,_F_,"Upload config n°%d (%s)",iAction,gptActions[iAction].szApplication));
 		iOldCategoryId=gptActions[iAction].iCategoryId;
-		rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds,bUploadIdPwd);
+		rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds);
 		TVUpdateItemState(w,hItem,iAction);
-		gptActions[iAction].bWithIdPwd=bUploadIdPwd;
 		strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_UPLOAD_OK));
 	}
 	
@@ -3169,7 +3179,7 @@ int UploadConfig(HWND w, char *pszDomainIds,BOOL bUploadIdPwd)
 	//        Je n'ai pas de meilleure idée qu'une sauvegarde complète (il n'est pas possible de retrouver
 	//        de manière certaine la section à modifier)
 	//        Il faut aussi écrire le bConfigSent à TRUE
-	//        Il faut aussi écrire le categId... et aussi bWithIdPwd... du coup la sauvegarde complète va bien !
+	//        Il faut aussi écrire le categId... et aussi iWithIdPwd... du coup la sauvegarde complète va bien !
 	SaveApplications();
 	BackupAppsNcategs();
 
@@ -3314,6 +3324,7 @@ int LoadApplications(void)
 	int rc=-1;
 	char szType[3+1];
 	char szConfigId[12+1];
+	char szWithIdPwd[4+1];
 	DWORD dw;
 	char *p;
 	char *pSectionNames=NULL;
@@ -3455,7 +3466,8 @@ int LoadApplications(void)
 		gptActions[i].bSaved=TRUE; // 0.93B6 ISSUE#55
 		gptActions[i].iNbEssais=0; // 0.93B7
 		gptActions[i].bAddAccount=GetConfigBoolValue(p,"addAccount",FALSE,TRUE); // 0.97 ISSUE#86
-		gptActions[i].bWithIdPwd=GetConfigBoolValue(p,"bWithIdPwd",FALSE,TRUE); // 1.03
+		GetPrivateProfileString(p,"bWithIdPwd","",szWithIdPwd,sizeof(szWithIdPwd),gszCfgFile);
+		gptActions[i].iWithIdPwd=atoi(szWithIdPwd);
 		gptActions[i].iPwdGroup=GetPrivateProfileInt(p,"pwdGroup",-1,gszCfgFile); // 1.03
 		gptActions[i].bPwdChangeInfos=GetConfigBoolValue(p,"pwdChange",FALSE,FALSE);
 #if 0
@@ -3641,7 +3653,7 @@ int SaveApplications(void)
 		}
 		// le plus beau sprintf de ma carrière... en espérant que le buffer soit assez grand ;-(
 		sprintf_s(tmpBuf,sizeof(tmpBuf),
-			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
+			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%d\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
 			gptActions[i].szApplication,
 			gptActions[i].iConfigId,
 			gptActions[i].iCategoryId,
@@ -3663,7 +3675,7 @@ int SaveApplications(void)
 			gptActions[i].szFullPathName,
 			*(gptActions[i].szLastUpload)==0?"":gptActions[i].szLastUpload,
 			gptActions[i].bAddAccount?"YES":"NO", // 0.97 ISSUE#86
-			gptActions[i].bWithIdPwd?"YES":"NO", // 1.03
+			gptActions[i].iWithIdPwd, // 1.03 + 1.05
 			gptActions[i].iPwdGroup); // 1.03
 			//,	gptActions[i].bPwdChangeInfos?"YES":"NO");
 		if (!WriteFile(hf,tmpBuf,strlen(tmpBuf),&dw,NULL)) 
@@ -3709,6 +3721,7 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
+
 
 //-----------------------------------------------------------------------------
 // AppNsitesDialogProc()
@@ -3883,18 +3896,11 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					LaunchSelectedApp(w);
 					break;
 				case MENU_PUBLISH:
-					UploadConfig(w,"1",FALSE);
-					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
-					break;
-				case MENU_PUBLISH_ID_PWD:
-					UploadConfig(w,"1",TRUE);
+					UploadConfig(w,"1");
 					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
 				case MENU_PUBLISH_TO:
-					if (PublishTo(gwAppNsites,FALSE)==0) EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
-					break;
-				case MENU_PUBLISH_ID_PWD_TO:
-					if (PublishTo(gwAppNsites,TRUE)==0) EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
+					if (PublishTo(gwAppNsites)==0) EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
 				case IMG_LOUPE:
 					if (HIWORD(wp)==0) TogglePasswordField(w);
@@ -3964,7 +3970,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				RECT *pRectNewSize=(RECT*)lp;
 				TRACE((TRACE_DEBUG,_F_,"RectNewSize=%d,%d,%d,%d",pRectNewSize->top,pRectNewSize->left,pRectNewSize->bottom,pRectNewSize->right));
 				if (pRectNewSize->right-pRectNewSize->left < 560)  pRectNewSize->right=pRectNewSize->left+560;
-				if (pRectNewSize->bottom-pRectNewSize->top < 540)  pRectNewSize->bottom=pRectNewSize->top+540;
+				if (pRectNewSize->bottom-pRectNewSize->top < 540+(gbAdmin?50:0))  pRectNewSize->bottom=pRectNewSize->top+540+(gbAdmin?50:0);
 				rc=TRUE;
 			}
 			break;
@@ -3992,6 +3998,14 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case TX_LANCEMENT:
 					SetBkMode((HDC)wp,TRANSPARENT);
 					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+				case TX_MODE_ADMIN: 
+					if (gbAdmin)
+					{
+						SetTextColor((HDC)wp,RGB(255,255,255));
+						SetBkMode((HDC)wp,TRANSPARENT);
+						rc=(int)ghRedBrush;
+					}
 					break;
 				case CK_KBSIM:
 				case CK_AUTO_LOCK:

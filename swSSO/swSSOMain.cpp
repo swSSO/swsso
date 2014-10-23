@@ -129,6 +129,8 @@ int giNbDomains=0;
 BOOL gbWillTerminate=FALSE;
 BOOL gbAdmin=FALSE;
 
+HBRUSH ghRedBrush=NULL;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -1252,16 +1254,11 @@ static int LoadIcons(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	ghIconAltTab=(HICON)LoadImage(ghInstance, 
-					MAKEINTRESOURCE(IDI_LOGO),
-					IMAGE_ICON,
-					0,
-					0,
-					LR_DEFAULTSIZE);
+	ghIconAltTab=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDI_LOGO),IMAGE_ICON,0,0,LR_DEFAULTSIZE);
 	if (ghIconAltTab==NULL) goto end;
-	ghIconSystrayActive=(HICON)LoadImage(ghInstance, gbAdmin ? MAKEINTRESOURCE(IDI_SYSTRAY_ADMIN_ACTIVE):MAKEINTRESOURCE(IDI_SYSTRAY_ACTIVE),IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
+	ghIconSystrayActive=(HICON)LoadImage(ghInstance, gbAdmin ? MAKEINTRESOURCE(IDI_SYSTRAY_ADMIN_ACTIVE) : MAKEINTRESOURCE(IDI_SYSTRAY_ACTIVE),IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
 	if (ghIconSystrayActive==NULL) goto end;
-	ghIconSystrayInactive=(HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDI_SYSTRAY_INACTIVE), IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
+	ghIconSystrayInactive=(HICON)LoadImage(ghInstance, gbAdmin ? MAKEINTRESOURCE(IDI_SYSTRAY_ADMIN_INACTIVE) : MAKEINTRESOURCE(IDI_SYSTRAY_INACTIVE), IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
 	if (ghIconSystrayInactive==NULL) goto end;
 	ghIconLoupe = (HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDI_LOUPE),IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_LOADTRANSPARENT);
 	if (ghIconLoupe == NULL) goto end;
@@ -1288,6 +1285,8 @@ static int LoadIcons(void)
 	if (ghCursorWait==NULL) goto end;
 	ghImageList=ImageList_LoadBitmap(ghInstance,MAKEINTRESOURCE(IDB_TVIMAGES),16,4,RGB(255,0,255));
 	if (ghImageList==NULL) goto end;
+	if (gbAdmin) ghRedBrush=CreateSolidBrush(RGB(255,0,0));
+
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -1315,6 +1314,7 @@ static void UnloadIcons(void)
 	if (ghCursorHand != NULL) { DestroyCursor(ghCursorHand); ghCursorHand = NULL; }
 	if (ghCursorWait!=NULL) { DestroyCursor(ghCursorWait); ghCursorWait=NULL; }
 	if (ghImageList!=NULL) ImageList_Destroy(ghImageList);
+	if (ghRedBrush!=NULL) { DeleteObject(ghRedBrush); ghRedBrush=NULL; }
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 

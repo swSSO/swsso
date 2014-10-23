@@ -520,28 +520,41 @@ else if ($_GET['action']=="getdomains")
 {
 	$cnx=dbConnect();
 	if (!$cnx) return;
-	
-	$szRequest= "select id,label from "._TABLE_PREFIX_."domains order by label";
+
+	// commence par lire le libellé du domaine commun (pour qu'il soit placé en tête de liste puis lit tous les autres)
+	$szRequest= "select label from "._TABLE_PREFIX_."domains where id=1";
 	if (isset($_GET["debug"])) echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-
 	header("Content-type: text/xml; charset=UTF-8");
-	if(mysql_num_rows($req)==0) 
+	if (mysql_num_rows($req)==0) 
 	{
 		echo "<domains>NOT FOUND</domains>";
 	}
 	else
 	{
 		echo "<domains>\n";
-		$i=0;
-		while($ligne=mysql_fetch_row($req))
+		$ligne=mysql_fetch_row($req);
+		echo "<domain num=\"0\">\n";
+		echo "<id><![CDATA[1]]></id>\n";
+		echo "<label><![CDATA[".$ligne[0]."]]></label>\n";
+		echo "</domain>\n";
+		$szRequest= "select id,label from "._TABLE_PREFIX_."domains where id<>1 order by label";
+		if (isset($_GET["debug"])) echo $szRequest;
+		$req=mysql_query($szRequest,$cnx);
+		if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+		
+		if(mysql_num_rows($req)!=0) 
 		{
-			echo "<domain num=\"".$i."\">\n";
-			echo "<id><![CDATA[".$ligne[0]."]]></id>\n";
-			echo "<label><![CDATA[".$ligne[1]."]]></label>\n";
-			echo "</domain>\n";
-			$i++;
+			$i=1;
+			while($ligne=mysql_fetch_row($req))
+			{
+				echo "<domain num=\"".$i."\">\n";
+				echo "<id><![CDATA[".$ligne[0]."]]></id>\n";
+				echo "<label><![CDATA[".$ligne[1]."]]></label>\n";
+				echo "</domain>\n";
+				$i++;
+			}
 		}
 		echo "</domains>";
 	}

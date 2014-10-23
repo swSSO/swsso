@@ -77,18 +77,21 @@ static void ShowContextMenu(HWND w)
 	{
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_THIS_APPLI,GetString(IDS_MENU_THIS_APPLI));
 	}
-	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_SSO_NOW,GetString(IDS_MENU_SSO_NOW));
-	if (gbShowMenu_AppPasswordMenu && giLastApplicationSSO!=-1) // ISSUE#107
+	if (!gbAdmin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_SSO_NOW,GetString(IDS_MENU_SSO_NOW));
+	if (!gbAdmin && gbShowMenu_AppPasswordMenu && giLastApplicationSSO!=-1) // ISSUE#107
 	{
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_CHANGEAPPPWD,GetString(IDS_MENU_CHANGEAPPPWD));
 	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_APPNSITES,GetString(IDS_MENU_APPNSITES));
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PROPRIETES,GetString(IDS_MENU_PROP));
-	if ((giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) || *gszCfgPortal!=0 || gbUseADPasswordForAppLogin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-	if (giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_MDP,GetString(IDS_MENU_MDP));
-	if (gbUseADPasswordForAppLogin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_MDP_WINDOWS,GetString(IDS_MENU_MDP_WINDOWS));
-	if (*gszCfgPortal!=0) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PORTAL,GetString(IDS_MENU_PORTAL));
+	if (!gbAdmin)
+	{
+		if ((giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) || *gszCfgPortal!=0 || gbUseADPasswordForAppLogin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+		if (giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_MDP,GetString(IDS_MENU_MDP));
+		if (gbUseADPasswordForAppLogin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_MDP_WINDOWS,GetString(IDS_MENU_MDP_WINDOWS));
+		if (*gszCfgPortal!=0) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PORTAL,GetString(IDS_MENU_PORTAL));
+	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	if (gbSSOActif)
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_ACTIVER,GetString(IDS_MENU_DESACTIVER));

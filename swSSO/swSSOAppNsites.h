@@ -63,6 +63,13 @@
 #define WAIT_IF_SSO_NOK 120
 #define WAIT_ONE_MINUTE 61 // ATTENTION, CETTE VALEUR DOIT TOUJOURS ETRE DIFFERENTE DE WAIT_IF_SSO_OK !
 
+// flags pour iWithIdPwd
+#define CONFIG_WITH_ID1 1
+#define CONFIG_WITH_ID2 2
+#define CONFIG_WITH_ID3 4
+#define CONFIG_WITH_ID4 8
+#define CONFIG_WITH_PWD 16
+
 typedef struct 
 {
 	int  iConfigId; // 0.91 : identifiant de la config (synchro avec le serveur)
@@ -105,7 +112,7 @@ typedef struct
 	char szLastUpload[14+1]; 		//0.91 : date de dernier upload (AAAAMMJJHHMMSS)
 	BOOL bSaved;				// 0.93B6 ISSUE#55 : indique si la config a été "appliquée" depuis son ajout. Une config non bSaved apparait dans la fenêtre mais n'est pas exécutée
 	BOOL bAddAccount;			// 0.97B1 ISSUE#86 : permet de savoir que la config a été créée par ajout de compte
-	BOOL bWithIdPwd;			// 1.03 : permet de savoir que la config a été récupérée du serveur avec son id et mdp (donc interdit de voir et de modifier)
+	BOOL iWithIdPwd;			// 1.03 modifé 1.05 (BOOL -> int) : permet de savoir que la config a été récupérée du serveur avec ids et/ou mdp (donc interdit de voir le mdp et de modifier les ids et mdp)
 	int  iPwdGroup;				// 1.03 : groupement des configurations pour changement mot de passe
 } T_ACTION;
 
@@ -136,6 +143,8 @@ int GetCategoryIndex(int id);
 int BackupAppsNcategs(void);
 void ShowApplicationDetails(HWND w,int iAction);
 void GetApplicationDetails(HWND w,int iAction);
+
+int UploadConfig(HWND w, char *pszDomainIds);
 
 // ATTENTION, ces deux fonctions sont utilisées par swSSOLaunchApp.cpp, cela suppose
 // que l'identifiant du treeview TV_APPLICATIONS soit bien identique dans les 2 fenêtres !

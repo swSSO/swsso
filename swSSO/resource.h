@@ -24,6 +24,7 @@
 #define PSP_BROWSER                             210
 #define IDD_PUBLISH_TO                          212
 #define IDI_SYSTRAY_ADMIN_ACTIVE                214
+#define IDI_SYSTRAY_ADMIN_INACTIVE              216
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000
@@ -216,6 +217,7 @@
 #define CK_AUTO_LOCK                            40024
 #define IDS_CONFIG_ALREADY_EXISTS               40024
 #define IDS_CONFIG_PROXY                        40025
+#define TX_MODE_ADMIN                           40025
 #define IDS_MENU_APPNSITES                      40026
 #define IDS_VALUE                               40027
 #define IDS_MENU_RENOMMER                       40028
