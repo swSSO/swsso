@@ -686,7 +686,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				// ISSUE#87 : l'URL dans la config peut avoir la forme : le site www demande*|http://www
 				int len=strlen(gptActions[i].szURL);
 				pszURL2=(char*)malloc(len+1);
-				if (*pszURL2==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%ld)",len+1)); goto end; }
+				if (pszURL2==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%ld)",len+1)); goto end; }
 				memcpy(pszURL2,gptActions[i].szURL,len+1);
 				char *p=strchr(pszURL2,'|');
 				if (p!=NULL)
