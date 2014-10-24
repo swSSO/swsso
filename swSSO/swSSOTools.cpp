@@ -177,12 +177,6 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	BSTR bstrServerAddress=NULL;
 	BSTR bstrRequest=NULL;
 
-	SysFreeString(bstrProxyURL);
-	SysFreeString(bstrProxyUser);
-	SysFreeString(bstrProxyPwd);
-	SysFreeString(bstrServerAddress);
-	SysFreeString(bstrRequest);
-
 	// 0.89 : si pas de paramètres proxy reçus, utilise les valeurs globales
 	if (pInProxyParams==NULL)
 	{
@@ -283,6 +277,11 @@ end:
     if (hRequest!=NULL) WinHttpCloseHandle(hRequest);
     if (hConnect!=NULL) WinHttpCloseHandle(hConnect);
     if (hSession!=NULL) WinHttpCloseHandle(hSession);
+	SysFreeString(bstrProxyURL);
+	SysFreeString(bstrProxyUser);
+	SysFreeString(bstrProxyPwd);
+	SysFreeString(bstrServerAddress);
+	SysFreeString(bstrRequest);
 	TRACE((TRACE_LEAVE,_F_, "pszResult=0x%08lx",pszResult));
 	return pszResult;
 }
