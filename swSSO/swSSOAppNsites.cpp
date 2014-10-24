@@ -3185,7 +3185,7 @@ int UploadConfig(HWND w, char *pszDomainIds)
 
 	// si le categ id a changé lors de l'upload, il faut le détecter pour mettre à jour l'item dans la listview
 	// (tout le reste est bon en mémoire et dans le fichier swsso.ini)
-	if (iNewCategoryId!=iOldCategoryId)
+	if (iNewCategoryId!=-1 && iNewCategoryId!=iOldCategoryId)
 	{
 		HTREEITEM hItemCategory=hParentItem==NULL?hItem:hParentItem;
 		TVItemSetLParam(w,hItemCategory,iNewCategoryId);
