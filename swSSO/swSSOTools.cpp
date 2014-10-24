@@ -40,8 +40,6 @@ static DWORD gdwHTTPResultFactor=2048; // 2 Ko octets par config
 static int giRefreshTimer=10;
 char gszRes[512];
 char gcszK3[]="33333333";
-WCHAR gwcTmp1_512[512+1];
-WCHAR gwcTmp2_512[512+1];
 char gszComputedValue[256+1];
 
 //*****************************************************************************
@@ -173,6 +171,18 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	DWORD dwOptions;
 	DWORD dwFlags;
 
+	BSTR bstrProxyURL=NULL;
+	BSTR bstrProxyUser=NULL;
+	BSTR bstrProxyPwd=NULL;
+	BSTR bstrServerAddress=NULL;
+	BSTR bstrRequest=NULL;
+
+	SysFreeString(bstrProxyURL);
+	SysFreeString(bstrProxyUser);
+	SysFreeString(bstrProxyPwd);
+	SysFreeString(bstrServerAddress);
+	SysFreeString(bstrRequest);
+
 	// 0.89 : si pas de paramètres proxy reçus, utilise les valeurs globales
 	if (pInProxyParams==NULL)
 	{
@@ -188,8 +198,9 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	if (pProxyParams->bInternetUseProxy && *(pProxyParams->szProxyURL)!=0)
 	{
 		TRACE((TRACE_INFO,_F_,"Proxy:%s",pProxyParams->szProxyURL)); 
-		MultiByteToWideChar(CP_ACP,0,pProxyParams->szProxyURL,-1,gwcTmp1_512,sizeof(gwcTmp1_512)-1);
-		hSession = WinHttpOpen(L"swsso.exe",WINHTTP_ACCESS_TYPE_NAMED_PROXY,gwcTmp1_512,WINHTTP_NO_PROXY_BYPASS, 0);
+		bstrProxyURL=GetBSTRFromSZ(pProxyParams->szProxyURL);
+		if (bstrProxyURL==NULL) goto end;
+		hSession = WinHttpOpen(L"swsso.exe",WINHTTP_ACCESS_TYPE_NAMED_PROXY,bstrProxyURL,WINHTTP_NO_PROXY_BYPASS, 0);
 	}
 	else
 	{
@@ -201,15 +212,17 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	WinHttpSetTimeouts(hSession, timeout*1000, timeout*1000, timeout*1000, timeout*1000); 
 
 	// WinHttpConnect
-	MultiByteToWideChar(CP_ACP,0,gszServerAddress,-1,gwcTmp1_512,sizeof(gwcTmp1_512)-1);
-    hConnect = WinHttpConnect(hSession,gwcTmp1_512,(INTERNET_PORT)giServerPort, 0); // ISSUE€162 (port configurable)
+	bstrServerAddress=GetBSTRFromSZ(gszServerAddress);
+	if (bstrServerAddress==NULL) goto end;
+	hConnect = WinHttpConnect(hSession,bstrServerAddress,(INTERNET_PORT)giServerPort, 0); // ISSUE€162 (port configurable)
 	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s) - port : %d",gszServerAddress,giServerPort)); goto end; }
     
 	// WinHttpOpenRequest
-	MultiByteToWideChar(CP_ACP,0,szRequest,-1,gwcTmp1_512,sizeof(gwcTmp1_512)-1);
+	bstrRequest=GetBSTRFromSZ(szRequest);
+	if (bstrRequest==NULL) goto end;
 	dwFlags=WINHTTP_FLAG_ESCAPE_PERCENT;
 	if (gbServerHTTPS) dwFlags|=WINHTTP_FLAG_SECURE;
-    hRequest = WinHttpOpenRequest( hConnect,L"GET",gwcTmp1_512,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,dwFlags); // ISSUE#162 (HTTPS possible)
+    hRequest = WinHttpOpenRequest(hConnect,L"GET",bstrRequest,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,dwFlags); // ISSUE#162 (HTTPS possible)
 	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",gbServerHTTPS?"https":"http",gszServerAddress,giServerPort,szRequest)); 
 	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(GET %s)",szRequest)); goto end; }
 
@@ -222,9 +235,11 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 
 	if (*(pProxyParams->szProxyUser)!=0)
 	{
-		MultiByteToWideChar(CP_ACP,0,pProxyParams->szProxyUser,-1,gwcTmp1_512,sizeof(gwcTmp1_512)-1);
-		MultiByteToWideChar(CP_ACP,0,pProxyParams->szProxyPwd,-1,gwcTmp2_512,sizeof(gwcTmp2_512)-1);
-		brc=WinHttpSetCredentials(hRequest,WINHTTP_AUTH_TARGET_PROXY,WINHTTP_AUTH_SCHEME_BASIC,gwcTmp1_512,gwcTmp2_512,NULL);
+		bstrProxyUser=GetBSTRFromSZ(pProxyParams->szProxyUser);
+		if (bstrProxyUser==NULL) goto end;
+		bstrProxyPwd=GetBSTRFromSZ(pProxyParams->szProxyPwd);
+		if (bstrProxyPwd==NULL) goto end;
+		brc=WinHttpSetCredentials(hRequest,WINHTTP_AUTH_TARGET_PROXY,WINHTTP_AUTH_SCHEME_BASIC,bstrProxyUser,bstrProxyPwd,NULL);
 		TRACE((TRACE_INFO,_F_,"WinHttpSetCredentials(user:%s)",pProxyParams->szProxyUser)); 
 		if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpSetCredentials()=0x%08lx",GetLastError())); goto end; }
 	}
