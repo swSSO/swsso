@@ -3848,6 +3848,13 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				char tmpPwd[LEN_PWD+1]="";
 				rc=StoreNodeValue(tmpPwd,sizeof(tmpPwd),pChildElement);
 				TRACE((TRACE_PWD,_F_, "pwdValue=%s",tmpPwd));
+				for (i=0;i<iReplaceExistingConfig;i++)
+				{
+					if (rc==0) 
+						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_PWD;
+					else
+						gptActions[ptiActions[i]].iWithIdPwd|=CONFIG_WITH_PWD;
+				}
 				if (rc>0)
 				{
 					char *pszEncryptedPassword=NULL;
@@ -3860,10 +3867,6 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 						for (i=0;i<iReplaceExistingConfig;i++)
 						{
 							strcpy_s(gptActions[ptiActions[i]].szPwdEncryptedValue,sizeof(gptActions[ptiActions[i]].szPwdEncryptedValue),pszEncryptedPassword);
-							if (rc==0) 
-								gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_PWD;
-							else
-								gptActions[ptiActions[i]].iWithIdPwd|=CONFIG_WITH_PWD;
 						}
 					}
 				}
