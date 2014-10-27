@@ -37,6 +37,7 @@
 
 unsigned int gMsgTaskbarRestart=0; // message registré pour recevoir les notifs de recréation du systray
 int BeginChangeAppPassword(void);
+int RefreshRights(void);
 
 static int giRefreshTimer=10;
 
@@ -85,6 +86,7 @@ static void ShowContextMenu(HWND w)
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_APPNSITES,GetString(IDS_MENU_APPNSITES));
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PROPRIETES,GetString(IDS_MENU_PROP));
+
 	if (!gbAdmin)
 	{
 		if ((giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) || *gszCfgPortal!=0 || gbUseADPasswordForAppLogin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
@@ -93,6 +95,7 @@ static void ShowContextMenu(HWND w)
 		if (*gszCfgPortal!=0) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PORTAL,GetString(IDS_MENU_PORTAL));
 	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+	if (gbShowMenu_RefreshRights) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_REFRESH_RIGHTS,GetString(IDS_MENU_REFRESH_RIGHTS));
 	if (gbSSOActif)
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_ACTIVER,GetString(IDS_MENU_DESACTIVER));
 	else
@@ -242,6 +245,15 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						SSOActivate(w);
 					}
 					ShowConfig();
+					break;
+				case TRAY_MENU_REFRESH_RIGHTS:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_REFRESH_RIGHTS"));
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
+					{
+						if (AskPwd(NULL,TRUE)!=0) goto end;
+						SSOActivate(w);
+					}
+					RefreshRights();
 					break;
 				case TRAY_MENU_APPNSITES:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_APPNSITES"));
@@ -979,6 +991,37 @@ end:
 	UninstallHotKey();
 	SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
 	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// RefreshRights()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+int RefreshRights(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=0;
+	BOOL sav_gbDisplayConfigsNotifications;
+
+	LoadPolicies();
+	sav_gbDisplayConfigsNotifications=gbDisplayConfigsNotifications;
+	gbDisplayConfigsNotifications=FALSE;
+	if (gbInternetManualPutConfig) 
+	{
+		giNbDomains=GetDomains(TRUE,0,gtabDomains);
+	}
+	if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
+	{
+		rc=GetNewOrModifiedConfigsFromServer();
+	}
+	if (rc==0)
+		MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_DONE),"swSSO",MB_ICONINFORMATION | MB_OK);
+	else
+		MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_ERROR),"swSSO",MB_ICONEXCLAMATION | MB_OK);
+	gbDisplayConfigsNotifications=sav_gbDisplayConfigsNotifications;
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

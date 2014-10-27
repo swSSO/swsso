@@ -621,8 +621,6 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	UNREFERENCED_PARAMETER(lp);
 	
 	int rc=FALSE;
-	int lenId,lenPwd,lenId2,lenId3,lenId4;
-
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -634,11 +632,11 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
 			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
 			// limitation champs de saisie
-			SendMessage(GetDlgItem(w,TB_ID),EM_LIMITTEXT,90,0);
-			SendMessage(GetDlgItem(w,TB_ID2),EM_LIMITTEXT,90,0);
-			SendMessage(GetDlgItem(w,TB_ID3),EM_LIMITTEXT,90,0);
-			SendMessage(GetDlgItem(w,TB_ID4),EM_LIMITTEXT,90,0);
-			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,90,0);
+			SendMessage(GetDlgItem(w,TB_ID),EM_LIMITTEXT,LEN_ID,0);
+			SendMessage(GetDlgItem(w,TB_ID2),EM_LIMITTEXT,LEN_ID,0);
+			SendMessage(GetDlgItem(w,TB_ID3),EM_LIMITTEXT,LEN_ID,0);
+			SendMessage(GetDlgItem(w,TB_ID4),EM_LIMITTEXT,LEN_ID,0);
+			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,LEN_PWD,0);
 			// remplissage des champs si valeur connue
 			SetDlgItemText(w,TB_ID,gptActions[params->iAction].szId1Value);
 			SetDlgItemText(w,TB_ID2,gptActions[params->iAction].szId2Value);
@@ -835,11 +833,12 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (HIWORD(wp)==EN_CHANGE)
 					{
 						char szPassword[LEN_PWD+1];
-						T_IDANDPWDDIALOG *params=(T_IDANDPWDDIALOG*)GetWindowLong(w,DWL_USER);
-						lenId=GetDlgItemText(w,TB_ID,gptActions[params->iAction].szId1Value,sizeof(gptActions[params->iAction].szId1Value));
-						lenId2=GetDlgItemText(w,TB_ID2,gptActions[params->iAction].szId2Value,sizeof(gptActions[params->iAction].szId2Value));
-						lenId3=GetDlgItemText(w,TB_ID3,gptActions[params->iAction].szId3Value,sizeof(gptActions[params->iAction].szId3Value));
-						lenId4=GetDlgItemText(w,TB_ID4,gptActions[params->iAction].szId4Value,sizeof(gptActions[params->iAction].szId4Value));
+						char szId[LEN_ID+1];
+						int lenId,lenPwd,lenId2,lenId3,lenId4;
+						lenId=GetDlgItemText(w,TB_ID,szId,sizeof(szId));
+						lenId2=GetDlgItemText(w,TB_ID2,szId,sizeof(szId));
+						lenId3=GetDlgItemText(w,TB_ID3,szId,sizeof(szId));
+						lenId4=GetDlgItemText(w,TB_ID4,szId,sizeof(szId));
 						lenPwd=GetDlgItemText(w,TB_PWD,szPassword,sizeof(szPassword));
 						EnableWindow(GetDlgItem(w,IDOK),((lenId==0 && !gbDontAskId) || 
 														 (lenPwd==0 && !gbDontAskPwd) ||

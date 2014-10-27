@@ -78,6 +78,8 @@ BOOL gbShowAutoLockOption=TRUE;
 // ISSUE#183
 BOOL gbEnableOption_ShowBrowsers=TRUE;
 BOOL gbShowMenu_UploadWithIdPwd=FALSE;			// 1.03 - active le menu "Uploader avec identifiant et mot de passe"
+// ISSUE#204
+BOOL gbShowMenu_RefreshRights=FALSE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -116,6 +118,7 @@ BOOL gbServerHTTPS=FALSE;						// 1.03 - ISSUE#162
 int  giServerPort=INTERNET_DEFAULT_HTTP_PORT;	// 1.03 - ISSUE#162
 BOOL gbUseADPasswordForAppLogin=FALSE;			// 1.03 - permet d'utiliser %ADPASSWORD% dans le champ mot de passe (n'utilise pas (encore) swSSOCM --> le mdp AD est demandé à l'utilisateur)
 BOOL gbDisplayWindowsPasswordChange=TRUE;	// 1.05 - affiche / masque le message affiché lors du changement de mot de passe windows (en mode chaîné)
+BOOL gbCategoryAutoUpdate=FALSE;			// 1.06 - ISSUE#206 : met à jour la catégorie sur le serveur lorsqu'une application est déplacée dans l'IHM client
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -314,6 +317,11 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWBROWSERS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbEnableOption_ShowBrowsers=(BOOL)dwValue; 
+
+		// ISSUE#204
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_REFRESH_RIGHTS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_RefreshRights=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -518,6 +526,11 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_DISPLAY_WINDOWS_PASSWORD_CHANGE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbDisplayWindowsPasswordChange=(BOOL)dwValue; 
 
+		// ISSUE#206
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_CATEGORY_AUTO_UPDATE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbCategoryAutoUpdate=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -666,6 +679,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbCheckIniIntegrity=%d"			,gbCheckIniIntegrity));
 	TRACE((TRACE_INFO,_F_,"gbShowAutoLockOption=%d"			,gbShowAutoLockOption));
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowBrowsers=%d"	,gbEnableOption_ShowBrowsers));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_RefreshRights=%d"		,gbShowMenu_RefreshRights));
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
@@ -697,6 +711,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"giMaxConfigs=%d"						,giMaxConfigs));
 	TRACE((TRACE_INFO,_F_,"gbUseADPasswordForAppLogin=%d"		,gbUseADPasswordForAppLogin));
 	TRACE((TRACE_INFO,_F_,"gbDisplayWindowsPasswordChange=%d"	,gbDisplayWindowsPasswordChange));
+	TRACE((TRACE_INFO,_F_,"gbCategoryAutoUpdate=%d"				,gbCategoryAutoUpdate));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));

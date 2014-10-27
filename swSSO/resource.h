@@ -353,3 +353,6 @@
 #define IDS_MENU_MDP_WINDOWS                    40145
 #define IDS_ERROR_WINDOWS_SSO_LOGON3            40146
 #define IDS_MSG_CHANGE_APP_PWD_3                40147
+#define IDS_MENU_REFRESH_RIGHTS                 40148
+#define IDS_REFRESH_RIGHTS_DONE                 40149
+#define IDS_REFRESH_RIGHTS_ERROR                40150

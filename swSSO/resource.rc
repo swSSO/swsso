@@ -726,6 +726,9 @@ STRINGTABLE
     IDS_MENU_MDP_WINDOWS          "&Mot de passe Windows..."
     IDS_ERROR_WINDOWS_SSO_LOGON3  "Erreur au démarrage de swSSO.\r\nVeuillez fermer et rouvrir votre session Windows.\r\nSi le problème persiste, contactez votre support."
     IDS_MSG_CHANGE_APP_PWD_3      "Collez ensuite ce mot de passe dans les champs ""nouveau mot de passe"" de l'application avec la combinaison %s"
+    IDS_MENU_REFRESH_RIGHTS       "Rafraîchir mes droits"
+    IDS_REFRESH_RIGHTS_DONE       "Vos droits ont bien été mis à jour."
+    IDS_REFRESH_RIGHTS_ERROR      "Une erreur est survenue. Vos droits n'ont pas été mis à jour."
 }
 
 
