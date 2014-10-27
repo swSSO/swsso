@@ -3561,6 +3561,7 @@ int SaveApplications(void)
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 	char szType[3+1];
+	char szWithIdPwd[4+1];
 	int i;
 	DWORD dw;
 	HANDLE hf=INVALID_HANDLE_VALUE;
@@ -3664,9 +3665,14 @@ int SaveApplications(void)
 				free(pszEncrypted);
 			}
 		}
+		// pour compatibilité : il faut avoir NO si 0, ensuite valeurs numériques OK
+		if (gptActions[i].iWithIdPwd==0)
+			strcpy_s(szWithIdPwd,sizeof(szWithIdPwd),"NO");
+		else
+			sprintf_s(szWithIdPwd,sizeof(szWithIdPwd),"%d",gptActions[i].iWithIdPwd);
 		// le plus beau sprintf de ma carrière... en espérant que le buffer soit assez grand ;-(
 		sprintf_s(tmpBuf,sizeof(tmpBuf),
-			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%d\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
+			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
 			gptActions[i].szApplication,
 			gptActions[i].iConfigId,
 			gptActions[i].iCategoryId,
@@ -3688,7 +3694,7 @@ int SaveApplications(void)
 			gptActions[i].szFullPathName,
 			*(gptActions[i].szLastUpload)==0?"":gptActions[i].szLastUpload,
 			gptActions[i].bAddAccount?"YES":"NO", // 0.97 ISSUE#86
-			gptActions[i].iWithIdPwd, // 1.03 + 1.05
+			szWithIdPwd, // 1.03 + 1.05
 			gptActions[i].iPwdGroup); // 1.03
 			//,	gptActions[i].bPwdChangeInfos?"YES":"NO");
 		if (!WriteFile(hf,tmpBuf,strlen(tmpBuf),&dw,NULL)) 
