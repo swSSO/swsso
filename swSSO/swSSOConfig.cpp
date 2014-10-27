@@ -2945,6 +2945,47 @@ end:
 }
 
 // ----------------------------------------------------------------------------------
+// StoreNodeValueIfNotEmpty() -- pour ISSUE#212
+// ----------------------------------------------------------------------------------
+// Remplit la sz passée en paramètre avec la valeur du textenode
+// ----------------------------------------------------------------------------------
+// [rc] Taille de la valeur renseignée ou -1 si erreur
+// ----------------------------------------------------------------------------------
+int StoreNodeValueIfNotEmpty(char *buf,int bufsize,IXMLDOMNode *pNode)
+{
+	TRACE((TRACE_ENTER,_F_, "bufsize=%d",bufsize));
+	
+	int rc=-1;
+	HRESULT hr;
+	IXMLDOMNode *pText=NULL;
+	VARIANT vNodeValue;
+	vNodeValue.vt=VT_EMPTY;
+
+	hr=pNode->get_firstChild(&pText);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild()")); goto end; }
+	if (pText==NULL) // champ vide
+	{ 
+		TRACE((TRACE_DEBUG,_F_,"pNode->get_firstChild()=NULL"));
+		rc=0; 
+	}
+	else
+	{
+		hr=pText->get_nodeValue(&vNodeValue);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pText->get_nodeValue()")); goto end; }
+		if (vNodeValue.vt!=VT_BSTR) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeValue() is not a BSTR !?")); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"vNodeValue.bstrVal='%S'",vNodeValue.bstrVal));
+		if (SysStringLen(vNodeValue.bstrVal)==0) 
+			rc=0;
+		else
+			rc=sprintf_s(buf,bufsize,"%S",vNodeValue.bstrVal);
+	}	
+end:
+	if (vNodeValue.vt!=VT_EMPTY) VariantClear(&vNodeValue);
+	if (pText!=NULL) pText->Release();
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+// ----------------------------------------------------------------------------------
 // LookForConfig
 // ----------------------------------------------------------------------------------
 // Recherche de la configuration d'un SSO sur le serveur
@@ -3758,7 +3799,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
-					rc=StoreNodeValue(gptActions[ptiActions[i]].szId1Value,sizeof(gptActions[ptiActions[i]].szId1Value),pChildElement);
+					rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[i]].szId1Value,sizeof(gptActions[ptiActions[i]].szId1Value),pChildElement); // ISSUE#212
 					TRACE((TRACE_DEBUG,_F_, "id1Value=%s",gptActions[ptiActions[i]].szId1Value));
 					if (rc==0) 
 						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_ID1;
@@ -3770,7 +3811,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
-					rc=StoreNodeValue(gptActions[ptiActions[i]].szId2Value,sizeof(gptActions[ptiActions[i]].szId2Value),pChildElement);
+					rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[i]].szId2Value,sizeof(gptActions[ptiActions[i]].szId2Value),pChildElement); // ISSUE#212
 					TRACE((TRACE_DEBUG,_F_, "id2Value=%s",gptActions[ptiActions[i]].szId2Value));
 					if (rc==0) 
 						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_ID2;
@@ -3782,7 +3823,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
-					rc=StoreNodeValue(gptActions[ptiActions[i]].szId3Value,sizeof(gptActions[ptiActions[i]].szId3Value),pChildElement);
+					rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[i]].szId3Value,sizeof(gptActions[ptiActions[i]].szId3Value),pChildElement); // ISSUE#212
 					TRACE((TRACE_DEBUG,_F_, "id3Value=%s",gptActions[ptiActions[i]].szId3Value));
 					if (rc==0) 
 						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_ID3;
@@ -3794,7 +3835,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
-					rc=StoreNodeValue(gptActions[ptiActions[i]].szId4Value,sizeof(gptActions[ptiActions[i]].szId4Value),pChildElement);
+					rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[i]].szId4Value,sizeof(gptActions[ptiActions[i]].szId4Value),pChildElement); // ISSUE#212
 					TRACE((TRACE_DEBUG,_F_, "id4Value=%s",gptActions[ptiActions[i]].szId4Value));
 					if (rc==0) 
 						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_ID4;
