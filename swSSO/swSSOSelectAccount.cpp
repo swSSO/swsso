@@ -28,15 +28,15 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// swSSOLaunchApp.cpp
+// swSSOSelectAccount.cpp
 //-----------------------------------------------------------------------------
 
 #include "stdafx.h"
 
-HWND gwLaunchApp=NULL;
+HWND gwSelectAccount=NULL;
 static int giRefreshTimer=10;
 static int giSetForegroundTimer=20;
-int giLaunchedApp=-1; // index de l'application lancée
+int giSelectedAccount=-1; // index de l'application sélectionnée pour réutilisation du compte
 
 //-----------------------------------------------------------------------------
 // MoveControls()
@@ -53,7 +53,6 @@ static void MoveControls(HWND w)
 	SetWindowPos(GetDlgItem(w,TV_APPLICATIONS),NULL,10,10,rect.right-20,rect.bottom-48,SWP_NOZORDER);
 	SetWindowPos(GetDlgItem(w,IDOK),NULL,rect.right-162,rect.bottom-30,0,0,SWP_NOSIZE | SWP_NOZORDER);
 	SetWindowPos(GetDlgItem(w,IDCANCEL),NULL,rect.right-82,rect.bottom-30,0,0,SWP_NOSIZE | SWP_NOZORDER);
-	SetWindowPos(GetDlgItem(w,CK_VISIBLE),NULL,12,rect.bottom-28,0,0,SWP_NOSIZE | SWP_NOZORDER);
 		
 	InvalidateRect(w,NULL,FALSE);
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -73,24 +72,23 @@ static void SaveWindowPos(HWND w)
 
 	if (IsIconic(w)) goto end;
 
-	gx2=rect.left;
-	gy2=rect.top;
-	gcx2=rect.right-rect.left;
-	gcy2=rect.bottom-rect.top;
-	wsprintf(s,"%d",gx2);  WritePrivateProfileString("swSSO","x2",s,gszCfgFile);
-	wsprintf(s,"%d",gy2);  WritePrivateProfileString("swSSO","y2",s,gszCfgFile);
-	wsprintf(s,"%d",gcx2); WritePrivateProfileString("swSSO","cx2",s,gszCfgFile);
-	wsprintf(s,"%d",gcy2); WritePrivateProfileString("swSSO","cy2",s,gszCfgFile);
-	WritePrivateProfileString("swSSO","LaunchTopMost",gbLaunchTopMost?"YES":"NO",gszCfgFile);
+	gx4=rect.left;
+	gy4=rect.top;
+	gcx4=rect.right-rect.left;
+	gcy4=rect.bottom-rect.top;
+	wsprintf(s,"%d",gx4);  WritePrivateProfileString("swSSO","x4",s,gszCfgFile);
+	wsprintf(s,"%d",gy4);  WritePrivateProfileString("swSSO","y4",s,gszCfgFile);
+	wsprintf(s,"%d",gcx4); WritePrivateProfileString("swSSO","cx4",s,gszCfgFile);
+	wsprintf(s,"%d",gcy4); WritePrivateProfileString("swSSO","cy4",s,gszCfgFile);
 	StoreIniEncryptedHash(); // ISSUE#164
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
 //-----------------------------------------------------------------------------
-// OnInitDialog()
+// SelectAccountOnInitDialog()
 //-----------------------------------------------------------------------------
-void OnInitDialog(HWND w)
+void SelectAccountOnInitDialog(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	
@@ -98,12 +96,12 @@ void OnInitDialog(HWND w)
 	int cy;
 	RECT rect;
 	
-	gwLaunchApp=w;
+	gwSelectAccount=w;
 
 	// Positionnement et dimensionnement de la fenêtre
-	if (gx2!=-1 && gy2!=-1 && gcx2!=-1 && gcy2!=-1)
+	if (gx4!=-1 && gy4!=-1 && gcx4!=-1 && gcy4!=-1)
 	{
-		SetWindowPos(w,NULL,gx2,gy2,gcx2,gcy2,SWP_NOZORDER);
+		SetWindowPos(w,NULL,gx4,gy4,gcx4,gcy4,SWP_NOZORDER);
 	}
 	else // position par défaut
 	{
@@ -121,11 +119,7 @@ void OnInitDialog(HWND w)
 	TreeView_SetImageList(GetDlgItem(w,TV_APPLICATIONS),ghImageList,TVSIL_STATE);
 
 	// Remplissage de la treeview
-	FillTreeView(w,FALSE);
-
-	// case à cocher "Toujours visible"
-	CheckDlgButton(w,CK_VISIBLE,gbLaunchTopMost?BST_CHECKED:BST_UNCHECKED);
-	SetWindowPos(w,gbLaunchTopMost?HWND_TOPMOST:HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+	FillTreeView(w,TRUE);
 
 	// timer de refresh
 	if (giSetForegroundTimer==giTimer) giSetForegroundTimer=21;
@@ -135,11 +129,11 @@ void OnInitDialog(HWND w)
 }
 
 //-----------------------------------------------------------------------------
-// LaunchAppDialogProc()
+// SelectAccountDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la fenêtre de lancement d'application 
 //-----------------------------------------------------------------------------
-static int CALLBACK LaunchAppDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+static int CALLBACK SelectAccountDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
 //	TRACE((TRACE_DEBUG,_F_,"msg=0x%08lx LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",msg,LOWORD(wp),HIWORD(wp),lp));
@@ -148,7 +142,7 @@ static int CALLBACK LaunchAppDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	switch (msg)
 	{
 		case WM_INITDIALOG:		// ------------------------------------------------------- WM_INITDIALOG
-			OnInitDialog(w);
+			SelectAccountOnInitDialog(w);
 			MoveControls(w); 
 			break;
 		case WM_DESTROY:
@@ -173,24 +167,37 @@ static int CALLBACK LaunchAppDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case IDOK:
 					if (HIWORD(wp)==0) // les notifications autres que "from a control" ne nous intéressent pas !
 					{
-						LaunchSelectedApp(w);
+						HTREEITEM hItem,hParentItem;
+						int iAction;
+						hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
+						hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),hItem);
+						if (hParentItem!=NULL) // sinon c'est une catégorie, ça ne nous intéresse pas
+						{
+							iAction=TVItemGetLParam(w,hItem); 
+							EndDialog(w,iAction);
+						}
 					}
 					break;
 				case IDCANCEL:
 					if (HIWORD(wp)==0) // les notifications autres que "from a control" ne nous intéressent pas !
 					{
 						SaveWindowPos(w);
-						EndDialog(w,IDCANCEL);
+						EndDialog(w,-1);
 					}
-					break;
-				case CK_VISIBLE:
-					gbLaunchTopMost=(IsDlgButtonChecked(w,CK_VISIBLE)==BST_CHECKED);
-					SetWindowPos(w,gbLaunchTopMost?HWND_TOPMOST:HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 					break;
 			}
 			break;
 		case WM_SIZE:			// ------------------------------------------------------- WM_SIZE
 			MoveControls(w); 
+			break;
+		case WM_SIZING:
+			{
+				RECT *pRectNewSize=(RECT*)lp;
+				TRACE((TRACE_DEBUG,_F_,"RectNewSize=%d,%d,%d,%d",pRectNewSize->top,pRectNewSize->left,pRectNewSize->bottom,pRectNewSize->right));
+				if (pRectNewSize->right-pRectNewSize->left < 391)  pRectNewSize->right=pRectNewSize->left+391;
+				if (pRectNewSize->bottom-pRectNewSize->top < 553)  pRectNewSize->bottom=pRectNewSize->top+553;
+				rc=TRUE;
+			}
 			break;
 		case WM_NOTIFY:			// ------------------------------------------------------- WM_NOTIFY
 			switch (((NMHDR FAR *)lp)->code) 
@@ -198,17 +205,14 @@ static int CALLBACK LaunchAppDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case NM_DBLCLK:
 					if (wp==TV_APPLICATIONS) 
 					{
-						LaunchSelectedApp(w);
-					}
-					break;
-				case TVN_KEYDOWN:
-					{
-						LPNMTVKEYDOWN ptvkd = (LPNMTVKEYDOWN)lp;
-						switch (ptvkd->wVKey)
+						HTREEITEM hItem,hParentItem;
+						int iAction;
+						hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
+						hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),hItem);
+						if (hParentItem!=NULL) // sinon c'est une catégorie, ça ne nous intéresse pas
 						{
-							case VK_F5:
-								FillTreeView(w,FALSE);
-								break;
+							iAction=TVItemGetLParam(w,hItem); 
+							EndDialog(w,iAction);
 						}
 					}
 					break;
@@ -219,26 +223,25 @@ static int CALLBACK LaunchAppDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 }
 
 // ----------------------------------------------------------------------------------
-// ShowLaunchApp()
+// ShowSelectAccount()
 // ----------------------------------------------------------------------------------
-// Fenêtre de lancement des applications
+// Fenêtre de séléction d'un compte existant
 // ----------------------------------------------------------------------------------
-int ShowLaunchApp(void)
+int ShowSelectAccount(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=1;
+	int rc=-1;
 	
 	// si fenêtre déjà affichée, la replace au premier plan
-	if (gwLaunchApp!=NULL)
+	if (gwSelectAccount!=NULL)
 	{
-		ShowWindow(gwLaunchApp,SW_SHOW);
-		SetForegroundWindow(gwLaunchApp);
+		ShowWindow(gwSelectAccount,SW_SHOW);
+		SetForegroundWindow(gwSelectAccount);
 		goto end;
 	}
 
-	DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_LAUNCH_APP),HWND_DESKTOP,LaunchAppDialogProc,0);
-	gwLaunchApp=NULL;
-	rc=0;
+	rc=DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SELECT_ACCOUNT),HWND_DESKTOP,SelectAccountDialogProc);
+	gwSelectAccount=NULL;
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;

@@ -143,10 +143,10 @@ static int giSetForegroundTimer=20;
 #define ACTIVATE_NO			2
 #define ACTIVATE_TOGGLE		3
 
-int TVItemGetLParam(HWND w,HTREEITEM hItem);
+
 void TVItemSetLParam(HWND w,HTREEITEM hItem,LPARAM lp);
 int TVItemGetText(HWND w,HTREEITEM hItem,char *pszText,int sizeofText);
-HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication);
+HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication,BOOL bWithId);
 HTREEITEM TVAddCategory(HWND w,int iCategory);
 void ClearApplicationDetails(HWND w);
 void ShowApplicationDetails(HWND w,int iAction);
@@ -1158,7 +1158,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive)
 	// génère le nom de l'application
 	GenerateApplicationName(giNbActions,szAppName);
 	
-	hNewItem=TVAddApplication(w,giNbActions,NULL);
+	hNewItem=TVAddApplication(w,giNbActions,NULL,FALSE);
 	if (hNewItem!=NULL) 
 	{
 		TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
@@ -2412,12 +2412,13 @@ end:
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication)
+HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication,BOOL bWithId)
 {
-	TRACE((TRACE_ENTER,_F_, "Label=%s iCategoryId=%d",gptActions[iAction].szApplication,gptActions[iAction].iCategoryId));
+	TRACE((TRACE_ENTER,_F_, "Label=%s iCategoryId=%d bWithId=%d",gptActions[iAction].szApplication,gptActions[iAction].iCategoryId,bWithId));
 	HTREEITEM hItem=NULL;
 	TVINSERTSTRUCT tvis;
 	int iCategory;
+	char buf[LEN_APPLICATION_NAME+LEN_ID+10];
 
 	iCategory=GetCategoryIndex(gptActions[iAction].iCategoryId);
 	if (iCategory==-1) iCategory=0;
@@ -2426,9 +2427,21 @@ HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication)
 	tvis.itemex.mask=TVIF_TEXT|TVIF_PARAM; //|TVIF_STATE;
 	tvis.itemex.cchTextMax=0;
 	if (pszApplication==NULL)
-		tvis.itemex.pszText=gptActions[iAction].szApplication;
+	{
+		if (bWithId)
+		{
+			sprintf_s(buf,sizeof(buf),"%s (identifiant : %s)",gptActions[iAction].szApplication,gptActions[iAction].szId1Value);
+			tvis.itemex.pszText=buf;
+		}
+		else
+		{
+			tvis.itemex.pszText=gptActions[iAction].szApplication;
+		}
+	}
 	else
+	{
 		tvis.itemex.pszText=pszApplication;
+	}
 	tvis.itemex.lParam=iAction;
 	//tvis.itemex.stateMask=TVIS_STATEIMAGEMASK;
 	//tvis.itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?1:2);
@@ -2475,7 +2488,7 @@ end:
 //-----------------------------------------------------------------------------
 // Remplit la TreeView TV_APPLICATIONS
 //-----------------------------------------------------------------------------
-void FillTreeView(HWND w)
+void FillTreeView(HWND w,BOOL bWithId)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -2494,7 +2507,7 @@ void FillTreeView(HWND w)
 	{
 		if (gptActions[i].iType!=WEBPWD)
 		{
-			hItem=TVAddApplication(w,i,NULL); if (hItem==NULL) goto end;
+			hItem=TVAddApplication(w,i,NULL,bWithId); if (hItem==NULL) goto end;
 		}
 	}
 end:
@@ -2722,7 +2735,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	TreeView_SetImageList(GetDlgItem(w,TV_APPLICATIONS),ghImageList,TVSIL_STATE);
 
 	// Remplissage de la treeview
-	FillTreeView(w);
+	FillTreeView(w,FALSE);
 
 	// Sélectionne l'application
 	if (ptAppNsites->iSelected==-1) 
@@ -3110,7 +3123,7 @@ void MoveApp(HWND w,HTREEITEM hItem,int iNewCategoryIndex)
 	// modification de la catégorie dans la table des actions
 	gptActions[tvItem.lParam].iCategoryId=gptCategories[iNewCategoryIndex].id;
 	// ajout de l'élément avec sa nouvelle catégorie mais en conservant le titre existant (correction #99)
-	hNewItem=TVAddApplication(w,tvItem.lParam,szApplication);
+	hNewItem=TVAddApplication(w,tvItem.lParam,szApplication,FALSE);
 	// effacement de l'élément dans son ancienne catégorie
 	TreeView_DeleteItem(GetDlgItem(w,TV_APPLICATIONS),hItem);
 	if (hNewItem!=NULL) TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
@@ -4158,11 +4171,6 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 									TreeView_EditLabel(GetDlgItem(w,TV_APPLICATIONS),hItem); 
 								}
 								break;
-							/* v0.88 : plus besoin car tri automatique
-							           et de toute façon n'est pas compatible avec la correction du bug #89 !
-							case VK_F5:
-								FillTreeView(w);
-								break;*/
 							case VK_DELETE:
 								TVRemoveSelectedAppOrCateg(w);
 								if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
@@ -4241,7 +4249,7 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 		// SAUF si la demande de réaffichage vient du systray (dans ce cas on met juste au premier plan)
 		if (!bFromSystray)
 		{
-			FillTreeView(gwAppNsites);
+			FillTreeView(gwAppNsites,FALSE);
 			TVSelectItemFromLParam(gwAppNsites,TYPE_APPLICATION,iSelected);
 		}	
 		goto end;

@@ -68,6 +68,7 @@ BOOL gbSSOChrome=TRUE;					// ISSUE#176
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
 int gx3,gy3,gcx3,gcy3; 		// positionnement de la fenêtre publishto
+int gx4,gy4,gcx4,gcy4;		// positionnement de la fenêtre de sélection d'un compte existant
 char gszLastConfigUpdate[14+1]; 		// 0.91 : date (AAAAMMJJHHMMSS) de dernière mise à jour des configurations depuis le serveur
 HWND gwPropertySheet=NULL;
 
@@ -137,16 +138,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				if(GetObject(hFont, sizeof(LOGFONT), (LPSTR)&logfont)!= NULL)
 					logfont.lfUnderline=TRUE;
 				hFont=CreateFontIndirect(&logfont);
-
-				if(hFont!=NULL)
-				{
-					HWND wItem;
-					wItem=GetDlgItem(w,TX_URL);
-					if(wItem!=NULL) PostMessage(wItem,WM_SETFONT,(LPARAM)hFont,TRUE);
-					// 0.86 : suppression de l'@mail
-					//wItem=GetDlgItem(w,TX_MAILTO);
-					//if(wItem!=NULL) PostMessage(wItem,WM_SETFONT,(LPARAM)hFont,TRUE);
-				}
+				if(hFont!=NULL) PostMessage(GetDlgItem(w,TX_URL),WM_SETFONT,(LPARAM)hFont,TRUE);
 			}
 			char s[100];
 			// 0.63BETA5 : détail nb sso popups
@@ -225,7 +217,6 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					SetTextColor((HDC)wp,RGB(0x20,0x20,0xFF));
 					break;
 				case TX_URL:
-				//case TX_MAILTO: 0.86 : suppression de l'@mail
 					SetTextColor((HDC)wp,RGB(0,0,255));
 					SetBkMode((HDC)wp,TRANSPARENT);
 					rc=(int)GetStockObject(HOLLOW_BRUSH); // 0.60
@@ -340,6 +331,9 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				EndPaint(w,&ps);
 				rc=TRUE;
  			}
+			break;
+		case WM_DESTROY:
+			DeleteObject((HFONT)SendMessage(GetDlgItem(w,TX_URL),WM_GETFONT,0,0));  
 			break;
 	}
 	return rc;
@@ -663,9 +657,9 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// masquage de champs 
 			EnableWindow(GetDlgItem(w,TB_ID),!gbDontAskId);
 			EnableWindow(GetDlgItem(w,TB_PWD),!gbDontAskPwd);
-			ShowWindow(GetDlgItem(w,TB_ID2),gbDontAskId2?SW_HIDE:SW_SHOW);
-			ShowWindow(GetDlgItem(w,TB_ID3),gbDontAskId3?SW_HIDE:SW_SHOW);
-			ShowWindow(GetDlgItem(w,TB_ID4),gbDontAskId4?SW_HIDE:SW_SHOW);
+			ShowWindow(GetDlgItem(w,TB_ID2),gbDontAskId2?SW_HIDE:SW_SHOW); ShowWindow(GetDlgItem(w,TX_ID2),gbDontAskId2?SW_HIDE:SW_SHOW); 
+			ShowWindow(GetDlgItem(w,TB_ID3),gbDontAskId3?SW_HIDE:SW_SHOW); ShowWindow(GetDlgItem(w,TX_ID3),gbDontAskId3?SW_HIDE:SW_SHOW); 
+			ShowWindow(GetDlgItem(w,TB_ID4),gbDontAskId4?SW_HIDE:SW_SHOW); ShowWindow(GetDlgItem(w,TX_ID4),gbDontAskId4?SW_HIDE:SW_SHOW); 
 			if (gbDontAskId && gbDontAskPwd) EnableWindow(GetDlgItem(w,IDOK),TRUE);
 			// nom des champs complémentaires, si présents
 			if (!gbDontAskId2)
@@ -704,7 +698,7 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// positionnement et dimensionnement de la fenêtre + replacement des boutons OK / Cancel
 			int cx;
 			int cy;
-			RECT rect,clientRect,rectOK,rectCancel;
+			RECT rect,clientRect,rectOK,rectCancel,rectLink;
 			int iNbToHide=((gbDontAskId2?1:0)+(gbDontAskId3?1:0)+(gbDontAskId4?1:0));
 
 			// dimensionnement de la fenêtre
@@ -726,6 +720,11 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			SetWindowPos(GetDlgItem(w,IDOK),NULL,rectOK.left,rectOK.top-32*iNbToHide-(rect.bottom-rect.top-clientRect.bottom),0,0,SWP_NOSIZE | SWP_NOZORDER);
 			SetWindowPos(GetDlgItem(w,IDCANCEL),NULL,rectCancel.left,rectCancel.top-32*iNbToHide-(rect.bottom-rect.top-clientRect.bottom),0,0,SWP_NOSIZE | SWP_NOZORDER);
 
+			// replacement du lien "je veux réutiliser un identifiant existant"
+			GetWindowRect(GetDlgItem(w,TX_EXISTING),&rectLink);
+			// remarque : (rect.bottom-rect.top-clientRect.bottom) = taille de la barre de titre
+			SetWindowPos(GetDlgItem(w,TX_EXISTING),NULL,rectLink.left,rectLink.top-32*iNbToHide-(rect.bottom-rect.top-clientRect.bottom),0,0,SWP_NOSIZE | SWP_NOZORDER);
+			
 			cx = GetSystemMetrics( SM_CXSCREEN );
 			cy = GetSystemMetrics( SM_CYSCREEN );
 			GetWindowRect(w,&rect);
@@ -753,6 +752,16 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			else // positionnement en bas à droite de l'écran, près de l'icone swSSO
 			{
 				SetWindowPos(w,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
+			}
+			// lien souligné
+			LOGFONT logfont;
+			HFONT hFont;
+			hFont=(HFONT)SendMessage(w,WM_GETFONT,0,0);
+			if(hFont!=NULL)
+			{
+				if(GetObject(hFont, sizeof(LOGFONT), (LPSTR)&logfont)!= NULL) logfont.lfUnderline=TRUE;
+				hFont=CreateFontIndirect(&logfont);
+				if(hFont!=NULL) PostMessage(GetDlgItem(w,TX_EXISTING),WM_SETFONT,(LPARAM)hFont,TRUE);
 			}
 
 			// titre en gras
@@ -849,14 +858,76 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					SetBkMode((HDC)wp,TRANSPARENT);
 					rc=(int)GetStockObject(HOLLOW_BRUSH);
 					break;
+				case TX_EXISTING:
+					SetTextColor((HDC)wp,RGB(0,0,255));
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
 			}
 			break;
+		case WM_SETCURSOR:
+		{
+			POINT point={0,0};
+			HWND hwndChild=NULL;
+			INT iDlgCtrlID=0;
+		
+			GetCursorPos(&point);
+			MapWindowPoints(HWND_DESKTOP,w,&point,1);
+			hwndChild=ChildWindowFromPoint(w,point);
+			iDlgCtrlID=GetDlgCtrlID(hwndChild);
+			if (iDlgCtrlID==TX_EXISTING)
+			{
+				if(IsWindowVisible(hwndChild))
+				{
+					SetCursor(ghCursorHand);
+					rc=TRUE;
+				}
+			}
+			
+			break;
+		}
+		case WM_LBUTTONDOWN:
+		{
+			POINT pt;
+			pt.x=LOWORD(lp); 
+			pt.y=HIWORD(lp);
+			MapWindowPoints(w,HWND_DESKTOP,&pt,1);
+			RECT rect;
+			GetWindowRect(GetDlgItem(w,TX_EXISTING),&rect);
+			if ((pt.x >= rect.left)&&(pt.x <= rect.right)&& (pt.y >= rect.top) &&(pt.y <= rect.bottom))
+			{
+				int iAction;
+				iAction=ShowSelectAccount();
+				if (iAction!=-1) // l'utilisateur a sélectionné une appli dans la liste
+				{
+					SetDlgItemText(w,TB_ID,gptActions[iAction].szId1Value);
+					if (*gptActions[iAction].szPwdEncryptedValue!=0)
+					{
+						char *pszDecryptedValue=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+						if (pszDecryptedValue!=NULL) 
+						{
+							SetDlgItemText(w,TB_PWD,pszDecryptedValue);
+							SecureZeroMemory(pszDecryptedValue,strlen(pszDecryptedValue));
+							free(pszDecryptedValue);
+						}
+					}
+					if (!gbDontAskId2) SetDlgItemText(w,TB_ID2,gptActions[iAction].szId2Value);
+					if (!gbDontAskId3) SetDlgItemText(w,TB_ID3,gptActions[iAction].szId3Value);
+					if (!gbDontAskId4) SetDlgItemText(w,TB_ID4,gptActions[iAction].szId4Value);
+					SetFocus(GetDlgItem(w,IDOK));
+				}
+			}
+			break;
+		}
 		case WM_HELP:
 			Help();
 			break;
 		case WM_PAINT:
 			DrawLogoBar(w,50,ghLogoFondBlanc50);
 			rc=TRUE;
+			break;
+		case WM_DESTROY:
+			DeleteObject((HFONT)SendMessage(GetDlgItem(w,TX_EXISTING),WM_GETFONT,0,0));  
 			break;
 	}
 	return rc;
@@ -1101,6 +1172,11 @@ int GetConfigHeader()
 		GetPrivateProfileString("swSSO","lastADPwdChange","",gszLastADPwdChange,sizeof(gszLastADPwdChange),gszCfgFile);
 		GetPrivateProfileString("swSSO","ADPwd","",gszEncryptedADPwd,sizeof(gszEncryptedADPwd),gszCfgFile);
 	}
+
+	gx4=GetPrivateProfileInt("swSSO","x4",-1,gszCfgFile);
+	gy4=GetPrivateProfileInt("swSSO","y4",-1,gszCfgFile);
+	gcx4=GetPrivateProfileInt("swSSO","cx4",-1,gszCfgFile);
+	gcy4=GetPrivateProfileInt("swSSO","cy4",-1,gszCfgFile);
 
 	// REMARQUE : la config proxy est lue plus loin dans le démarrage du main, sinon la clé n'est pas disponible
 	//            pour déchiffrer le mot de passe proxy !

@@ -25,6 +25,7 @@
 #define IDD_PUBLISH_TO                          212
 #define IDI_SYSTRAY_ADMIN_ACTIVE                214
 #define IDI_SYSTRAY_ADMIN_INACTIVE              216
+#define IDD_SELECT_ACCOUNT                      218
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000
@@ -155,6 +156,7 @@
 #define PB_MDP_OUBLIE                           40000
 #define PB_RECHALLENGE                          40000
 #define PB_TOUT                                 40000
+#define TX_EXISTING                             40000
 #define TX_FRAME1                               40000
 #define CK_IE                                   40001
 #define CK_NPMECA                               40001

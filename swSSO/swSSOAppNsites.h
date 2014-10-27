@@ -143,11 +143,11 @@ int GetCategoryIndex(int id);
 int BackupAppsNcategs(void);
 void ShowApplicationDetails(HWND w,int iAction);
 void GetApplicationDetails(HWND w,int iAction);
-
+int TVItemGetLParam(HWND w,HTREEITEM hItem);
 int UploadConfig(HWND w, char *pszDomainIds);
 
 // ATTENTION, ces deux fonctions sont utilisées par swSSOLaunchApp.cpp, cela suppose
 // que l'identifiant du treeview TV_APPLICATIONS soit bien identique dans les 2 fenêtres !
-void FillTreeView(HWND w);
+void FillTreeView(HWND w,BOOL bWithId);
 void LaunchSelectedApp(HWND w);
 

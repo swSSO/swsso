@@ -97,6 +97,7 @@ extern HWND gwPropertySheet;		// 0.83 : handle de la fenetre de config (pour mas
 extern int gx,gy,gcx,gcy;			// 0.85 : positionnement de la fenêtre sites et applications
 extern int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; // 0.91 : positionnement de la fenêtre de lancement d'application
 extern int gx3,gy3,gcx3,gcy3;		// 1.05 : positionnement de la fenêtre publishto
+extern int gx4,gy4,gcx4,gcy4;		// 1.06 : positionnement de la fenêtre de sélection d'un compte existant
 
 extern BOOL gbDisplayChangeAppPwdDialog ; // ISSUE#107
 extern BOOL gbSSOInternetExplorer;			// ISSUE#176

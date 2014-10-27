@@ -237,6 +237,7 @@
     <ClCompile Include="swSSOMain.cpp" />
     <ClCompile Include="swSSOPolicies.cpp" />
     <ClCompile Include="swSSORecovery.cpp" />
+    <ClCompile Include="swSSOSelectAccount.cpp" />
     <ClCompile Include="swSSOTools.cpp" />
     <ClCompile Include="swSSOTrace.cpp" />
     <ClCompile Include="swSSOTray.cpp" />
@@ -266,6 +267,7 @@
     <ClInclude Include="swSSOMain.h" />
     <ClInclude Include="swSSOPolicies.h" />
     <ClInclude Include="swSSORecovery.h" />
+    <ClInclude Include="swSSOSelectAccount.h" />
     <ClInclude Include="swSSOTools.h" />
     <ClInclude Include="swSSOTrace.h" />
     <ClInclude Include="swSSOTray.h" />
