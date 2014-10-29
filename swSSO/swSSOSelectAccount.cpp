@@ -174,6 +174,7 @@ static int CALLBACK SelectAccountDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (hParentItem!=NULL) // sinon c'est une catégorie, ça ne nous intéresse pas
 						{
 							iAction=TVItemGetLParam(w,hItem); 
+							SaveWindowPos(w);
 							EndDialog(w,iAction);
 						}
 					}
@@ -212,6 +213,7 @@ static int CALLBACK SelectAccountDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (hParentItem!=NULL) // sinon c'est une catégorie, ça ne nous intéresse pas
 						{
 							iAction=TVItemGetLParam(w,hItem); 
+							SaveWindowPos(w);
 							EndDialog(w,iAction);
 						}
 					}
