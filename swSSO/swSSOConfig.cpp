@@ -1144,13 +1144,10 @@ int GetConfigHeader()
 	gy2=GetPrivateProfileInt("swSSO","y2",-1,gszCfgFile);
 	gcx2=GetPrivateProfileInt("swSSO","cx2",-1,gszCfgFile);
 	gcy2=GetPrivateProfileInt("swSSO","cy2",-1,gszCfgFile);
-	if (gbInternetManualPutConfig)
-	{
-		gx3=GetPrivateProfileInt("swSSO","x3",-1,gszCfgFile);
-		gy3=GetPrivateProfileInt("swSSO","y3",-1,gszCfgFile);
-		gcx3=GetPrivateProfileInt("swSSO","cx3",-1,gszCfgFile);
-		gcy3=GetPrivateProfileInt("swSSO","cy3",-1,gszCfgFile);
-	}
+	gx3=GetPrivateProfileInt("swSSO","x3",-1,gszCfgFile);
+	gy3=GetPrivateProfileInt("swSSO","y3",-1,gszCfgFile);
+	gcx3=GetPrivateProfileInt("swSSO","cx3",-1,gszCfgFile);
+	gcy3=GetPrivateProfileInt("swSSO","cy3",-1,gszCfgFile);
 	GetPrivateProfileString("swSSO","lastConfigUpdate","",gszLastConfigUpdate,sizeof(gszLastConfigUpdate),gszCfgFile);
 	
 	// lecture des recovery infos

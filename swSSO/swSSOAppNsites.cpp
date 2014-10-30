@@ -3145,6 +3145,7 @@ void MoveApp(HWND w,HTREEITEM hItem,int iNewCategoryIndex)
 	TVITEMEX tvItem; 
 	HTREEITEM hNewItem;
 	char szApplication[LEN_APPLICATION_NAME+1];
+	int iGnored=-1;
 
 	tvItem.mask=TVIF_HANDLE | TVIF_PARAM | TVIF_TEXT;
 	tvItem.hItem=hItem;
@@ -3161,6 +3162,12 @@ void MoveApp(HWND w,HTREEITEM hItem,int iNewCategoryIndex)
 	// effacement de l'élément dans son ancienne catégorie
 	TreeView_DeleteItem(GetDlgItem(w,TV_APPLICATIONS),hItem);
 	if (hNewItem!=NULL) TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
+	
+	// ISSUE#206 : Mise à jour automatique sur le serveur quand une application est déplacée d’une catégorie à une autre
+	if (gbCategoryAutoUpdate)
+	{
+		PutConfigOnServer(tvItem.lParam,&iGnored,"DONTCHANGE");
+	}
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }

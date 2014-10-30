@@ -325,7 +325,8 @@ else if ($_GET['action']=="putconfig")
     
 	// V6 : gestion des domaines multiples, exemple : $var_domainId=1,3,5
 	// Si la configuration existe déjà, supprime toutes les associations dans la table configs_domains
-	if ($var_configId!="0")
+	// sauf si le client demande explicitement à ne pas les modifier (cas concret : déplacement d'une config d'une categorie à une autre)
+	if ($var_configId!="0" && $var_domainId!="DONTCHANGE")
 	{
 		$szRequest="delete from "._TABLE_PREFIX_."configs_domains where configId=".$var_configId;
 		if (isset($_GET["debug"])) echo $szRequest;
@@ -467,27 +468,31 @@ else if ($_GET['action']=="putconfig")
 	// V6 : gestion des domaines multiples, exemple : $var_domainId=1,3,5
 	// A ce stade, la config a été ajoutée ou mise à jour, on a son id dans $var_configId, 
 	// il faut maintenant mettre à jour les associations dans configs_domains
-	$tok = strtok($var_domainId,",");
-	$bFirst=1;
-	$szRequest="";
-	while ($tok !== false) 
+	// sauf si le client demande explicitement à ne pas les modifier (cas concret : déplacement d'une config d'une categorie à une autre)
+	if ($var_domainId!="DONTCHANGE")
 	{
-		if ($bFirst==0)
-			$szRequest=$szRequest.",";
-		else
+		$tok = strtok($var_domainId,",");
+		$bFirst=1;
+		$szRequest="";
+		while ($tok !== false) 
 		{
-			$szRequest="insert into "._TABLE_PREFIX_."configs_domains (configId,domainId) values ";
-			$bFirst=0;
+			if ($bFirst==0)
+				$szRequest=$szRequest.",";
+			else
+			{
+				$szRequest="insert into "._TABLE_PREFIX_."configs_domains (configId,domainId) values ";
+				$bFirst=0;
+			}
+			$szRequest=$szRequest."(".$var_configId.",".$tok.") ";
+			$tok = strtok(",");
 		}
-		$szRequest=$szRequest."(".$var_configId.",".$tok.") ";
-		$tok = strtok(",");
-	}
-	if ($szRequest!="")
-	{
-		$szRequest=$szRequest.";";
-		if (isset($_GET["debug"])) echo $szRequest;
-		$result=mysql_query($szRequest,$cnx);
-		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+		if ($szRequest!="")
+		{
+			$szRequest=$szRequest.";";
+			if (isset($_GET["debug"])) echo $szRequest;
+			$result=mysql_query($szRequest,$cnx);
+			if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+		}
 	}
 	dbClose($cnx);
 	echo "OK:".$var_configId.":".$var_categId;
