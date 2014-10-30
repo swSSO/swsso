@@ -89,7 +89,6 @@ CAPTION "swSSO - Gestion des sites et applications"
 FONT 8, "Tahoma", 400, 0, 0
 {
     CTEXT           "MODE ADMINISTRATEUR", TX_MODE_ADMIN, 7, 2, 429, 15, NOT WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, WS_EX_LEFT
-    AUTOCHECKBOX    "&Détecter les erreurs de connexion à cette application", CK_AUTO_LOCK, 17, 272, 180, 8, WS_GROUP, WS_EX_LEFT
     ICON            "", IMG_ID, 418, 18, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_ID2, 415, 57, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
     ICON            "", IMG_ID3, 417, 70, 21, 20, SS_ICON | SS_NOTIFY, WS_EX_TRANSPARENT
@@ -117,8 +116,10 @@ FONT 8, "Tahoma", 400, 0, 0
     CONTROL         "Tab1", TAB_CONFIG, WC_TABCONTROL, 0, 197, 98, 15, 169, WS_EX_LEFT
     LTEXT           "&Identifiant", TX_ID, 203, 25, 38, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_ID, 259, 23, 158, 13, ES_AUTOHSCROLL, WS_EX_LEFT
+    AUTOCHECKBOX    "Identi&fiant AD", CK_AD_ID, 193, 91, 61, 8, NOT WS_VISIBLE | WS_GROUP, WS_EX_LEFT
     LTEXT           "&Mot de passe", TX_PWD, 203, 39, 44, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_PWD, 259, 37, 133, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    AUTOCHECKBOX    "Mot &de passe AD", CK_AD_PWD, 294, 92, 70, 8, NOT WS_VISIBLE | WS_GROUP, WS_EX_LEFT
     EDITTEXT        TB_PWD_CLEAR, 265, 42, 133, 13, ES_AUTOHSCROLL, WS_EX_LEFT
     LTEXT           "&2ème identifiant", TX_ID2, 203, 52, 57, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_ID2, 259, 50, 158, 13, ES_AUTOHSCROLL, WS_EX_LEFT
@@ -157,6 +158,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Groupe (mot de passe)", TX_PWD_GROUP, 213, 271, 74, 8, NOT WS_VISIBLE | SS_LEFT, WS_EX_LEFT
     EDITTEXT        TB_ID4_ID, 283, 247, 128, 13, ES_AUTOHSCROLL, WS_EX_LEFT
     EDITTEXT        TB_PWD_GROUP, 285, 270, 128, 13, NOT WS_VISIBLE | ES_AUTOHSCROLL, WS_EX_LEFT
+    AUTOCHECKBOX    "&Détecter les erreurs de connexion à cette application", CK_AUTO_LOCK, 17, 272, 180, 8, WS_GROUP, WS_EX_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 7, 253, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "Annuler", IDCANCEL, 62, 253, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "&Appliquer", IDAPPLY, 121, 253, 50, 14, 0, WS_EX_LEFT
@@ -778,3 +780,4 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
+

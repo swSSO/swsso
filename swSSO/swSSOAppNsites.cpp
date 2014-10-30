@@ -78,7 +78,10 @@ static BOOL gbEffacementEnCours=FALSE;
 static BOOL gbShowPwd;
 static BOOL gbShowGeneratedPwd;
 static char buf2048[2048]; // gros buffer pas beau
-static HBRUSH ghTabBrush;
+static HBRUSH ghTabBrush=NULL;
+
+char gcszUsername[]="%USERNAME%";
+char gcszADPassword[]="%ADPASSWORD%";
 
 #define TB_PWD_SUBCLASS_ID 1
 #define TB_PWD_CLEAR_SUBCLASS_ID 2
@@ -720,6 +723,11 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 		SetDlgItemText(w,TB_ID4,"");		EnableWindow(GetDlgItem(w,TB_ID4),FALSE);	
 		SetDlgItemText(w,TB_PWD,"");		EnableWindow(GetDlgItem(w,TB_PWD),FALSE);
 		SetDlgItemText(w,TB_PWD_CLEAR,"");		EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),FALSE);
+		if (gbAdmin) 
+		{
+			EnableWindow(GetDlgItem(w,CK_AD_ID),FALSE);
+			EnableWindow(GetDlgItem(w,CK_AD_PWD),FALSE);
+		}
 		EnableWindow(GetDlgItem(w,IMG_LOUPE),FALSE);
 		SetDlgItemText(w,TB_TITRE,"");		EnableWindow(GetDlgItem(w,TB_TITRE),FALSE);
 		SetDlgItemText(w,TB_URL,"");		EnableWindow(GetDlgItem(w,TB_URL),FALSE);
@@ -746,6 +754,11 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 		EnableWindow(GetDlgItem(w,TB_PWD),TRUE);
 		EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),TRUE);
 		EnableWindow(GetDlgItem(w,IMG_LOUPE),TRUE);
+		if (gbAdmin) 
+		{
+			EnableWindow(GetDlgItem(w,CK_AD_ID),TRUE);
+			EnableWindow(GetDlgItem(w,CK_AD_PWD),TRUE);
+		}
 		EnableWindow(GetDlgItem(w,CB_TYPE),TRUE);
 		EnableWindow(GetDlgItem(w,CK_KBSIM),TRUE);
 		EnableWindow(GetDlgItem(w,TB_KBSIM),TRUE); //////// TODO : NE PAS DEGRISER SI SUR L'AUTRE ONGLET
@@ -2117,6 +2130,11 @@ void ShowApplicationDetails(HWND w,int iAction)
 	char szTmp[10+1];
 	gbIsChanging=TRUE;
 	
+	if (gbAdmin) 
+	{
+		CheckDlgButton(w,CK_AD_ID,BST_UNCHECKED);
+		CheckDlgButton(w,CK_AD_PWD,BST_UNCHECKED);
+	}
 	if (iAction>giNbActions) { TRACE((TRACE_ERROR,_F_,"iAction=%d ! (giNbActions=%d)",iAction,giNbActions)); goto end; }
 	giLastApplicationConfig=iAction;
 
@@ -2135,6 +2153,10 @@ void ShowApplicationDetails(HWND w,int iAction)
 		if (pszDecryptedValue!=NULL) 
 		{
 			SetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,pszDecryptedValue);
+			if (gbAdmin) 
+			{
+				if (strcmp(pszDecryptedValue,gcszADPassword)==0) CheckDlgButton(w,CK_AD_PWD,BST_CHECKED);
+			}
 			SecureZeroMemory(pszDecryptedValue,strlen(pszDecryptedValue));
 			free(pszDecryptedValue);
 		}
@@ -2158,6 +2180,10 @@ void ShowApplicationDetails(HWND w,int iAction)
 	// MoveControls(w,GetDlgItem(w,TAB_CONFIG)); 
 
 	SetDlgItemText(w,TB_ID, gptActions[iAction].szId1Value);
+	if (gbAdmin) 
+	{
+		if (strcmp(gptActions[iAction].szId1Value,gcszUsername)==0) CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
+	}
 	SetDlgItemText(w,TB_ID2,gptActions[iAction].szId2Value);
 	SetDlgItemText(w,TB_ID3,gptActions[iAction].szId3Value);
 	SetDlgItemText(w,TB_ID4,gptActions[iAction].szId4Value);
@@ -2820,6 +2846,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 	GetClientRect(w,&rect);
 	int yPosAutoLock;
 	int yOffset=gbAdmin?30:0;
+	int yOffsetPwd=gbAdmin?20:0;
 
 	RECT rectTabConfig;
 	rectTabConfig.left=rect.right*2/5+15;
@@ -2852,24 +2879,29 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_ID3),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_ID4),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_ID)   ,NULL,rect.right*2/5+25,50+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-		SetWindowPos(GetDlgItem(w,TX_PWD)  ,NULL,rect.right*2/5+25,80+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		SetWindowPos(GetDlgItem(w,TX_PWD)  ,NULL,rect.right*2/5+25,80+yOffset+yOffsetPwd,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TB_ID)   ,NULL,rect.right*2/5+25+80,47+yOffset,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,IMG_ID)  ,NULL,rect.right-30,49+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		if (gbEnableOption_ShowPassword)
 		{
-			SetWindowPos(GetDlgItem(w,IMG_LOUPE),NULL,rect.right-52,79+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_PWD)      ,NULL,rect.right*2/5+25+80,77+yOffset,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TB_PWD_CLEAR),NULL,rect.right*2/5+25+80,77+yOffset,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_LOUPE),NULL,rect.right-52,79+yOffset+yOffsetPwd,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD)      ,NULL,rect.right*2/5+25+80,77+yOffset+yOffsetPwd,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD_CLEAR),NULL,rect.right*2/5+25+80,77+yOffset+yOffsetPwd,rect.right*3/5-160,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79+yOffset+yOffsetPwd,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 		else
 		{
 			ShowWindow(GetDlgItem(w,IMG_LOUPE),SW_HIDE);
-			SetWindowPos(GetDlgItem(w,TB_PWD)  ,NULL,rect.right*2/5+25+80,77+yOffset,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TB_PWD)  ,NULL,rect.right*2/5+25+80,77+yOffset+yOffsetPwd,rect.right*3/5-140,20,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_PWD) ,NULL,rect.right-30,79+yOffset+yOffsetPwd,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 		ShowWindow(GetDlgItem(w,TB_PWD),gbShowPwd?SW_HIDE:SW_SHOW);
 		ShowWindow(GetDlgItem(w,TB_PWD_CLEAR),gbShowPwd?SW_SHOW:SW_HIDE);
+		if (gbAdmin)
+		{
+			SetWindowPos(GetDlgItem(w,CK_AD_ID),NULL,rect.right*2/5+25+80,47+yOffset+25,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,CK_AD_PWD),NULL,rect.right*2/5+25+80,79+yOffset+43,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		}
 	}
 	else // onglet sélectionné = identifiants complémentaires
 	{
@@ -2881,6 +2913,8 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_ID)   ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_PWD)  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_LOUPE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,CK_AD_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,CK_AD_PWD),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_ID2),NULL,rect.right*2/5+25,50+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_ID3),NULL,rect.right*2/5+25,80+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_ID4),NULL,rect.right*2/5+25,110+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
@@ -3938,7 +3972,36 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case CK_AUTO_LOCK:
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE);
 					break;
-				case TB_KBSIM:
+				case CK_AD_ID:
+					SetDlgItemText(w,TB_ID,IsDlgButtonChecked(w,CK_AD_ID)?gcszUsername:"");
+					break;
+				case CK_AD_PWD:
+					SetDlgItemText(w,TB_PWD,IsDlgButtonChecked(w,CK_AD_PWD)?gcszADPassword:"");
+					SetDlgItemText(w,TB_PWD_CLEAR,IsDlgButtonChecked(w,CK_AD_PWD)?gcszADPassword:"");
+					break;
+				case TB_ID:
+					if (gbAdmin)
+					{
+						char szId[LEN_ID+1];
+						GetDlgItemText(w,TB_ID,szId,sizeof(szId));
+						CheckDlgButton(w,CK_AD_ID,(strcmp(szId,gcszUsername)==0)?BST_CHECKED:BST_UNCHECKED);
+					}
+					break;
+				case TB_PWD:
+					if (gbAdmin)
+					{
+						char szPwd[LEN_PWD+1];
+						GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
+						CheckDlgButton(w,CK_AD_PWD,(strcmp(szPwd,gcszADPassword)==0)?BST_CHECKED:BST_UNCHECKED);
+					}
+					break;
+				case TB_PWD_CLEAR:
+					if (gbAdmin)
+					{
+						char szPwd[LEN_PWD+1];
+						GetDlgItemText(w,TB_PWD_CLEAR,szPwd,sizeof(szPwd));
+						CheckDlgButton(w,CK_AD_PWD,(strcmp(szPwd,gcszADPassword)==0)?BST_CHECKED:BST_UNCHECKED);
+					}
 					break;
 				case PB_PARCOURIR:
 					{
@@ -4026,8 +4089,11 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						rc=(int)ghRedBrush;
 					}
 					break;
+				case CK_AD_ID:
+				case CK_AD_PWD:
 				case CK_KBSIM:
 				case CK_AUTO_LOCK:
+				{
 					// Si pas déjà fait, création de la BRUSH pour peinture arrière plan des CHECKBOX...
 					// Comment ça marche : on récupère la couleur du pixel juste à côté de la check box,
 					// qui correspond à la couleur du fond de l'onglet. Ca aurait été bcp plus simple si la
@@ -4049,11 +4115,14 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							TRACE((TRACE_INFO,_F_,"Cas du pixel noir... évité :-)"));
 						}
 						else
+						{
 							ghTabBrush=CreateSolidBrush(color);
+						}
 					}
 					SetBkMode((HDC)wp,TRANSPARENT);
 					rc=(int)ghTabBrush;
 					break;
+				}
 			}			
 			break;
 		case WM_NOTIFY:			// ------------------------------------------------------- WM_NOTIFY
