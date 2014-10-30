@@ -3164,7 +3164,7 @@ void MoveApp(HWND w,HTREEITEM hItem,int iNewCategoryIndex)
 	if (hNewItem!=NULL) TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
 	
 	// ISSUE#206 : Mise à jour automatique sur le serveur quand une application est déplacée d’une catégorie à une autre
-	if (gbCategoryAutoUpdate)
+	if (gbCategoryManagement && gbCategoryAutoUpdate)
 	{
 		PutConfigOnServer(tvItem.lParam,&iGnored,"DONTCHANGE");
 	}
