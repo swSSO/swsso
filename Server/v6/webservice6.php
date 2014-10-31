@@ -603,4 +603,83 @@ else if ($_GET['action']=="getconfigdomains")
 		echo "</domains>";
 	}
 	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// isadminpwd
+// ------------------------------------------------------------
+else if ($_GET['action']=="isadminpwd")
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	$szRequest= "select pwd from "._TABLE_PREFIX_."adminpwd where pwd!=''";
+	$req=mysql_query($szRequest,$cnx);
+	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+
+	header("Content-type: text/xml; charset=UTF-8");
+	if(mysql_num_rows($req)==0) 
+	{
+		echo "NO";
+	}
+	else
+	{
+		echo "YES";
+	}
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// checkadminpwd
+// ------------------------------------------------------------
+else if ($_GET['action']=="checkadminpwd")
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	$var_salt=utf8_decode(myaddslashes($_GET['salt']));
+	$var_pwd=utf8_decode(myaddslashes($_GET['pwd']));
+	
+	// calcul le hash du pwd salé
+	$averifier=sha1($var_salt.$var_pwd);
+	
+	// lit la pwd salé en base
+	$szRequest= "select pwd from "._TABLE_PREFIX_."adminpwd where pwd!=''";
+	$req=mysql_query($szRequest,$cnx);
+	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+
+	header("Content-type: text/xml; charset=UTF-8");
+	if(mysql_num_rows($req)==0) 
+	{
+		echo "KO";
+	}
+	else
+	{
+		// compare
+		$luenbase=mysql_fetch_row($req);
+		if ($luenbase[0]==$averifier)
+			echo "OK";
+		else
+			echo "KO";
+	}
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// defineadminpwd
+// ------------------------------------------------------------
+else if ($_GET['action']=="defineadminpwd")
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	$var_salt=utf8_decode(myaddslashes($_GET['salt']));
+	$var_pwd=utf8_decode(myaddslashes($_GET['pwd']));
+	
+	// calcul le hash du pwd salé
+	$pwdhashesale=sha1($var_salt.$var_pwd);
+	
+	$szRequest="update "._TABLE_PREFIX_."adminpwd set pwd='".$pwdhashesale."'";
+	mysql_query($szRequest,$cnx);
+	dbClose($cnx);
+
+	header("Content-type: text/xml; charset=UTF-8");
+	echo "OK";
 }?>

@@ -186,24 +186,6 @@ FONT 8, "Tahoma"
 
 
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-IDD_PWD_ADMIN_DEFINE DIALOG 0, 0, 268, 109
-STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
-CAPTION "swSSO - Mode administration"
-FONT 8, "Tahoma"
-{
-    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 256, 1, WS_EX_LEFT
-    LTEXT           "Veuillez définir le mot de passe administrateur :", TX_FRAME, 55, 11, 199, 8, SS_LEFT, WS_EX_LEFT
-    LTEXT           "&Mot de passe :", IDC_STATIC, 12, 48, 53, 8, SS_LEFT, WS_EX_LEFT
-    EDITTEXT        TB_NEW_PWD1, 72, 46, 189, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
-    LTEXT           "&Confirmation :", IDC_STATIC, 12, 68, 50, 10, SS_LEFT, WS_EX_LEFT
-    EDITTEXT        TB_NEW_PWD2, 72, 65, 189, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
-    DEFPUSHBUTTON   "OK", IDOK, 158, 88, 50, 14, WS_DISABLED, WS_EX_LEFT
-    PUSHBUTTON      "Annuler", IDCANCEL, 212, 88, 50, 14, 0, WS_EX_LEFT
-}
-
-
-
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 IDD_CHALLENGE DIALOG 0, 0, 325, 245
 STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 CAPTION "swSSO - Réinitialisation du mot de passe"
@@ -433,6 +415,24 @@ FONT 8, "Tahoma"
     PUSHBUTTON      "Annuler", IDCANCEL, 210, 71, 50, 14, 0, WS_EX_LEFT
     LTEXT           "Veuillez saisir le mot de passe administrateur :", TX_FRAME, 49, 11, 200, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 242, 1, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+IDD_PWD_ADMIN_DEFINE DIALOG 0, 0, 268, 109
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "swSSO - Mode administration"
+FONT 8, "Tahoma"
+{
+    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 256, 1, WS_EX_LEFT
+    LTEXT           "Veuillez définir le mot de passe administrateur :", TX_FRAME, 55, 11, 199, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "&Mot de passe :", IDC_STATIC, 12, 48, 53, 8, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        TB_NEW_PWD1, 72, 46, 189, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    LTEXT           "&Confirmation :", IDC_STATIC, 12, 68, 50, 10, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        TB_NEW_PWD2, 72, 65, 189, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 158, 88, 50, 14, WS_DISABLED, WS_EX_LEFT
+    PUSHBUTTON      "Annuler", IDCANCEL, 212, 88, 50, 14, 0, WS_EX_LEFT
 }
 
 
@@ -765,6 +765,7 @@ STRINGTABLE
     IDS_MENU_REFRESH_RIGHTS       "Rafraîchir mes droits"
     IDS_REFRESH_RIGHTS_DONE       "Vos droits ont bien été mis à jour."
     IDS_REFRESH_RIGHTS_ERROR      "Une erreur est survenue. Vos droits n'ont pas été mis à jour."
+    IDS_ADMIN_PWD_STORE_ERROR     "Une erreur est survenue. Le mot de passe administrateur n'a pas été enregistré."
 }
 
 

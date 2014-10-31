@@ -360,3 +360,4 @@
 #define IDS_MENU_REFRESH_RIGHTS                 40148
 #define IDS_REFRESH_RIGHTS_DONE                 40149
 #define IDS_REFRESH_RIGHTS_ERROR                40150
+#define IDS_ADMIN_PWD_STORE_ERROR               40151

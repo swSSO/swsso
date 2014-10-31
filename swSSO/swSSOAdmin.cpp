@@ -37,6 +37,53 @@
 static int giRefreshTimer=10;
 
 //-----------------------------------------------------------------------------
+// CheckAdminPwd()
+//-----------------------------------------------------------------------------
+// Vérifie le mot de passe admin en base
+//-----------------------------------------------------------------------------
+int CheckAdminPwd(char *szPwd)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	UNREFERENCED_PARAMETER(szPwd);
+
+
+	rc=0;
+//end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// StoreAdminPwd()
+//-----------------------------------------------------------------------------
+// Stocke le mot de passe admin en base
+//-----------------------------------------------------------------------------
+int StoreAdminPwd(char *szNewPwd)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	
+	char szRequest[512+1];
+	char *pszResult=NULL;
+	char szHash[2*32+1];
+
+	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szHash);
+	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szHash+16);
+	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szHash+32);
+	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szHash+48);
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szHash,strlen(szHash),"szHash :"));
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=defineadminpwd&hash=%s&pwd=%s",gszWebServiceAddress,szHash,szNewPwd);
+	pszResult=HTTPRequest(szRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	rc=(strcmp(pszResult,"OK")==0)?0:-1;
+
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
 // AskAdminPwdDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la fenêtre de saisie du mot de passe admin
@@ -89,12 +136,14 @@ static int CALLBACK AskAdminPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case IDOK:
 				{
 					char szPwd[LEN_PWD+1];
+					int ret;
 					GetDlgItemText(w,TB_NEW_PWD1,szPwd,sizeof(szPwd));
-
-					// TODO : vérifier le mot de passe en base
-
+					ret=CheckAdminPwd(szPwd);
 					SecureZeroMemory(szPwd,strlen(szPwd));
-					EndDialog(w,IDOK);
+					if (ret==0)
+						EndDialog(w,IDOK);
+					else
+						MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_ICONEXCLAMATION);
 					break;
 				}
 				case IDCANCEL:
@@ -192,12 +241,14 @@ static int CALLBACK DefineAdminPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp
 				case IDOK:
 				{
 					char szNewPwd1[LEN_PWD+1];
+					int ret;
 					GetDlgItemText(w,TB_NEW_PWD1,szNewPwd1,sizeof(szNewPwd1));
-
-					// TODO : stocker le mot de passe en base
-
+					ret=StoreAdminPwd(szNewPwd1);
 					SecureZeroMemory(szNewPwd1,strlen(szNewPwd1));
-					EndDialog(w,IDOK);
+					if (ret==0)
+						EndDialog(w,IDOK);
+					else
+						MessageBox(w,GetString(IDS_ADMIN_PWD_STORE_ERROR),"swSSO",MB_ICONEXCLAMATION);
 					break;
 				}
 				case IDCANCEL:
@@ -262,12 +313,17 @@ int DefineAdminPwd()
 BOOL IsAdminPwdDefined()
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	BOOL rc;
-	
-	// TODO : regarder en base s'il y a un mot de passe admin défini
+	BOOL rc=FALSE;
+	char szRequest[512+1];
+	char *pszResult=NULL;
 
-	rc=FALSE;
-//end:
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=isadminpwd",gszWebServiceAddress);
+	pszResult=HTTPRequest(szRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	
+	rc=(strcmp(pszResult,"YES")==0);
+
+end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

@@ -4793,6 +4793,7 @@ int GetDomains(BOOL bAllDomains,int iConfigId,T_DOMAIN *pgtabDomain)
 	}
 #endif
 end:
+	if (pszResult!=NULL) free(pszResult);
 	if (bstrXML!=NULL) SysFreeString(bstrXML);
 	if (bstrNodeName!=NULL) SysFreeString(bstrNodeName);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
