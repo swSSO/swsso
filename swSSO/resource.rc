@@ -173,14 +173,32 @@ STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMEN
 CAPTION "swSSO - Mot de passe Windows Active Directory"
 FONT 8, "Tahoma"
 {
-    EDITTEXT        TB_NEW_PWD1, 96, 46, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
-    EDITTEXT        TB_NEW_PWD2, 96, 65, 165, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    EDITTEXT        TB_NEW_PWD1, 72, 46, 189, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    EDITTEXT        TB_NEW_PWD2, 72, 65, 189, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 158, 88, 50, 14, WS_DISABLED, WS_EX_LEFT
     PUSHBUTTON      "Annuler", IDCANCEL, 212, 88, 50, 14, 0, WS_EX_LEFT
-    LTEXT           "&Confirmation :", IDC_STATIC, 7, 68, 50, 10, SS_LEFT, WS_EX_LEFT
-    LTEXT           "&Nouveau mot de passe :", IDC_STATIC, 7, 48, 79, 10, SS_LEFT, WS_EX_LEFT
+    LTEXT           "&Confirmation :", IDC_STATIC, 12, 68, 50, 10, SS_LEFT, WS_EX_LEFT
+    LTEXT           "&Mot de passe :", IDC_STATIC, 12, 48, 53, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Merci de saisir votre mot de passe d'ouverture de session Windows ci-dessous.", TX_FRAME, 47, 7, 211, 19, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 256, 1, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+IDD_PWD_ADMIN_DEFINE DIALOG 0, 0, 268, 109
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "swSSO - Mode administration"
+FONT 8, "Tahoma"
+{
+    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 256, 1, WS_EX_LEFT
+    LTEXT           "Veuillez définir le mot de passe administrateur :", TX_FRAME, 55, 11, 199, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "&Mot de passe :", IDC_STATIC, 12, 48, 53, 8, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        TB_NEW_PWD1, 72, 46, 189, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    LTEXT           "&Confirmation :", IDC_STATIC, 12, 68, 50, 10, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        TB_NEW_PWD2, 72, 65, 189, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 158, 88, 50, 14, WS_DISABLED, WS_EX_LEFT
+    PUSHBUTTON      "Annuler", IDCANCEL, 212, 88, 50, 14, 0, WS_EX_LEFT
 }
 
 
@@ -399,6 +417,22 @@ FONT 8, "Tahoma"
     PUSHBUTTON      "Annuler", IDCANCEL, 210, 85, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "Mot de passe &oublié ?", PB_MDP_OUBLIE, 7, 85, 81, 14, 0, WS_EX_LEFT
     LTEXT           "&Mot de passe :", IDC_STATIC, 9, 47, 48, 10, SS_LEFT, WS_EX_LEFT
+}
+
+
+
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+IDD_PWD_ADMIN_ASK DIALOG 0, 0, 267, 90
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "swSSO - Mode administration"
+FONT 8, "Tahoma"
+{
+    LTEXT           "&Mot de passe :", IDC_STATIC, 9, 47, 48, 10, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        TB_PWD, 60, 45, 200, 13, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 156, 71, 50, 14, WS_DISABLED, WS_EX_LEFT
+    PUSHBUTTON      "Annuler", IDCANCEL, 210, 71, 50, 14, 0, WS_EX_LEFT
+    LTEXT           "Veuillez saisir le mot de passe administrateur :", TX_FRAME, 49, 11, 200, 8, SS_LEFT, WS_EX_LEFT
+    CONTROL         "", IDC_SEPARATOR, WC_STATIC, SS_ETCHEDHORZ, 0, 31, 242, 1, WS_EX_LEFT
 }
 
 
@@ -780,4 +814,3 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
-

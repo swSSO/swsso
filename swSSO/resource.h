@@ -26,6 +26,8 @@
 #define IDI_SYSTRAY_ADMIN_ACTIVE                214
 #define IDI_SYSTRAY_ADMIN_INACTIVE              216
 #define IDD_SELECT_ACCOUNT                      218
+#define IDD_PWD_ADMIN_DEFINE                    222
+#define IDD_PWD_ADMIN_ASK                       223
 #define PB_SAVEAS                               1000
 #define PSP_ABOUT                               1000
 #define TB_ID1                                  1000

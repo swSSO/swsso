@@ -2079,6 +2079,18 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	// lecture du header de la config (=lecture section swSSO)
 	if (GetConfigHeader()!=0) { iError=-2; goto end; }
 
+	if (gbAdmin) // si défini, demande le mot de passe admin, sinon demande de le définir
+	{
+		if (IsAdminPwdDefined())
+		{
+			if (AskAdminPwd()!=0) goto end;
+		}
+		else
+		{
+			if (DefineAdminPwd()!=0) goto end;
+		}
+	}
+
 	if (*gszCfgVersion==0) // version <0.50 ou premier lancement...
 	{
 		strcpy_s(gszCfgVersion,4,gcszCfgVersion);
@@ -2316,7 +2328,6 @@ askpwd:
 		{ 
 			MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); 
 		}
-		if (gbAdmin) gbInternetManualPutConfig=TRUE;
 		if (gbInternetManualPutConfig) // 1.05 : on ne demande pas à l'admin quel est son domaine, il doit pouvoir tous les gérer
 		{
 			giDomainId=-1;
@@ -2457,7 +2468,7 @@ askpwd:
 				goto end;
 		}
 	}
-
+	if (gbAdmin) gbInternetManualPutConfig=TRUE;
 	if (!gbAdmin)
 	{
 		if (LaunchTimer()!=0)

@@ -107,6 +107,9 @@
     <ClCompile Include="swSSOSelectAccount.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="swSSOAdmin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="hand.cur">
@@ -185,6 +188,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="swSSOSelectAccount.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOAdmin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
