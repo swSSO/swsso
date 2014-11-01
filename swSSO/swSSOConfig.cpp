@@ -3320,6 +3320,8 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 	gbDontAskId4=TRUE;
 	gbDontAskPwd=TRUE;
 
+	int iCurWithIdPwd=0;
+
 	hr = CoCreateInstance(CLSID_DOMDocument30, NULL, CLSCTX_INPROC_SERVER, IID_IXMLDOMDocument,(void**)&pDoc);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(IID_IXMLDOMDocument)=0x%08lx",hr)); goto end; }
 
@@ -3341,6 +3343,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 		int i,j;
 		iReplaceExistingConfig=0; 
 		bReplaceExistingConfig=FALSE;
+		iCurWithIdPwd=0;
 
 		TRACE((TRACE_DEBUG,_F_,"<app>"));
 		hr=pChildApp->get_firstChild(&pChildElement);
@@ -3773,81 +3776,82 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					SaveCategories();
 				}
 			}
-			/*
-			else if (CompareBSTRtoSZ(bstrNodeName,"domainId")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"withIdPwd")) 
 			{
 				char tmp[10+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
 				if (rc>0) 
 				{
-					for (i=0;i<iReplaceExistingConfig;i++)
-					{
-						gptActions[ptiActions[i]].iDomainId=atoi(tmp);
-						TRACE((TRACE_DEBUG,_F_,"gptActions[%d].iDomainId=%d",ptiActions[i],gptActions[ptiActions[i]].iDomainId));
-					}
+					iCurWithIdPwd=atoi(tmp);
+					TRACE((TRACE_DEBUG,_F_,"iCurWithIdPwd=%d",iCurWithIdPwd));
 				}
-			}*/
+			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"id1Value")) // nouveau v1.03
 			{
-				for (i=0;i<iReplaceExistingConfig;i++)
+				if (iCurWithIdPwd & CONFIG_WITH_ID1) // identifiant imposé par l'admin
 				{
-					rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[i]].szId1Value,sizeof(gptActions[ptiActions[i]].szId1Value),pChildElement); // ISSUE#212
-					TRACE((TRACE_DEBUG,_F_, "id1Value=%s",gptActions[ptiActions[i]].szId1Value));
-					if (rc==0) 
-						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_ID1;
-					else
-						gptActions[ptiActions[i]].iWithIdPwd|=CONFIG_WITH_ID1;
+					rc=StoreNodeValue(gptActions[ptiActions[0]].szId1Value,sizeof(gptActions[ptiActions[0]].szId1Value),pChildElement);
 				}
+				else
+				{
+					if (gptActions[ptiActions[0]].iWithIdPwd & CONFIG_WITH_ID1) // la config avait un ID imposé mais maintenant l'admin l'a enlevé , il faut le supprimer
+						*gptActions[ptiActions[0]].szId1Value=0;
+					else
+						rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[0]].szId1Value,sizeof(gptActions[ptiActions[0]].szId1Value),pChildElement); // ISSUE#212
+				}
+				TRACE((TRACE_DEBUG,_F_, "id1Value=%s",gptActions[ptiActions[0]].szId1Value));
 			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"id2Value")) // nouveau v1.03
 			{
-				for (i=0;i<iReplaceExistingConfig;i++)
+				if (iCurWithIdPwd & CONFIG_WITH_ID2) // identifiant imposé par l'admin
 				{
-					rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[i]].szId2Value,sizeof(gptActions[ptiActions[i]].szId2Value),pChildElement); // ISSUE#212
-					TRACE((TRACE_DEBUG,_F_, "id2Value=%s",gptActions[ptiActions[i]].szId2Value));
-					if (rc==0) 
-						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_ID2;
-					else
-						gptActions[ptiActions[i]].iWithIdPwd|=CONFIG_WITH_ID2;
+					rc=StoreNodeValue(gptActions[ptiActions[0]].szId2Value,sizeof(gptActions[ptiActions[0]].szId2Value),pChildElement);
 				}
+				else
+				{
+					if (gptActions[ptiActions[0]].iWithIdPwd & CONFIG_WITH_ID2) // la config avait un ID2 imposé mais maintenant l'admin l'a enlevé , il faut le supprimer
+						*gptActions[ptiActions[0]].szId2Value=0;
+					else
+						rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[0]].szId2Value,sizeof(gptActions[ptiActions[0]].szId2Value),pChildElement); // ISSUE#212
+				}
+				TRACE((TRACE_DEBUG,_F_, "id2Value=%s",gptActions[ptiActions[0]].szId2Value));
 			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"id3Value")) // nouveau v1.03
 			{
-				for (i=0;i<iReplaceExistingConfig;i++)
+				if (iCurWithIdPwd & CONFIG_WITH_ID3) // identifiant imposé par l'admin
 				{
-					rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[i]].szId3Value,sizeof(gptActions[ptiActions[i]].szId3Value),pChildElement); // ISSUE#212
-					TRACE((TRACE_DEBUG,_F_, "id3Value=%s",gptActions[ptiActions[i]].szId3Value));
-					if (rc==0) 
-						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_ID3;
-					else
-						gptActions[ptiActions[i]].iWithIdPwd|=CONFIG_WITH_ID3;
+					rc=StoreNodeValue(gptActions[ptiActions[0]].szId3Value,sizeof(gptActions[ptiActions[0]].szId3Value),pChildElement);
 				}
+				else
+				{
+					if (gptActions[ptiActions[0]].iWithIdPwd & CONFIG_WITH_ID3) // la config avait un ID3 imposé mais maintenant l'admin l'a enlevé , il faut le supprimer
+						*gptActions[ptiActions[0]].szId3Value=0;
+					else
+						rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[0]].szId3Value,sizeof(gptActions[ptiActions[0]].szId3Value),pChildElement); // ISSUE#212
+				}
+				TRACE((TRACE_DEBUG,_F_, "id3Value=%s",gptActions[ptiActions[0]].szId3Value));
 			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"id4Value")) // nouveau v1.03
 			{
-				for (i=0;i<iReplaceExistingConfig;i++)
+				if (iCurWithIdPwd & CONFIG_WITH_ID4) // identifiant imposé par l'admin
 				{
-					rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[i]].szId4Value,sizeof(gptActions[ptiActions[i]].szId4Value),pChildElement); // ISSUE#212
-					TRACE((TRACE_DEBUG,_F_, "id4Value=%s",gptActions[ptiActions[i]].szId4Value));
-					if (rc==0) 
-						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_ID4;
-					else
-						gptActions[ptiActions[i]].iWithIdPwd|=CONFIG_WITH_ID4;
+					rc=StoreNodeValue(gptActions[ptiActions[0]].szId4Value,sizeof(gptActions[ptiActions[0]].szId4Value),pChildElement);
 				}
+				else
+				{
+					if (gptActions[ptiActions[0]].iWithIdPwd & CONFIG_WITH_ID4) // la config avait un ID4 imposé mais maintenant l'admin l'a enlevé , il faut le supprimer
+						*gptActions[ptiActions[0]].szId4Value=0;
+					else
+						rc=StoreNodeValueIfNotEmpty(gptActions[ptiActions[0]].szId4Value,sizeof(gptActions[ptiActions[0]].szId4Value),pChildElement); // ISSUE#212
+				}
+				TRACE((TRACE_DEBUG,_F_, "id4Value=%s",gptActions[ptiActions[0]].szId4Value));
 			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"pwdValue")) // nouveau v1.03
 			{
 				char tmpPwd[LEN_PWD+1]="";
 				rc=StoreNodeValue(tmpPwd,sizeof(tmpPwd),pChildElement);
 				TRACE((TRACE_PWD,_F_, "pwdValue=%s",tmpPwd));
-				for (i=0;i<iReplaceExistingConfig;i++)
-				{
-					if (rc==0) 
-						gptActions[ptiActions[i]].iWithIdPwd&=!CONFIG_WITH_PWD;
-					else
-						gptActions[ptiActions[i]].iWithIdPwd|=CONFIG_WITH_PWD;
-				}
-				if (rc>0)
+				if ((iCurWithIdPwd & CONFIG_WITH_PWD) || rc>0)
 				{
 					char *pszEncryptedPassword=NULL;
 					// chiffre le mot de passe
@@ -3855,13 +3859,16 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					SecureZeroMemory(tmpPwd,LEN_PWD+1);
 					if (pszEncryptedPassword!=NULL) 
 					{
-						// le stocke dans toutes les configs concernées
-						for (i=0;i<iReplaceExistingConfig;i++)
-						{
-							strcpy_s(gptActions[ptiActions[i]].szPwdEncryptedValue,sizeof(gptActions[ptiActions[i]].szPwdEncryptedValue),pszEncryptedPassword);
-						}
+						strcpy_s(gptActions[ptiActions[0]].szPwdEncryptedValue,sizeof(gptActions[ptiActions[0]].szPwdEncryptedValue),pszEncryptedPassword);
 					}
 				}
+				else if (gptActions[ptiActions[0]].iWithIdPwd & CONFIG_WITH_PWD) // la config avait un PWD imposé mais maintenant l'admin l'a enlevé , il faut le supprimer
+				{
+					*gptActions[ptiActions[0]].szPwdEncryptedValue=0;
+				}
+				// On a fini de traiter tous les id et mdp imposés, on peut stocker le withIdPwd
+				gptActions[ptiActions[0]].iWithIdPwd=iCurWithIdPwd;
+				TRACE((TRACE_DEBUG,_F_,"gptActions[%d].iWithIdPwd=%d",ptiActions[0],gptActions[ptiActions[0]].iWithIdPwd));
 			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"pwdGroup")) 
 			{

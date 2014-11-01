@@ -113,7 +113,7 @@ else if ($_GET['action']=="getconfig")
 			
 	if (_ENCRYPT_=="TRUE")
 	{
-		$columns=$columns.",".$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue;
+		$columns=$columns.",withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue;
 	}
 				
 	if (isset($_GET["debug"])) echo $columns;
@@ -261,11 +261,12 @@ else if ($_GET['action']=="getconfig")
 			echo "<domainId><![CDATA[".$ligne[21]."]]></domainId>\n";
 			echo "<pwdGroup><![CDATA[".$ligne[22]."]]></pwdGroup>\n";
 			echo "<autoLock><![CDATA[".$ligne[23]."]]></autoLock>\n";
-			if (isset($ligne[24])) echo "<id1Value><![CDATA[".$ligne[24]."]]></id1Value>\n";
-			if (isset($ligne[25])) echo "<id2Value><![CDATA[".$ligne[25]."]]></id2Value>\n";
-			if (isset($ligne[26])) echo "<id3Value><![CDATA[".$ligne[26]."]]></id3Value>\n";
-			if (isset($ligne[27])) echo "<id4Value><![CDATA[".$ligne[27]."]]></id4Value>\n";
-			if (isset($ligne[28])) echo "<pwdValue><![CDATA[".$ligne[28]."]]></pwdValue>\n";
+			if (isset($ligne[24])) echo "<withIdPwd><![CDATA[".$ligne[24]."]]></withIdPwd>\n";
+			if (isset($ligne[25])) echo "<id1Value><![CDATA[".$ligne[25]."]]></id1Value>\n";
+			if (isset($ligne[26])) echo "<id2Value><![CDATA[".$ligne[26]."]]></id2Value>\n";
+			if (isset($ligne[27])) echo "<id3Value><![CDATA[".$ligne[27]."]]></id3Value>\n";
+			if (isset($ligne[28])) echo "<id4Value><![CDATA[".$ligne[28]."]]></id4Value>\n";
+			if (isset($ligne[29])) echo "<pwdValue><![CDATA[".$ligne[29]."]]></pwdValue>\n";
 			echo "</app>\n";
 			$i++;
 		}

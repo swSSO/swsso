@@ -2378,24 +2378,59 @@ void GetApplicationDetails(HWND w,int iAction)
 		strcpy_s(gptActions[iAction].szFullPathName,sizeof(gptActions[iAction].szFullPathName),buf2048);
 	}
 
-	if (bChanged)
+	if (gbShowMenu_UploadWithIdPwd)
 	{
-		TRACE((TRACE_INFO,_F_,"Changement de config pour %s",gptActions[iAction].szApplication));
-		// gptActions[iAction].bConfigOK=FALSE; // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
-		gptActions[iAction].bConfigSent=FALSE;
-		//gptActions[iAction].tLastDetect=-1;
-		//gptActions[iAction].wLastDetect=NULL;
-		gptActions[iAction].tLastSSO=-1;
-		gptActions[iAction].wLastSSO=NULL;
-		gptActions[iAction].iWaitFor=WAIT_IF_SSO_OK;
+		GetDlgItemText(w,TB_ID,buf2048,sizeof(buf2048));
+		if (strcmp(buf2048,gptActions[iAction].szId1Value)!=0) 
+		{
+			TRACE((TRACE_DEBUG,_F_,"Chgt config %s (szId1Value : %s -> %s)",gptActions[iAction].szApplication,gptActions[iAction].szId1Value,buf2048));
+			bChanged=TRUE;
+			strcpy_s(gptActions[iAction].szId1Value,sizeof(gptActions[iAction].szId1Value),buf2048);
+		}
+		GetDlgItemText(w,TB_ID2,buf2048,sizeof(buf2048));
+		if (strcmp(buf2048,gptActions[iAction].szId2Value)!=0) 
+		{
+			TRACE((TRACE_DEBUG,_F_,"Chgt config %s (szId2Value : %s -> %s)",gptActions[iAction].szApplication,gptActions[iAction].szId2Value,buf2048));
+			bChanged=TRUE;
+			strcpy_s(gptActions[iAction].szId2Value,sizeof(gptActions[iAction].szId2Value),buf2048);
+		}
+		GetDlgItemText(w,TB_ID3,buf2048,sizeof(buf2048));
+		if (strcmp(buf2048,gptActions[iAction].szId3Value)!=0) 
+		{
+			TRACE((TRACE_DEBUG,_F_,"Chgt config %s (szId3Value : %s -> %s)",gptActions[iAction].szApplication,gptActions[iAction].szId3Value,buf2048));
+			bChanged=TRUE;
+			strcpy_s(gptActions[iAction].szId3Value,sizeof(gptActions[iAction].szId3Value),buf2048);
+		}
+		GetDlgItemText(w,TB_ID4,buf2048,sizeof(buf2048));
+		if (strcmp(buf2048,gptActions[iAction].szId4Value)!=0) 
+		{
+			TRACE((TRACE_DEBUG,_F_,"Chgt config %s (szId4Value : %s -> %s)",gptActions[iAction].szApplication,gptActions[iAction].szId4Value,buf2048));
+			bChanged=TRUE;
+			strcpy_s(gptActions[iAction].szId4Value,sizeof(gptActions[iAction].szId4Value),buf2048);
+		}
+		GetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,buf2048,sizeof(buf2048));
+		char *pszDecryptedValue=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+		if (pszDecryptedValue!=NULL) 
+		{
+			if (strcmp(buf2048,pszDecryptedValue)!=0) 
+			{
+				TRACE((TRACE_PWD,_F_,"Chgt config %s (Password : %s -> %s)",gptActions[iAction].szApplication,pszDecryptedValue,buf2048));
+				bChanged=TRUE;
+			}
+			SecureZeroMemory(pszDecryptedValue,strlen(pszDecryptedValue));
+			free(pszDecryptedValue);
+		}
+		SecureZeroMemory(buf2048,sizeof(buf2048));
 	}
-	GetDlgItemText(w,TB_ID,gptActions[iAction].szId1Value,sizeof(gptActions[iAction].szId1Value));
-	GetDlgItemText(w,TB_ID2,gptActions[iAction].szId2Value,sizeof(gptActions[iAction].szId2Value));
-	GetDlgItemText(w,TB_ID3,gptActions[iAction].szId3Value,sizeof(gptActions[iAction].szId3Value));
-	GetDlgItemText(w,TB_ID4,gptActions[iAction].szId4Value,sizeof(gptActions[iAction].szId4Value));
+	else
+	{
+		GetDlgItemText(w,TB_ID, gptActions[iAction].szId1Value,sizeof(gptActions[iAction].szId1Value));
+		GetDlgItemText(w,TB_ID2,gptActions[iAction].szId2Value,sizeof(gptActions[iAction].szId2Value));
+		GetDlgItemText(w,TB_ID3,gptActions[iAction].szId3Value,sizeof(gptActions[iAction].szId3Value));
+		GetDlgItemText(w,TB_ID4,gptActions[iAction].szId4Value,sizeof(gptActions[iAction].szId4Value));
 
+	}
 	GetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,szPassword,sizeof(szPassword));
-
 	if (*szPassword!=0)
 	{
 		pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
@@ -2427,6 +2462,17 @@ void GetApplicationDetails(HWND w,int iAction)
 	else
 	{
 		strcpy_s(gptActions[iAction].szPwdEncryptedValue,sizeof(gptActions[iAction].szPwdEncryptedValue),szPassword);
+	}
+	if (bChanged)
+	{
+		TRACE((TRACE_INFO,_F_,"Changement de config pour %s",gptActions[iAction].szApplication));
+		// gptActions[iAction].bConfigOK=FALSE; // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
+		gptActions[iAction].bConfigSent=FALSE;
+		//gptActions[iAction].tLastDetect=-1;
+		//gptActions[iAction].wLastDetect=NULL;
+		gptActions[iAction].tLastSSO=-1;
+		gptActions[iAction].wLastSSO=NULL;
+		gptActions[iAction].iWaitFor=WAIT_IF_SSO_OK;
 	}
 end:
 	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);
