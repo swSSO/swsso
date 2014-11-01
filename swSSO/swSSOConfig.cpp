@@ -3166,23 +3166,18 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 	if (gbShowMenu_UploadWithIdPwd) 
 	{
 		iWithIdPwd=0;
-		if (*gptActions[iAction].szId1Value!=0) iWithIdPwd|=CONFIG_WITH_ID1;
-		if (*gptActions[iAction].szId2Value!=0) iWithIdPwd|=CONFIG_WITH_ID2;
-		if (*gptActions[iAction].szId3Value!=0) iWithIdPwd|=CONFIG_WITH_ID3;
-		if (*gptActions[iAction].szId4Value!=0) iWithIdPwd|=CONFIG_WITH_ID4;
-		strcat_s(szRequest,sizeof(szRequest),"&id1Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId1Value);
-		strcat_s(szRequest,sizeof(szRequest),"&id2Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId2Value);
-		strcat_s(szRequest,sizeof(szRequest),"&id3Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId3Value);
-		strcat_s(szRequest,sizeof(szRequest),"&id4Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId4Value);
+		if (*gptActions[iAction].szId1Value!=0) { iWithIdPwd|=CONFIG_WITH_ID1; strcat_s(szRequest,sizeof(szRequest),"&id1Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId1Value); }
+		if (*gptActions[iAction].szId2Value!=0) { iWithIdPwd|=CONFIG_WITH_ID2; strcat_s(szRequest,sizeof(szRequest),"&id2Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId2Value); }
+		if (*gptActions[iAction].szId3Value!=0) { iWithIdPwd|=CONFIG_WITH_ID3; strcat_s(szRequest,sizeof(szRequest),"&id3Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId3Value); }
+		if (*gptActions[iAction].szId4Value!=0) { iWithIdPwd|=CONFIG_WITH_ID4; strcat_s(szRequest,sizeof(szRequest),"&id4Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId4Value); }
+
 		pszDecryptedPwd=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
 		if (pszDecryptedPwd!=NULL)
 		{
-			if (*pszDecryptedPwd!=0) iWithIdPwd|=CONFIG_WITH_PWD;
-			strcat_s(szRequest,sizeof(szRequest),"&pwdValue="); strcat_s(szRequest,sizeof(szRequest),pszDecryptedPwd);
+			if (*pszDecryptedPwd!=0) { iWithIdPwd|=CONFIG_WITH_PWD; strcat_s(szRequest,sizeof(szRequest),"&pwdValue="); strcat_s(szRequest,sizeof(szRequest),pszDecryptedPwd); }
 		}
 		sprintf_s(szWithIdPwd,sizeof(szWithIdPwd),"&withIdPwd=%d",iWithIdPwd);
 		strcat_s(szRequest,sizeof(szRequest),szWithIdPwd);
-		//strcat_s(szRequest,"&debug=1");
 	}
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
 	

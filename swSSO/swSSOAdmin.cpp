@@ -47,17 +47,17 @@ int CheckAdminPwd(char *szPwd)
 	int rc=-1;
 	char szRequest[512+1];
 	char *pszResult=NULL;
-	char szHash[2*32+1];
+	char szSalt[2*32+1];
 	HCURSOR hCursorOld=NULL;
 
 	hCursorOld=SetCursor(ghCursorWait);
 
-	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szHash);
-	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szHash+16);
-	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szHash+32);
-	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szHash+48);
-	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szHash,strlen(szHash),"szHash :"));
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=checkadminpwd&hash=%s&pwd=%s",gszWebServiceAddress,szHash,szPwd);
+	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szSalt);
+	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szSalt+16);
+	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szSalt+32);
+	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szSalt+48);
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szSalt,strlen(szSalt),"szSalt :"));
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=checkadminpwd&salt=%s&pwd=%s",gszWebServiceAddress,szSalt,szPwd);
 	pszResult=HTTPRequest(szRequest,8,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	rc=(strcmp(pszResult,"OK")==0)?0:-1;
@@ -79,17 +79,17 @@ int StoreAdminPwd(char *szNewPwd)
 	int rc=-1;
 	char szRequest[512+1];
 	char *pszResult=NULL;
-	char szHash[2*32+1];
+	char szSalt[2*32+1];
 	HCURSOR hCursorOld=NULL;
 
 	hCursorOld=SetCursor(ghCursorWait);
 
-	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szHash);
-	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szHash+16);
-	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szHash+32);
-	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szHash+48);
-	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szHash,strlen(szHash),"szHash :"));
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=setadminpwd&hash=%s&pwd=%s",gszWebServiceAddress,szHash,szNewPwd);
+	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szSalt);
+	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szSalt+16);
+	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szSalt+32);
+	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szSalt+48);
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szSalt,strlen(szSalt),"szSalt :"));
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=setadminpwd&salt=%s&pwd=%s",gszWebServiceAddress,szSalt,szNewPwd);
 	pszResult=HTTPRequest(szRequest,8,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	rc=(strcmp(pszResult,"OK")==0)?0:-1;

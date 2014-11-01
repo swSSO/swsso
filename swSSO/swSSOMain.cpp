@@ -105,7 +105,7 @@ char gszUserName[UNLEN+1]="";
 
 char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-char gcszK1[]="11111111";
+char gcszK1[]="_1111111";
 
 // 0.91 : pour choix de config (fenêtre ChooseConfig)
 typedef struct
@@ -2079,7 +2079,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	// lecture du header de la config (=lecture section swSSO)
 	if (GetConfigHeader()!=0) { iError=-2; goto end; }
 
-	if (gbAdmin) // si défini, demande le mot de passe admin, sinon demande de le définir
+	if (gbAdmin && gbNoMasterPwd && gcszK1[0]!='1') // si défini, demande le mot de passe admin, sinon demande de le définir
 	{
 		if (IsAdminPwdSet())
 		{

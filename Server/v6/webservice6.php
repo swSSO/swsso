@@ -373,7 +373,7 @@ else if ($_GET['action']=="putconfig")
 		$param_title=         "AES_ENCRYPT('".$var_title."','"._AESPWD_."')";
 		$param_szFullPathName="AES_ENCRYPT('".$var_szFullPathName."','"._AESPWD_."')";
 		$param_szName=        "AES_ENCRYPT('".$var_szName."','"._AESPWD_."')";
-		if ($var_withIdPwd==1)
+		//if ($var_withIdPwd!=0)
 		{
 			$param_id1Value=  "AES_ENCRYPT('".$var_id1Value."','"._AESPWD_."')";
 			$param_id2Value=  "AES_ENCRYPT('".$var_id2Value."','"._AESPWD_."')";
@@ -403,9 +403,9 @@ else if ($_GET['action']=="putconfig")
 	if ($var_configId!="0")
 	{
 		$szRequestOptions="";
-		if ($var_withIdPwd==1) 
+		//if ($var_withIdPwd!=0) 
 		{
-			$szRequestionOptions=",withIdPwd=1,".
+			$szRequestOptions=",withIdPwd=".$var_withIdPwd.",".
 								 "id1Value=".$param_id1Value.",".
 								 "id2Value=".$param_id2Value.",".
 								 "id3Value=".$param_id3Value.",".
@@ -447,10 +447,10 @@ else if ($_GET['action']=="putconfig")
 	{
 		$szRequestOptions1="";
 		$szRequestOptions2="";
-		if ($var_withIdPwd==1) 
+		//if ($var_withIdPwd!="0") 
 		{
 			$szRequestOptions1=",withIdPwd,id1Value,id2Value,id3Value,id4Value,pwdValue";
-			$szRequestOptions2=",1,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue;
+			$szRequestOptions2=",".$var_withIdPwd.",".$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue;
 		}
 		
 		$szRequest="insert into "._TABLE_PREFIX_."config (active,typeapp,title,url,id1Name,id1Type,pwdName,validateName,".
@@ -636,30 +636,39 @@ else if ($_GET['action']=="checkadminpwd")
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
-	$var_salt=utf8_decode(myaddslashes($_GET['salt']));
-	$var_pwd=utf8_decode(myaddslashes($_GET['pwd']));
+	$var_salt="";
+	$var_pwd="";
+	if (isset($_GET["salt"])) $var_salt=utf8_decode(myaddslashes($_GET['salt']));
+	if (isset($_GET["pwd"])) $var_pwd=utf8_decode(myaddslashes($_GET['pwd']));
 	
-	// calcul le hash du pwd salé
-	$averifier=sha1($var_salt.$var_pwd);
-	
-	// lit la pwd salé en base
-	$szRequest= "select pwd from "._TABLE_PREFIX_."adminpwd where pwd!=''";
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-
-	header("Content-type: text/xml; charset=UTF-8");
-	if(mysql_num_rows($req)==0) 
+	if ($var_salt=="" || $var_pwd=="")
 	{
 		echo "KO";
 	}
 	else
 	{
-		// compare
-		$luenbase=mysql_fetch_row($req);
-		if ($luenbase[0]==$averifier)
-			echo "OK";
-		else
+		// calcul le hash du pwd salé
+		$averifier=sha1($var_salt.$var_pwd);
+		
+		// lit la pwd salé en base
+		$szRequest= "select pwd from "._TABLE_PREFIX_."adminpwd where pwd!=''";
+		$req=mysql_query($szRequest,$cnx);
+		if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+
+		header("Content-type: text/xml; charset=UTF-8");
+		if(mysql_num_rows($req)==0) 
+		{
 			echo "KO";
+		}
+		else
+		{
+			// compare
+			$luenbase=mysql_fetch_row($req);
+			if ($luenbase[0]==$averifier)
+				echo "OK";
+			else
+				echo "KO";
+		}
 	}
 	dbClose($cnx);
 }
@@ -671,18 +680,27 @@ else if ($_GET['action']=="setadminpwd")
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
-	$var_salt=utf8_decode(myaddslashes($_GET['salt']));
-	$var_pwd=utf8_decode(myaddslashes($_GET['pwd']));
+	$var_salt="";
+	$var_pwd="";
+	if (isset($_GET["salt"])) $var_salt=utf8_decode(myaddslashes($_GET['salt']));
+	if (isset($_GET["pwd"])) $var_pwd=utf8_decode(myaddslashes($_GET['pwd']));
 	
-	// calcul le hash du pwd salé
-	$pwdhashesale=sha1($var_salt.$var_pwd);
-	
-	$szRequest="insert into "._TABLE_PREFIX_."adminpwd (pwd) values ('".$pwdhashesale."')";
-	$req=mysql_query($szRequest,$cnx);
-	header("Content-type: text/xml; charset=UTF-8");
-	if (!$req) 
+	if ($var_salt=="" || $var_pwd=="")
+	{
 		echo "KO";
+	}
 	else
-		echo "OK";
+	{
+		// calcul le hash du pwd salé
+		$pwdhashesale=sha1($var_salt.$var_pwd);
+		
+		$szRequest="insert into "._TABLE_PREFIX_."adminpwd (pwd) values ('".$pwdhashesale."')";
+		$req=mysql_query($szRequest,$cnx);
+		header("Content-type: text/xml; charset=UTF-8");
+		if (!$req) 
+			echo "KO";
+		else
+			echo "OK";
+	}
 	dbClose($cnx);
 }?>
