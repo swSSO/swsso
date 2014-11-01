@@ -3221,6 +3221,9 @@ int UploadConfig(HWND w, char *pszDomainIds)
 	{
 		iAction=TVItemGetLParam(w,hItem); 
 		if (iAction==-1 || iAction>=giNbActions) goto end;
+
+		GetApplicationDetails(w,iAction); // ISSUE#213
+
 		TRACE((TRACE_INFO,_F_,"Upload config n°%d (%s)",iAction,gptActions[iAction].szApplication));
 		iOldCategoryId=gptActions[iAction].iCategoryId;
 		rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds);
