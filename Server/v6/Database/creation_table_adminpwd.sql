@@ -32,5 +32,3 @@
 CREATE TABLE IF NOT EXISTS `adminpwd` (
   `pwd` char(40)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
-INSERT INTO `adminpwd` (pwd) VALUES ("");
