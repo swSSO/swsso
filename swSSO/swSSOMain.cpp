@@ -2081,13 +2081,13 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 
 	if (gbAdmin) // si défini, demande le mot de passe admin, sinon demande de le définir
 	{
-		if (IsAdminPwdDefined())
+		if (IsAdminPwdSet())
 		{
 			if (AskAdminPwd()!=0) goto end;
 		}
 		else
 		{
-			if (DefineAdminPwd()!=0) goto end;
+			if (SetAdminPwd()!=0) goto end;
 		}
 	}
 

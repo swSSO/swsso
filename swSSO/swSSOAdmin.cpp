@@ -45,11 +45,25 @@ int CheckAdminPwd(char *szPwd)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	UNREFERENCED_PARAMETER(szPwd);
+	char szRequest[512+1];
+	char *pszResult=NULL;
+	char szHash[2*32+1];
+	HCURSOR hCursorOld=NULL;
 
+	hCursorOld=SetCursor(ghCursorWait);
 
-	rc=0;
-//end:
+	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szHash);
+	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szHash+16);
+	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szHash+32);
+	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szHash+48);
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szHash,strlen(szHash),"szHash :"));
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=checkadminpwd&hash=%s&pwd=%s",gszWebServiceAddress,szHash,szPwd);
+	pszResult=HTTPRequest(szRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	rc=(strcmp(pszResult,"OK")==0)?0:-1;
+
+end:
+	if (hCursorOld!=NULL) SetCursor(hCursorOld);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -63,22 +77,25 @@ int StoreAdminPwd(char *szNewPwd)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	
 	char szRequest[512+1];
 	char *pszResult=NULL;
 	char szHash[2*32+1];
+	HCURSOR hCursorOld=NULL;
+
+	hCursorOld=SetCursor(ghCursorWait);
 
 	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szHash);
 	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szHash+16);
 	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szHash+32);
 	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szHash+48);
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szHash,strlen(szHash),"szHash :"));
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=defineadminpwd&hash=%s&pwd=%s",gszWebServiceAddress,szHash,szNewPwd);
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=setadminpwd&hash=%s&pwd=%s",gszWebServiceAddress,szHash,szNewPwd);
 	pszResult=HTTPRequest(szRequest,8,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	rc=(strcmp(pszResult,"OK")==0)?0:-1;
 
 end:
+	if (hCursorOld!=NULL) SetCursor(hCursorOld);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -137,7 +154,7 @@ static int CALLBACK AskAdminPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				{
 					char szPwd[LEN_PWD+1];
 					int ret;
-					GetDlgItemText(w,TB_NEW_PWD1,szPwd,sizeof(szPwd));
+					GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
 					ret=CheckAdminPwd(szPwd);
 					SecureZeroMemory(szPwd,strlen(szPwd));
 					if (ret==0)
@@ -189,11 +206,11 @@ int AskAdminPwd()
 }
 
 //-----------------------------------------------------------------------------
-// DefineAdminPwdDialogProc()
+// SetAdminPwdDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la fenêtre de définition du mot de passe admin
 //-----------------------------------------------------------------------------
-static int CALLBACK DefineAdminPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+static int CALLBACK SetAdminPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
 
@@ -246,9 +263,14 @@ static int CALLBACK DefineAdminPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp
 					ret=StoreAdminPwd(szNewPwd1);
 					SecureZeroMemory(szNewPwd1,strlen(szNewPwd1));
 					if (ret==0)
+					{
+						MessageBox(w,GetString(IDS_ADMIN_PWD_STORE_OK),"swSSO",MB_ICONINFORMATION);
 						EndDialog(w,IDOK);
+					}
 					else
+					{
 						MessageBox(w,GetString(IDS_ADMIN_PWD_STORE_ERROR),"swSSO",MB_ICONEXCLAMATION);
+					}
 					break;
 				}
 				case IDCANCEL:
@@ -288,16 +310,16 @@ static int CALLBACK DefineAdminPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp
 }
 
 //-----------------------------------------------------------------------------
-// DefineAdminPwd() 
+// SetAdminPwd() 
 //-----------------------------------------------------------------------------
 // Demande de définir le mot de passe admin et l'enregistre en base
 //-----------------------------------------------------------------------------
-int DefineAdminPwd()
+int SetAdminPwd()
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 	
-	if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_PWD_ADMIN_DEFINE),NULL,DefineAdminPwdDialogProc)==IDOK) rc=0;
+	if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_PWD_ADMIN_DEFINE),NULL,SetAdminPwdDialogProc)==IDOK) rc=0;
 	
 //end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -306,24 +328,28 @@ int DefineAdminPwd()
 
 
 //-----------------------------------------------------------------------------
-// IsAdminPwdDefined() 
+// IsAdminPwdSet() 
 //-----------------------------------------------------------------------------
 // Regarde en base si le mot de passe admin est défini
 //-----------------------------------------------------------------------------
-BOOL IsAdminPwdDefined()
+BOOL IsAdminPwdSet()
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	BOOL rc=FALSE;
 	char szRequest[512+1];
 	char *pszResult=NULL;
+	HCURSOR hCursorOld=NULL;
 
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=isadminpwd",gszWebServiceAddress);
+	hCursorOld=SetCursor(ghCursorWait);
+
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=isadminpwdset",gszWebServiceAddress);
 	pszResult=HTTPRequest(szRequest,8,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	
 	rc=(strcmp(pszResult,"YES")==0);
 
 end:
+	if (hCursorOld!=NULL) SetCursor(hCursorOld);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

@@ -607,7 +607,7 @@ else if ($_GET['action']=="getconfigdomains")
 // ------------------------------------------------------------
 // isadminpwd
 // ------------------------------------------------------------
-else if ($_GET['action']=="isadminpwd")
+else if ($_GET['action']=="isadminpwdset")
 {
 	$cnx=dbConnect();
 	if (!$cnx) return;
@@ -663,9 +663,9 @@ else if ($_GET['action']=="checkadminpwd")
 	dbClose($cnx);
 }
 // ------------------------------------------------------------
-// defineadminpwd
+// setadminpwd
 // ------------------------------------------------------------
-else if ($_GET['action']=="defineadminpwd")
+else if ($_GET['action']=="setadminpwd")
 {
 	$cnx=dbConnect();
 	if (!$cnx) return;
@@ -676,10 +676,12 @@ else if ($_GET['action']=="defineadminpwd")
 	// calcul le hash du pwd salé
 	$pwdhashesale=sha1($var_salt.$var_pwd);
 	
-	$szRequest="update "._TABLE_PREFIX_."adminpwd set pwd='".$pwdhashesale."'";
-	mysql_query($szRequest,$cnx);
-	dbClose($cnx);
-
+	$szRequest="insert into "._TABLE_PREFIX_."adminpwd (pwd) values ('".$pwdhashesale."')";
+	$req=mysql_query($szRequest,$cnx);
 	header("Content-type: text/xml; charset=UTF-8");
-	echo "OK";
+	if (!$req) 
+		echo "KO";
+	else
+		echo "OK";
+	dbClose($cnx);
 }?>

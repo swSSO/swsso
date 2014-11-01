@@ -766,6 +766,7 @@ STRINGTABLE
     IDS_REFRESH_RIGHTS_DONE       "Vos droits ont bien été mis à jour."
     IDS_REFRESH_RIGHTS_ERROR      "Une erreur est survenue. Vos droits n'ont pas été mis à jour."
     IDS_ADMIN_PWD_STORE_ERROR     "Une erreur est survenue. Le mot de passe administrateur n'a pas été enregistré."
+    IDS_ADMIN_PWD_STORE_OK        "Le mot de passe administrateur a bien été enregistré."
 }
 
 

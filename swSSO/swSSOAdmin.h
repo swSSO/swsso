@@ -31,6 +31,6 @@
 // swSSOAdmin.h
 //-----------------------------------------------------------------------------
 
-BOOL IsAdminPwdDefined();
-int DefineAdminPwd();
+BOOL IsAdminPwdSet();
+int SetAdminPwd();
 int AskAdminPwd();
