@@ -29,6 +29,8 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
+// VERSION INTERNE : 6.1
+//------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
 // showAll -> appelé par showall et showold 
@@ -389,10 +391,10 @@ function menuShowDomains()
 	{
 		$ligne = mysql_fetch_row($req);
 		echo "<br>&nbsp;&nbsp;&nbsp;-&nbsp;";
-		echo "<a href=\"./admin.php?action=menu"._WRITESUFFIX_."&domain=".$ligne[0]."\">".utf8_encode($ligne[1])."</a>";
+		echo "<a href=\"./admin.php?action=menu"._MENUSUFFIX_."&domain=".$ligne[0]."\">".utf8_encode($ligne[1])."</a>";
 	}
 	echo "<br>&nbsp;&nbsp;&nbsp;-&nbsp;";
-	echo "<a href=\"./admin.php?action=menu"._WRITESUFFIX_."&domain=0\">Tous les domaines</a>";
+	echo "<a href=\"./admin.php?action=menu"._MENUSUFFIX_."&domain=0\">Tous les domaines</a>";
 	
 	dbClose($cnx);
 }

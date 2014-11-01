@@ -34,7 +34,8 @@ include('util.php');
 // webservice6.PHP : Utilisé à partir de la version swSSO 1.05 pour la gestion des domaines multiples.
 //                   Le client 1.05 et les suivants resteront compatibles avec webservice5.php tant
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
-// VERSION INTERNE : 6.0
+//------------------------------------------------------------------------------
+// VERSION INTERNE : 6.1
 //------------------------------------------------------------------------------
 // Commandes : isalive, getversion, putconfig, getconfig et getdomains
 //------------------------------------------------------------------------------

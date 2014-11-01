@@ -32,6 +32,8 @@ include('functions.php');
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
+// VERSION INTERNE : 6.1
+//------------------------------------------------------------------------------
 
 $title="<title>swSSO - Serveur de configuration (v6.0)</title>";
 
@@ -271,7 +273,7 @@ else if ($_GET['action']=="menu"._MENUSUFFIX_)
 			echo "<br/>+ <a href=./admin.php?action=showcategories"._READSUFFIX_.">Cat&eacute;gories</a>"; 
 			echo "<br/>+ <a href=./admin.php?action=showdomains"._READSUFFIX_.">Ajouter ou supprimer un domaine</a>";
 			if (_STATS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=showstats"._READSUFFIX_.">Statistiques</a>";      
-			echo "<br/>+ <a href=./admin.php?action=deleteadminpwd"._READSUFFIX_.">Effacer le mot de passe administrateur</a>";   
+			echo "<br/>+ <a href=./admin.php?action=deleteadminpwd"._WRITESUFFIX_.">Effacer le mot de passe administrateur</a>";   
 			echo "<br/>+ <a href=./webservice6.php?action=isalive>Test \"isalive\"</a>";   
 			if (_ENCRYPT_=="TRUE")
 				echo "<br/><br/>Chiffrement : activ&eacute;";

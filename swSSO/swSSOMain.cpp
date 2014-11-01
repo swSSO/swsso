@@ -2328,7 +2328,7 @@ askpwd:
 		{ 
 			MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); 
 		}
-		if (gbInternetManualPutConfig) // 1.05 : on ne demande pas à l'admin quel est son domaine, il doit pouvoir tous les gérer
+		if (gbAdmin || gbInternetManualPutConfig) // 1.05 : on ne demande pas à l'admin quel est son domaine, il doit pouvoir tous les gérer
 		{
 			giDomainId=-1;
 			SaveConfigHeader();
@@ -2468,7 +2468,6 @@ askpwd:
 				goto end;
 		}
 	}
-	if (gbAdmin) gbInternetManualPutConfig=TRUE;
 	if (!gbAdmin)
 	{
 		if (LaunchTimer()!=0)
