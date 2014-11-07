@@ -181,6 +181,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_USE_AD_PASSWORD					"UseADPassword"
 #define REGVALUE_DISPLAY_WINDOWS_PASSWORD_CHANGE	"DisplayWindowsPasswordChange"
 #define REGVALUE_CATEGORY_AUTO_UPDATE				"CategoryAutoUpdate"
+#define REGVALUE_CONGIG_FULL_SYNC					"ConfigFullSync"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -213,6 +214,7 @@ extern int  giServerPort;					// 1.03 - ISSUE#162
 extern BOOL gbUseADPasswordForAppLogin;		// 1.03 - permet d'utiliser %ADPASSWORD% dans le champ mot de passe (n'utilise pas (encore) swSSOCM --> le mdp AD est demandé à l'utilisateur)
 extern BOOL gbDisplayWindowsPasswordChange; // 1.05 - affiche / masque le message affiché lors du changement de mot de passe windows (en mode chaîné)
 extern BOOL gbCategoryAutoUpdate;			// 1.06 - ISSUE#206 : met à jour la catégorie sur le serveur lorsqu'une application est déplacée dans l'IHM client
+extern BOOL gbConfigFullSync;				// 1.07 - ISSUE#214
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

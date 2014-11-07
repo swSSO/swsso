@@ -68,6 +68,7 @@ long GetMasterPwdLastChange(void);
 int ChangeApplicationPassword(HWND w,int iAction);
 int GetAllConfigsFromServer(void);
 int GetNewOrModifiedConfigsFromServer(void);
+int DeleteConfigsNotOnServer(void);
 
 int StoreNodeValue(char *buf,int bufsize,IXMLDOMNode *pNode);
 

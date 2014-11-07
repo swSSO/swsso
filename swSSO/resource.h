@@ -362,3 +362,4 @@
 #define IDS_REFRESH_RIGHTS_ERROR                40150
 #define IDS_ADMIN_PWD_STORE_ERROR               40151
 #define IDS_ADMIN_PWD_STORE_OK                  40152
+#define IDS_CLOSE_APPNSITES_FIRST               40153

@@ -2368,6 +2368,11 @@ askpwd:
 		{
 			GetNewOrModifiedConfigsFromServer();
 		}
+		// ISSUE#214
+		if (gbConfigFullSync) // réalise une synchro complète en supprimant les configs qui ne sont plus présentes sur le serveur
+		{
+			DeleteConfigsNotOnServer();
+		}
 	}
 	// ISSUE#59 : ce code était avant dans LoadCategories().
 	// Déplacé dans winmain pour ne pas l'exécuter si des catégories ont été récupérées depuis le serveur

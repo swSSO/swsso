@@ -767,6 +767,7 @@ STRINGTABLE
     IDS_REFRESH_RIGHTS_ERROR      "Une erreur est survenue. Vos droits n'ont pas été mis à jour."
     IDS_ADMIN_PWD_STORE_ERROR     "Une erreur est survenue. Le mot de passe administrateur n'a pas été enregistré."
     IDS_ADMIN_PWD_STORE_OK        "Le mot de passe administrateur a bien été enregistré."
+    IDS_CLOSE_APPNSITES_FIRST     "Veuillez fermer la fenêtre de gestion des sites et applications puis réessayez."
 }
 
 
@@ -816,4 +817,3 @@ IDI_SYSTRAY_INACTIVE ICON           "SystrayInactive.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1                  RT_MANIFEST    ".\\manifest.xml"
-

@@ -4071,7 +4071,7 @@ int GetNewOrModifiedConfigsFromServer(void)
 		// il faut de toute façon récupérer toutes les configs ajoutées et (modifiées ou archivées)
 		// depuis la dernière vérification puis traiter au cas par cas les configs
 		sizeofIdsList=0;
-		bstrXML=LookForConfig("","","",gszLastConfigUpdate,
+		bstrXML=LookForConfig("","","",gbConfigFullSync?"20000101000000":gszLastConfigUpdate,
 							gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK);
 	}
 	else
@@ -4137,6 +4137,98 @@ end:
 	}
 	if (pszIds!=NULL) free(pszIds);
 	if (bstrXML!=NULL) SysFreeString(bstrXML);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// DeleteConfigsNotOnServer()
+// ----------------------------------------------------------------------------------
+// Récupère la liste des configurations autorisée pour l'utilisateur sur le serveur
+// Supprime dans le .ini toutes celles qui ne sont pas sur le serveur
+// ----------------------------------------------------------------------------------
+int DeleteConfigsNotOnServer(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szRequest[512+1];
+	char *pszResult=NULL;
+	char *p;
+	int *pitabConfigsOnServer=NULL;
+	int iNbConfigsOnServer;
+	int iConfigId;
+	int i,j,k;
+	char *strtokContext=NULL;
+	
+	// appel webservice
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getdomainconfigs&domainId=%d",gszWebServiceAddress,giDomainId);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
+	pszResult=HTTPRequest(szRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+
+	if (strcmp(pszResult,"NONE")==0)
+	{
+		// l'utilisateur n'a plus le droit à rien... c'est louche...
+	}
+	else // réponse au format id,id,id,
+	{
+		pitabConfigsOnServer=(int*)malloc(giMaxConfigs);
+		if (pitabConfigsOnServer==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",giMaxConfigs)); goto end; }
+		// construit une table d'id de configs présentes sur le serveur
+		iNbConfigsOnServer=0;
+		p=strtok_s(pszResult,",",&strtokContext);
+		while (p!=NULL)
+		{
+			iConfigId=atoi(p);
+			if (iConfigId!=0) 
+			{
+				pitabConfigsOnServer[iNbConfigsOnServer]=iConfigId;
+				iNbConfigsOnServer++;
+			}
+			p=strtok_s(NULL,",",&strtokContext);
+		}
+#if TRACES_ACTIVEES
+		{
+			for (i=0;i<iNbConfigsOnServer;i++)
+			{
+				TRACE((TRACE_DEBUG,_F_,"pitabConfigsOnServer[%d]=%d",i,pitabConfigsOnServer[i]));
+			}
+		}
+#endif
+		// parcourt la table des configs de l'utilisateur et supprime celles qui ne sont pas dans la liste du serveur
+		i=0;
+		while (i<giNbActions)
+		{
+			if (gptActions[i].iConfigId==0) goto config_suivante;
+			for (j=0;j<iNbConfigsOnServer;j++)
+			{
+				if (gptActions[i].iConfigId==pitabConfigsOnServer[j]) 
+				{
+					TRACE((TRACE_DEBUG,_F_,"ConfigId %d trouve --> on conserve",gptActions[i].iConfigId));
+					goto config_suivante;
+				}
+			}
+			TRACE((TRACE_DEBUG,_F_,"ConfigId %d non trouvée --> on supprime !",gptActions[i].iConfigId));
+			for (k=i;k<giNbActions-1;k++)
+			{
+				TRACE((TRACE_DEBUG,_F_,"Copie %d sur %d",k+1,k));
+				memcpy(&gptActions[k],&gptActions[k+1],sizeof(T_ACTION));
+			}
+			giNbActions--;
+			i--;
+config_suivante:
+			i++;
+		}
+	}
+	
+	SaveApplications();
+	SavePortal();
+	SaveLastConfigUpdate();
+	rc=0;
+
+end:
+	if (pitabConfigsOnServer!=NULL) free(pitabConfigsOnServer);
+	if (pszResult!=NULL) free(pszResult);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

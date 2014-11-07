@@ -1011,6 +1011,11 @@ int RefreshRights(void)
 	int rc=0;
 	BOOL sav_gbDisplayConfigsNotifications;
 
+	if (gwAppNsites!=NULL)
+	{
+		MessageBox(NULL,GetString(IDS_CLOSE_APPNSITES_FIRST),"swSSO",MB_ICONEXCLAMATION | MB_OK);
+		goto end;
+	}
 	LoadPolicies();
 	sav_gbDisplayConfigsNotifications=gbDisplayConfigsNotifications;
 	gbDisplayConfigsNotifications=FALSE;
@@ -1022,11 +1027,16 @@ int RefreshRights(void)
 	{
 		rc=GetNewOrModifiedConfigsFromServer();
 	}
+	if (gbConfigFullSync) // réalise une synchro complète en supprimant les configs qui ne sont plus présentes sur le serveur
+	{
+		DeleteConfigsNotOnServer();
+	}
 	if (rc==0)
 		MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_DONE),"swSSO",MB_ICONINFORMATION | MB_OK);
 	else
 		MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_ERROR),"swSSO",MB_ICONEXCLAMATION | MB_OK);
 	gbDisplayConfigsNotifications=sav_gbDisplayConfigsNotifications;
+end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

@@ -35,9 +35,7 @@ include('util.php');
 //                   Le client 1.05 et les suivants resteront compatibles avec webservice5.php tant
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
 //------------------------------------------------------------------------------
-// VERSION INTERNE : 6.1
-//------------------------------------------------------------------------------
-// Commandes : isalive, getversion, putconfig, getconfig et getdomains
+// VERSION INTERNE : 6.2
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
@@ -578,9 +576,9 @@ else if ($_GET['action']=="getconfigdomains")
 	// récupération des paramètres passés dans l'URL
     $var_configId=utf8_decode(myaddslashes($_GET['configId']));
 	
-	$szRequest= "select configs_domains.domainId,domains.label ".
+	$szRequest= "select "._TABLE_PREFIX_."configs_domains.domainId,"._TABLE_PREFIX_."domains.label ".
 			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."domains where ".
-			"configId=".$var_configId." and configs_domains.domainId=domains.id order by configs_domains.domainId";
+			"configId=".$var_configId." and "._TABLE_PREFIX_."configs_domains.domainId="._TABLE_PREFIX_."domains.id order by "._TABLE_PREFIX_."configs_domains.domainId";
 	if (isset($_GET["debug"])) echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -603,6 +601,38 @@ else if ($_GET['action']=="getconfigdomains")
 			$i++;
 		}
 		echo "</domains>";
+	}
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// getdomainconfigs
+// ------------------------------------------------------------
+else if ($_GET['action']=="getdomainconfigs")
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	// récupération des paramètres passés dans l'URL
+    $var_domainId=utf8_decode(myaddslashes($_GET['domainId']));
+	
+	$szRequest= "select "._TABLE_PREFIX_."config.id ".
+			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."config where ".
+			"active=1 and (domainId=1 or domainId=".$var_domainId.") and configId="._TABLE_PREFIX_."config.id";
+	if (isset($_GET["debug"])) echo $szRequest;
+	$req=mysql_query($szRequest,$cnx);
+	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+
+	header("Content-type: text/xml; charset=UTF-8");
+	if(mysql_num_rows($req)==0) 
+	{
+		echo "NONE";
+	}
+	else
+	{
+		while($ligne=mysql_fetch_row($req))
+		{
+			echo $ligne[0].",";
+		}
 	}
 	dbClose($cnx);
 }
