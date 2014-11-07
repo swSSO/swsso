@@ -162,6 +162,8 @@ end:
 // Dans le même répertoire que le fichier swsso.ini
 // Format CSV, une ligne unique :
 // USERNAME;COMPUTERNAME;date dernière connexion réussie AAAAMMJJ;nb d'applications actives;nbsssoréalisés
+// En 1.06 changement de format
+// SHA1(USERNAME);date dernière connexion réussie AAAAMMJJ;nb applis actives;nbsssoréalisés;nb applis actives enrôlées depuis le serveur
 //-----------------------------------------------------------------------------
 int swStat(void)
 {
@@ -172,6 +174,11 @@ int swStat(void)
 	char szFilename[_MAX_PATH+2]; // pas beau mais comme .stat fait 1 car de plus que .ini, ça ne marchera pas mais au moins le buffer d'explosera pas..
 	DWORD len, dw;
 	char *p;
+	int iNbActiveApps,iNbActiveAppsFromServer;
+	HCRYPTHASH hHash=NULL;
+	DWORD lenHash;
+	unsigned char bufHashValue[HASH_LEN];
+	char szHashValue[HASH_LEN*2+1];
 	
 	if (gLastLoginTime.wYear==0) // ISSUE#171
 	{ 
@@ -192,11 +199,22 @@ int swStat(void)
 		TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFilename,GetLastError()));
 		goto end;
 	}
-	// USERNAME;COMPUTERNAME;date dernière connexion réussie AAAAMMJJ;nb d'applications actives;nbsssoréalisés
-	len=wsprintf(buf2048,"%s;%s;%04d%02d%02d;%d;%d",
-		gszUserName,gszComputerName,
+	// récup du nb d'applis
+	GetNbActiveApps(&iNbActiveApps,&iNbActiveAppsFromServer);
+	
+	// hash du username
+	if (!CryptCreateHash(ghProv,CALG_SHA1,0,0,&hHash)) { TRACE((TRACE_ERROR,_F_,"CryptCreateHash(CALG_SHA1)=0x%08lx",GetLastError())); goto end; }
+	if (!CryptHashData(hHash,(BYTE*)gszUserName,strlen(gszUserName),0)) { TRACE((TRACE_ERROR,_F_,"CryptHashData()=0x%08lx",GetLastError())); goto end; }
+	lenHash=HASH_LEN;
+	if (!CryptGetHashParam(hHash,HP_HASHVAL,bufHashValue,&lenHash,0)) { TRACE((TRACE_ERROR,_F_,"CryptGetHashParam(HP_HASHVAL)=0x%08lx",GetLastError())); goto end; }
+	TRACE_BUFFER((TRACE_DEBUG,_F_,bufHashValue,lenHash,"hash"));
+	swCryptEncodeBase64(bufHashValue,HASH_LEN,szHashValue);
+
+	// SHA1(USERNAME);date dernière connexion réussie AAAAMMJJ;nb applis actives;nbsssoréalisés;nb applis actives enrôlées depuis le serveur
+	len=wsprintf(buf2048,"%s;%04d%02d%02d;%d;%d;%d",
+		szHashValue,
 		(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
-		GetNbActiveApps(),guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO); 
+		iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer); 
 	if (!WriteFile(hfStat,buf2048,len,&dw,NULL))
 	{
 		TRACE((TRACE_ERROR,_F_,"WriteFile(%s,%ld)=%d",szFilename,len,GetLastError()));
@@ -205,7 +223,7 @@ int swStat(void)
 		
 	rc=0;
 end:
-	
+	if (hHash!=NULL) CryptDestroyHash(hHash);
 	if (hfStat!=INVALID_HANDLE_VALUE) CloseHandle(hfStat); 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;

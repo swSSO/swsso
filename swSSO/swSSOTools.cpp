@@ -1633,17 +1633,24 @@ int swCheckBrowserURL(int iPopupType,char *pszCompare)
 //-----------------------------------------------------------------------------
 // Retourne le nb de configurations actives
 //-----------------------------------------------------------------------------
-int GetNbActiveApps()
+void GetNbActiveApps(int *piNbActiveApps,int *piNbActiveAppsFromServer)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=0;
 	int i;
+	*piNbActiveApps=0;
+	*piNbActiveAppsFromServer=0;
 	for (i=0;i<giNbActions;i++)
 	{
-		if (gptActions[i].bActive) rc++;
+		if (gptActions[i].bActive) 
+		{
+			(*piNbActiveApps)++;
+			if (gptActions[i].iConfigId!=0)
+			{
+				(*piNbActiveAppsFromServer)++;
+			}
+		}
 	}
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
+	TRACE((TRACE_LEAVE,_F_, "iNbActiveApps=%d iNbActiveAppsFromServer=%d",*piNbActiveApps,*piNbActiveAppsFromServer));
 }
 
 //-----------------------------------------------------------------------------

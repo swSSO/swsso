@@ -546,7 +546,7 @@ FONT 8, "Tahoma", 400, 0, 0
     LTEXT           "Fichier de configuration :", TX_CONFIGFILE2, 17, 153, 81, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.", -1, 17, 55, 259, 18, SS_LEFT, WS_EX_LEFT
     LTEXT           "Licence", TX_LICENCE, 7, 41, 28, 11, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Version 1.06 (05/11/2014)", TX_ABOUT, 47, 12, 120, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Version 1.06 (07/11/2014)", TX_ABOUT, 47, 12, 120, 8, SS_LEFT, WS_EX_LEFT
     LTEXT           "Portail :", TX_PORTAL2, 17, 122, 42, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SEP_LICENCE, WC_STATIC, SS_ETCHEDHORZ, 35, 45, 248, 1, WS_EX_LEFT
     CONTROL         "", IDC_SEP_INFORMATIONS, WC_STATIC, SS_ETCHEDHORZ, 52, 82, 218, 1, WS_EX_LEFT

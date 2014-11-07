@@ -117,6 +117,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			int cx;
 			int cy;
 			RECT rect;
+			int iNbActiveApps,iNbActiveAppsFromServer;
 			
 			if (gwPropertySheet==NULL) // nécessaire pour ne pas le faire à chaque premier affichage de l'onglet
 			{
@@ -144,7 +145,8 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// 0.63BETA5 : détail nb sso popups
 			wsprintf(s,"%d (%d web - %d popups - %d windows)",guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,guiNbWEBSSO,guiNbPOPSSO,guiNbWINSSO);
 			SetDlgItemText(w,TX_NBSSO,s);
-			wsprintf(s,"%d / %d",GetNbActiveApps(),giNbActions);
+			GetNbActiveApps(&iNbActiveApps,&iNbActiveAppsFromServer);
+			wsprintf(s,"%d / %d",iNbActiveApps,giNbActions);
 			SetDlgItemText(w,TX_NBAPP,s);
 			SetDlgItemText(w,TX_CONFIGFILE,gszCfgFile);
 

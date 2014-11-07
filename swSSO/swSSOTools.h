@@ -76,7 +76,7 @@ BOOL swStringMatch(char *szToBeCompared,char *szPattern);
 BOOL swURLMatch(char *szToBeCompared,char *szPattern);
 char *GetComputedValue(const char *szValue);
 int swCheckBrowserURL(int iPopupType,char *pszCompare);
-int GetNbActiveApps();
+void GetNbActiveApps(int *piNbActiveApps,int *piNbActiveAppsFromServer);
 
 // 0.93 : liste des dernières fenêtres détectées et dont la configuration est connue de swSSO
 #define MAX_NB_LAST_DETECT 500
