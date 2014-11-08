@@ -239,7 +239,7 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	}
 
 	brc = WinHttpSendRequest(hRequest,WINHTTP_NO_ADDITIONAL_HEADERS, 0,WINHTTP_NO_REQUEST_DATA,0,0,0);
-	if (!brc) { swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,gszServerAddress,(char*)szRequest,NULL,0); TRACE((TRACE_ERROR,_F_,"WinHttpSendRequest()")); goto end; }
+	if (!brc) { swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,gszServerAddress,(char*)szRequest,NULL,NULL,0); TRACE((TRACE_ERROR,_F_,"WinHttpSendRequest()")); goto end; }
  
     brc = WinHttpReceiveResponse(hRequest, NULL);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpReceiveResponse()")); goto end; }

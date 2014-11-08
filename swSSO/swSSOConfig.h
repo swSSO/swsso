@@ -157,3 +157,15 @@ extern T_SALT gSalts;
 
 extern char gszLastADPwdChange[14+1];					// 1.03 : date de dernier changement de mdp dans l'AD, format AAAAMMJJHHMMSS
 extern char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1];	// 1.03 : valeur du mot de passe AD (fourni par l'utilisateur)
+
+
+typedef struct
+{
+	int iNbConfigsAdded;
+	int iNbConfigsModified;
+	int iNbConfigsDisabled;
+	int iNbConfigsDeleted;
+} T_CONFIG_SYNC;
+
+extern T_CONFIG_SYNC gtConfigSync;
+void ReportConfigSync(BOOL bShowMessage);

@@ -133,7 +133,7 @@ void SSOActivate(HWND w)
 		strcpy_s(nid.szTip,sizeof(nid.szTip),GetString(IDS_ACTIVE)); //max64
 		if (gwPropertySheet!=NULL) ShowWindow(gwPropertySheet,SW_SHOW);
 		if (gwAppNsites!=NULL) ShowWindow(gwAppNsites,SW_SHOW);
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_UNLOCK_SUCCESS,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_UNLOCK_SUCCESS,NULL,NULL,NULL,NULL,0);
 	}
 	else // DESACTIVATION
 	{
@@ -149,7 +149,7 @@ void SSOActivate(HWND w)
 		if (gwPropertySheet!=NULL) ShowWindow(gwPropertySheet,SW_HIDE);
 		if (gwAppNsites!=NULL) ShowWindow(gwAppNsites,SW_HIDE);
 		if (gwAskPwd!=NULL) { EndDialog(gwAskPwd,IDCANCEL); gwAskPwd=NULL; }
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_LOCK,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_LOCK,NULL,NULL,NULL,NULL,0);
 	}
 	rc=Shell_NotifyIcon(NIM_MODIFY,&nid);
 	if (!rc) 
@@ -969,7 +969,7 @@ int BeginChangeAppPassword(void)
 				SaveApplications();
 				if (gwAppNsites!=NULL) ShowAppNsites(giLastApplicationConfig,FALSE); // ISSUE#192
 				// log
-				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CHANGE_APP_PWD,gptActions[giLastApplicationSSO].szApplication,gptActions[giLastApplicationSSO].szId1Value,NULL,0);
+				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CHANGE_APP_PWD,gptActions[giLastApplicationSSO].szApplication,gptActions[giLastApplicationSSO].szId1Value,NULL,NULL,0);
 				// fini !
 				bDone=TRUE;
 				rc=0;
@@ -1009,7 +1009,6 @@ int RefreshRights(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=0;
-	BOOL sav_gbDisplayConfigsNotifications;
 
 	if (gwAppNsites!=NULL)
 	{
@@ -1017,8 +1016,13 @@ int RefreshRights(void)
 		goto end;
 	}
 	LoadPolicies();
-	sav_gbDisplayConfigsNotifications=gbDisplayConfigsNotifications;
-	gbDisplayConfigsNotifications=FALSE;
+	GetConfigHeader();
+	
+	gtConfigSync.iNbConfigsAdded=0;
+	gtConfigSync.iNbConfigsDeleted=0;
+	gtConfigSync.iNbConfigsDisabled=0;
+	gtConfigSync.iNbConfigsModified=0;
+
 	if (gbInternetManualPutConfig) 
 	{
 		giNbDomains=GetDomains(TRUE,0,gtabDomains);
@@ -1031,11 +1035,12 @@ int RefreshRights(void)
 	{
 		DeleteConfigsNotOnServer();
 	}
+	ReportConfigSync(FALSE);
 	if (rc==0)
 		MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_DONE),"swSSO",MB_ICONINFORMATION | MB_OK);
 	else
 		MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_ERROR),"swSSO",MB_ICONEXCLAMATION | MB_OK);
-	gbDisplayConfigsNotifications=sav_gbDisplayConfigsNotifications;
+	
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;

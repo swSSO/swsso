@@ -593,7 +593,7 @@ int RecoveryChallenge(HWND w)
 		swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData);
 		WritePrivateProfileString("swSSO","recoveryRunning",pszKsData,gszCfgFile);
 		StoreIniEncryptedHash(); // ISSUE#164
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,NULL,0);
 		rc=0;
 	}
 	else
@@ -718,12 +718,12 @@ end:
 	else if (rc==-1) // erreur technique
 	{
 		MessageBox(w,GetString(IDS_RECOVERY_ERROR),"swSSO",MB_ICONEXCLAMATION | MB_OK);
-		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_RECOVERY_FAIL,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_RECOVERY_FAIL,NULL,NULL,NULL,NULL,0);
 	}
 	else if (rc==-3) // erreur de format
 	{
 		MessageBox(w,GetString(IDS_RECOVERY_ERROR_FORMAT),"swSSO",MB_ICONEXCLAMATION | MB_OK);
-		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_RECOVERY_FAIL,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_RECOVERY_FAIL,NULL,NULL,NULL,NULL,0);
 	}
 	
 

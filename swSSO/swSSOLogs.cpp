@@ -42,7 +42,7 @@
 // syslog en fonction de la config EnterpriseOptions en base de registre
 // Remarque : syslog = implémentation ultérieure !
 //-----------------------------------------------------------------------------
-int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszParam3,int iAction)
+int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszParam3,char *pszParam4,int iAction)
 {
 	TRACE((TRACE_ENTER,_F_,"wType=0x%04x dwMsg=0x%08lx",wType,dwMsg));
 	int rc=-1;
@@ -82,6 +82,7 @@ int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszP
 	if (pszParam1!=NULL) { pInsertStrings[0]=pszParam1; wNumStrings++; }
 	if (pszParam2!=NULL) { pInsertStrings[1]=pszParam2; wNumStrings++; }
 	if (pszParam3!=NULL) { pInsertStrings[2]=pszParam3; wNumStrings++; }
+	if (pszParam4!=NULL) { pInsertStrings[3]=pszParam4; wNumStrings++; }
 
 	
 	if (*gszLogFileName!=0) // log dans fichier

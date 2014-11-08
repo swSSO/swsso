@@ -93,6 +93,8 @@ T_SALT gSalts; // sels pour le stockage du mdp primaire et la dérivation de clé 
 
 const char gcszCfgVersion[]="093";
 
+T_CONFIG_SYNC gtConfigSync;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -2147,7 +2149,7 @@ static int CALLBACK ChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM wp,LPA
 					GetDlgItemText(w,TB_NEW_PWD2,szNewPwd2,sizeof(szNewPwd2));
 					if (CheckMasterPwd(szOldPwd)!=0)
 					{
-						swLogEvent(EVENTLOG_WARNING_TYPE,MSG_PRIMARY_PWD_CHANGE_BAD_PWD,NULL,NULL,NULL,0);
+						swLogEvent(EVENTLOG_WARNING_TYPE,MSG_PRIMARY_PWD_CHANGE_BAD_PWD,NULL,NULL,NULL,NULL,0);
 						SendDlgItemMessage(w,TB_OLD_PWD,EM_SETSEL,0,-1);
 						MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 						if (giBadPwdCount>5) PostQuitMessage(-1);
@@ -2518,9 +2520,9 @@ int ChangeWindowsPwd(void)
 	rc=0;
 end:
 	if (rc==0)
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_PRIMARY_PWD_CHANGE_SUCCESS,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_PRIMARY_PWD_CHANGE_SUCCESS,NULL,NULL,NULL,NULL,0);
 	else
-		swLogEvent(EVENTLOG_WARNING_TYPE,MSG_PRIMARY_PWD_CHANGE_ERROR,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_WARNING_TYPE,MSG_PRIMARY_PWD_CHANGE_ERROR,NULL,NULL,NULL,NULL,0);
 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
@@ -2574,9 +2576,9 @@ int ChangeMasterPwd(const char *szNewPwd)
 	rc=0;
 end:
 	if (rc==0)
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_PRIMARY_PWD_CHANGE_SUCCESS,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_PRIMARY_PWD_CHANGE_SUCCESS,NULL,NULL,NULL,NULL,0);
 	else
-		swLogEvent(EVENTLOG_WARNING_TYPE,MSG_PRIMARY_PWD_CHANGE_ERROR,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_WARNING_TYPE,MSG_PRIMARY_PWD_CHANGE_ERROR,NULL,NULL,NULL,NULL,0);
 
 	if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
 	if (pszTranscryptedPwd!=NULL) { free(pszTranscryptedPwd); pszTranscryptedPwd=NULL; }
@@ -3305,10 +3307,6 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 	int iReplaceExistingConfig=0;
 	BOOL bReplaceExistingConfig=FALSE;
 
-	int iNbConfigsAdded=0;
-	int iNbConfigsModified=0;
-	int iNbConfigsDisabled=0;
-
 	char *pszEncodedURL=NULL;
 	char *pszDecodedURL=NULL;
 
@@ -3458,12 +3456,12 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 							TRACE((TRACE_INFO,_F_,"Désactivation et raz du ConfigId de la config %d (id=%d,name=%s)",ptiActions[i],gptActions[ptiActions[i]].iConfigId,gptActions[ptiActions[i]].szApplication));
 							gptActions[ptiActions[i]].bActive=FALSE;
 							gptActions[ptiActions[i]].iConfigId=0;
-							iNbConfigsDisabled++;
+							gtConfigSync.iNbConfigsDisabled++;
 						}
 					}
 					else
 					{
-						if (bReplaceExistingConfig) iNbConfigsModified+=iReplaceExistingConfig; else iNbConfigsAdded++;
+						if (bReplaceExistingConfig) gtConfigSync.iNbConfigsModified+=iReplaceExistingConfig; else gtConfigSync.iNbConfigsAdded++;
 					}
 				}
 			}
@@ -3497,7 +3495,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 						TRACE((TRACE_DEBUG,_F_,"szIniLastModified=%s gptActions[iAction].szLastUpload=%s",szIniLastModified,gptActions[ptiActions[i]].szLastUpload));
 						if (strcmp(szIniLastModified,gptActions[ptiActions[i]].szLastUpload)==0)
 						{
-							if (bReplaceExistingConfig) iNbConfigsModified--; // compense le ++ fait lors du test sur valeur 'active'
+							if (bReplaceExistingConfig) gtConfigSync.iNbConfigsModified--; // compense le ++ fait lors du test sur valeur 'active'
 							// Suite des impacts de ISSUE#24 : ne passe pas à la config suivante car il faut malgré tout
 							// répercuter la modification sur l'ensemble des configs qui ont ce configId
 							// goto nextChildApp;
@@ -3956,28 +3954,11 @@ nextChildApp:
 #ifdef TRACES_ACTIVEES
 	if (bGetAll)
 	{
-		TRACE((TRACE_DEBUG,_F_,"iNbConfigsAdded   =%d",iNbConfigsAdded));
-		TRACE((TRACE_DEBUG,_F_,"iNbConfigsModified=%d",iNbConfigsModified));
-		TRACE((TRACE_DEBUG,_F_,"iNbConfigsDisabled=%d",iNbConfigsDisabled));
+		TRACE((TRACE_DEBUG,_F_,"gtConfigSync.iNbConfigsAdded   =%d",gtConfigSync.iNbConfigsAdded));
+		TRACE((TRACE_DEBUG,_F_,"gtConfigSync.iNbConfigsModified=%d",gtConfigSync.iNbConfigsModified));
+		TRACE((TRACE_DEBUG,_F_,"gtConfigSync.iNbConfigsDisabled=%d",gtConfigSync.iNbConfigsDisabled));
 	}
 #endif
-	if (bGetAll && (iNbConfigsAdded!=0 || iNbConfigsModified!=0 || iNbConfigsDisabled!=0))
-	{
-		// 0.93 : logs
-		char szNbConfigsAdded[5];
-		char szNbConfigsModified[5];
-		char szNbConfigsDisabled[5];
-		wsprintf(szNbConfigsAdded,"%d",iNbConfigsAdded);
-		wsprintf(szNbConfigsModified,"%d",iNbConfigsModified);
-		wsprintf(szNbConfigsDisabled,"%d",iNbConfigsDisabled);
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CONFIG_UPDATE,szNbConfigsAdded,szNbConfigsModified,szNbConfigsDisabled,0);
-		// 0.92 / ISSUE#26 : n'affiche pas les messages si gbDisplayConfigsNotifications=FALSE
-		if (gbDisplayConfigsNotifications) 
-		{
-			wsprintf(buf2048,GetString(IDS_GETCONFIGS_RESULT),iNbConfigsAdded,iNbConfigsModified,iNbConfigsDisabled);
-			MessageBox(w,buf2048,"swSSO",MB_ICONINFORMATION | MB_OK);
-		}
-	}
 end:
 	if (ptiActions!=NULL) { free(ptiActions); ptiActions=NULL; }
 	if (pszEncodedURL!=NULL) free(pszEncodedURL);
@@ -4214,6 +4195,7 @@ int DeleteConfigsNotOnServer(void)
 				TRACE((TRACE_DEBUG,_F_,"Copie %d sur %d",k+1,k));
 				memcpy(&gptActions[k],&gptActions[k+1],sizeof(T_ACTION));
 			}
+			gtConfigSync.iNbConfigsDeleted++;
 			giNbActions--;
 			i--;
 config_suivante:
@@ -4233,6 +4215,35 @@ end:
 	return rc;
 }
 
+//-----------------------------------------------------------------------------
+// ReportConfigSync()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void ReportConfigSync(BOOL bShowMessage)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	char szNbConfigsAdded[5];
+	char szNbConfigsModified[5];
+	char szNbConfigsDisabled[5];
+	char szNbConfigsDeleted[5];
+
+	if (gtConfigSync.iNbConfigsAdded!=0 || gtConfigSync.iNbConfigsModified!=0 || gtConfigSync.iNbConfigsDisabled!=0 || gtConfigSync.iNbConfigsDeleted!=0)
+	{
+		wsprintf(szNbConfigsAdded,"%d",gtConfigSync.iNbConfigsAdded);
+		wsprintf(szNbConfigsModified,"%d",gtConfigSync.iNbConfigsModified);
+		wsprintf(szNbConfigsDisabled,"%d",gtConfigSync.iNbConfigsDisabled);
+		wsprintf(szNbConfigsDeleted,"%d",gtConfigSync.iNbConfigsDeleted);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CONFIG_UPDATE,szNbConfigsAdded,szNbConfigsModified,szNbConfigsDisabled,szNbConfigsDeleted,0);
+		if (bShowMessage) 
+		{
+			wsprintf(buf2048,GetString(IDS_GETCONFIGS_RESULT),gtConfigSync.iNbConfigsAdded,gtConfigSync.iNbConfigsModified,gtConfigSync.iNbConfigsDisabled,gtConfigSync.iNbConfigsDeleted);
+			MessageBox(NULL,buf2048,"swSSO",MB_ICONINFORMATION | MB_OK);
+		}
+	}
+	TRACE((TRACE_LEAVE,_F_, ""));
+	return;
+}
 // ----------------------------------------------------------------------------------
 // ReactivateApplicationFromCurrentWindow()
 // ----------------------------------------------------------------------------------

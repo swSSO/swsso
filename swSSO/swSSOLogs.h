@@ -31,5 +31,5 @@
 // swSSOLogs.h
 //-----------------------------------------------------------------------------
 
-int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszParam3,int iAction);
+int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszParam3,char *pszParam4,int iAction);
 int swStat(void);

@@ -1083,7 +1083,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					case XEBSSO: guiNbWEBSSO++; break;
 				}
 				// ISSUE#127 (le swLogEvent était fait trop tôt, cf. plus haut)
-				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
+				swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,NULL,i);
 				goto end;
 			}
 			switch(gptActions[i].iType)
@@ -1167,7 +1167,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 						gptActions[i].iNbEssais=0;
 						gptActions[i].iWaitFor=WAIT_IF_SSO_OK; 
 						// ISSUE#127 (le swLogEvent était fait trop tôt, cf. plus haut)
-						swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
+						swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,NULL,i);
 					}
 					else if (rc==-2) // SSO abandonné car l'URL ne correspond pas
 					{
@@ -1592,9 +1592,9 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						SecureZeroMemory(szPwd,strlen(szPwd));
 						// 0.93B1 : log authentification primaire échouée
 						if (gbSSOActif)
-							swLogEvent(EVENTLOG_WARNING_TYPE,MSG_PRIMARY_LOGIN_ERROR,NULL,NULL,NULL,0);
+							swLogEvent(EVENTLOG_WARNING_TYPE,MSG_PRIMARY_LOGIN_ERROR,NULL,NULL,NULL,NULL,0);
 						else
-							swLogEvent(EVENTLOG_WARNING_TYPE,MSG_UNLOCK_BAD_PWD,NULL,NULL,NULL,0);
+							swLogEvent(EVENTLOG_WARNING_TYPE,MSG_UNLOCK_BAD_PWD,NULL,NULL,NULL,NULL,0);
 
 						SendDlgItemMessage(w,TB_PWD,EM_SETSEL,0,-1);
 
@@ -1708,7 +1708,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 		}
 		else
 		{
-			swLogEvent(EVENTLOG_ERROR_TYPE,MSG_GENERIC_START_ERROR,NULL,NULL,NULL,0);
+			swLogEvent(EVENTLOG_ERROR_TYPE,MSG_GENERIC_START_ERROR,NULL,NULL,NULL,NULL,0);
 			char szErrMsg[1024+1];
 			strcpy_s(szErrMsg,sizeof(szErrMsg),GetString(IDS_GENERIC_STARTING_ERROR));
 			MessageBox(NULL,szErrMsg,GetString(IDS_MESSAGEBOX_TITLE),MB_OK | MB_ICONSTOP);
@@ -2266,7 +2266,7 @@ askpwd:
 			}
 		}
 		// 0.93B1 : log authentification primaire réussie
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_PRIMARY_LOGIN_SUCCESS,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_PRIMARY_LOGIN_SUCCESS,NULL,NULL,NULL,NULL,0);
 	}
 
 	// 0.80B9 : lit la config proxy pour ce poste de travail.
@@ -2317,6 +2317,11 @@ askpwd:
 			}
 		}
 	}
+
+	gtConfigSync.iNbConfigsAdded=0;
+	gtConfigSync.iNbConfigsDeleted=0;
+	gtConfigSync.iNbConfigsDisabled=0;
+	gtConfigSync.iNbConfigsModified=0;
 
 	// 0.91 : propose à l'utilisateur de récupérer les configurations disponibles sur le serveur
 	TRACE((TRACE_DEBUG,_F_,"giNbActions=%d gbGetAllConfigsAtFirstStart=%d giDomainId=%d",giNbActions,gbGetAllConfigsAtFirstStart,giDomainId));
@@ -2374,6 +2379,8 @@ askpwd:
 			DeleteConfigsNotOnServer();
 		}
 	}
+	ReportConfigSync(gbDisplayConfigsNotifications);
+
 	// ISSUE#59 : ce code était avant dans LoadCategories().
 	// Déplacé dans winmain pour ne pas l'exécuter si des catégories ont été récupérées depuis le serveur
 	if (giNbCategories==0) // si aucune catégorie, crée la catégorie "non classé"
@@ -2458,7 +2465,7 @@ askpwd:
 		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile);
 		StoreIniEncryptedHash(); // ISSUE#164
 		MessageBox(NULL,GetString(giPwdProtection==PP_ENCRYPTED?IDS_RECOVERY_ENCRYPTED_OK:IDS_RECOVERY_WINDOWS_OK),"swSSO",MB_ICONINFORMATION | MB_OK);
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_SUCCESS,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_SUCCESS,NULL,NULL,NULL,NULL,0);
 	}
 
 	if (giPwdProtection==PP_WINDOWS)
@@ -2515,19 +2522,19 @@ askpwd:
 end:
 	if (iError==-1)
 	{
-		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_GENERIC_START_ERROR,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_GENERIC_START_ERROR,NULL,NULL,NULL,NULL,0);
 		char szErrMsg[1024+1];
 		strcpy_s(szErrMsg,sizeof(szErrMsg),GetString(IDS_GENERIC_STARTING_ERROR));
 		MessageBox(NULL,szErrMsg,GetString(IDS_MESSAGEBOX_TITLE),MB_OK | MB_ICONSTOP);
 	}
 	else if (iError==-2) 
 	{
-		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SWSSO_INI_CORRUPTED,gszCfgFile,NULL,NULL,0);
+		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SWSSO_INI_CORRUPTED,gszCfgFile,NULL,NULL,NULL,0);
 		MessageBox(NULL,gszErrorMessageIniFile,GetString(IDS_MESSAGEBOX_TITLE),MB_OK | MB_ICONSTOP);
 	}
 	else
 	{
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_QUIT,NULL,NULL,NULL,0);
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_QUIT,NULL,NULL,NULL,NULL,0);
 		if (gbStat) swStat(); // 0.99 - ISSUE#106
 	}
 

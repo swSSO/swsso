@@ -151,7 +151,7 @@ Severity=Success
 Facility=Application
 SymbolicName=MSG_CONFIG_UPDATE
 Language=French
-Mise a jour des configurations : %1 ajouts, %2 modifications, %3 desactivations
+Mise a jour des configurations : %1 ajouts, %2 modifications, %3 desactivations, %4 suppressions
 .
 
 MessageId=0x00000010

@@ -691,7 +691,7 @@ STRINGTABLE
     IDS_LAUNCH_APP                "Lancer cette application"
     IDS_LAUNCH_ONE_APP            "Lancer une application..."
     IDS_NO_LAUNCH_PATH            "Vous n'avez pas défini de commande de lancement pour cette application."
-    IDS_GETCONFIGS_RESULT         "Vos configurations ont été mises à jour.      \r\n- Configurations ajoutées : %d\r\n- Configurations modifiées : %d\r\n- Configurations désactivées : %d"
+    IDS_GETCONFIGS_RESULT         "Vos configurations ont été mises à jour.      \r\n- Configurations ajoutées : %d\r\n- Configurations modifiées : %d\r\n- Configurations désactivées : %d\r\n- Configurations supprimées : %d"
     IDS_DELETION_FORBIDDEN        "Ceci est une configuration entreprise. Elle ne peut pas être supprimée."
     IDS_IDANDPWDTEXT_NEW          "Veuillez saisir vos informations de connexion à :\r\n%s"
     IDS_IDANDPWDTITLE_NEW         "swSSO - Ajout d'une application"

@@ -197,7 +197,7 @@
 //
 // MessageText:
 //
-// Mise a jour des configurations : %1 ajouts, %2 modifications, %3 desactivations
+// Mise a jour des configurations : %1 ajouts, %2 modifications, %3 desactivations, %4 suppressions
 //
 #define MSG_CONFIG_UPDATE                ((DWORD)0x0000000FL)
 
