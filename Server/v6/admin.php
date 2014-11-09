@@ -233,17 +233,20 @@ else if ($_GET['action']=="deletedomain"._WRITESUFFIX_)
 // ------------------------------------------------------------
 else if ($_GET['action']=="deleteadminpwd"._WRITESUFFIX_)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
+	if (_SHOWRESETPWD_=="TRUE")
+	{
+		$cnx=dbConnect();
+		if (!$cnx) return;
 
-	$szRequest="delete from "._TABLE_PREFIX_."adminpwd where pwd!=''";      
+		$szRequest="delete from "._TABLE_PREFIX_."adminpwd where pwd!=''";      
 
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+		$req=mysql_query($szRequest,$cnx);
+		if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
-	echo "Mot de passe administrateur effac&eacute;.";
-	
-	dbClose($cnx);
+		echo "Mot de passe administrateur effac&eacute;.";
+		
+		dbClose($cnx);
+	}
 }
 // ------------------------------------------------------------
 // MENU
@@ -272,8 +275,8 @@ else if ($_GET['action']=="menu"._MENUSUFFIX_)
 			menuShowDomains();
 			echo "<br/>+ <a href=./admin.php?action=showcategories"._READSUFFIX_.">Cat&eacute;gories</a>"; 
 			echo "<br/>+ <a href=./admin.php?action=showdomains"._READSUFFIX_.">Ajouter ou supprimer un domaine</a>";
-			if (_STATS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=showstats"._READSUFFIX_.">Statistiques</a>";      
-			echo "<br/>+ <a href=./admin.php?action=deleteadminpwd"._WRITESUFFIX_.">Effacer le mot de passe administrateur</a>";   
+			if (_STATS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=showstats"._READSUFFIX_.">Statistiques</a>";    
+			if (_SHOWRESETPWD_=="TRUE") echo "<br/>+ <a href=./admin.php?action=deleteadminpwd"._WRITESUFFIX_.">Effacer le mot de passe administrateur</a>";   
 			echo "<br/>+ <a href=./webservice6.php?action=isalive>Test \"isalive\"</a>";   
 			if (_ENCRYPT_=="TRUE")
 				echo "<br/><br/>Chiffrement : activ&eacute;";
