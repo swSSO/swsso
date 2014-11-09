@@ -4202,10 +4202,12 @@ config_suivante:
 			i++;
 		}
 	}
-	
-	SaveApplications();
-	SavePortal();
-	SaveLastConfigUpdate();
+	if (gtConfigSync.iNbConfigsDeleted!=0) // il y a eu au moins une suppression
+	{
+		SaveApplications();
+		SavePortal();
+		SaveLastConfigUpdate();
+	}
 	rc=0;
 
 end:
