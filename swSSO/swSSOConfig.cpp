@@ -1129,7 +1129,7 @@ int GetConfigHeader()
 	gbInternetCheckVersion=GetConfigBoolValue("swSSO","internetCheckVersion",bCheckVersion,TRUE);
 	gbInternetCheckBeta=GetConfigBoolValue("swSSO","internetCheckBeta",gbInternetCheckBeta_DefaultValue,TRUE);
 	gbInternetGetConfig=GetConfigBoolValue("swSSO","internetGetConfig",gbInternetGetConfig_DefaultValue,TRUE);
-	gbInternetManualPutConfig=GetConfigBoolValue("swSSO","internetManualPutConfig",gbInternetManualPutConfig_DefaultValue,TRUE);
+	gbInternetManualPutConfig=GetConfigBoolValue("swSSO","internetManualPutConfig",gbAdmin?TRUE:gbInternetManualPutConfig_DefaultValue,TRUE);
 	GetPrivateProfileString("swSSO","Portal",gszCfgPortal_DefaultValue,gszCfgPortal,sizeof(gszCfgPortal),gszCfgFile);
 	gbLaunchTopMost=GetConfigBoolValue("swSSO","LaunchTopMost",gbLaunchTopMost_DefaultValue,TRUE);
 	gbParseWindowsOnStart=GetConfigBoolValue("swSSO","parseWindowsOnStart",gbParseWindowsOnStart_DefaultValue,TRUE);// 0.93B4 ISSUE#50 (?)

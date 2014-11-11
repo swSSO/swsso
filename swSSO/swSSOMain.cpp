@@ -1692,6 +1692,17 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 	// mode de fonctionnement sans mot de passe
 	if (gbNoMasterPwd && gcszK1[0]!='1')
 	{
+		if (gbAdmin) // si défini, demande le mot de passe admin, sinon demande de le définir
+		{
+			if (IsAdminPwdSet())
+			{
+				if (AskAdminPwd()!=0) goto end;
+			}
+			else
+			{
+				if (SetAdminPwd()!=0) goto end;
+			}
+		}
 		char szTemp[LEN_PWD+1];
 		SecureZeroMemory(szTemp,LEN_PWD+1);
 		memcpy(szTemp,gcszK1,8);
@@ -2078,7 +2089,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 
 	// lecture du header de la config (=lecture section swSSO)
 	if (GetConfigHeader()!=0) { iError=-2; goto end; }
-
+/*
 	if (gbAdmin && gbNoMasterPwd && gcszK1[0]!='1') // si défini, demande le mot de passe admin, sinon demande de le définir
 	{
 		if (IsAdminPwdSet())
@@ -2090,7 +2101,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			if (SetAdminPwd()!=0) goto end;
 		}
 	}
-
+*/
 	if (*gszCfgVersion==0) // version <0.50 ou premier lancement...
 	{
 		strcpy_s(gszCfgVersion,4,gcszCfgVersion);
@@ -2107,9 +2118,22 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		else // mode sans mot de passe
 		{
 			BYTE AESKeyData[AES256_KEY_LEN];
+			char szTemp[LEN_PWD+1]; // 4 morceaux de clé x 8 octets + nom d'utilisateur tronqué à 16 octets = 48
+
+			if (gbAdmin) // si défini, demande le mot de passe admin, sinon demande de le définir
+			{
+				if (IsAdminPwdSet())
+				{
+					if (AskAdminPwd()!=0) goto end;
+				}
+				else
+				{
+					if (SetAdminPwd()!=0) goto end;
+				}
+			}
+
 			giPwdProtection=PP_ENCRYPTED;
 			swGenPBKDF2Salt(); // génère le sel qui sera pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
-			char szTemp[LEN_PWD+1]; // 4 morceaux de clé x 8 octets + nom d'utilisateur tronqué à 16 octets = 48
 			SecureZeroMemory(szTemp,LEN_PWD+1);
 			memcpy(szTemp,gcszK1,8);
 			memcpy(szTemp+8,gcszK2,8);
