@@ -143,10 +143,10 @@ function showAll($active,$domain,$title)
 		$ligne = mysql_fetch_row($req);
 		echo "<tr>";
 		if ($active==1)
-			echo "<td><a href=\"./admin.php?action=archiveconfig"._WRITESUFFIX_."&id=".$ligne[0]."&active=".$active."\" ".
+			echo "<td><a href=\"./admin.php?action=archiveconfig"._WRITESUFFIX_."&id=".$ligne[0]."&domain=".$domain."&active=".$active."\" ".
 				" onclick=\"return confirm('Confirmez-vous l\'archivage de ".utf8_encode($ligne[1])." [".$ligne[0]."] ?');\">".$ligne[0]."</a></td>";
 		else
-			echo "<td><a href=\"./admin.php?action=deleteconfig"._WRITESUFFIX_."&id=".$ligne[0]."&active=".$active."\" ".
+			echo "<td><a href=\"./admin.php?action=deleteconfig"._WRITESUFFIX_."&id=".$ligne[0]."&domain=".$domain."&active=".$active."\" ".
 				" onclick=\"return confirm('Confirmez-vous la suppression de ".utf8_encode($ligne[1])." [".$ligne[0]."] ?');\">".$ligne[0]."</a></td>";
 		if ($ligne[17]!="") echo "<td>".utf8_encode($ligne[22]."(".$ligne[17].")")."</td>"; else echo "<td align=center>-</td>";   // categId
 		if ($ligne[19]!="") // domainId

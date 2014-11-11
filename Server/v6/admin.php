@@ -209,7 +209,7 @@ else if ($_GET['action']=="deletecateg"._WRITESUFFIX_)
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
 	dbClose($cnx);
-	showCategories(var_domain,$title);
+	showCategories($title);
 }
 // ------------------------------------------------------------
 // deletedomain : suppression définitive d'un domain
