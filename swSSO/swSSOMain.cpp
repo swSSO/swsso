@@ -2336,6 +2336,7 @@ askpwd:
 		if (gbAdmin || gbInternetManualPutConfig) // 1.05 : on ne demande pas à l'admin quel est son domaine, il doit pouvoir tous les gérer
 		{
 			giDomainId=-1;
+			strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),"Tous");
 			SaveConfigHeader();
 			GetAllConfigsFromServer();
 		}
@@ -2355,6 +2356,9 @@ askpwd:
 			// 0.92 / ISSUE#26 : n'affiche pas la demande si gbDisplayConfigsNotifications=FALSE
 			else if (!gbDisplayConfigsNotifications || MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS),"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES) 
 			{
+				// 1.07 : renseigne le domaine label correspondant au domain id du .ini
+				if (*gszDomainLabel==0) { GetDomainLabel(giDomainId); SaveConfigHeader(); }
+
 				GetAllConfigsFromServer();
 			}
 		}
@@ -2368,18 +2372,33 @@ askpwd:
 		{
 			giNbDomains=GetDomains(TRUE,0,gtabDomains);
 		}
+		else
+		{
+			// Il faut aussi récupérer la liste des domaines pour renseigner le label du domaine de l'utilisateur
+			// (s'il est vide et que le domaineId est différent de -1=tous ou 1=commun)
+			if (*gszDomainLabel==0)
+			{
+				if (giDomainId!=-1 && giDomainId!=1)
+				{
+					giNbDomains=GetDomains(TRUE,0,gtabDomains);
+				}
+				GetDomainLabel(giDomainId); 
+				SaveConfigHeader();
+			}
+		}
+		
 		// 0.91 : si demandé, récupère les nouvelles configurations et/ou les configurations modifiées
 		if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
 		{
-			GetNewOrModifiedConfigsFromServer();
+			GetNewOrModifiedConfigsFromServer(gbAdmin);
 		}
 		// ISSUE#214
-		if (gbConfigFullSync) // réalise une synchro complète en supprimant les configs qui ne sont plus présentes sur le serveur
+		if (gbRemoveDeletedConfigsAtStart) // réalise une synchro complète en supprimant les configs qui ne sont plus présentes sur le serveur
 		{
 			DeleteConfigsNotOnServer();
 		}
 	}
-	ReportConfigSync(gbDisplayConfigsNotifications);
+	ReportConfigSync(gbDisplayConfigsNotifications,gbAdmin);
 
 	// ISSUE#59 : ce code était avant dans LoadCategories().
 	// Déplacé dans winmain pour ne pas l'exécuter si des catégories ont été récupérées depuis le serveur
@@ -2400,7 +2419,10 @@ askpwd:
 	// 1.03 : si configuré pour utiliser le mot de passe AD comme mot de passe secondaire (%ADPASSWORD%),
 	//        vérifie que la date de dernier changement de mot de passe AD et le cas échéant demande à 
 	//        l'utilisateur de le saisir
-	if (gbUseADPasswordForAppLogin) CheckADPwdChange(); // ne doit pas être bloquant si échoue, car peut être lié à AD non joignable par ex.
+	if (!gbAdmin) // 1.07 : ne le demande pas en mode admin
+	{
+		if (gbUseADPasswordForAppLogin) CheckADPwdChange(); // ne doit pas être bloquant si échoue, car peut être lié à AD non joignable par ex.
+	}
 	
 	// inscription pour réception des notifs de verrouillage de session
 	gbRegisterSessionNotification=WTSRegisterSessionNotification(gwMain,NOTIFY_FOR_THIS_SESSION);

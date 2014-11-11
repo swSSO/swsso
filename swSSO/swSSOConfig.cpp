@@ -4034,7 +4034,7 @@ end:
 // Récupère la liste des configurations ajoutées et/ou modifiées depuis la dernière
 // vérification, ainsi que les configurations archivées pour désactivation
 // ----------------------------------------------------------------------------------
-int GetNewOrModifiedConfigsFromServer(void)
+int GetNewOrModifiedConfigsFromServer(BOOL bForced)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 						
@@ -4052,7 +4052,7 @@ int GetNewOrModifiedConfigsFromServer(void)
 		// il faut de toute façon récupérer toutes les configs ajoutées et (modifiées ou archivées)
 		// depuis la dernière vérification puis traiter au cas par cas les configs
 		sizeofIdsList=0;
-		bstrXML=LookForConfig("","","",gbConfigFullSync?"20000101000000":gszLastConfigUpdate,
+		bstrXML=LookForConfig("","","",bForced?"20000101000000":gszLastConfigUpdate,
 							gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK);
 	}
 	else
@@ -4064,7 +4064,7 @@ int GetNewOrModifiedConfigsFromServer(void)
 			// pas récupérer les configurations existantes sur le serveur. Dans ce cas le mieux est de ne pas faire 
 			// la requête ! (d'autant que le serveur retourne les configs existantes !)
 			if (!gbGetNewConfigsAtStart) { rc=0; goto end; }
-			bstrXML=LookForConfig("","","",gszLastConfigUpdate,
+			bstrXML=LookForConfig("","","",bForced?"20000101000000":gszLastConfigUpdate,
 								gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK);
 		}
 		else
@@ -4079,7 +4079,7 @@ int GetNewOrModifiedConfigsFromServer(void)
 				pos+=wsprintf(pszIds+pos,"%d,",gptActions[i].iConfigId);
 			}
 			*(pszIds+pos-1)=0; // supprime la virgule
-			bstrXML=LookForConfig("","",pszIds,gszLastConfigUpdate,
+			bstrXML=LookForConfig("","",pszIds,bForced?"20000101000000":gszLastConfigUpdate,
 								gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK);
 		}
 	}
@@ -4153,7 +4153,7 @@ int DeleteConfigsNotOnServer(void)
 	}
 	else // réponse au format id,id,id,
 	{
-		pitabConfigsOnServer=(int*)malloc(giMaxConfigs);
+		pitabConfigsOnServer=(int*)malloc(giMaxConfigs*sizeof(int));
 		if (pitabConfigsOnServer==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",giMaxConfigs)); goto end; }
 		// construit une table d'id de configs présentes sur le serveur
 		iNbConfigsOnServer=0;
@@ -4222,7 +4222,7 @@ end:
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-void ReportConfigSync(BOOL bShowMessage)
+void ReportConfigSync(BOOL bShowMessage, BOOL bShowIfZero)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	char szNbConfigsAdded[5];
@@ -4230,7 +4230,7 @@ void ReportConfigSync(BOOL bShowMessage)
 	char szNbConfigsDisabled[5];
 	char szNbConfigsDeleted[5];
 
-	if (gtConfigSync.iNbConfigsAdded!=0 || gtConfigSync.iNbConfigsModified!=0 || gtConfigSync.iNbConfigsDisabled!=0 || gtConfigSync.iNbConfigsDeleted!=0)
+	if (bShowIfZero || gtConfigSync.iNbConfigsAdded!=0 || gtConfigSync.iNbConfigsModified!=0 || gtConfigSync.iNbConfigsDisabled!=0 || gtConfigSync.iNbConfigsDeleted!=0)
 	{
 		wsprintf(szNbConfigsAdded,"%d",gtConfigSync.iNbConfigsAdded);
 		wsprintf(szNbConfigsModified,"%d",gtConfigSync.iNbConfigsModified);
@@ -4243,6 +4243,7 @@ void ReportConfigSync(BOOL bShowMessage)
 			MessageBox(NULL,buf2048,"swSSO",MB_ICONINFORMATION | MB_OK);
 		}
 	}
+
 	TRACE((TRACE_LEAVE,_F_, ""));
 	return;
 }
@@ -4802,6 +4803,41 @@ void InternetCheckVersion()
 	}
 end:
 	if (pszResult!=NULL) free(pszResult);
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// GetDomainLabel()
+//-----------------------------------------------------------------------------
+// Renseigne le libellé d'un domaine en fonction de son id (id si non trouvé)
+//-----------------------------------------------------------------------------
+void GetDomainLabel(int iDomainId)
+{
+	TRACE((TRACE_ENTER,_F_, "iDomainId=%d",iDomainId));
+	int i;
+
+	if (iDomainId==-1)
+	{
+		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),"Tous");
+	}
+	else if (iDomainId==1)
+	{
+		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),"Commun");
+	}
+	else
+	{
+		for (i=0;i<giNbDomains;i++)
+		{
+			if (gtabDomains[i].iDomainId==iDomainId) 
+			{
+				strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),gtabDomains[i].szDomainLabel);
+				goto end;
+			}
+		}
+		// non trouvé, on met l'id en libellé
+		sprintf_s(gszDomainLabel,sizeof(gszDomainLabel),"Domaine #%d",iDomainId);
+	}
+end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 

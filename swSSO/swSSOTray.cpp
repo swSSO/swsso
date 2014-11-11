@@ -1027,17 +1027,36 @@ int RefreshRights(void)
 	{
 		giNbDomains=GetDomains(TRUE,0,gtabDomains);
 	}
+	else
+	{
+		// Il faut aussi récupérer la liste des domaines pour renseigner le label du domaine de l'utilisateur
+		// (s'il est vide et que le domaineId est différent de -1=tous ou 1=commun)
+		if (*gszDomainLabel==0)
+		{
+			if (giDomainId!=-1 && giDomainId!=1)
+			{
+				giNbDomains=GetDomains(TRUE,0,gtabDomains);
+			}
+			GetDomainLabel(giDomainId); 
+			SaveConfigHeader();
+		}
+	}
 	if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
 	{
-		rc=GetNewOrModifiedConfigsFromServer();
+		rc=GetNewOrModifiedConfigsFromServer(TRUE);
 	}
-	if (gbConfigFullSync) // réalise une synchro complète en supprimant les configs qui ne sont plus présentes sur le serveur
+	if (gbRemoveDeletedConfigsAtStart) // Supprime les configs qui ne sont plus présentes sur le serveur
 	{
 		DeleteConfigsNotOnServer();
 	}
-	ReportConfigSync(FALSE);
+	
 	if (rc==0)
-		MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_DONE),"swSSO",MB_ICONINFORMATION | MB_OK);
+	{
+		if (gbAdmin || gbInternetManualPutConfig)
+			ReportConfigSync(TRUE,TRUE);
+		else
+			MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_DONE),"swSSO",MB_ICONINFORMATION | MB_OK);
+	}
 	else
 		MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_ERROR),"swSSO",MB_ICONEXCLAMATION | MB_OK);
 	

@@ -67,7 +67,7 @@ int SaveMasterPwdLastChange(void);
 long GetMasterPwdLastChange(void);
 int ChangeApplicationPassword(HWND w,int iAction);
 int GetAllConfigsFromServer(void);
-int GetNewOrModifiedConfigsFromServer(void);
+int GetNewOrModifiedConfigsFromServer(BOOL bForced);
 int DeleteConfigsNotOnServer(void);
 
 int StoreNodeValue(char *buf,int bufsize,IXMLDOMNode *pNode);
@@ -115,6 +115,7 @@ T_DOMAIN;
 extern int  giDomainId;						// 0.94B1 : gestion des domaines
 extern char gszDomainLabel[LEN_DOMAIN+1];
 int GetDomains(BOOL bAllDomains, int iConfigId,T_DOMAIN *pgtabDomain);
+void GetDomainLabel(int iDomainId);
 
 extern BOOL gbParseWindowsOnStart;  // 0.93B4 : parse / ne parse pas les fenêtres ouvertes au lancement de SSO
 #define MAX_EXCLUDED_HANDLES 500
@@ -168,4 +169,4 @@ typedef struct
 } T_CONFIG_SYNC;
 
 extern T_CONFIG_SYNC gtConfigSync;
-void ReportConfigSync(BOOL bShowMessage);
+void ReportConfigSync(BOOL bShowMessage,BOOL bShowIfZero);

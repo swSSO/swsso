@@ -614,10 +614,13 @@ else if ($_GET['action']=="getdomainconfigs")
 	
 	// récupération des paramètres passés dans l'URL
     $var_domainId=utf8_decode(myaddslashes($_GET['domainId']));
-	
+
+	$conditions="";
+	if ($var_domainId!=-1) $conditions="and (domainId=1 or domainId=".$var_domainId.")";
+
 	$szRequest= "select "._TABLE_PREFIX_."config.id ".
 			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."config where ".
-			"active=1 and (domainId=1 or domainId=".$var_domainId.") and configId="._TABLE_PREFIX_."config.id";
+			"active=1 ".$conditions." and configId="._TABLE_PREFIX_."config.id";
 	if (isset($_GET["debug"])) echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }

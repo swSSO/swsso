@@ -119,7 +119,7 @@ int  giServerPort=INTERNET_DEFAULT_HTTP_PORT;	// 1.03 - ISSUE#162
 BOOL gbUseADPasswordForAppLogin=FALSE;			// 1.03 - permet d'utiliser %ADPASSWORD% dans le champ mot de passe (n'utilise pas (encore) swSSOCM --> le mdp AD est demandé à l'utilisateur)
 BOOL gbDisplayWindowsPasswordChange=TRUE;	// 1.05 - affiche / masque le message affiché lors du changement de mot de passe windows (en mode chaîné)
 BOOL gbCategoryAutoUpdate=FALSE;			// 1.06 - ISSUE#206 : met à jour la catégorie sur le serveur lorsqu'une application est déplacée dans l'IHM client
-BOOL gbConfigFullSync=FALSE;				// 1.07 - ISSUE#214
+BOOL gbRemoveDeletedConfigsAtStart=FALSE;	// 1.07 - ISSUE#214
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -534,8 +534,8 @@ void LoadPolicies(void)
 
 		// ISSUE#214
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_CONGIG_FULL_SYNC,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbConfigFullSync=(BOOL)dwValue; 
+		rc=RegQueryValueEx(hKey,REGVALUE_REMOVE_DELETED_CONFIGS_AT_START,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbRemoveDeletedConfigsAtStart=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -718,7 +718,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbUseADPasswordForAppLogin=%d"		,gbUseADPasswordForAppLogin));
 	TRACE((TRACE_INFO,_F_,"gbDisplayWindowsPasswordChange=%d"	,gbDisplayWindowsPasswordChange));
 	TRACE((TRACE_INFO,_F_,"gbCategoryAutoUpdate=%d"				,gbCategoryAutoUpdate));
-	TRACE((TRACE_INFO,_F_,"gbConfigFullSync=%d"					,gbConfigFullSync));
+	TRACE((TRACE_INFO,_F_,"gbRemoveDeletedConfigsAtStart=%d"	,gbRemoveDeletedConfigsAtStart));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
