@@ -363,21 +363,27 @@
 #define IDS_ADMIN_PWD_STORE_ERROR       40151
 #define IDS_ADMIN_PWD_STORE_OK          40152
 #define IDS_CLOSE_APPNSITES_FIRST       40153
-#define IDM_SWUNDO                        40154
-#define IDM_SWCUT                         40155
-#define IDM_SWCOPY                        40156
-#define IDM_SWPASTE                       40157
-#define IDM_SWCLEARSELECTION              40158
-#define IDM_SWSELECTALL                   40159
+#define IDM_SWUNDO                      40154
+#define IDM_SWCUT                       40155
+#define IDM_SWCOPY                      40156
+#define IDM_SWPASTE                     40157
+#define IDM_SWCLEARSELECTION            40158
+#define IDM_SWSELECTALL                 40159
+#define IDS_DELETE_CONFIG_ON_SERVER_OK  42000
+#define IDS_DELETE_CONFIG_ON_SERVER_KO  42001
+#define IDS_DELETE_CATEG                42002
+#define IDS_DELETE_CATEG_ON_SERVER_OK   42003
+#define IDS_DELETE_CATEG_ON_SERVER_KO   42004
+#define IDS_DELETE_CATEG_NOT_EXISTING   42005
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        101
-#define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1000
-#define _APS_NEXT_SYMED_VALUE           101
+#define _APS_NEXT_RESOURCE_VALUE        42001
+#define _APS_NEXT_COMMAND_VALUE         44000
+#define _APS_NEXT_CONTROL_VALUE         46000
+#define _APS_NEXT_SYMED_VALUE           48000
 #endif
 #endif

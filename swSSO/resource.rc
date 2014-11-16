@@ -629,7 +629,7 @@ BEGIN
     IDS_COMBOTYPE3          "Fenêtre Windows"
     IDS_OLDVERSION          "0.42 ou inférieure"
     IDS_PP_ENCRYPTED        "AES-256 et PBKDF2 (mot de passe maître)"
-    IDS_DELETE              "Confirmez-vous la suppression de l'application %s ?"
+    IDS_DELETE              "Confirmez-vous la suppression de la configuration %s ?\r\nAttention, cette configuration sera également supprimée du serveur."
     IDS_MENU_ACTIVER        "&Activer"
     IDS_MENU_AJOUTER_APPLI  "A&jouter une application"
     IDS_MENU_SUPPRIMER      "&Supprimer"
@@ -841,6 +841,21 @@ BEGIN
     IDS_ADMIN_PWD_STORE_OK  "Le mot de passe administrateur a bien été enregistré."
     IDS_CLOSE_APPNSITES_FIRST 
                             "Veuillez fermer la fenêtre de gestion des sites et applications puis réessayez."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DELETE_CONFIG_ON_SERVER_OK 
+                            "La configuration a bien été supprimée du serveur."
+    IDS_DELETE_CONFIG_ON_SERVER_KO 
+                            "Une erreur est survenue. La configuration n'a pas été supprimée."
+    IDS_DELETE_CATEG        "Confirmez-vous la suppression de la catégorie %s ?\r\nAttention, cette catégorie sera également supprimée du serveur."
+    IDS_DELETE_CATEG_ON_SERVER_OK 
+                            "La catégorie a bien été supprimée du serveur."
+    IDS_DELETE_CATEG_ON_SERVER_KO 
+                            "Une erreur est survenue. La catégorie n'a pas été supprimée."
+    IDS_DELETE_CATEG_NOT_EXISTING 
+                            "Cette catégorie n'avait pas encore été publiée sur le serveur. Elle a simplement été supprimée localement."
 END
 
 #endif    // French (France) resources

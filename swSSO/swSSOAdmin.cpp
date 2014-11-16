@@ -60,7 +60,8 @@ int CheckAdminPwd(char *szPwd)
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=checkadminpwd&salt=%s&pwd=%s",gszWebServiceAddress,szSalt,szPwd);
 	pszResult=HTTPRequest(szRequest,8,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
-	rc=(strcmp(pszResult,"OK")==0)?0:-1;
+
+	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
 
 end:
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
@@ -92,7 +93,8 @@ int StoreAdminPwd(char *szNewPwd)
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=setadminpwd&salt=%s&pwd=%s",gszWebServiceAddress,szSalt,szNewPwd);
 	pszResult=HTTPRequest(szRequest,8,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
-	rc=(strcmp(pszResult,"OK")==0)?0:-1;
+	
+	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
 
 end:
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);

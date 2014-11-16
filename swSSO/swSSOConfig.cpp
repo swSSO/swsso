@@ -4218,6 +4218,60 @@ end:
 	return rc;
 }
 
+// ----------------------------------------------------------------------------------
+// DeleteConfigOnServer()
+// ----------------------------------------------------------------------------------
+// Supprime la configuration passée en paramètre sur le serveur
+// ----------------------------------------------------------------------------------
+int DeleteConfigOnServer(int iAction)
+{
+	TRACE((TRACE_ENTER,_F_, "iAction=%d",iAction));
+	int rc=-1;
+	char szRequest[512+1];
+	char *pszResult=NULL;
+
+	if (iAction==-1) goto end;
+	// appel webservice
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deleteconfig&configId=%d",gszWebServiceAddress,gptActions[iAction].iConfigId);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
+	pszResult=HTTPRequest(szRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+
+	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
+
+end:		
+	if (pszResult!=NULL) free(pszResult);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// DeleteCategOnServer()
+// ----------------------------------------------------------------------------------
+// Supprime la catégorie passée en paramètre sur le serveur
+// ----------------------------------------------------------------------------------
+int DeleteCategOnServer(int iCategory)
+{
+	TRACE((TRACE_ENTER,_F_, "iCategory=%d",iCategory));
+	int rc=-1;
+	char szRequest[512+1];
+	char *pszResult=NULL;
+
+	if (iCategory==-1) goto end;
+	// appel webservice
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deletecateg&categId=%d",gszWebServiceAddress,gptCategories[iCategory].id);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
+	pszResult=HTTPRequest(szRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+
+	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
+
+end:		
+	if (pszResult!=NULL) free(pszResult);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
 //-----------------------------------------------------------------------------
 // ReportConfigSync()
 //-----------------------------------------------------------------------------

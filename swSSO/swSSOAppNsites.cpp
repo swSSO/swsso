@@ -1586,6 +1586,29 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 			MessageBox(w,GetString(IDS_CATEG_NOT_EMPTY),"swSSO",MB_ICONEXCLAMATION);
 			goto end;
 		}
+		// ISSUE#223 : si gbAdminDeleteConfigsOnServer alors supprime aussi sur le serveur (avec confirmation)
+		if (gbAdminDeleteConfigsOnServer)
+		{
+			char szMsg[500];
+			wsprintf(szMsg,GetString(IDS_DELETE_CATEG),gptCategories[iCategory].szLabel);
+			if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
+			if (iCategoryId<10000) // configuration pas encore remontée sur le serveur
+			{
+				MessageBox(w,GetString(IDS_DELETE_CATEG_NOT_EXISTING),"swSSO",MB_OK | MB_ICONINFORMATION);
+			}
+			else
+			{
+				if (DeleteCategOnServer(iCategory)==0)
+				{
+					MessageBox(w,GetString(IDS_DELETE_CATEG_ON_SERVER_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+				}
+				else
+				{
+					MessageBox(w,GetString(IDS_DELETE_CATEG_ON_SERVER_KO),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+					goto end;
+				}
+			}
+		}
 		// effacement dans le fichier : ne me semble plus utile depuis que le fichier est réécrit 
 		// complètement à chaque sauvegarde => supprimé en 0.90B1
 		// wsprintf(szCategoryId,"%d",iCategoryId);
@@ -1619,6 +1642,22 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 		{
 			MessageBox(w,GetString(IDS_DELETION_FORBIDDEN),"swSSO",MB_ICONEXCLAMATION);
 			goto end;
+		}
+		// ISSUE#223 : si gbAdminDeleteConfigsOnServer alors supprime aussi sur le serveur (avec confirmation)
+		if (gbAdminDeleteConfigsOnServer)
+		{
+			char szMsg[500];
+			wsprintf(szMsg,GetString(IDS_DELETE),gptActions[iAction].szApplication);
+			if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
+			if (DeleteConfigOnServer(iAction)==0)
+			{
+				MessageBox(w,GetString(IDS_DELETE_CONFIG_ON_SERVER_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+			}
+			else
+			{
+				MessageBox(w,GetString(IDS_DELETE_CONFIG_ON_SERVER_KO),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+				goto end;
+			}
 		}
 		// ISSUE#159 : on ne demande plus de confirmation puisque la suppression est annulable
 		// wsprintf(szMsg,GetString(IDS_DELETE),gptActions[iAction].szApplication);
@@ -1676,6 +1715,14 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 		// s'il n'y avait pas plus simple... Qu'en pensez-vous ?
 		// 0.92B3 effacement mémoire pour éviter l'affichage des champs dans la fenêtre ajouter cette application
 		ZeroMemory(&gptActions[giNbActions],sizeof(T_ACTION));
+
+		// ISSUE#223 suite : après effacement de la config sur le serveur, on sauvegarde localement
+		if (gbAdminDeleteConfigsOnServer)
+		{
+			SaveApplications();
+			BackupAppsNcategs();
+			EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE);
+		}
 	}
 	rc=0;
 end:
@@ -2036,7 +2083,7 @@ static void TVShowContextMenu(HWND w)
 	hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),hItem);
 	if (hParentItem==NULL) // c'est une catégorie 
 	{
-		if (gbShowMenu_EnableDisable)
+		if (gbShowMenu_EnableDisable && !gbAdmin)
 		{
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_ACTIVER,GetString(IDS_MENU_ACTIVER));
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DESACTIVER,GetString(IDS_MENU_DESACTIVER));
@@ -2081,7 +2128,7 @@ static void TVShowContextMenu(HWND w)
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 			bAddSeparator=TRUE;
 		}
-		if (gbShowMenu_EnableDisable)
+		if (gbShowMenu_EnableDisable && !gbAdmin)
 		{
 			if (gptActions[iAction].bActive)
 				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DESACTIVER,GetString(IDS_MENU_DESACTIVER));
@@ -3979,7 +4026,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case MENU_SUPPRIMER:
 					TVRemoveSelectedAppOrCateg(w);
-					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+					if (!gbIsChanging && !gbAdminDeleteConfigsOnServer) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_DUPLIQUER:
 					TVDuplicateSelectedApp(w,FALSE);
@@ -4182,7 +4229,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			}			
 			break;
 		case WM_NOTIFY:			// ------------------------------------------------------- WM_NOTIFY
-			TRACE((TRACE_DEBUG,_F_,"WM_NOTIFY : NMHDR.hwndFrom=0x%08lx NMHDR.idFrom=0x%08lx NMHDR.code=0x%08lx",((NMHDR*)lp)->hwndFrom,((NMHDR*)lp)->idFrom,((NMHDR*)lp)->code));
+			// TRACE((TRACE_DEBUG,_F_,"WM_NOTIFY : NMHDR.hwndFrom=0x%08lx NMHDR.idFrom=0x%08lx NMHDR.code=0x%08lx",((NMHDR*)lp)->hwndFrom,((NMHDR*)lp)->idFrom,((NMHDR*)lp)->code));
 			switch (((NMHDR FAR *)lp)->code) 
 			{
 				case TCN_SELCHANGE:
@@ -4304,13 +4351,13 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 								break;
 							case VK_DELETE:
 								TVRemoveSelectedAppOrCateg(w);
-								if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+								if (!gbIsChanging && !gbAdminDeleteConfigsOnServer) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 								break;
 						}
 					}
 					break;
 				case NM_DBLCLK:
-					if (wp==TV_APPLICATIONS) // 0.90 correction du bug #86
+					if (wp==TV_APPLICATIONS && !gbAdmin) // 0.90 correction du bug #86
 					{
 						TVActivateSelectedAppOrCateg(w,ACTIVATE_TOGGLE);
 						if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114

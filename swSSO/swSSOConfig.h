@@ -69,6 +69,8 @@ int ChangeApplicationPassword(HWND w,int iAction);
 int GetAllConfigsFromServer(void);
 int GetNewOrModifiedConfigsFromServer(BOOL bForced);
 int DeleteConfigsNotOnServer(void);
+int DeleteConfigOnServer(int iAction);
+int DeleteCategOnServer(int iAction);
 
 int StoreNodeValue(char *buf,int bufsize,IXMLDOMNode *pNode);
 
