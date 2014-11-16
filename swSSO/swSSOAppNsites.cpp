@@ -2191,6 +2191,8 @@ void ShowApplicationDetails(HWND w,int iAction)
 	// 1.05 : sauf pour l'admin
 	if ((gptActions[iAction].iWithIdPwd & CONFIG_WITH_PWD) && !gbInternetManualPutConfig) gbShowPwd=FALSE;
 
+	EnableControls(w,gptActions[iAction].iType,TRUE);
+
 	// déchiffrement mot de passe
 	SetDlgItemText(w,TB_PWD,"");
 	SetDlgItemText(w,TB_PWD_CLEAR,"");
@@ -2202,7 +2204,17 @@ void ShowApplicationDetails(HWND w,int iAction)
 			SetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,pszDecryptedValue);
 			if (gbAdmin) 
 			{
-				if (strcmp(pszDecryptedValue,gcszADPassword)==0) CheckDlgButton(w,CK_AD_PWD,BST_CHECKED);
+				if (strcmp(pszDecryptedValue,gcszADPassword)==0) 
+				{
+					CheckDlgButton(w,CK_AD_PWD,BST_CHECKED);
+					EnableWindow(GetDlgItem(w,TB_PWD),FALSE);
+					EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),FALSE);
+				}
+				else
+				{
+					EnableWindow(GetDlgItem(w,TB_PWD),TRUE);
+					EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),TRUE);
+				}
 			}
 			SecureZeroMemory(pszDecryptedValue,strlen(pszDecryptedValue));
 			free(pszDecryptedValue);
@@ -2229,8 +2241,17 @@ void ShowApplicationDetails(HWND w,int iAction)
 	SetDlgItemText(w,TB_ID, gptActions[iAction].szId1Value);
 	if (gbAdmin) 
 	{
-		if (strcmp(gptActions[iAction].szId1Value,gcszUsername)==0) CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
+		if (strcmp(gptActions[iAction].szId1Value,gcszUsername)==0) 
+		{
+			CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
+			EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+		}
+		else
+		{
+			EnableWindow(GetDlgItem(w,TB_ID),TRUE);
+		}
 	}
+	
 	SetDlgItemText(w,TB_ID2,gptActions[iAction].szId2Value);
 	SetDlgItemText(w,TB_ID3,gptActions[iAction].szId3Value);
 	SetDlgItemText(w,TB_ID4,gptActions[iAction].szId4Value);
@@ -2245,7 +2266,7 @@ void ShowApplicationDetails(HWND w,int iAction)
 	SendMessage(GetDlgItem(w,CB_ID3_TYPE),CB_SETCURSEL,gptActions[iAction].id3Type,0);
 	SendMessage(GetDlgItem(w,CB_ID4_TYPE),CB_SETCURSEL,gptActions[iAction].id4Type,0);
 	SetDlgItemText(w,TB_LANCEMENT,gptActions[iAction].szFullPathName);
-	EnableControls(w,gptActions[iAction].iType,TRUE);
+	//EnableControls(w,gptActions[iAction].iType,TRUE);
 	CheckDlgButton(w,CK_AUTO_LOCK,gptActions[iAction].bAutoLock?BST_CHECKED:BST_UNCHECKED);
 	// 0.90 : affichage de l'application en cours de modification dans la barre de titre
 	// 0.92B8 : affichage d'infos techniques dans la barre de titre si SHIFT enfoncée
@@ -4076,18 +4097,48 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE);
 					break;
 				case CK_AD_ID:
-					SetDlgItemText(w,TB_ID,IsDlgButtonChecked(w,CK_AD_ID)?gcszUsername:"");
+					if (IsDlgButtonChecked(w,CK_AD_ID))
+					{
+						SetDlgItemText(w,TB_ID,gcszUsername);
+						EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+					}
+					else
+					{	
+						SetDlgItemText(w,TB_ID,"");
+						EnableWindow(GetDlgItem(w,TB_ID),TRUE);
+					}
 					break;
 				case CK_AD_PWD:
-					SetDlgItemText(w,TB_PWD,IsDlgButtonChecked(w,CK_AD_PWD)?gcszADPassword:"");
-					SetDlgItemText(w,TB_PWD_CLEAR,IsDlgButtonChecked(w,CK_AD_PWD)?gcszADPassword:"");
+					if (IsDlgButtonChecked(w,CK_AD_PWD))
+					{
+						SetDlgItemText(w,TB_PWD,gcszADPassword);
+						SetDlgItemText(w,TB_PWD_CLEAR,gcszADPassword);
+						EnableWindow(GetDlgItem(w,TB_PWD),FALSE);
+						EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),FALSE);
+					}
+					else
+					{
+						SetDlgItemText(w,TB_PWD,"");
+						SetDlgItemText(w,TB_PWD_CLEAR,"");
+						EnableWindow(GetDlgItem(w,TB_PWD),TRUE);
+						EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),TRUE);
+					}
 					break;
 				case TB_ID:
 					if (gbAdmin)
 					{
 						char szId[LEN_ID+1];
 						GetDlgItemText(w,TB_ID,szId,sizeof(szId));
-						CheckDlgButton(w,CK_AD_ID,(strcmp(szId,gcszUsername)==0)?BST_CHECKED:BST_UNCHECKED);
+						if (strcmp(szId,gcszUsername)==0)
+						{
+							CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
+							EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+						}
+						else
+						{
+							CheckDlgButton(w,CK_AD_ID,BST_UNCHECKED);
+							EnableWindow(GetDlgItem(w,TB_ID),TRUE);
+						}
 					}
 					break;
 				case TB_PWD:
@@ -4095,7 +4146,16 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					{
 						char szPwd[LEN_PWD+1];
 						GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
-						CheckDlgButton(w,CK_AD_PWD,(strcmp(szPwd,gcszADPassword)==0)?BST_CHECKED:BST_UNCHECKED);
+						if (strcmp(szPwd,gcszADPassword)==0)
+						{
+							CheckDlgButton(w,CK_AD_PWD,BST_CHECKED);
+							EnableWindow(GetDlgItem(w,TB_PWD),FALSE);
+						}
+						else
+						{
+							CheckDlgButton(w,CK_AD_PWD,BST_UNCHECKED);
+							EnableWindow(GetDlgItem(w,TB_PWD),TRUE);
+						}
 					}
 					break;
 				case TB_PWD_CLEAR:
@@ -4103,7 +4163,16 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					{
 						char szPwd[LEN_PWD+1];
 						GetDlgItemText(w,TB_PWD_CLEAR,szPwd,sizeof(szPwd));
-						CheckDlgButton(w,CK_AD_PWD,(strcmp(szPwd,gcszADPassword)==0)?BST_CHECKED:BST_UNCHECKED);
+						if (strcmp(szPwd,gcszADPassword)==0)
+						{
+							CheckDlgButton(w,CK_AD_PWD,BST_CHECKED);
+							EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),FALSE);
+						}
+						else
+						{
+							CheckDlgButton(w,CK_AD_PWD,BST_UNCHECKED);
+							EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),TRUE);
+						}
 					}
 					break;
 				case PB_PARCOURIR:
