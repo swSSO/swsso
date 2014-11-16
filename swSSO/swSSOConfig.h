@@ -169,4 +169,4 @@ typedef struct
 } T_CONFIG_SYNC;
 
 extern T_CONFIG_SYNC gtConfigSync;
-void ReportConfigSync(BOOL bShowMessage,BOOL bShowIfZero);
+void ReportConfigSync(int iErrorMessage,BOOL bShowMessage,BOOL bShowIfZero);

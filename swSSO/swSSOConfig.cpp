@@ -4099,7 +4099,8 @@ int GetNewOrModifiedConfigsFromServer(BOOL bForced)
 	if (rc==-1)
 	{
 		// 0.92 / ISSUE#26 : n'affiche pas la demande si gbDisplayConfigsNotifications=FALSE
-		if (gbDisplayConfigsNotifications) MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+		// 1.07 : les erreurs sont affichées + tard
+		// if (gbDisplayConfigsNotifications) MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 		goto end;
 	}
 	else if (rc==-2) // ISSUE#149
@@ -4220,30 +4221,58 @@ end:
 //-----------------------------------------------------------------------------
 // ReportConfigSync()
 //-----------------------------------------------------------------------------
-// 
+// Si iErrorMessage=0 : pas d'erreur, on affiche le détail de la synchro
+// sinon affiche le message d'erreur fourni en apramètre
 //-----------------------------------------------------------------------------
-void ReportConfigSync(BOOL bShowMessage, BOOL bShowIfZero)
+void ReportConfigSync(int iErrorMessage,BOOL bShowMessage, BOOL bShowIfZero)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	char szNbConfigsAdded[5];
-	char szNbConfigsModified[5];
-	char szNbConfigsDisabled[5];
-	char szNbConfigsDeleted[5];
 
-	if (bShowIfZero || gtConfigSync.iNbConfigsAdded!=0 || gtConfigSync.iNbConfigsModified!=0 || gtConfigSync.iNbConfigsDisabled!=0 || gtConfigSync.iNbConfigsDeleted!=0)
+	if (iErrorMessage==0)
 	{
-		wsprintf(szNbConfigsAdded,"%d",gtConfigSync.iNbConfigsAdded);
-		wsprintf(szNbConfigsModified,"%d",gtConfigSync.iNbConfigsModified);
-		wsprintf(szNbConfigsDisabled,"%d",gtConfigSync.iNbConfigsDisabled);
-		wsprintf(szNbConfigsDeleted,"%d",gtConfigSync.iNbConfigsDeleted);
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CONFIG_UPDATE,szNbConfigsAdded,szNbConfigsModified,szNbConfigsDisabled,szNbConfigsDeleted,0);
-		if (bShowMessage) 
+		if (bShowIfZero || gtConfigSync.iNbConfigsAdded!=0 || gtConfigSync.iNbConfigsModified!=0 || gtConfigSync.iNbConfigsDisabled!=0 || gtConfigSync.iNbConfigsDeleted!=0)
 		{
-			wsprintf(buf2048,GetString(IDS_GETCONFIGS_RESULT),gtConfigSync.iNbConfigsAdded,gtConfigSync.iNbConfigsModified,gtConfigSync.iNbConfigsDisabled,gtConfigSync.iNbConfigsDeleted);
-			MessageBox(NULL,buf2048,"swSSO",MB_ICONINFORMATION | MB_OK);
+			char szNbConfigsAdded[5];
+			char szNbConfigsModified[5];
+			char szNbConfigsDisabled[5];
+			char szNbConfigsDeleted[5];
+			wsprintf(szNbConfigsAdded,"%d",gtConfigSync.iNbConfigsAdded);
+			wsprintf(szNbConfigsModified,"%d",gtConfigSync.iNbConfigsModified);
+			wsprintf(szNbConfigsDisabled,"%d",gtConfigSync.iNbConfigsDisabled);
+			wsprintf(szNbConfigsDeleted,"%d",gtConfigSync.iNbConfigsDeleted);
+			swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CONFIG_UPDATE,szNbConfigsAdded,szNbConfigsModified,szNbConfigsDisabled,szNbConfigsDeleted,0);
+			if (bShowMessage) 
+			{
+				// wsprintf(buf2048,GetString(IDS_GETCONFIGS_RESULT),gtConfigSync.iNbConfigsAdded,gtConfigSync.iNbConfigsModified,gtConfigSync.iNbConfigsDisabled,gtConfigSync.iNbConfigsDeleted);
+				// MessageBox(NULL,buf2048,"swSSO",MB_ICONINFORMATION | MB_OK);
+				NOTIFYICONDATA nid;
+				ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+				nid.cbSize=sizeof(NOTIFYICONDATA);
+				nid.hWnd=gwMain;
+				nid.uID=0; 
+				//nid.hIcon=;
+				nid.uFlags=NIF_INFO; // szInfo, szInfoTitle, dwInfoFlags, and uTimeout
+				nid.uTimeout=2000;
+				strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),"Mise à jour réussie");
+				sprintf_s(nid.szInfo,sizeof(nid.szInfo),GetString(IDS_GETCONFIGS_RESULT),gtConfigSync.iNbConfigsAdded,gtConfigSync.iNbConfigsModified,gtConfigSync.iNbConfigsDisabled,gtConfigSync.iNbConfigsDeleted);
+				Shell_NotifyIcon(NIM_MODIFY, &nid); 
+			}
 		}
 	}
-
+	else // message d'erreur
+	{
+		NOTIFYICONDATA nid;
+		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+		nid.cbSize=sizeof(NOTIFYICONDATA);
+		nid.hWnd=gwMain;
+		nid.uID=0; 
+		//nid.hIcon=;
+		nid.uFlags=NIF_INFO; // szInfo, szInfoTitle, dwInfoFlags, and uTimeout
+		nid.uTimeout=2000;
+		strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),"Echec de la mise à jour");
+		strcpy_s(nid.szInfo,sizeof(nid.szInfo),GetString(iErrorMessage));
+		Shell_NotifyIcon(NIM_MODIFY, &nid); 
+	}
 	TRACE((TRACE_LEAVE,_F_, ""));
 	return;
 }

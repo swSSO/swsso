@@ -33,7 +33,7 @@
 
 extern const char gcszCurrentVersion[];
 extern const char gcszCurrentBeta[];
-
+extern HWND gwMain;
 extern HINSTANCE ghInstance;
 extern bool gbSSOActif;
 extern HICON ghIconAltTab;

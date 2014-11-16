@@ -431,6 +431,7 @@ else if ($_GET['action']=="putconfig")
 									  "szFullPathName=".$param_szFullPathName.",".
 									  "lastModified='".$var_lastModified."',".
 									  "pwdGroup=".$var_pwdGroup.",".
+									  "active='1',".
 									  "autoLock=".$var_autoLock.
 									  $szRequestOptions." WHERE ".
 									  _TABLE_PREFIX_."config.id='".$var_configId."'";

@@ -41,7 +41,7 @@
 const char gcszCurrentVersion[]="106";	// 101 = 1.01
 const char gcszCurrentBeta[]="1071";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
-static HWND gwMain=NULL;
+HWND gwMain=NULL;
 
 HINSTANCE ghInstance;
 HRESULT   ghrCoIni=E_FAIL;	 // code retour CoInitialize()
@@ -2351,11 +2351,12 @@ askpwd:
 	TRACE((TRACE_DEBUG,_F_,"giNbActions=%d gbGetAllConfigsAtFirstStart=%d giDomainId=%d",giNbActions,gbGetAllConfigsAtFirstStart,giDomainId));
 	if (giNbActions==0 && gbGetAllConfigsAtFirstStart) // CAS DU PREMIER LANCEMENT (ou encore aucune config enregistrée)
 	{
-		// 1.03 : récupère la liste des domaines (avant, était dans SelectDomain, mais doit être fait dans tous les cas pour alimenter le menu Upload)
+		// 1.03 : récupère la liste des domaines
 		giNbDomains=GetDomains(TRUE,0,gtabDomains);
 		if (giNbDomains==0)
 		{ 
-			MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); 
+			MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+			goto end;
 		}
 		if (gbAdmin || gbInternetManualPutConfig) // 1.05 : on ne demande pas à l'admin quel est son domaine, il doit pouvoir tous les gérer
 		{
@@ -2375,20 +2376,21 @@ askpwd:
 				//    : -1 - Erreur (serveur non disponible, ...)
 				if (ret==0 || ret==1) GetAllConfigsFromServer();
 				else if (ret==2) goto end;
-				else if (ret==-1) { MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); }
+				else if (ret==-1) { MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION); goto end; }
 			}
 			// 0.92 / ISSUE#26 : n'affiche pas la demande si gbDisplayConfigsNotifications=FALSE
 			else if (!gbDisplayConfigsNotifications || MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS),"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES) 
 			{
 				// 1.07 : renseigne le domaine label correspondant au domain id du .ini
 				if (*gszDomainLabel==0) { GetDomainLabel(giDomainId); SaveConfigHeader(); }
-
 				GetAllConfigsFromServer();
 			}
 		}
+		ReportConfigSync(0,gbDisplayConfigsNotifications,gbAdmin);
 	}
 	else // CAS DES LANCEMENTS ULTERIEURS (avec configurations déjà enregistrées)
 	{
+		BOOL bOK=TRUE;
 		// 1.03 : récupère la liste des domaines (doit être fait dans tous les cas pour alimenter le menu Upload)
 		// mais si échoue, ne doit pas être bloquant ni générer de message d'erreur (mode déconnecté)
 		// Pour ne pas générer une requête inutile, on ne fait que pour les utilisateurs qui ont le droit d'utiliser le menu upload
@@ -2410,19 +2412,19 @@ askpwd:
 				SaveConfigHeader();
 			}
 		}
-		
 		// 0.91 : si demandé, récupère les nouvelles configurations et/ou les configurations modifiées
 		if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
 		{
-			GetNewOrModifiedConfigsFromServer(gbAdmin);
+			if (GetNewOrModifiedConfigsFromServer(gbAdmin)!=0) bOK=FALSE;
 		}
 		// ISSUE#214
 		if (gbRemoveDeletedConfigsAtStart) // réalise une synchro complète en supprimant les configs qui ne sont plus présentes sur le serveur
 		{
-			DeleteConfigsNotOnServer();
+			if (DeleteConfigsNotOnServer()!=0) bOK=FALSE;
 		}
+		if (bOK) ReportConfigSync(0,gbDisplayConfigsNotifications,gbAdmin);
 	}
-	ReportConfigSync(gbDisplayConfigsNotifications,gbAdmin);
+	
 
 	// ISSUE#59 : ce code était avant dans LoadCategories().
 	// Déplacé dans winmain pour ne pas l'exécuter si des catégories ont été récupérées depuis le serveur

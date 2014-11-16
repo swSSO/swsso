@@ -1046,19 +1046,17 @@ int RefreshRights(void)
 	}
 	if (gbRemoveDeletedConfigsAtStart) // Supprime les configs qui ne sont plus présentes sur le serveur
 	{
-		DeleteConfigsNotOnServer();
+		rc=DeleteConfigsNotOnServer();
 	}
 	
 	if (rc==0)
 	{
-		if (gbAdmin || gbInternetManualPutConfig)
-			ReportConfigSync(TRUE,TRUE);
-		else
-			MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_DONE),"swSSO",MB_ICONINFORMATION | MB_OK);
+		ReportConfigSync(0,TRUE,TRUE);
 	}
-	else
-		MessageBox(NULL,GetString(IDS_REFRESH_RIGHTS_ERROR),"swSSO",MB_ICONEXCLAMATION | MB_OK);
-	
+	else if (!gbDisplayConfigsNotifications) // si gbDisplayConfigsNotifications, un message d'erreur aura été affiché avant
+	{
+		ReportConfigSync(IDS_REFRESH_RIGHTS_ERROR,TRUE,TRUE);
+	}
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
