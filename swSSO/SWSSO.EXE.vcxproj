@@ -211,12 +211,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Image Include="barre.bmp" />
+    <Image Include="exclamation.bmp" />
+    <Image Include="help-8bits.ico" />
+    <Image Include="logo-50.bmp" />
+    <Image Include="logo-90.bmp" />
     <Image Include="logo.bmp" />
     <Image Include="logo.ICO" />
+    <Image Include="loupe-8bits.ico" />
     <Image Include="loupe.bmp" />
     <Image Include="loupe.ico" />
+    <Image Include="question.bmp" />
     <Image Include="swsso-v5 52x44.bmp" />
     <Image Include="SystrayActive.ico" />
+    <Image Include="SystrayAdminActive.ico" />
+    <Image Include="SystrayAdminInactive.ico" />
     <Image Include="SystrayInactive.ico" />
     <Image Include="tvImages.bmp" />
   </ItemGroup>

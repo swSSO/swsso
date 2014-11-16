@@ -42,6 +42,30 @@
     <Image Include="tvImages.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="exclamation.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="logo-50.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="logo-90.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="question.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="help-8bits.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="loupe-8bits.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="SystrayAdminActive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="SystrayAdminInactive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="COPYING.txt" />

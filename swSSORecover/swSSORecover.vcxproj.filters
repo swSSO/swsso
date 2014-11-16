@@ -21,6 +21,12 @@
     <Image Include="logo.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="logo.ICO">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="SystrayActive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">

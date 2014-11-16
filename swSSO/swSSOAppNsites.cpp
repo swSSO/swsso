@@ -2610,22 +2610,22 @@ LRESULT CALLBACK PwdProc(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR uIdSubclas
 			bTrackPopupMenu=TrackPopupMenu(hPopupMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON,pt.x, pt.y, 0, w, NULL);
 			switch (bTrackPopupMenu)
 			{
-				case IDM_UNDO:
+				case IDM_SWUNDO:
 					SendMessage(w,EM_UNDO,0,0);
 					break;
-				case IDM_CUT:
+				case IDM_SWCUT:
 					SendMessage(w,WM_CUT,0,0);
 					break;
-				case IDM_COPY:
+				case IDM_SWCOPY:
 					SendMessage(w,WM_COPY,0,0);
 					break;
-				case IDM_PASTE:
+				case IDM_SWPASTE:
 					SendMessage(w, WM_PASTE,0,0);
 					break;
-				case IDM_CLEARSELECTION:
+				case IDM_SWCLEARSELECTION:
 					SendMessage(w,WM_CLEAR,0,0);
 					break;
-				case IDM_SELECTALL:
+				case IDM_SWSELECTALL:
 					SendMessage(w,EM_SETSEL,0,-1);
 					break;
 				case IDM_GENERATE_ALPHANUM_10:
@@ -2663,13 +2663,13 @@ LRESULT CALLBACK PwdProc(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR uIdSubclas
 		case WM_INITMENUPOPUP:
 		{
 			UINT uBegSel,uEndSel;
-			if (!SendMessage(w, EM_CANUNDO, 0, 0)) EnableMenuItem( (HMENU) wp, IDM_UNDO, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+			if (!SendMessage(w, EM_CANUNDO, 0, 0)) EnableMenuItem( (HMENU) wp, IDM_SWUNDO, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
 			SendMessage (w, EM_GETSEL, (UINT)&uBegSel, (UINT)&uEndSel);
 			if (uBegSel == uEndSel)
 			{
-				EnableMenuItem( (HMENU) wp, IDM_CUT, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
-				EnableMenuItem( (HMENU) wp, IDM_COPY, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
-				EnableMenuItem( (HMENU) wp, IDM_CLEARSELECTION, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+				EnableMenuItem( (HMENU) wp, IDM_SWCUT, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+				EnableMenuItem( (HMENU) wp, IDM_SWCOPY, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+				EnableMenuItem( (HMENU) wp, IDM_SWCLEARSELECTION, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
 			}
 			if (!IsClipboardFormatAvailable(CF_TEXT)) EnableMenuItem( (HMENU) wp, IDM_PASTE, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
 			if (SendMessage(w, WM_GETTEXTLENGTH , (WPARAM)-1, 0) == (LRESULT)(uEndSel - uBegSel)) EnableMenuItem( (HMENU) wp, IDM_SELECTALL, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );

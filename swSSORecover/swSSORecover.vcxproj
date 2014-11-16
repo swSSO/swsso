@@ -97,6 +97,8 @@
   <ItemGroup>
     <Image Include="barre.bmp" />
     <Image Include="logo.bmp" />
+    <Image Include="logo.ICO" />
+    <Image Include="SystrayActive.ico" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="manifest.xml" />
