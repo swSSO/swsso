@@ -366,7 +366,6 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		case WM_QUERYENDSESSION:
 			TRACE((TRACE_INFO,_F_,"WM_QUERYENDSESSION"));
 			if (gbStat) swStat();
-			MessageBox(NULL,"","",MB_OK);
 			return TRUE;
 		default:
 			if(msg==gMsgTaskbarRestart) // notif recréation systray

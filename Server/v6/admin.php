@@ -32,7 +32,7 @@ include('functions.php');
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.1
+// VERSION INTERNE : 6.2
 //------------------------------------------------------------------------------
 
 $title="<title>swSSO - Serveur de configuration (v6.0)</title>";
