@@ -375,6 +375,8 @@
 #define IDS_DELETE_CATEG_ON_SERVER_OK   42003
 #define IDS_DELETE_CATEG_ON_SERVER_KO   42004
 #define IDS_DELETE_CATEG_NOT_EXISTING   42005
+#define IDS_ACTIVE_ADMIN                42006
+#define IDS_SYSTRAY_ADMIN               42006
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

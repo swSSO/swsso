@@ -90,7 +90,7 @@ char gcszK2[]="22222222";
 static int giRefreshTimer=10;
 
 T_SALT gSalts; // sels pour le stockage du mdp primaire et la dérivation de clé de chiffrement des mdp secondaires
-
+int giActionIdPwdAsked=-1;
 const char gcszCfgVersion[]="093";
 
 T_CONFIG_SYNC gtConfigSync;
@@ -631,6 +631,7 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		{
 			// récupération de la structure T_IDANDPWDDIALOG passée en LPARAM
 			T_IDANDPWDDIALOG *params=(T_IDANDPWDDIALOG*)lp;
+			giActionIdPwdAsked=params->iAction;
 			// stockage pour la suite
 			SetWindowLong(w,DWL_USER,lp);
 			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);

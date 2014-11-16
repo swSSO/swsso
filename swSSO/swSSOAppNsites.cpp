@@ -1587,26 +1587,19 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 			goto end;
 		}
 		// ISSUE#223 : si gbAdminDeleteConfigsOnServer alors supprime aussi sur le serveur (avec confirmation)
-		if (gbAdminDeleteConfigsOnServer)
+		if (gbAdminDeleteConfigsOnServer && iCategoryId>=10000)
 		{
 			char szMsg[500];
 			wsprintf(szMsg,GetString(IDS_DELETE_CATEG),gptCategories[iCategory].szLabel);
 			if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
-			if (iCategoryId<10000) // configuration pas encore remontée sur le serveur
+			if (DeleteCategOnServer(iCategory)==0)
 			{
-				MessageBox(w,GetString(IDS_DELETE_CATEG_NOT_EXISTING),"swSSO",MB_OK | MB_ICONINFORMATION);
+				MessageBox(w,GetString(IDS_DELETE_CATEG_ON_SERVER_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
 			}
 			else
 			{
-				if (DeleteCategOnServer(iCategory)==0)
-				{
-					MessageBox(w,GetString(IDS_DELETE_CATEG_ON_SERVER_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
-				}
-				else
-				{
-					MessageBox(w,GetString(IDS_DELETE_CATEG_ON_SERVER_KO),"swSSO",MB_OK | MB_ICONEXCLAMATION);
-					goto end;
-				}
+				MessageBox(w,GetString(IDS_DELETE_CATEG_ON_SERVER_KO),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+				goto end;
 			}
 		}
 		// effacement dans le fichier : ne me semble plus utile depuis que le fichier est réécrit 
@@ -1632,6 +1625,13 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 		// efface la partie droite (détail) 
 		if (hNewSelectedItem!=NULL) TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewSelectedItem);
 		ClearApplicationDetails(w);
+		// ISSUE#223 suite : après effacement de la categ sur le serveur, on sauvegarde localement
+		if (gbAdminDeleteConfigsOnServer && iCategoryId>=10000)
+		{
+			SaveApplications();
+			BackupAppsNcategs();
+			EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE);
+		}
 	}
 	else // c'est une application
 	{
@@ -1644,7 +1644,7 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 			goto end;
 		}
 		// ISSUE#223 : si gbAdminDeleteConfigsOnServer alors supprime aussi sur le serveur (avec confirmation)
-		if (gbAdminDeleteConfigsOnServer)
+		if (gbAdminDeleteConfigsOnServer && gptActions[iAction].iConfigId!=0)
 		{
 			char szMsg[500];
 			wsprintf(szMsg,GetString(IDS_DELETE),gptActions[iAction].szApplication);
@@ -1717,7 +1717,7 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 		ZeroMemory(&gptActions[giNbActions],sizeof(T_ACTION));
 
 		// ISSUE#223 suite : après effacement de la config sur le serveur, on sauvegarde localement
-		if (gbAdminDeleteConfigsOnServer)
+		if (gbAdminDeleteConfigsOnServer && gptActions[iAction].iConfigId!=0)
 		{
 			SaveApplications();
 			BackupAppsNcategs();
@@ -2645,6 +2645,7 @@ void FillTreeView(HWND w,BOOL bWithId)
 	// Ajout des actions
 	for (i=0;i<giNbActions;i++) 
 	{
+		if (bWithId && i==giActionIdPwdAsked) continue; // ISSUE#225
 		if (gptActions[i].iType!=WEBPWD)
 		{
 			hItem=TVAddApplication(w,i,NULL,bWithId); if (hItem==NULL) goto end;

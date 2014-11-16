@@ -130,7 +130,7 @@ void SSOActivate(HWND w)
 	if (gbSSOActif) // ACTIVATION
 	{
 		nid.hIcon=ghIconSystrayActive;
-		strcpy_s(nid.szTip,sizeof(nid.szTip),GetString(IDS_ACTIVE)); //max64
+		strcpy_s(nid.szTip,sizeof(nid.szTip),gbAdmin?GetString(IDS_SYSTRAY_ADMIN):GetString(IDS_ACTIVE)); //max64
 		if (gwPropertySheet!=NULL) ShowWindow(gwPropertySheet,SW_SHOW);
 		if (gwAppNsites!=NULL) ShowWindow(gwAppNsites,SW_SHOW);
 		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_UNLOCK_SUCCESS,NULL,NULL,NULL,NULL,0);
@@ -138,7 +138,7 @@ void SSOActivate(HWND w)
 	else // DESACTIVATION
 	{
 		nid.hIcon=ghIconSystrayInactive;
-		strcpy_s(nid.szTip,sizeof(nid.szTip),GetString(IDS_DESACTIVE)); //max64
+		strcpy_s(nid.szTip,sizeof(nid.szTip),gbAdmin?GetString(IDS_SYSTRAY_ADMIN):GetString(IDS_DESACTIVE)); //max64
 		//0.83 : supprime la clé de la mémoire
 		//0.96 : sauf si SSO Windows (et si on décide de le faire, attention effet de bord dans AskPWd()).
 		//1.01 (ISSUE#140) : sauf si mode réactivation sans saisie de mot de passe
@@ -443,7 +443,14 @@ int CreateSystray(HWND wMain)
 	nid.uFlags=NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	nid.uCallbackMessage=WM_APP;
 	nid.hIcon=(gbSSOActif ? ghIconSystrayActive : ghIconSystrayInactive); // #113 cas de la recréation du systray
-	strcpy_s(nid.szTip,sizeof(nid.szTip),GetString(gbSSOActif ? IDS_ACTIVE : IDS_DESACTIVE)); //max=64 // #113 cas de la recréation du systray
+	if (gbAdmin)
+	{
+		strcpy_s(nid.szTip,sizeof(nid.szTip),GetString(IDS_SYSTRAY_ADMIN));
+	}
+	else
+	{
+		strcpy_s(nid.szTip,sizeof(nid.szTip),GetString(gbSSOActif ? IDS_ACTIVE : IDS_DESACTIVE)); //max=64 // #113 cas de la recréation du systray
+	}
 
 	if (!Shell_NotifyIcon(NIM_ADD,&nid)) 
 	{
