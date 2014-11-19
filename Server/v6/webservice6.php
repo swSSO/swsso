@@ -35,7 +35,7 @@ include('util.php');
 //                   Le client 1.05 et les suivants resteront compatibles avec webservice5.php tant
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
 //------------------------------------------------------------------------------
-// VERSION INTERNE : 6.2
+// VERSION INTERNE : 6.3
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
@@ -777,6 +777,63 @@ else if ($_GET['action']=="deletecateg")
 		echo "OK";
 	else
 		echo "KO";
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// deletedomain
+// ------------------------------------------------------------
+else if ($_GET['action']=="deletedomain")
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	if (isset($_GET["domainId"])) $var_domainId=utf8_decode(myaddslashes($_GET['domainId']));
+
+	// vérifie qu'aucune config n'est attachée à ce domaine
+	$szRequest="select count(*) from "._TABLE_PREFIX_."configs_domains where domainid=".$var_domainId;
+	if (isset($_GET["debug"])) echo $szRequest;
+	$result=mysql_query($szRequest,$cnx);
+	$nbDomains=mysql_result($result,0);
+	
+	if ($nbDomains!=0) 
+	{
+		echo "KO";
+	}
+	else
+	{
+		$szRequest="delete from "._TABLE_PREFIX_."domains where id=".$var_domainId;
+		if (isset($_GET["debug"])) echo $szRequest;
+		$result=mysql_query($szRequest,$cnx);
+		header("Content-type: text/xml; charset=UTF-8");
+		if ($result) 
+			echo "OK";
+		else
+			echo "KO";
+	}
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// adddomain
+// ------------------------------------------------------------
+else if ($_GET['action']=="adddomain")
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	if (isset($_GET["domainLabel"])) $var_domainLabel=utf8_decode(myaddslashes($_GET['domainLabel']));
+
+	$szRequest="insert into "._TABLE_PREFIX_."domains (label) values ('".$var_domainLabel."')";
+	if (isset($_GET["debug"])) echo $szRequest;
+	$result=mysql_query($szRequest,$cnx);
+	if ($result) 
+	{
+		$var_domainId=mysql_insert_id();
+		echo "OK:".$var_domainId;
+	}
+	else	
+	{ 
+		echo "KO";
+	}
 	dbClose($cnx);
 }
 ?>
