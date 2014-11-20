@@ -134,6 +134,7 @@
 #define TX_ID4                          1116
 #define TV_APPLICATIONS                 1119
 #define TX_PWD2                         1120
+#define TV_DOMAINS                      1121
 #define TAB_APPLICATIONS                1124
 #define TAB_IDPWD                       1125
 #define TAB_CONFIG                      1126
@@ -376,14 +377,19 @@
 #define IDS_DELETE_CATEG_ON_SERVER_KO   42004
 #define IDS_DELETE_CATEG_NOT_EXISTING   42005
 #define IDS_ACTIVE_ADMIN                42006
-#define IDS_SYSTRAY_ADMIN               42006
+#define IDS_SYSTRAY_ADMIN               42007
+#define IDS_TAB_DOMAINS                 42008
+#define IDS_MENU_ADD_DOMAIN             42009
+#define IDS_DELETE_DOMAIN_CONFIRM       42010
+#define IDS_DELETE_DOMAIN_OK            42011
+#define IDS_DELETE_DOMAIN_KO            42012
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        42001
+#define _APS_NEXT_RESOURCE_VALUE        42008
 #define _APS_NEXT_COMMAND_VALUE         44000
 #define _APS_NEXT_CONTROL_VALUE         46000
 #define _APS_NEXT_SYMED_VALUE           48000

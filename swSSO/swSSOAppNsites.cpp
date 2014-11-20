@@ -72,7 +72,8 @@ int giNextCategId=1; // ISSUE#184
 HWND gwAppNsites=NULL;
 
 // globales locales
-static BOOL gbTVLabelEditing=FALSE;
+static BOOL gbTVApplicationsLabelEditing=FALSE;
+static BOOL gbTVDomainsLabelEditing=FALSE;
 // static BOOL gbAtLeastOneAppRenamed=FALSE; // 0.90B1 : renommage direct, flag inutile
 static BOOL gbEffacementEnCours=FALSE;
 static BOOL gbShowPwd;
@@ -138,6 +139,9 @@ static int giSetForegroundTimer=20;
 #define MENU_AJOUTER_COMPTE 50015
 #define MENU_PUBLISH_TO   50016
 #define SUBMENU_CATEG			50100
+#define MENU_RENOMMER_DOMAINE	50017
+#define MENU_SUPPRIMER_DOMAINE	50018
+#define MENU_AJOUTER_DOMAINE 50019
 
 #define TYPE_APPLICATION	1
 #define TYPE_CATEGORY		2
@@ -917,6 +921,26 @@ int GetCategoryIndex(int id)
 	for (i=0;i<giNbCategories;i++)
 	{
 		if (gptCategories[i].id==id) { rc=i; goto end;}
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// GetDomainIndex()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+int GetDomainIndex(int id)
+{
+	TRACE((TRACE_ENTER,_F_, "id=%d",id));
+	int rc=-1;
+	int i;
+
+	for (i=0;i<giNbDomains;i++)
+	{
+		if (gtabDomains[i].iDomainId==id) { rc=i; goto end;}
 	}
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -2166,6 +2190,35 @@ end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
+// ----------------------------------------------------------------------------------
+// TVDomainsShowContextMenu()
+// ----------------------------------------------------------------------------------
+// Affichage du menu contextuel sur clic-droit dans la treeview des domaines
+// ----------------------------------------------------------------------------------
+static void TVDomainsShowContextMenu(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	POINT pt;
+	GetCursorPos(&pt);
+	HMENU hMenu=NULL;
+	HTREEITEM hItem;
+	//int iDomain;
+	//int i;
+
+	hMenu=CreatePopupMenu(); if (hMenu==NULL) goto end;
+	hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
+	if (hItem==NULL) { TRACE((TRACE_INFO,_F_,"TreeView_GetSelection()->NULL")); goto end; }
+	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_RENOMMER_DOMAINE,GetString(IDS_MENU_RENOMMER));
+	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_SUPPRIMER_DOMAINE,GetString(IDS_MENU_SUPPRIMER));
+	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_DOMAINE,GetString(IDS_MENU_ADD_DOMAIN));
+	SetForegroundWindow(w);
+	TrackPopupMenu(hMenu, TPM_TOPALIGN,pt.x, pt.y, 0, w, NULL );
+end:	
+	if (hMenu!=NULL) DestroyMenu(hMenu);
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
 //-----------------------------------------------------------------------------
 // ShowApplicationDetails(HWND w,int iAction)
 //-----------------------------------------------------------------------------
@@ -2767,7 +2820,8 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	RECT rect;
 
 	gbIsChanging=TRUE;
-	gbTVLabelEditing=FALSE;
+	gbTVApplicationsLabelEditing=FALSE;
+	gbTVDomainsLabelEditing=FALSE;
 	//gbAtLeastOneAppRenamed=FALSE; // 0.90B1 : renommage direct, flag inutile
 	gbEffacementEnCours;
 	gbShowPwd=FALSE;
@@ -2797,6 +2851,11 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	tcItem.mask = TCIF_TEXT ; 
 	tcItem.pszText = GetString(IDS_TAB_APPLICATIONS); // "Sites et applications"; 
 	TabCtrl_InsertItem(GetDlgItem(w,TAB_APPLICATIONS),0,&tcItem);
+	if (gbAdmin)
+	{
+		tcItem.pszText = GetString(IDS_TAB_DOMAINS); // "Domains"; 
+	}
+	TabCtrl_InsertItem(GetDlgItem(w,TAB_APPLICATIONS),1,&tcItem);
 	tcItem.pszText = GetString(IDS_TAB_IDPWD1); // "Identifiant et mot de passe"; 
 	TabCtrl_InsertItem(GetDlgItem(w,TAB_IDPWD),0,&tcItem);
 	tcItem.pszText = GetString(IDS_TAB_IDPWD2); // "Identifiants complémentaires"; 
@@ -2877,6 +2936,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 
 	// Remplissage de la treeview
 	FillTreeView(w,FALSE);
+	if (gbAdmin) FillTreeViewDomains(w);
 
 	// Sélectionne l'application
 	if (ptAppNsites->iSelected==-1) 
@@ -2978,8 +3038,17 @@ static void MoveControls(HWND w,HWND wToRefresh)
 	
 	// TabControl de gauche (liste des applications)
 	SetWindowPos(GetDlgItem(w,TAB_APPLICATIONS),NULL,10,10+yOffset,rect.right*2/5,rect.bottom-45,SWP_NOZORDER);
-	SetWindowPos(GetDlgItem(w,TV_APPLICATIONS),NULL,20,40+yOffset,rect.right*2/5-20,rect.bottom-85,SWP_NOZORDER);
-	
+	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==0) // onglet sélectionné = sites et applications
+	{
+		ShowWindow(GetDlgItem(w,TV_DOMAINS),SW_HIDE);
+		SetWindowPos(GetDlgItem(w,TV_APPLICATIONS),NULL,20,40+yOffset,rect.right*2/5-20,rect.bottom-85,SWP_NOZORDER|SWP_SHOWWINDOW);
+	}
+	else // onglet sélectionné = domains
+	{
+		ShowWindow(GetDlgItem(w,TV_APPLICATIONS),SW_HIDE);
+		SetWindowPos(GetDlgItem(w,TV_DOMAINS),NULL,20,40+yOffset,rect.right*2/5-20,rect.bottom-85,SWP_NOZORDER|SWP_SHOWWINDOW);
+	}
+
 	// TabControl haut droite (identifiants et mot de passe)
 	SetWindowPos(GetDlgItem(w,TAB_IDPWD),NULL,rect.right*2/5+15,10+yOffset,rect.right*3/5-20,rect.bottom*1/3-20,SWP_NOZORDER);
 	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_IDPWD))==0) // onglet sélectionné = identifiant et mot de passe
@@ -3960,9 +4029,14 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case IDOK:
 					if (HIWORD(wp)==0) // les notifications autres que "from a control" ne nous intéressent pas !
 					{
-						if (gbTVLabelEditing)
+						if (gbTVApplicationsLabelEditing)
 						{
 							TreeView_EndEditLabelNow(GetDlgItem(w,TV_APPLICATIONS),FALSE);
+							rc=TRUE;
+						}
+						else if (gbTVDomainsLabelEditing)
+						{
+							TreeView_EndEditLabelNow(GetDlgItem(w,TV_DOMAINS),FALSE);
 							rc=TRUE;
 						}
 						else
@@ -4011,9 +4085,14 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case IDCANCEL:
 					if (HIWORD(wp)==0) // les notifications autres que "from a control" ne nous intéressent pas !
 					{
-						if (gbTVLabelEditing)
+						if (gbTVApplicationsLabelEditing)
 						{
 							TreeView_EndEditLabelNow(GetDlgItem(w,TV_APPLICATIONS),TRUE);
+							rc=TRUE;
+						}
+						else if (gbTVDomainsLabelEditing)
+						{
+							TreeView_EndEditLabelNow(GetDlgItem(w,TV_DOMAINS),TRUE);
 							rc=TRUE;
 						}
 						else
@@ -4046,9 +4125,19 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (hItem!=NULL) TreeView_EditLabel(GetDlgItem(w,TV_APPLICATIONS),hItem);
 					}
 					break;
+				case MENU_RENOMMER_DOMAINE:
+					{
+						TRACE((TRACE_DEBUG,_F_,"MENU_RENOMMER_DOMAINE"));
+						HTREEITEM hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
+						if (hItem!=NULL) TreeView_EditLabel(GetDlgItem(w,TV_DOMAINS),hItem);
+					}
+					break;
 				case MENU_SUPPRIMER:
 					TVRemoveSelectedAppOrCateg(w);
 					if (!gbIsChanging && !gbAdminDeleteConfigsOnServer) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+					break;
+				case MENU_SUPPRIMER_DOMAINE:
+					TVDomainsDeleteDomain(w);
 					break;
 				case MENU_DUPLIQUER:
 					TVDuplicateSelectedApp(w,FALSE);
@@ -4065,6 +4154,10 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case MENU_AJOUTER_CATEG:
 					NewCategory(w);
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+					break;
+				case MENU_AJOUTER_DOMAINE:
+					// TODO
+					MessageBox(NULL,"AJOUTER DOMAINE","",MB_OK);
 					break;
 				case MENU_CHANGER_IDS:
 					ChangeCategIds(w);
@@ -4306,7 +4399,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					MoveControls(w,NULL); // 0.90, avant il y avait (w,w), correction bug#102
 					break;
 				case TVN_SELCHANGED:
-					if (!gbEffacementEnCours)
+					if (wp==TV_APPLICATIONS && !gbEffacementEnCours)
 					{
 						HTREEITEM hParentItem;
 						LPNMTREEVIEW pnmtv = (LPNMTREEVIEW)lp;
@@ -4339,71 +4432,106 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							ShowApplicationDetails(w,pnmtv->itemNew.lParam);
 						}
 					}
+					else if (wp==TV_DOMAINS)
+					{
+						if (GetKeyState(VK_SHIFT) & 0x8000)
+						{
+							HTREEITEM hItem;
+							int iDomainId;
+							hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
+							iDomainId=TVItemGetLParam(w,hItem);
+							wsprintf(buf2048,"swSSO [id=%d]",iDomainId);
+							SetWindowText(w,buf2048);
+							}
+						else
+						{
+							SetWindowText(w,GetString(IDS_TITRE_APPNSITES));
+						}
+					}
 					break;
 				case TVN_BEGINLABELEDIT:
 					{
 						TRACE((TRACE_DEBUG,_F_,"TVN_BEGINLABELEDIT"));
-						HWND wEdit=TreeView_GetEditControl(GetDlgItem(w,TV_APPLICATIONS));
-						if (wEdit!=NULL) SendMessage(wEdit,EM_LIMITTEXT,LEN_APPLICATION_NAME,0);
-						gbTVLabelEditing=TRUE;
+						if (wp==TV_APPLICATIONS)
+						{
+							HWND wEdit=TreeView_GetEditControl(GetDlgItem(w,TV_APPLICATIONS));
+							if (wEdit!=NULL) SendMessage(wEdit,EM_LIMITTEXT,LEN_APPLICATION_NAME,0);
+							gbTVApplicationsLabelEditing=TRUE;
+						}
+						else
+						{
+							HWND wEdit=TreeView_GetEditControl(GetDlgItem(w,TV_DOMAINS));
+							if (wEdit!=NULL) SendMessage(wEdit,EM_LIMITTEXT,LEN_DOMAIN,0);
+							gbTVDomainsLabelEditing=TRUE;
+						}
+
 					}
 					break;
 				case TVN_ENDLABELEDIT:
 					{
 						TRACE((TRACE_DEBUG,_F_,"TVN_ENDLABELEDIT"));
-						gbTVLabelEditing=FALSE;
-						// gbAtLeastOneAppRenamed=TRUE; // 0.88 - #89 // 0.90B1 : renommage direct, flag inutile
-						LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO)lp;
-						HTREEITEM hParentItem;
-						if (ptvdi->item.pszText!=NULL)
+						if (wp==TV_APPLICATIONS)
 						{
-							// ISSUE#151
-							if (*(ptvdi->item.pszText)==0) { rc=FALSE; goto end; }
-							hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),ptvdi->item.hItem);
-							if (hParentItem==NULL) // fin d'edition du label d'une catégorie
+							gbTVApplicationsLabelEditing=FALSE;
+							// gbAtLeastOneAppRenamed=TRUE; // 0.88 - #89 // 0.90B1 : renommage direct, flag inutile
+							LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO)lp;
+							HTREEITEM hParentItem;
+							if (ptvdi->item.pszText!=NULL)
 							{
-								int iCategory,iCategoryId;
-								iCategoryId=TVItemGetLParam(w,ptvdi->item.hItem);
-								iCategory=GetCategoryIndex(iCategoryId);
-								if (iCategory!=-1)
+								// ISSUE#151
+								if (*(ptvdi->item.pszText)==0) { rc=FALSE; goto end; }
+								hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),ptvdi->item.hItem);
+								if (hParentItem==NULL) // fin d'edition du label d'une catégorie
 								{
-									if (IsCategoryNameUnique(iCategory,ptvdi->item.pszText))
+									int iCategory,iCategoryId;
+									iCategoryId=TVItemGetLParam(w,ptvdi->item.hItem);
+									iCategory=GetCategoryIndex(iCategoryId);
+									if (iCategory!=-1)
 									{
-										strcpy_s(gptCategories[iCategory].szLabel,LEN_CATEGORY_LABEL+1,ptvdi->item.pszText);
+										if (IsCategoryNameUnique(iCategory,ptvdi->item.pszText))
+										{
+											strcpy_s(gptCategories[iCategory].szLabel,LEN_CATEGORY_LABEL+1,ptvdi->item.pszText);
+											SetWindowLong(w, DWL_MSGRESULT, TRUE);
+											PostMessage(w,WM_APP+1,0,0);
+										}
+										else
+										{
+											SetWindowLong(w, DWL_MSGRESULT, FALSE);
+											MessageBox(w,GetString(IDS_CATEGNAME_ALREADY_EXISTS),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+										}
+									}
+								}
+								else // fin d'edition du label d'une application
+								{
+									int iAction;
+									iAction=TVItemGetLParam(w,ptvdi->item.hItem);
+									if (IsApplicationNameUnique(iAction,ptvdi->item.pszText))
+									{
+										// 0.88 : on ne recopie plus directement le nouveau nom dans la table gptActions
+										//        ce sera fait plus tard au moment de la validation (OK ou appliquer)
+										//        Correction du bug #89
+										// 0.90B1 : on prend en compte tout de suite le renommage (la suppression des WriteProfileString le permet)
+										strcpy_s(gptActions[iAction].szApplication,LEN_APPLICATION_NAME+1,ptvdi->item.pszText);
+										// 0.90 : affichage de l'application en cours de modification dans la barre de titre
+										wsprintf(buf2048,"%s [%s]",GetString(IDS_TITRE_APPNSITES),gptActions[iAction].szApplication);
+										SetWindowText(w,buf2048);
+
 										SetWindowLong(w, DWL_MSGRESULT, TRUE);
-										PostMessage(w,WM_APP+1,0,0);
+										PostMessage(w,WM_APP+1,0,(LPARAM)hParentItem);
 									}
 									else
 									{
 										SetWindowLong(w, DWL_MSGRESULT, FALSE);
-										MessageBox(w,GetString(IDS_CATEGNAME_ALREADY_EXISTS),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+										MessageBox(w,GetString(IDS_APPNAME_ALREADY_EXISTS),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 									}
 								}
 							}
-							else // fin d'edition du label d'une application
-							{
-								int iAction;
-								iAction=TVItemGetLParam(w,ptvdi->item.hItem);
-								if (IsApplicationNameUnique(iAction,ptvdi->item.pszText))
-								{
-									// 0.88 : on ne recopie plus directement le nouveau nom dans la table gptActions
-									//        ce sera fait plus tard au moment de la validation (OK ou appliquer)
-									//        Correction du bug #89
-									// 0.90B1 : on prend en compte tout de suite le renommage (la suppression des WriteProfileString le permet)
-									strcpy_s(gptActions[iAction].szApplication,LEN_APPLICATION_NAME+1,ptvdi->item.pszText);
-									// 0.90 : affichage de l'application en cours de modification dans la barre de titre
-									wsprintf(buf2048,"%s [%s]",GetString(IDS_TITRE_APPNSITES),gptActions[iAction].szApplication);
-									SetWindowText(w,buf2048);
-
-									SetWindowLong(w, DWL_MSGRESULT, TRUE);
-									PostMessage(w,WM_APP+1,0,(LPARAM)hParentItem);
-								}
-								else
-								{
-									SetWindowLong(w, DWL_MSGRESULT, FALSE);
-									MessageBox(w,GetString(IDS_APPNAME_ALREADY_EXISTS),"swSSO",MB_OK | MB_ICONEXCLAMATION);
-								}
-							}
+						}
+						else
+						{
+							// TODO
+							MessageBox(NULL,"RENOMMAGE TERMIEN","",MB_OK);
+							gbTVDomainsLabelEditing=FALSE;
 						}
 						rc=TRUE;
 					}
@@ -4415,13 +4543,28 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						{
 							case VK_F2:
 								{
-									HTREEITEM hItem= TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS)); 
-									TreeView_EditLabel(GetDlgItem(w,TV_APPLICATIONS),hItem); 
+									if (wp==TV_APPLICATIONS)
+									{
+										HTREEITEM hItem= TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS)); 
+										TreeView_EditLabel(GetDlgItem(w,TV_APPLICATIONS),hItem); 
+									}
+									else if (wp==TV_DOMAINS)
+									{
+										HTREEITEM hItem= TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS)); 
+										TreeView_EditLabel(GetDlgItem(w,TV_DOMAINS),hItem); 
+									}
 								}
 								break;
 							case VK_DELETE:
-								TVRemoveSelectedAppOrCateg(w);
-								if (!gbIsChanging && !gbAdminDeleteConfigsOnServer) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+								if (wp==TV_APPLICATIONS)
+								{
+									TVRemoveSelectedAppOrCateg(w);
+									if (!gbIsChanging && !gbAdminDeleteConfigsOnServer) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+								}
+								else if (wp==TV_DOMAINS)
+								{
+									TVDomainsDeleteDomain(w);
+								}
 								break;
 						}
 					}
@@ -4452,6 +4595,22 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hItem);
 						}
 						TVShowContextMenu(w);
+					}
+					else if (wp==TV_DOMAINS)
+					{
+						TVHITTESTINFO htInfo;
+						HTREEITEM hItem;
+						GetCursorPos(&htInfo.pt);
+						TRACE((TRACE_DEBUG,_F_,"GetCursorPos()  ->x=%d y=%d",htInfo.pt.x,htInfo.pt.y));
+						ScreenToClient(GetDlgItem(w,TV_DOMAINS),&htInfo.pt);
+						TRACE((TRACE_DEBUG,_F_,"ScreenToClient()->x=%d y=%d",htInfo.pt.x,htInfo.pt.y));
+						hItem=TreeView_HitTest(GetDlgItem(w,TV_DOMAINS),&htInfo);
+						TRACE((TRACE_DEBUG,_F_,"TreeView_HitTest()=0x%08lx, flags=0x%08lx",hItem,htInfo.flags));
+						if (hItem!=NULL && (htInfo.flags&TVHT_ONITEM))
+						{
+							TreeView_SelectItem(GetDlgItem(w,TV_DOMAINS),hItem);
+						}
+						TVDomainsShowContextMenu(w);
 					}
 					break;
 
@@ -4511,58 +4670,91 @@ end:
 	return rc;
 }
 
+//-----------------------------------------------------------------------------
+// TVAddDomain(HWND w,int iDomain)
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+HTREEITEM TVAddDomain(HWND w,int iDomain)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	HTREEITEM hItem=NULL;
+	TVINSERTSTRUCT tvis;
+	
+	tvis.hParent=NULL;
+	tvis.hInsertAfter=TVI_SORT;
+	tvis.itemex.mask=TVIF_TEXT|TVIF_PARAM; //|TVIF_STATE;
+	tvis.itemex.cchTextMax=0;
+	tvis.itemex.pszText=gtabDomains[iDomain].szDomainLabel;
+	tvis.itemex.lParam=gtabDomains[iDomain].iDomainId;
+	hItem=TreeView_InsertItem(GetDlgItem(w,TV_DOMAINS),&tvis);
+	if (hItem==NULL) { TRACE((TRACE_ERROR,_F_,"TreeView_InsertItem()")) ; goto end; }
 
-// ========== tentative de transparence sur la loupe...
-#if 0
-// swssomain.cpp :
-	HANDLE ghLoupe=NULL;
-	ghLoupe=(HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOUPE),IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR);
-	if (ghLoupe==NULL) goto end;
-	if (ghLoupe!=NULL) { DeleteObject(ghLoupe); ghLoupe=NULL; }
+end:
+	TRACE((TRACE_LEAVE,_F_, "hItem=0x%08lx",hItem));
+	return hItem;
+}	
+//-----------------------------------------------------------------------------
+// FillTreeViewDomains()
+//-----------------------------------------------------------------------------
+// Remplit la TreeView TV_DOMAINS
+//-----------------------------------------------------------------------------
+void FillTreeViewDomains(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
 
-// swssoappnsites.cpp
-		case WM_PAINT:
-			{
-		        PAINTSTRUCT ps;
-				HDC dc=BeginPaint(GetDlgItem(w,IMG_LOUPE),&ps);
-				//HDC dc=BeginPaint(w,&ps);
-				RECT rect;
-				GetWindowRect(GetDlgItem(w,TAB_IDPWD),&rect);
-TRACE((TRACE_DEBUG,_F_,"rect.left=%d rect.top=%d",rect.left,rect.top));
-				POINT pt;
-				pt.x=rect.left;
-				pt.y=rect.top;
-				ScreenToClient(w,&pt);
-TRACE((TRACE_DEBUG,_F_,"pt.x=%d pt.y=%d",pt.x,pt.y));
-				DrawTransparentBitmap(ghLoupe,dc,pt.x,pt.y,16,16,RGB(255,0,128));
-				EndPaint(w,&ps);
- 			}
-#endif
+	int i;
+	HTREEITEM hItem=NULL;
 
-//=== poubelle
+	TreeView_DeleteAllItems(GetDlgItem(w,TV_DOMAINS));
 
-			/*
-				case CB_ID2_TYPE:
-					if (HIWORD(wp)==CBN_SELCHANGE)
-					{
-						int iType=SendMessage(GetDlgItem(w,CB_ID2_TYPE),CB_GETCURSEL,0,0);
-						EnableWindow(GetDlgItem(w,TB_ID2_ID),iType==UNK?FALSE:TRUE);
-					}
-					break;
-				case CB_ID3_TYPE:
-					if (HIWORD(wp)==CBN_SELCHANGE)
-					{
-						int iType=SendMessage(GetDlgItem(w,CB_ID3_TYPE),CB_GETCURSEL,0,0);
-						EnableWindow(GetDlgItem(w,TB_ID3_ID),iType==UNK?FALSE:TRUE);
-					}
-					break;
-				case CB_ID4_TYPE:
-					if (HIWORD(wp)==CBN_SELCHANGE)
-					{
-						int iType=SendMessage(GetDlgItem(w,CB_ID4_TYPE),CB_GETCURSEL,0,0);
-						EnableWindow(GetDlgItem(w,TB_ID4_ID),iType==UNK?FALSE:TRUE);
-					}
-					break;
-*/
-			
+	// Ajout des domains
+	for (i=0;i<giNbDomains;i++) 
+	{
+		hItem=TVAddDomain(w,i); if (hItem==NULL) goto end;
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
 
+//-----------------------------------------------------------------------------
+// TVDomainsDeleteDomain()
+//-----------------------------------------------------------------------------
+// Supprime le domaine sélectionné
+//-----------------------------------------------------------------------------
+void TVDomainsDeleteDomain(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	HTREEITEM hItem;
+	int iDomainId,iDomain;
+	char szRequest[512+1];
+	char *pszResult=NULL;
+	char szMsg[500];
+
+	hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
+	iDomainId=TVItemGetLParam(w,hItem);
+	iDomain=GetDomainIndex(iDomainId);
+	if (iDomain==-1) goto end;
+
+	wsprintf(szMsg,GetString(IDS_DELETE_DOMAIN_CONFIRM),gtabDomains[iDomain].szDomainLabel);
+	if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
+
+	// appel webservice
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deletedomain&domainId=%d",gszWebServiceAddress,iDomainId);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
+	pszResult=HTTPRequest(szRequest,8,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	if (pszResult[0]=='O' && pszResult[1]=='K')
+	{
+		giNbDomains=GetDomains(TRUE,0,gtabDomains);
+		FillTreeViewDomains(w);
+		MessageBox(w,GetString(IDS_DELETE_DOMAIN_OK),"swSSO",MB_OK|MB_ICONINFORMATION);
+	}
+	else
+	{
+		MessageBox(w,GetString(IDS_DELETE_DOMAIN_KO),"swSSO",MB_OK|MB_ICONEXCLAMATION);
+	}
+end:
+	if (pszResult!=NULL) free(pszResult);
+	TRACE((TRACE_LEAVE,_F_, ""));
+}

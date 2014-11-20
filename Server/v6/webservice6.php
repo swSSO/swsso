@@ -836,6 +836,23 @@ else if ($_GET['action']=="adddomain")
 	}
 	dbClose($cnx);
 }
+// ------------------------------------------------------------
+// renamedomain
+// ------------------------------------------------------------
+else if ($_GET['action']=="renamedomain")
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	if (isset($_GET["domainId"])) $var_domainId=utf8_decode(myaddslashes($_GET['domainId']));
+	if (isset($_GET["domainLabel"])) $var_domainLabel=utf8_decode(myaddslashes($_GET['domainLabel']));
+
+	$szRequest="update "._TABLE_PREFIX_."domains set label='".$var_domainLabel."' where id='".$var_domainId."'";
+	if (isset($_GET["debug"])) echo $szRequest;
+	$result=mysql_query($szRequest,$cnx);
+	echo "OK";
+	dbClose($cnx);
+}
 ?>
 
 

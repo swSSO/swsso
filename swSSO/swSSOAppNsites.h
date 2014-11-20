@@ -151,3 +151,6 @@ int UploadConfig(HWND w, char *pszDomainIds);
 void FillTreeView(HWND w,BOOL bWithId);
 void LaunchSelectedApp(HWND w);
 
+void FillTreeViewDomains(HWND w);
+void TVDomainsDeleteDomain(HWND w);
+int GetDomainIndex(int id);
