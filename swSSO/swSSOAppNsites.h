@@ -152,5 +152,7 @@ void FillTreeView(HWND w,BOOL bWithId);
 void LaunchSelectedApp(HWND w);
 
 void FillTreeViewDomains(HWND w);
-void TVDomainsDeleteDomain(HWND w);
+void AddDomain(HWND w);
+void DeleteDomain(HWND w);
 int GetDomainIndex(int id);
+int UploadDomain(HWND w,int iDomain);

@@ -383,6 +383,14 @@
 #define IDS_DELETE_DOMAIN_CONFIRM       42010
 #define IDS_DELETE_DOMAIN_OK            42011
 #define IDS_DELETE_DOMAIN_KO            42012
+#define IDS_NEW_DOMAIN                  42013
+#define IDS_MSG_MAX_DOMAINS             42014
+#define IDS_UPLOAD_DOMAIN_OK            42015
+#define IDS_UPLOAD_DOMAIN_KO            42016
+#define IDS_DOMAIN_ALREADY_EXISTS       42017
+#define IDS_RENAME_DOMAIN_OK            42018
+#define IDS_UPLOAD_DOMAIN_KO2           42019
+#define IDS_RENAME_DOMAIN_KO            42019
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

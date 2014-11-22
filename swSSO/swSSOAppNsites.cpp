@@ -164,6 +164,8 @@ static char *gpNextCollapsedCategory=NULL;
 static char *gpCollapsedCategoryContext=NULL;
 static char gszEnumCollapsedCategories[1024];
 
+static BOOL gbAddingDomain=FALSE;
+
 // ISSUE#111 - tooltips
 static HWND gwTip=NULL;
 typedef struct
@@ -330,7 +332,7 @@ void PublishToOnInitDialog(HWND w)
 	TRACE((TRACE_ENTER,_F_, ""));
 	LVITEM lvi;
 	int i,j;
-	T_DOMAIN tabConfigDomains[100];
+	T_DOMAIN tabConfigDomains[MAX_DOMAINS];
 	int iNbDomains;
 	HCURSOR hCursorOld=NULL;
 	hCursorOld=SetCursor(ghCursorWait);
@@ -1088,7 +1090,7 @@ void GenerateCategoryName(int iCategory,char *pszProposition)
 		{
 			if (_stricmp(szCategory,gptCategories[i].szLabel)==0) 
 			{
-				TRACE((TRACE_INFO,_F_,"AppName %s already exists",szCategory));
+				TRACE((TRACE_INFO,_F_,"CategName %s already exists",szCategory));
 				bUniqueNameFound=FALSE;
 				iUniqueId++;
 				wsprintf(szCategory,"%s (%d)",pszProposition,iUniqueId);
@@ -1099,6 +1101,70 @@ suite:;
 	}
 	strcpy_s(gptCategories[iCategory].szLabel,sizeof(gptCategories[iCategory].szLabel),szCategory);
 	TRACE((TRACE_LEAVE,_F_, "out:%s",gptCategories[iCategory].szLabel));
+}
+
+// ----------------------------------------------------------------------------------
+// GenerateDomainName()
+// ----------------------------------------------------------------------------------
+// Génère un nom pour ce domaine (vérifie si existe, ajoute un id unique)
+// ----------------------------------------------------------------------------------
+void GenerateDomainName(int iDomain,char *pszProposition)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+
+	char szDomain[LEN_DOMAIN+1];
+	int i;
+	BOOL bUniqueNameFound=FALSE;
+	int iUniqueId=0;
+
+	strcpy_s(szDomain,sizeof(szDomain),pszProposition);
+	// parcourt la liste pour voir si ce titre existe déjà. Si oui, ajoute (1) et rééssaie en incrémentant à chaque fois
+	while (!bUniqueNameFound)
+	{
+		bUniqueNameFound=TRUE;
+		TRACE((TRACE_DEBUG,_F_,"Looking for %s DomainLabel unicity",szDomain));
+		for (i=0;i<giNbDomains;i++)
+		{
+			//TRACE((TRACE_DEBUG,_F_,"Comparing with : %s (%d)",gptActions[i].szApplication,i));
+			if (i!=iDomain && _stricmp(szDomain,gtabDomains[i].szDomainLabel)==0) 
+			{
+				TRACE((TRACE_INFO,_F_,"DomainLabel %s already exists",szDomain));
+				bUniqueNameFound=FALSE;
+				iUniqueId++;
+				pszProposition[LEN_DOMAIN-7]=0; // laisse de la place pour id unique ! (bug #116)
+				wsprintf(szDomain,"%s (%d)",pszProposition,iUniqueId);
+				goto suite;
+			}
+		}
+suite:;
+	}
+	strcpy_s(gtabDomains[iDomain].szDomainLabel,sizeof(gtabDomains[iDomain].szDomainLabel),szDomain);
+	TRACE((TRACE_LEAVE,_F_, "out:%s",gtabDomains[iDomain].szDomainLabel));
+}
+
+// ----------------------------------------------------------------------------------
+// IsDomainNameUnique()
+// ----------------------------------------------------------------------------------
+// 
+// ----------------------------------------------------------------------------------
+BOOL IsDomainNameUnique(int iDomain,char *pszDomainLabel)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+
+	int i;
+	int rc=TRUE;
+	for (i=0;i<giNbDomains;i++)
+	{
+		if (i==iDomain) continue;
+		if (_stricmp(pszDomainLabel,gtabDomains[i].szDomainLabel)==0) 
+		{
+			rc=FALSE;
+			goto end;
+		}
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
 }
 
 // ----------------------------------------------------------------------------------
@@ -1614,6 +1680,8 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 		if (gbAdminDeleteConfigsOnServer && iCategoryId>=10000)
 		{
 			char szMsg[500];
+			HCURSOR hCursorOld=NULL;
+			hCursorOld=SetCursor(ghCursorWait);
 			wsprintf(szMsg,GetString(IDS_DELETE_CATEG),gptCategories[iCategory].szLabel);
 			if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
 			if (DeleteCategOnServer(iCategory)==0)
@@ -1625,6 +1693,7 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 				MessageBox(w,GetString(IDS_DELETE_CATEG_ON_SERVER_KO),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 				goto end;
 			}
+			if (hCursorOld!=NULL) SetCursor(hCursorOld);
 		}
 		// effacement dans le fichier : ne me semble plus utile depuis que le fichier est réécrit 
 		// complètement à chaque sauvegarde => supprimé en 0.90B1
@@ -1671,6 +1740,8 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 		if (gbAdminDeleteConfigsOnServer && gptActions[iAction].iConfigId!=0)
 		{
 			char szMsg[500];
+			HCURSOR hCursorOld=NULL;
+			hCursorOld=SetCursor(ghCursorWait);
 			wsprintf(szMsg,GetString(IDS_DELETE),gptActions[iAction].szApplication);
 			if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
 			if (DeleteConfigOnServer(iAction)==0)
@@ -1682,6 +1753,7 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 				MessageBox(w,GetString(IDS_DELETE_CONFIG_ON_SERVER_KO),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 				goto end;
 			}
+			if (hCursorOld!=NULL) SetCursor(hCursorOld);
 		}
 		// ISSUE#159 : on ne demande plus de confirmation puisque la suppression est annulable
 		// wsprintf(szMsg,GetString(IDS_DELETE),gptActions[iAction].szApplication);
@@ -2854,8 +2926,8 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	if (gbAdmin)
 	{
 		tcItem.pszText = GetString(IDS_TAB_DOMAINS); // "Domains"; 
+		TabCtrl_InsertItem(GetDlgItem(w,TAB_APPLICATIONS),1,&tcItem);
 	}
-	TabCtrl_InsertItem(GetDlgItem(w,TAB_APPLICATIONS),1,&tcItem);
 	tcItem.pszText = GetString(IDS_TAB_IDPWD1); // "Identifiant et mot de passe"; 
 	TabCtrl_InsertItem(GetDlgItem(w,TAB_IDPWD),0,&tcItem);
 	tcItem.pszText = GetString(IDS_TAB_IDPWD2); // "Identifiants complémentaires"; 
@@ -4137,7 +4209,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (!gbIsChanging && !gbAdminDeleteConfigsOnServer) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_SUPPRIMER_DOMAINE:
-					TVDomainsDeleteDomain(w);
+					DeleteDomain(w);
 					break;
 				case MENU_DUPLIQUER:
 					TVDuplicateSelectedApp(w,FALSE);
@@ -4156,8 +4228,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_AJOUTER_DOMAINE:
-					// TODO
-					MessageBox(NULL,"AJOUTER DOMAINE","",MB_OK);
+					AddDomain(w);
 					break;
 				case MENU_CHANGER_IDS:
 					ChangeCategIds(w);
@@ -4437,12 +4508,15 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (GetKeyState(VK_SHIFT) & 0x8000)
 						{
 							HTREEITEM hItem;
-							int iDomainId;
+							int iDomain;
 							hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
-							iDomainId=TVItemGetLParam(w,hItem);
-							wsprintf(buf2048,"swSSO [id=%d]",iDomainId);
-							SetWindowText(w,buf2048);
+							iDomain=TVItemGetLParam(w,hItem);
+							if (iDomain!=-1) 
+							{
+								wsprintf(buf2048,"swSSO [id=%d]",gtabDomains[iDomain].iDomainId);
+								SetWindowText(w,buf2048);
 							}
+						}
 						else
 						{
 							SetWindowText(w,GetString(IDS_TITRE_APPNSITES));
@@ -4464,7 +4538,6 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							if (wEdit!=NULL) SendMessage(wEdit,EM_LIMITTEXT,LEN_DOMAIN,0);
 							gbTVDomainsLabelEditing=TRUE;
 						}
-
 					}
 					break;
 				case TVN_ENDLABELEDIT:
@@ -4527,11 +4600,70 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 								}
 							}
 						}
-						else
+						else if (wp==TV_DOMAINS)
 						{
-							// TODO
-							MessageBox(NULL,"RENOMMAGE TERMIEN","",MB_OK);
 							gbTVDomainsLabelEditing=FALSE;
+							LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO)lp;
+							if (ptvdi->item.pszText==NULL) // le nom n'a pas été changé : en renommage, on ne fait rien mais en ajout il faut ajouter
+							{
+								if (gbAddingDomain)
+								{
+									int iDomain;
+									iDomain=TVItemGetLParam(w,ptvdi->item.hItem);
+									if (UploadDomain(w,iDomain)==0)
+										SetWindowLong(w, DWL_MSGRESULT, TRUE);
+									else
+									{
+										HCURSOR hCursorOld=NULL;
+										hCursorOld=SetCursor(ghCursorWait);
+										giNbDomains=GetDomains(TRUE,0,gtabDomains);
+										FillTreeViewDomains(w);
+										if (hCursorOld!=NULL) SetCursor(hCursorOld);
+										SetWindowLong(w, DWL_MSGRESULT, FALSE);
+									}
+								}
+							}
+							else // le nom a changé
+							{
+								if (*(ptvdi->item.pszText)==0) // nom vide interdit
+								{
+									SetWindowLong(w, DWL_MSGRESULT, FALSE);
+								}
+								else
+								{
+									int iDomain;
+									iDomain=TVItemGetLParam(w,ptvdi->item.hItem);
+									if (IsDomainNameUnique(iDomain,ptvdi->item.pszText))
+									{
+										strcpy_s(gtabDomains[iDomain].szDomainLabel,LEN_DOMAIN+1,ptvdi->item.pszText);
+										if (UploadDomain(w,iDomain)==0)
+											SetWindowLong(w, DWL_MSGRESULT, TRUE);
+										else
+										{
+											HCURSOR hCursorOld=NULL;
+											hCursorOld=SetCursor(ghCursorWait);
+											giNbDomains=GetDomains(TRUE,0,gtabDomains);
+											FillTreeViewDomains(w);
+											if (hCursorOld!=NULL) SetCursor(hCursorOld);
+											SetWindowLong(w, DWL_MSGRESULT, FALSE);
+										}
+									}
+									else
+									{
+										if (gbAddingDomain)
+										{
+											HCURSOR hCursorOld=NULL;
+											hCursorOld=SetCursor(ghCursorWait);
+											giNbDomains=GetDomains(TRUE,0,gtabDomains);
+											FillTreeViewDomains(w);
+											if (hCursorOld!=NULL) SetCursor(hCursorOld);
+										}
+										MessageBox(w,GetString(IDS_DOMAIN_ALREADY_EXISTS),"swSSO",MB_OK | MB_ICONEXCLAMATION);								
+										SetWindowLong(w, DWL_MSGRESULT, FALSE);
+									}
+								}
+							}
+							gbAddingDomain=FALSE;
 						}
 						rc=TRUE;
 					}
@@ -4563,9 +4695,19 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 								}
 								else if (wp==TV_DOMAINS)
 								{
-									TVDomainsDeleteDomain(w);
+									DeleteDomain(w);
 								}
 								break;
+							case VK_F5:
+								if (wp==TV_DOMAINS)
+								{
+									HCURSOR hCursorOld=NULL;
+									hCursorOld=SetCursor(ghCursorWait);
+									giNbDomains=GetDomains(TRUE,0,gtabDomains);
+									FillTreeViewDomains(w);
+									if (hCursorOld!=NULL) SetCursor(hCursorOld);
+								}
+								break;						
 						}
 					}
 					break;
@@ -4671,11 +4813,11 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// TVAddDomain(HWND w,int iDomain)
+// TVDomainsAddDomain(HWND w,int iDomain)
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-HTREEITEM TVAddDomain(HWND w,int iDomain)
+HTREEITEM TVDomainsAddDomain(HWND w,int iDomain)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	HTREEITEM hItem=NULL;
@@ -4686,7 +4828,7 @@ HTREEITEM TVAddDomain(HWND w,int iDomain)
 	tvis.itemex.mask=TVIF_TEXT|TVIF_PARAM; //|TVIF_STATE;
 	tvis.itemex.cchTextMax=0;
 	tvis.itemex.pszText=gtabDomains[iDomain].szDomainLabel;
-	tvis.itemex.lParam=gtabDomains[iDomain].iDomainId;
+	tvis.itemex.lParam=iDomain;
 	hItem=TreeView_InsertItem(GetDlgItem(w,TV_DOMAINS),&tvis);
 	if (hItem==NULL) { TRACE((TRACE_ERROR,_F_,"TreeView_InsertItem()")) ; goto end; }
 
@@ -4711,36 +4853,126 @@ void FillTreeViewDomains(HWND w)
 	// Ajout des domains
 	for (i=0;i<giNbDomains;i++) 
 	{
-		hItem=TVAddDomain(w,i); if (hItem==NULL) goto end;
+		hItem=TVDomainsAddDomain(w,i); 
+		if (hItem==NULL) goto end;
+	}
+	// sélection première ligne
+	hItem=TreeView_GetRoot(GetDlgItem(w,TV_DOMAINS));
+	TreeView_SelectItem(GetDlgItem(w,TV_DOMAINS),hItem); 
+end:
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// UploadDomain()
+//-----------------------------------------------------------------------------
+// Publie un domaine sur le serveur
+//-----------------------------------------------------------------------------
+int UploadDomain(HWND w,int iDomain)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	HCURSOR hCursorOld=NULL;
+	hCursorOld=SetCursor(ghCursorWait);
+	char szRequest[512+1];
+	char *pszResult=NULL;
+	BOOL bRename=FALSE;
+
+	if (iDomain==giNbDomains) // c'est un ajout
+	{
+		// ajout dans la base et récupération de l'identifiant du domaine
+		sprintf_s(szRequest,sizeof(szRequest),"%s?action=adddomain&domainLabel=%s",gszWebServiceAddress,gtabDomains[iDomain].szDomainLabel);
+		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
+		pszResult=HTTPRequest(szRequest,8,NULL);
+		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+
+		// lecture du domainId généré en base de données et remplissage du champ iDomainId
+		if (pszResult[0]!='O' || pszResult[1]!='K') { TRACE((TRACE_ERROR,_F_,"Result=%s",pszResult)); goto end; }
+		gtabDomains[giNbDomains].iDomainId=atoi(pszResult+3);
+		giNbDomains++;
+	}
+	else // c'est un renommage
+	{
+		bRename=TRUE;
+		// renommage du domaine
+		sprintf_s(szRequest,sizeof(szRequest),"%s?action=renamedomain&domainId=%d&domainLabel=%s",gszWebServiceAddress,gtabDomains[iDomain].iDomainId,gtabDomains[iDomain].szDomainLabel);
+		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
+		pszResult=HTTPRequest(szRequest,8,NULL);
+		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+		if (pszResult[0]!='O' || pszResult[1]!='K') { TRACE((TRACE_ERROR,_F_,"Result=%s",pszResult)); goto end; }
+	}
+	rc=0;
+end:
+	if (hCursorOld!=NULL) SetCursor(hCursorOld);
+	if (pszResult!=NULL) free(pszResult);
+	if (rc==0)
+	{
+		// MessageBox(w,GetString(bRename?IDS_RENAME_DOMAIN_OK:IDS_UPLOAD_DOMAIN_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+	}
+	else
+	{
+		MessageBox(w,GetString(bRename?IDS_RENAME_DOMAIN_KO:IDS_UPLOAD_DOMAIN_KO),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+	}
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// AddDomain()
+//-----------------------------------------------------------------------------
+// Ajoute un domaine
+//-----------------------------------------------------------------------------
+void AddDomain(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	HTREEITEM hNewItem; //,hSelectedItem;
+
+	if (giNbDomains>=MAX_DOMAINS) { MessageBox(NULL,GetString(IDS_MSG_MAX_DOMAINS),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
+	
+	// 
+	gtabDomains[giNbDomains].iDomainId=0; 
+	strcpy_s(gtabDomains[giNbDomains].szDomainLabel,LEN_DOMAIN+1,GetString(IDS_NEW_DOMAIN));
+	GenerateDomainName(giNbDomains,gtabDomains[giNbDomains].szDomainLabel);
+	
+	gbAddingDomain=TRUE;
+
+	// ajout dans la treeview et renommage
+	hNewItem=TVDomainsAddDomain(w,giNbDomains);
+	if (hNewItem!=NULL) 
+	{
+		TreeView_SelectItem(GetDlgItem(w,TV_DOMAINS),hNewItem);
+		TreeView_EditLabel(GetDlgItem(w,TV_DOMAINS),hNewItem);
 	}
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
 //-----------------------------------------------------------------------------
-// TVDomainsDeleteDomain()
+// DeleteDomain()
 //-----------------------------------------------------------------------------
 // Supprime le domaine sélectionné
 //-----------------------------------------------------------------------------
-void TVDomainsDeleteDomain(HWND w)
+void DeleteDomain(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	HTREEITEM hItem;
-	int iDomainId,iDomain;
+	int iDomain;
 	char szRequest[512+1];
 	char *pszResult=NULL;
 	char szMsg[500];
+	HCURSOR hCursorOld=NULL;
 
 	hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
-	iDomainId=TVItemGetLParam(w,hItem);
-	iDomain=GetDomainIndex(iDomainId);
+	iDomain=TVItemGetLParam(w,hItem);
 	if (iDomain==-1) goto end;
 
 	wsprintf(szMsg,GetString(IDS_DELETE_DOMAIN_CONFIRM),gtabDomains[iDomain].szDomainLabel);
 	if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
 
+	hCursorOld=SetCursor(ghCursorWait);
+
 	// appel webservice
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deletedomain&domainId=%d",gszWebServiceAddress,iDomainId);
+	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deletedomain&domainId=%d",gszWebServiceAddress,gtabDomains[iDomain].iDomainId);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
 	pszResult=HTTPRequest(szRequest,8,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
@@ -4755,6 +4987,7 @@ void TVDomainsDeleteDomain(HWND w)
 		MessageBox(w,GetString(IDS_DELETE_DOMAIN_KO),"swSSO",MB_OK|MB_ICONEXCLAMATION);
 	}
 end:
+	if (hCursorOld!=NULL) SetCursor(hCursorOld);
 	if (pszResult!=NULL) free(pszResult);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }

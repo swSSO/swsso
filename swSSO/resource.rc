@@ -883,6 +883,18 @@ BEGIN
                             "Confirmez-vous la suppression du domaine %s ?\r\nAttention, le domaine sera également supprimé du serveur."
     IDS_DELETE_DOMAIN_OK    "Le domaine a bien été supprimé du serveur."
     IDS_DELETE_DOMAIN_KO    "Le domaine n'a pas pu être supprimé du serveur. Vérifiez qu'il n'y a plus d'applications publiées sur ce domaine."
+    IDS_NEW_DOMAIN          "Nouveau domaine"
+    IDS_MSG_MAX_DOMAINS     "Erreur : le nombre maximum de domaines est dépassé. Il n'est plus possible d'ajouter de nouveaux domaines."
+    IDS_UPLOAD_DOMAIN_OK    "Le domaine a bien été publié sur le serveur."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UPLOAD_DOMAIN_KO    "Une erreur est survenue. Le domaine n'a pas été publié sur le serveur."
+    IDS_DOMAIN_ALREADY_EXISTS 
+                            "Un domaine porte déjà ce nom. Veuillez en choisir un autre."
+    IDS_RENAME_DOMAIN_OK    "Le domaine a bien été renommé sur le serveur."
+    IDS_RENAME_DOMAIN_KO    "Une erreur est survenue. Le domaine n'a pas été renommé."
 END
 
 #endif    // French (France) resources

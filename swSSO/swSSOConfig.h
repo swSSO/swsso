@@ -116,6 +116,8 @@ typedef struct
 	char szDomainLabel[LEN_DOMAIN+1];
 }
 T_DOMAIN;
+#define MAX_DOMAINS 100
+
 extern int  giDomainId;						// 0.94B1 : gestion des domaines
 extern char gszDomainLabel[LEN_DOMAIN+1];
 int GetDomains(BOOL bAllDomains, int iConfigId,T_DOMAIN *pgtabDomain);
@@ -123,6 +125,7 @@ void GetDomainLabel(int iDomainId);
 
 extern BOOL gbParseWindowsOnStart;  // 0.93B4 : parse / ne parse pas les fenêtres ouvertes au lancement de SSO
 #define MAX_EXCLUDED_HANDLES 500
+
 extern int  giNbExcludedHandles;
 extern HWND gTabExcludedHandles[];
 
