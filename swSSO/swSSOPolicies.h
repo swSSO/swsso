@@ -183,6 +183,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_CATEGORY_AUTO_UPDATE				"CategoryAutoUpdate"
 #define REGVALUE_REMOVE_DELETED_CONFIGS_AT_START	"RemoveDeletedConfigsAtStart"
 #define REGVALUE_ADMIN_DELETE_CONFIGS_ON_SERVER		"AdminDeleteConfigsOnServer"
+#define REGVALUE_REFRESH_RIGHTS_FREQUENCY			"RefreshRightsFrequency"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -217,6 +218,7 @@ extern BOOL gbDisplayWindowsPasswordChange; // 1.05 - affiche / masque le messag
 extern BOOL gbCategoryAutoUpdate;			// 1.06 - ISSUE#206 : met à jour la catégorie sur le serveur lorsqu'une application est déplacée dans l'IHM client
 extern BOOL gbRemoveDeletedConfigsAtStart;	// 1.07 - ISSUE#214
 extern BOOL gbAdminDeleteConfigsOnServer;	// 1.07 - ISSUE#223
+extern int  giRefreshRightsFrequency;		// 1.07 - ISSUE#220
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

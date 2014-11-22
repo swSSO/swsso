@@ -121,6 +121,7 @@ BOOL gbDisplayWindowsPasswordChange=TRUE;	// 1.05 - affiche / masque le message 
 BOOL gbCategoryAutoUpdate=FALSE;			// 1.06 - ISSUE#206 : met à jour la catégorie sur le serveur lorsqu'une application est déplacée dans l'IHM client
 BOOL gbRemoveDeletedConfigsAtStart=FALSE;	// 1.07 - ISSUE#214
 BOOL gbAdminDeleteConfigsOnServer=FALSE;	// 1.07 - ISSUE#223
+extern int giRefreshRightsFrequency=0;		// 1.07 - ISSUE#220
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -543,6 +544,11 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_ADMIN_DELETE_CONFIGS_ON_SERVER,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbAdminDeleteConfigsOnServer=(BOOL)dwValue; 
 
+		// ISSUE#220
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_REFRESH_RIGHTS_FREQUENCY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giRefreshRightsFrequency=(int)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -726,6 +732,7 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"gbCategoryAutoUpdate=%d"				,gbCategoryAutoUpdate));
 	TRACE((TRACE_INFO,_F_,"gbRemoveDeletedConfigsAtStart=%d"	,gbRemoveDeletedConfigsAtStart));
 	TRACE((TRACE_INFO,_F_,"gbAdminDeleteConfigsOnServer=%d"		,gbAdminDeleteConfigsOnServer));
+	TRACE((TRACE_INFO,_F_,"giRefreshRightsFrequency=%d"			,giRefreshRightsFrequency));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
@@ -751,7 +758,6 @@ void LoadPolicies(void)
 	TRACE((TRACE_INFO,_F_,"REGKEY_HOTKEY ---------"));
 	TRACE((TRACE_INFO,_F_,"gszPastePwd_Text=%s",gszPastePwd_Text));
 #endif
-
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 

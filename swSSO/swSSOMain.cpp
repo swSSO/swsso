@@ -94,6 +94,7 @@ int giTimer=0;
 static int giRegisterSessionNotificationTimer=0;
 static int giNbRegisterSessionNotificationTries=0;
 static int giRefreshTimer=10;
+int giRefreshRightsTimer=0;
 
 int giOSVersion=OS_WINDOWS_OTHER;
 int giOSBits=OS_32;
@@ -182,6 +183,24 @@ static void CALLBACK TimerProc(HWND w,UINT msg,UINT idEvent,DWORD dwTime)
 		//        (plutôt que dans la WindowsProc -> au moins on est sûr que c'est toujours fait)
 		LaunchTimer();
 	}
+}
+
+//-----------------------------------------------------------------------------
+// RefreshRightsTimerProc()
+//-----------------------------------------------------------------------------
+
+static void CALLBACK RefreshRightsTimerProc(HWND w,UINT msg,UINT idEvent,DWORD dwTime)
+{
+	UNREFERENCED_PARAMETER(dwTime);
+	UNREFERENCED_PARAMETER(idEvent);
+	UNREFERENCED_PARAMETER(msg);
+	UNREFERENCED_PARAMETER(w);
+
+	TRACE((TRACE_ENTER,_F_, ""));
+
+	RefreshRights(FALSE,FALSE);
+	
+	TRACE((TRACE_LEAVE,_F_,""));
 }
 
 //-----------------------------------------------------------------------------
@@ -2543,6 +2562,12 @@ askpwd:
 	// Prise de la date de login pour les stats
 	GetLocalTime(&gLastLoginTime);
 
+	// déclenchement du timer de refresh des droits, si demandé
+	if (giRefreshRightsFrequency!=0)
+	{
+		giRefreshRightsTimer=SetTimer(NULL,0,giRefreshRightsFrequency*60*1000,RefreshRightsTimerProc);
+	}
+
 	// déclenchement du timer pour enumération de fenêtres toutes les 500ms
 	// boucle de message, dont on ne sortira que par un PostQuitMessage()
 	while((rc=GetMessage(&msg,NULL,0,0))!=0)
@@ -2597,6 +2622,7 @@ end:
 	if (ghPwdChangeEvent!=NULL) CloseHandle(ghPwdChangeEvent);
 	if (giRegisterSessionNotificationTimer!=0) KillTimer(NULL,giRegisterSessionNotificationTimer);
 	if (gbRegisterSessionNotification) WTSUnRegisterSessionNotification(gwMain);
+	if (giRefreshRightsTimer!=0) KillTimer(NULL,giRefreshRightsTimer);
 	if (rcSystray==0) DestroySystray(gwMain);
 	if (ghBoldFont!=NULL) DeleteObject(ghBoldFont);
 	// 0.65 : suppression : UnregisterClass("swSSOClass",ghInstance);

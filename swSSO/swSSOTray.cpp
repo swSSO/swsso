@@ -37,7 +37,6 @@
 
 unsigned int gMsgTaskbarRestart=0; // message registré pour recevoir les notifs de recréation du systray
 int BeginChangeAppPassword(void);
-int RefreshRights(void);
 
 static int giRefreshTimer=10;
 
@@ -253,7 +252,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (AskPwd(NULL,TRUE)!=0) goto end;
 						SSOActivate(w);
 					}
-					RefreshRights();
+					RefreshRights(TRUE,TRUE);
 					break;
 				case TRAY_MENU_APPNSITES:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_APPNSITES"));
@@ -1011,7 +1010,7 @@ end:
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-int RefreshRights(void)
+int RefreshRights(BOOL bForced,BOOL bReportSync)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=0;
@@ -1049,20 +1048,23 @@ int RefreshRights(void)
 	}
 	if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
 	{
-		rc=GetNewOrModifiedConfigsFromServer(TRUE);
+		rc=GetNewOrModifiedConfigsFromServer(bForced);
 	}
 	if (gbRemoveDeletedConfigsAtStart) // Supprime les configs qui ne sont plus présentes sur le serveur
 	{
 		rc=DeleteConfigsNotOnServer();
 	}
 	
-	if (rc==0)
+	if (bReportSync)
 	{
-		ReportConfigSync(0,TRUE,TRUE);
-	}
-	else if (!gbDisplayConfigsNotifications) // si gbDisplayConfigsNotifications, un message d'erreur aura été affiché avant
-	{
-		ReportConfigSync(IDS_REFRESH_RIGHTS_ERROR,TRUE,TRUE);
+		if (rc==0)
+		{
+			ReportConfigSync(0,TRUE,TRUE);
+		}
+		else if (!gbDisplayConfigsNotifications) // si gbDisplayConfigsNotifications, un message d'erreur aura été affiché avant
+		{
+			ReportConfigSync(IDS_REFRESH_RIGHTS_ERROR,TRUE,TRUE);
+		}
 	}
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));

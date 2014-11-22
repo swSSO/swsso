@@ -35,6 +35,7 @@ HWND CreateMainWindow(void);
 int  CreateSystray(HWND wMain);
 void DestroySystray(HWND wMain);
 void SSOActivate(HWND w);
+int RefreshRights(BOOL bForced,BOOL bReportSync);
 
 extern unsigned int gMsgTaskbarRestart;
 
