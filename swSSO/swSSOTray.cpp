@@ -602,8 +602,8 @@ void DrawLogoAndWarningBar(HWND w)
 	dc = BeginPaint(w, &ps);
 	if (dc == NULL) { TRACE((TRACE_ERROR, _F_, "BeginPaint()=%ld", GetLastError())); goto end; }
 	if (!BitBlt(dc, 0, 0, rect.right, 140, 0, 0, 0, WHITENESS)) { TRACE((TRACE_ERROR, _F_, "BitBlt(WHITENESS)=%ld", GetLastError())); }
-	DrawBitmap(ghLogoFondBlanc90, dc, 0, 0, 60, 80);
 	DrawBitmap(ghLogoExclamation, dc, 50, 75, 60, 60);
+	DrawBitmap(ghLogoFondBlanc90, dc, 0, 0, 60, 80);
 end:
 	if (dc != NULL) EndPaint(w, &ps);
 	TRACE((TRACE_LEAVE, _F_, ""));
@@ -1017,7 +1017,7 @@ int RefreshRights(BOOL bForced,BOOL bReportSync)
 
 	if (gwAppNsites!=NULL)
 	{
-		MessageBox(NULL,GetString(IDS_CLOSE_APPNSITES_FIRST),"swSSO",MB_ICONEXCLAMATION | MB_OK);
+		if (bReportSync) MessageBox(NULL,GetString(IDS_CLOSE_APPNSITES_FIRST),"swSSO",MB_ICONEXCLAMATION | MB_OK);
 		goto end;
 	}
 	LoadPolicies();

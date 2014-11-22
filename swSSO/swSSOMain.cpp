@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="106";	// 101 = 1.01
-const char gcszCurrentBeta[]="1072";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1073";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -1273,6 +1273,8 @@ static int LoadIcons(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
+	int len;
+	char szLogoFilename[_MAX_PATH+1];
 	ghIconAltTab=(HICON)LoadImage(ghInstance,MAKEINTRESOURCE(IDI_LOGO),IMAGE_ICON,0,0,LR_DEFAULTSIZE);
 	if (ghIconAltTab==NULL) goto end;
 	ghIconSystrayActive=(HICON)LoadImage(ghInstance, gbAdmin ? MAKEINTRESOURCE(IDI_SYSTRAY_ADMIN_ACTIVE) : MAKEINTRESOURCE(IDI_SYSTRAY_ACTIVE),IMAGE_ICON,GetSystemMetrics(SM_CXSMICON),GetSystemMetrics(SM_CYSMICON),LR_DEFAULTCOLOR);
@@ -1285,10 +1287,35 @@ static int LoadIcons(void)
 	if (ghIconHelp == NULL) goto end;
 	ghLogo = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 	if (ghLogo == NULL) goto end;
-	ghLogoFondBlanc50 = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO_FONDBLANC50), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-	if (ghLogoFondBlanc50==NULL) goto end;
-	ghLogoFondBlanc90 = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO_FONDBLANC90), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-	if (ghLogoFondBlanc90 == NULL) goto end;
+
+	// ISSUE#219
+	ghLogoFondBlanc50=NULL;
+	ghLogoFondBlanc90=NULL;
+	len=GetCurrentDirectory(_MAX_PATH-10,szLogoFilename);
+	if (len!=0)
+	{
+		if (szLogoFilename[len-1]!='\\') { strcat_s(szLogoFilename,_MAX_PATH+1,"\\"); }
+		strcat_s(szLogoFilename,_MAX_PATH+1,"swssologo50.bmp");
+		ghLogoFondBlanc50 = (HICON)LoadImage(NULL, szLogoFilename, IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR | LR_LOADFROMFILE);
+	}
+	len=GetCurrentDirectory(_MAX_PATH-10,szLogoFilename);
+	if (len!=0)
+	{
+		if (szLogoFilename[len-1]!='\\') { strcat_s(szLogoFilename,_MAX_PATH+1,"\\"); }
+		strcat_s(szLogoFilename,_MAX_PATH+1,"swssologo90.bmp");
+		ghLogoFondBlanc90 = (HICON)LoadImage(NULL, szLogoFilename, IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR | LR_LOADFROMFILE);
+	}
+	if (ghLogoFondBlanc50==NULL)
+	{
+		ghLogoFondBlanc50 = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO_FONDBLANC50), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+		if (ghLogoFondBlanc50==NULL) goto end;
+	}
+	if (ghLogoFondBlanc90==NULL)
+	{
+		ghLogoFondBlanc90 = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_LOGO_FONDBLANC90), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+		if (ghLogoFondBlanc90 == NULL) goto end;
+	}
+
 	ghLogoExclamation = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_EXCLAMATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 	if (ghLogoExclamation == NULL) goto end;
 	ghLogoQuestion = (HICON)LoadImage(ghInstance, MAKEINTRESOURCE(IDB_QUESTION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
@@ -2065,7 +2092,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		goto end;
 	}
 	
-	// si pas de .ini passé en paramètre, on ch das le rép courant
+	// si pas de .ini passé en paramètre, on cherche dans le rép courant
 	if (*lpCmdLine==0) 
 	{
 		len=GetCurrentDirectory(_MAX_PATH-10,gszCfgFile);
