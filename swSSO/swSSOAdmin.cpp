@@ -348,7 +348,7 @@ BOOL IsAdminPwdSet()
 	pszResult=HTTPRequest(szRequest,8,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	
-	rc=(strcmp(pszResult,"YES")==0);
+	if (pszResult[0]=='Y' && pszResult[1]=='E' && pszResult[2]=='S') rc=TRUE;
 
 end:
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);

@@ -4149,7 +4149,7 @@ int DeleteConfigsNotOnServer(void)
 	pszResult=HTTPRequest(szRequest,8,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 
-	if (strcmp(pszResult,"NONE")==0)
+	if (pszResult[0]=='N' && pszResult[1]=='O' && pszResult[2]=='N' && pszResult[3]=='E') 
 	{
 		// l'utilisateur n'a plus le droit à rien... c'est louche...
 	}
