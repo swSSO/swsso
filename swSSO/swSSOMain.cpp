@@ -87,8 +87,9 @@ BOOL gbRememberOnThisComputer=FALSE;
 BOOL gbRecoveryRunning=FALSE;
 
 BOOL gbRegisterSessionNotification=FALSE;
-UINT guiLaunchAppMsg;
-UINT guiConnectAppMsg;
+UINT guiLaunchAppMsg=0;
+UINT guiConnectAppMsg=0;
+UINT guiQuitMsg=0;
 
 int giTimer=0;
 static int giRegisterSessionNotificationTimer=0;
@@ -1965,6 +1966,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	BOOL b64=false;
 	BOOL bMigrationWindowsSSO=FALSE;
 	BOOL bForcePwdChangeNow=FALSE;
+	BOOL bQuit=FALSE;
 	
 	// init des traces
 	TRACE_OPEN();
@@ -2012,6 +2014,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	guiConnectAppMsg=RegisterWindowMessage("swsso-connectapp");
 	if (guiConnectAppMsg==0) { TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-connectapp)=%d",GetLastError())); }
 	else { TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-connectapp) OK -> msg=0x%08lx",guiConnectAppMsg)); }
+	guiQuitMsg=RegisterWindowMessage("swsso-quit");
+	if (guiQuitMsg==0) { TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-quit)=%d",GetLastError())); }
+	else { TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-quit) OK -> msg=0x%08lx",guiQuitMsg)); }
 	
 	// 0.92 : récupération version OS pour traitements spécifiques Vista et/ou Seven
 	// Remarque : pas tout à fait juste, mais convient pour les postes de travail. A revoir pour serveurs.
@@ -2069,6 +2074,25 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		if (*lpCmdLine==' ') lpCmdLine++;
 		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
 	}
+	// ISSUE#227 : quitter
+	if (strnistr(lpCmdLine,"/quit",-1)!=NULL && guiQuitMsg!=0) 
+	{
+		bQuit=TRUE;
+		// supprime le paramètre de la ligne de commande 
+		// pour traitement du path éventuellement spécifié pour le .ini
+		lpCmdLine+=strlen("/quit");
+		if (*lpCmdLine==' ') lpCmdLine++;
+		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
+	}
+	else if (strnistr(lpCmdLine,"-quit",-1)!=NULL && guiQuitMsg!=0) 
+	{
+		bQuit=TRUE;
+		// supprime le paramètre de la ligne de commande 
+		// pour traitement du path éventuellement spécifié pour le .ini
+		lpCmdLine+=strlen("-quit");
+		if (*lpCmdLine==' ') lpCmdLine++;
+		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
+	}
 	
 	// 0.42 vérif pas déjà lancé
 	if (gbAdmin)
@@ -2088,6 +2112,11 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		{
 			TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente de connecter l'application en avant plan"));
 			PostMessage(HWND_BROADCAST,guiConnectAppMsg,0,0);
+		}
+		if (bQuit)
+		{
+			TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente de s'arrêter"));
+			PostMessage(HWND_BROADCAST,guiQuitMsg,0,0);
 		}
 		goto end;
 	}
@@ -2610,7 +2639,12 @@ askpwd:
 			{
 				TRACE((TRACE_INFO,_F_,"Message recu : swsso-connectapp (0x%08lx)",guiConnectAppMsg));
 				PostMessage(gwMain,WM_COMMAND,MAKEWORD(TRAY_MENU_SSO_NOW,0),0);
-			} 
+			}
+			else if (msg.message==guiQuitMsg) // ISSUE#227
+			{
+				TRACE((TRACE_INFO,_F_,"Message recu : swsso-quit (0x%08lx)",guiQuitMsg));
+				PostMessage(gwMain,WM_COMMAND,MAKEWORD(TRAY_MENU_QUITTER,0),0);
+			}
 			else
 			{
 		        TranslateMessage(&msg); 
