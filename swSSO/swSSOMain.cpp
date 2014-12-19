@@ -827,7 +827,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		TRACE((TRACE_DEBUG,_F_,"tLastSSOOnThisWindow        =%ld (time du dernier SSO sur cette fenêtre)",tLastSSOOnThisWindow));
 		TRACE((TRACE_DEBUG,_F_,"tNow-tLastSSOOnThisWindow	=%ld (nb secondes depuis dernier SSO sur cette fenêtre)",tNow-tLastSSOOnThisWindow));
 
-		if (gptActions[i].iType==WEBSSO || gptActions[i].iType==WEBPWD || gptActions[i].iType==XEBSSO)
+		if (gptActions[i].iType==WEBSSO || gptActions[i].iType==WEBPWD || gptActions[i].iType==XEBSSO || 
+			(gptActions[i].iType==POPSSO && iPopupType==POPUP_CHROME)) // cas particulier : la popup chrome n'est pas une fenêtre comme les autres popup
 		{
 			// si tLastSSOOnThisWindow==1 => handle inconnu donc jamais traité => on fait le SSO, sinon :
 			if (tLastSSOOnThisWindow!=-1) // on a déjà fait un SSO sur cette même fenetre (cette action ou une autre, peu importe, par exemple une autre action à cause du multi-comptes)
@@ -1048,7 +1049,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					//gptActions[i].wLastDetect=w;
 					time(&gptActions[i].tLastSSO);
 					gptActions[i].wLastSSO=w;
-					LastDetect_AddOrUpdateWindow(w);
+					LastDetect_AddOrUpdateWindow(w,iPopupType);
 					gptActions[i].iWaitFor=WAIT_ONE_MINUTE;
 					TRACE((TRACE_DEBUG,_F_,"gptActions(%d).iWaitFor=WAIT_ONE_MINUTE",i));
 					goto end;
@@ -1078,7 +1079,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				//gptActions[i].wLastDetect=w;
 				time(&gptActions[i].tLastSSO);
 				gptActions[i].wLastSSO=w;
-				LastDetect_AddOrUpdateWindow(w);
+				LastDetect_AddOrUpdateWindow(w,iPopupType);
 				if (_strnicmp(gptActions[i].szKBSim,"[WAIT]",strlen("[WAIT]"))==0) gptActions[i].bWaitForUserAction=TRUE;
 				//goto suite; // 0.90 XXXXXXXXX ICI XXXXXXXXXXXXX
 				// ISSUE#61 / 0.93 : on ne traite les popup W7 en simulation de frappe, marche pas avec IE9 ou W7 SP1 ?
@@ -1106,7 +1107,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 						//gptActions[i].wLastDetect=w;
 						time(&gptActions[i].tLastSSO);
 						gptActions[i].wLastSSO=w;
-						LastDetect_AddOrUpdateWindow(w);
+						LastDetect_AddOrUpdateWindow(w,iPopupType);
 					}
 					break;
 				case WEBSSO: 
@@ -1165,7 +1166,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					//gptActions[i].wLastDetect=w;
 					time(&gptActions[i].tLastSSO);
 					gptActions[i].wLastSSO=w;
-					LastDetect_AddOrUpdateWindow(w);
+					LastDetect_AddOrUpdateWindow(w,iPopupType);
 
 					if (rc==0) // SSO réussi
 					{

@@ -85,10 +85,11 @@ typedef struct
 	BYTE   tag;         // tag pour repérage présence fenêtre (1=tagguée,0=non tagguée)
 	time_t tLastDetect;	// derniere détection de cette fenetre 
 	HWND   wLastDetect;	// handle de cette fenetre déjà détectée
+	int	   iPopupType; // type de la popup pour traitement particulier des popup chrome qui ne sont pas des fenêtres...
 }
 T_LAST_DETECT;
 
-int    LastDetect_AddOrUpdateWindow(HWND w);	// ajoute ou met à jour une fenêtre dans la liste des dernières détectées
+int    LastDetect_AddOrUpdateWindow(HWND w, int iPopupType);	// ajoute ou met à jour une fenêtre dans la liste des dernières détectées
 int    LastDetect_RemoveWindow(HWND w);			// supprime une fenêtre dans la liste des dernières détectées
 time_t LastDetect_GetTime(HWND w);				// retourne la date de dernière détection d'une fenêtre
 int    LastDetect_TagWindow(HWND w);			// marque la fenêtre comme toujours présente

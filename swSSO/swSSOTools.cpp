@@ -1268,7 +1268,7 @@ char *GetComputedValue(const char *szValue)
 //-----------------------------------------------------------------------------
 // ajoute ou met à jour une fenêtre dans la liste des dernières détectées
 //-----------------------------------------------------------------------------
-int LastDetect_AddOrUpdateWindow(HWND w)
+int LastDetect_AddOrUpdateWindow(HWND w,int iPopupType)
 {
 	TRACE((TRACE_ENTER,_F_, "w=0x%08lx",w));
 	int rc=-1;
@@ -1281,6 +1281,7 @@ int LastDetect_AddOrUpdateWindow(HWND w)
 			gTabLastDetect[i].tag=1;
 			time(&gTabLastDetect[i].tLastDetect);
 			gTabLastDetect[i].wLastDetect=w;
+			gTabLastDetect[i].iPopupType=iPopupType;
 			rc=0;
 			goto end;
 		}
@@ -1310,6 +1311,7 @@ int LastDetect_RemoveWindow(HWND w)
 			gTabLastDetect[i].tag=0;
 			gTabLastDetect[i].tLastDetect=-1;
 			gTabLastDetect[i].wLastDetect=NULL;
+			gTabLastDetect[i].iPopupType=POPUP_NONE;
 			rc=0;
 			goto end;
 		}
@@ -1383,7 +1385,8 @@ void LastDetect_RemoveUntaggedWindows(void)
 			// ont été traitées dans cette fenêtre puisqu'elle a disparu.
 			for (j=0;j<giNbActions;j++)
 			{
-				if (gptActions[j].iType==WEBSSO || gptActions[j].iType==XEBSSO)
+				if (gptActions[j].iType==WEBSSO || gptActions[j].iType==XEBSSO ||
+					(gptActions[j].iType==POPSSO && gTabLastDetect[i].iPopupType==POPUP_CHROME))
 				{
 					if (gptActions[j].wLastSSO==gTabLastDetect[i].wLastDetect)
 					{
