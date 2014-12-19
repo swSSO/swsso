@@ -1997,11 +1997,11 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	gbRecoveryRunning=FALSE;
 	gpSid=NULL;
 	gpszRDN=NULL;
-
 	gSalts.bPBKDF2PwdSaltReady=FALSE;
 	gSalts.bPBKDF2KeySaltReady=FALSE;
-
 	gLastLoginTime.wYear=0; // ISSUE#171
+
+	ZeroMemory(&gTabLastDetect,sizeof(T_LAST_DETECT)); // pourrait contribuer à la correction de ISSUE#229
 
 	// ligne de commande
 	if (strlen(lpCmdLine)>_MAX_PATH) { iError=-1; goto end; } 

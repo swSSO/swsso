@@ -135,6 +135,9 @@ static void ParseFrame(IHTMLDocument2 *pHTMLDocument2,LPARAM lp)
 		hr=pItems->item(index,index,&pIDispatch);
 		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pItems->item(%d)=0x%08lx",l,hr)); goto end; }
 		TRACE((TRACE_DEBUG,_F_,"item[%d] pIDispatch=0x%08lx",l,pIDispatch));
+		// ISSUE#229 : la méthode "item" de IHTMLElementCollection retourne S_OK même si l'élément n'est pas trouvé (si, si)
+		// Du coup il faut impérativement vérifier que le pointeur retourné n'est pas NULL (c'est documenté comme ça)
+		if (pIDispatch==NULL) { TRACE((TRACE_ERROR,_F_,"item[%d] pIDispatch=0x%08lx",l,pIDispatch)); goto end; }
 		
 		// si formulaire à valider (=non vide + pas ENTER), on cherche le formulaire dans la page HTML, sinon on passe à la suite
 		//if (lenFormName!=0 && strcmp(szFormName,gcszEnter)!=0) : 0.89 : on accepte les simulations de frappe complexes
