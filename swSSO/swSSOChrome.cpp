@@ -34,6 +34,154 @@
 #include "stdafx.h"
 
 //-----------------------------------------------------------------------------
+// GetChromePopupURL()
+//-----------------------------------------------------------------------------
+// Retourne le message dans la popup Chrome qui contient le texte permettant
+// d'identifier l'appli : "Le serveur http://blabla demande..."
+// Cette fonction est appelée systématiquement pour vérifier si la fenêtre Chrome
+// en cours d'analyse est une popup ou pas, il faut donc retourner dès qu'on voit
+// que ce n'est pas une popup
+// ----------------------------------------------------------------------------------
+// [in] w = handle de la fenêtre
+// [rc] pszURL (à libérer par l'appelant) ou NULL si erreur 
+// ----------------------------------------------------------------------------------
+// Nouvelle fonction en 1.07 / ISSUE#215 pour popup Chrome 36+ (version approximative)
+// Architecture :
+// - Niveau 0 : fenêtre principale de Chrome (w)
+// - Niveau 1 : fils#2
+// - Niveau 2 : fils#1
+// - Niveau 3 : fils#2
+// - Niveau 4 : fils#1
+// - Niveau 5 : fils#1 --> c'est lui qui contient le message (validé en Chrome 39 et 41)
+// ----------------------------------------------------------------------------------
+char *GetChromePopupURL(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	HRESULT hr;
+	IAccessible *pNiveau0=NULL,*pChildNiveau1=NULL,*pChildNiveau2=NULL,*pChildNiveau3=NULL,*pChildNiveau4=NULL,*pChildNiveau5=NULL;
+	VARIANT vtChild;
+	IDispatch *pIDispatch=NULL;
+	char *pszURL=NULL;
+	BSTR bstrURL=NULL;
+	//BSTR bstrName=NULL;
+	long lCount;
+
+	// Récupère le niveau 0
+	hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pNiveau0);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	// Vérifie qu'il y a bien au moins 2 fils
+	vtChild.vt=VT_I4;
+	vtChild.lVal=CHILDID_SELF;
+	hr=pNiveau0->get_accChildCount(&lCount);
+	TRACE((TRACE_DEBUG,_F_,"get_accChildCount() hr=0x%08lx lCount=%ld",hr,lCount));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end; }
+	if (lCount<2) { TRACE((TRACE_ERROR,_F_,"Niveau 0 : %d fils, on en attendait au moins 2",lCount)); goto end; }
+
+	// Récupère le niveau 1 (fils n°2 du niveau 0)
+	vtChild.vt=VT_I4;
+	vtChild.lVal=2;
+	hr=pNiveau0->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau1);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Vérifie qu'il y a bien au moins 1 fils
+	vtChild.vt=VT_I4;
+	vtChild.lVal=CHILDID_SELF;
+	hr=pChildNiveau1->get_accChildCount(&lCount);
+	TRACE((TRACE_DEBUG,_F_,"get_accChildCount() hr=0x%08lx lCount=%ld",hr,lCount));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end; }
+	if (lCount<1) { TRACE((TRACE_ERROR,_F_,"Niveau 1 : %d fils, on en attendait au moins 1",lCount)); goto end; }
+
+	// Récupère le niveau 2 (fils n°1 du niveau 1)
+	vtChild.vt=VT_I4;
+	vtChild.lVal=1;
+	hr=pChildNiveau1->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau2);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Vérifie qu'il y a bien au moins 2 fils
+	vtChild.vt=VT_I4;
+	vtChild.lVal=CHILDID_SELF;
+	hr=pChildNiveau2->get_accChildCount(&lCount);
+	TRACE((TRACE_DEBUG,_F_,"get_accChildCount() hr=0x%08lx lCount=%ld",hr,lCount));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end; }
+	if (lCount<2) { TRACE((TRACE_ERROR,_F_,"Niveau 2 : %d fils, on en attendait au moins 2",lCount)); goto end; }
+
+	// Récupère le niveau 3 (fils n°2 du niveau 2)
+	vtChild.vt=VT_I4;
+	vtChild.lVal=2;
+	hr=pChildNiveau2->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau3);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Vérifie qu'il y a bien au moins 1 fils
+	vtChild.vt=VT_I4;
+	vtChild.lVal=CHILDID_SELF;
+	hr=pChildNiveau3->get_accChildCount(&lCount);
+	TRACE((TRACE_DEBUG,_F_,"get_accChildCount() hr=0x%08lx lCount=%ld",hr,lCount));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end; }
+	if (lCount<1) { TRACE((TRACE_ERROR,_F_,"Niveau 3 : %d fils, on en attendait au moins 1",lCount)); goto end; }
+
+	// Récupère le niveau 4 (fils n°1 du niveau 3)
+	vtChild.vt=VT_I4;
+	vtChild.lVal=1;
+	hr=pChildNiveau3->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau4);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Vérifie qu'il y a bien au moins 1 fils
+	vtChild.vt=VT_I4;
+	vtChild.lVal=CHILDID_SELF;
+	hr=pChildNiveau4->get_accChildCount(&lCount);
+	TRACE((TRACE_DEBUG,_F_,"get_accChildCount() hr=0x%08lx lCount=%ld",hr,lCount));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end; }
+	if (lCount<1) { TRACE((TRACE_ERROR,_F_,"Niveau 4 : %d fils, on en attendait au moins 1",lCount)); goto end; }
+
+	//  Récupère le niveau 5 (fils n°1 du niveau 4)
+	vtChild.vt=VT_I4;
+	vtChild.lVal=1;
+	hr=pChildNiveau4->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau5);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Lecture du contenu du champ : c'est notre URL
+	vtChild.vt=VT_I4;
+	vtChild.lVal=CHILDID_SELF;
+	hr=pChildNiveau5->get_accName(vtChild,&bstrURL);
+	TRACE((TRACE_DEBUG,_F_,"get_accName() hr=0x%08lx bstrURL=%S",hr,bstrURL));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accName() hr=0x%08lx",hr)); goto end; }
+	pszURL=GetSZFromBSTR(bstrURL);
+	SysFreeString(bstrURL);
+
+end:
+	SysFreeString(bstrURL);
+	if (pIDispatch!=NULL) pIDispatch->Release();
+	if (pChildNiveau1!=NULL) pChildNiveau1->Release();
+	if (pChildNiveau2!=NULL) pChildNiveau2->Release();
+	if (pChildNiveau3!=NULL) pChildNiveau3->Release();
+	if (pChildNiveau4!=NULL) pChildNiveau4->Release();
+	if (pChildNiveau5!=NULL) pChildNiveau5->Release();
+	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
+	return pszURL;
+}
+
+
+//-----------------------------------------------------------------------------
 // GetChromeURL()
 //-----------------------------------------------------------------------------
 // Retourne l'URL courante de la fenêtre Chrome
@@ -179,12 +327,13 @@ end:
 	return pszURL;
 }
 
+// conservé au cas où, mais plus utilisé depuis 1.07 B4 (cf. ISSUE#215)
+#if 0
 typedef struct 
 {
 	int iAction;
 	HWND w;
 } T_CHROMEFINDPOPUP;
-
 
 //-----------------------------------------------------------------------------
 // ChromeFindPopupProc()
@@ -248,3 +397,4 @@ HWND GetChromePopupHandle(HWND w,int iAction)
 	return rc;
 }	
 
+#endif

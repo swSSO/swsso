@@ -622,8 +622,6 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 	char szMsg[512+1];
 	int lenTitle;
 	int iBrowser=BROWSER_NONE;
-	HWND wChromePopup=NULL;
-	HWND wReal=NULL; // bidouille pour Chrome
 	
 	guiNbWindows++;
 	// 0.93B4 : fenêtres éventuellement exclues 
@@ -649,16 +647,13 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		if (!gptActions[i].bSaved) { TRACE((TRACE_INFO,_F_,"action %d non enregistrée => SSO non exécuté",i)); goto suite; } // 0.93B6 ISSUE#55
 		if (gptActions[i].iType==UNK) goto suite; // 0.85 : ne traite pas si type inconnu
 		
-		// ESSAI POPUP AUTHENT CHROME
 		// Avant de comparer le titre, vérifier si ce n'est pas une popup Chrome
-		// En effet, avec Chrome, le titre est soit vide, soit correspond au site visité précedemment, donc non représentatif
-		wChromePopup=NULL;
-		// ISSUE#77 : Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
-		if (gptActions[i].iType==POPSSO && strncmp(szClassName,"Chrome_WidgetWin_",17)==0) wChromePopup=GetChromePopupHandle(w,i);
-		if (wChromePopup!=NULL)
+		// En effet, avec Chrome, le titre n'est pas toujours représentatif (notamment sur popup proxy)
+		if (gptActions[i].iType==POPSSO && strncmp(szClassName,"Chrome_WidgetWin_",17)==0) pszURL=GetChromePopupURL(w);
+		if (pszURL!=NULL)
 		{
 			iPopupType=POPUP_CHROME;
-			TRACE((TRACE_DEBUG,_F_,"POPUP_CHROME !"));
+			TRACE((TRACE_DEBUG,_F_,"POPUP_CHROME, on ignore le titre"));
 		}
 		else
 		{
@@ -670,8 +665,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			// if (_strnicmp(szTitre,gptActions[i].szTitle,lenTitle)!=0) goto suite; // fenêtre inconnue...
 			if (!swStringMatch(szTitre,gptActions[i].szTitle)) goto suite;
 		}
-		// A ce stade, on a associé le titre (uniquement le titre, c'est à dire qu'on n'a pas encore vérifié
-		// que l'URL était correcte) à une action.
+		// A ce stade, on a associé le titre à une action
+		// (uniquement le titre, c'est à dire qu'on n'a pas encore vérifié que l'URL était correcte)
 		TRACE((TRACE_INFO,_F_,"======= Fenêtre handle 0x%08lx titre connu (%s) classe (%s) action (%d) type (%d) à vérifier maintenant",w,szTitre,szClassName,i,gptActions[i].iType));
     	if (gptActions[i].iType==POPSSO) 
     	{
@@ -690,8 +685,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			}
 			else if (iPopupType==POPUP_CHROME)
 			{
-				pszURL=GetChromeURL(w);
-				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup Chrome non trouvee")); goto suite; }
+				// rien à faire, on a déjà récupéré l'URL plus haut
 			}
 			else
 			{
@@ -819,11 +813,6 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		TRACE((TRACE_DEBUG,_F_,"wLastSSO     =0x%08lx",gptActions[i].wLastSSO));
 
 		bDoSSO=true;
-
-		// Cas particulier de Chrome : remaplace le w de la fenêtre ppale par le w de la popup
-		// permet de gérer le comportement en cas d'échec d'authent exactement pareil qu'avec les autres
-		// navigateurs où la popup est une vraie fenetre...
-		if (gptActions[i].iType==POPSSO && iPopupType==POPUP_CHROME) { wReal=w; w=wChromePopup; }
 
 		// on n'exécute pas (une action utilisateur est nécessaire)
 		if (gptActions[i].bWaitForUserAction) 
@@ -1080,10 +1069,10 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			if (gptActions[i].bKBSim && gptActions[i].szKBSim[0]!=0)
 			{
 				TRACE((TRACE_INFO,_F_,"SSO en mode simulation de frappe clavier"));
-				if (gptActions[i].iType==POPSSO && iPopupType==POPUP_CHROME)
-					KBSimSSO(wReal,i);
-				else
-					KBSimSSO(w,i);
+				// if (gptActions[i].iType==POPSSO && iPopupType==POPUP_CHROME)
+				// KBSimSSO(wReal,i);
+				// else
+				KBSimSSO(w,i);
 				// repositionne tLastDetect et wLastDetect
 				//time(&gptActions[i].tLastDetect);
 				//gptActions[i].wLastDetect=w;

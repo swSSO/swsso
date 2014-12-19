@@ -4345,7 +4345,6 @@ void ReactivateApplicationFromCurrentWindow(void)
 	int i;
 	char szClassName[128+1];
 	char *pszURL=NULL;
-	HWND wChromePopup;
 
 	if (swGetTopWindow(&w,szTitle,sizeof(szTitle))!=0) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
 
@@ -4355,14 +4354,10 @@ void ReactivateApplicationFromCurrentWindow(void)
 
 	for (i=0;i<giNbActions;i++)
 	{
-		// 0.92B6 : ajout des Popups Chrome
-		wChromePopup=NULL;
-		if (gptActions[i].iType==POPSSO && strncmp(szClassName,"Chrome_WidgetWin_",17)==0)  // ISSUE#77 : Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
-			wChromePopup=GetChromePopupHandle(w,i);
-		if (wChromePopup!=NULL)
+		// ISSUE#215 : nouvelle gestion des popups pour Chrome 36+ (c'était merdique avant je ne conserve pas la compatibilité)	
+		if (gptActions[i].iType==POPSSO && strncmp(szClassName,"Chrome_WidgetWin_",17)==0) pszURL=GetChromePopupURL(w);
+		if (pszURL!=NULL)
 		{
-			pszURL=GetChromeURL(w);
-			if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup Chrome non trouvee")); goto suite; }
 			if (swStringMatch(pszURL,gptActions[i].szURL))
 			{
 				//gptActions[i].wLastDetect=NULL;
@@ -4373,6 +4368,7 @@ void ReactivateApplicationFromCurrentWindow(void)
 				gptActions[i].iWaitFor=WAIT_IF_SSO_OK;
 				gptActions[i].bWaitForUserAction=FALSE;
 			}
+			free(pszURL); pszURL=NULL;
 		}
 		else
 		{
@@ -4392,7 +4388,6 @@ void ReactivateApplicationFromCurrentWindow(void)
 				gptActions[i].bWaitForUserAction=FALSE;
 			}
 		}
-suite:;
 	}
 end:
 	if (pszURL!=NULL) free(pszURL);
@@ -4484,8 +4479,9 @@ int AddApplicationFromCurrentWindow(void)
 	}
 	else if (strncmp(szClassName,"Chrome_WidgetWin_",17)==0) // ISSUE#77 : Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
 	{
-		HWND wChromePopup=GetChromePopupHandle(w,-1);
-		if (wChromePopup==NULL) // pas de popup trouvée, c'est du contenu chrome Web
+		// ISSUE#215 : nouvelle gestion des popups pour Chrome 36+ (c'était merdique avant je ne conserve pas la compatibilité)	
+		pszURL=GetChromePopupURL(w);
+		if (pszURL==NULL) // pas de popup trouvée, c'est du contenu chrome Web
 		{
 			iType=UNK; // permet de récupérer les configs WEB ou XEB 
 			pszURL=GetChromeURL(w);
@@ -4497,11 +4493,6 @@ int AddApplicationFromCurrentWindow(void)
 		}
 		else // trouvé une popup Chrome, lecture du titre de la popup et de l'URL du site
 		{
-			GetWindowText(wChromePopup,szTitle,sizeof(szTitle));
-			pszURL=GetChromeURL(w);
-			// ISSUE#155
-			// if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup Chrome non trouvee")); goto suite; }
-			if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup Chrome non trouvee")); goto end; }
 			iType=POPSSO;
 		}
 	}

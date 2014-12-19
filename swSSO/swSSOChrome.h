@@ -32,8 +32,9 @@
 //-----------------------------------------------------------------------------
 
 char *GetChromeURL(HWND w);
-HWND GetChromePopupHandle(HWND w,int iAction);
-int SSOChromePopup(HWND w,int iAction,HWND wChromePopup);
+char *GetChromePopupURL(HWND w);
+
+// int SSOChromePopup(HWND w,int iAction,HWND wChromePopup);
 
 
 
