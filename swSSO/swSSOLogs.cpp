@@ -47,7 +47,7 @@ int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszP
 	TRACE((TRACE_ENTER,_F_,"wType=0x%04x dwMsg=0x%08lx",wType,dwMsg));
 	int rc=-1;
 	HANDLE hEventLog=NULL;
-	char *pInsertStrings[3] = {NULL,NULL,NULL};
+	char *pInsertStrings[4] = {NULL,NULL,NULL}; // ISSUE#230
 	WORD wNumStrings=0;
 	HANDLE hfLogs=INVALID_HANDLE_VALUE;
 	char buf2048[2048];
