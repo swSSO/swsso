@@ -4152,6 +4152,10 @@ int DeleteConfigsNotOnServer(void)
 	if (pszResult[0]=='N' && pszResult[1]=='O' && pszResult[2]=='N' && pszResult[3]=='E') 
 	{
 		// l'utilisateur n'a plus le droit à rien... c'est louche...
+		// ISSUE#232 : c'est peut-être louche, mais il faut supprimer les configs du coup...
+		gtConfigSync.iNbConfigsDeleted=giNbActions;
+		giNbActions=0;
+		giNbCategories=0;
 	}
 	else // réponse au format id,id,id,
 	{
