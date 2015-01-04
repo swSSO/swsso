@@ -35,7 +35,7 @@ include('util.php');
 //                   Le client 1.05 et les suivants resteront compatibles avec webservice5.php tant
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
 //------------------------------------------------------------------------------
-// VERSION INTERNE : 6.3
+// VERSION INTERNE : 6.3.1
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
@@ -748,7 +748,12 @@ else if ($_GET['action']=="deleteconfig")
 	if (!$cnx) return;
 	
 	if (isset($_GET["configId"])) $var_configId=utf8_decode(myaddslashes($_GET['configId']));
-
+	
+	// ISSUE#231 : il faut aussi supprimer le lien config - domaines
+	$szRequest="delete from "._TABLE_PREFIX_."configs_domains where configId=".$var_configId;
+	if (isset($_GET["debug"])) echo $szRequest;
+	mysql_query($szRequest,$cnx);
+	
 	$szRequest="delete from "._TABLE_PREFIX_."config where id=".$var_configId;
 	if (isset($_GET["debug"])) echo $szRequest;
 	$result=mysql_query($szRequest,$cnx);
