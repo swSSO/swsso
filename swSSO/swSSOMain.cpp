@@ -612,6 +612,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 	int i;
 	time_t tNow,tLastSSOOnThisWindow;
 	BOOL bDoSSO;
+	char *pszChromePopupURL=NULL;
 	char *pszURL=NULL;
 	char *pszURL2=NULL;
 	char *pszURLBar=NULL;
@@ -637,6 +638,14 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 
 	// lecture de la classe de la fenêtre (pour reconnaitre IE et Firefox ensuite)
 	GetClassName(w,szClassName,sizeof(szClassName));
+
+	// nouveau en 1.07B6
+	// si c'est une popup chrome, comme on ne peut pas discriminer sur le titre, il vaut mieux lire une seule fois l'URL ici
+	// sinon on le fait autant de fois qu'il y a d'applications configurées, c'est inutile et trop consommateur
+	if (strncmp(szClassName,"Chrome_WidgetWin_",17)==0)
+	{
+		pszChromePopupURL=GetChromePopupURL(w);
+	}
 	
 	TRACE((TRACE_DEBUG,_F_,"szTitre=%s",szTitre));
 
@@ -649,8 +658,9 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		
 		// Avant de comparer le titre, vérifier si ce n'est pas une popup Chrome
 		// En effet, avec Chrome, le titre n'est pas toujours représentatif (notamment sur popup proxy)
-		if (gptActions[i].iType==POPSSO && strncmp(szClassName,"Chrome_WidgetWin_",17)==0) pszURL=GetChromePopupURL(w);
-		if (pszURL!=NULL)
+		// if (gptActions[i].iType==POPSSO && strncmp(szClassName,"Chrome_WidgetWin_",17)==0) pszURL=GetChromePopupURL(w);
+		// if (pszURL!=NULL)
+		if (gptActions[i].iType==POPSSO && pszChromePopupURL!=NULL)
 		{
 			iPopupType=POPUP_CHROME;
 			TRACE((TRACE_DEBUG,_F_,"POPUP_CHROME, on ignore le titre"));
@@ -685,7 +695,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			}
 			else if (iPopupType==POPUP_CHROME)
 			{
-				// rien à faire, on a déjà récupéré l'URL plus haut
+				pszURL=GetChromePopupURL(w); // oui c'est un peu con parce qu'on a l'info dans pszChromePopupURL mais pour simplifier la logique de libération des pointeurs c'est mieux comme ça
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup Chrome non trouvee")); goto suite; }
 			}
 			else
 			{
@@ -1244,12 +1255,9 @@ suite:
 		if (pszURLBar!=NULL) { free(pszURLBar); pszURLBar=NULL; }
 	}
 end:
+	if (pszChromePopupURL!=NULL) { free(pszChromePopupURL); pszChromePopupURL=NULL; }
 	// nouveau en 0.90...
-	if (pszURL!=NULL)
-	{ 
-		free(pszURL); 
-		pszURL=NULL;
-	}
+	if (pszURL!=NULL) { free(pszURL); pszURL=NULL; }
 	return TRUE;
 }
 
