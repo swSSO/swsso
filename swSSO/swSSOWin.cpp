@@ -394,24 +394,26 @@ int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d",w,iAction));
 
 	HRESULT hr;
-	VARIANT vtSelf,vtChildL1,vtChildL2;
+	VARIANT vtSelf,vtChildL1,vtChildL2,vtChildL3;
 	VARIANT vtRole;
-	IAccessible *pChildL1=NULL,*pChildL2=NULL;
+	IAccessible *pChildL1=NULL,*pChildL2=NULL,*pChildL3=NULL;
 	IDispatch *pIDispatch=NULL;
-	long lCountL1,lCountL2;
-	int iL1,iL2;
+	long lCountL1,lCountL2,lCountL3;
+	int iL1,iL2,iL3;
 	int rc=-1;
 	int iIndexId=-1;
 	int iIndexPwd=-1;
+	int iLevel=-1;
 
 	// compte les childs de niveau 1
 	hr=pAccessible->get_accChildCount(&lCountL1);
 	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"get_accChildCount(L1)=0x%08lx",hr)); goto end; }
 	TRACE((TRACE_INFO,_F_,"get_accChildCount(L1)=%ld",lCountL1));
 
-	// énumère les childs de niveau 1 et cherche dans chaque child de niveau 2 ceux qui ont le type ROLE_SYSTEM_WINDOW
+	// énumère les childs de niveau 1 et cherche dans chaque child de niveau 2 ceux qui ont le type ROLE_SYSTEM_WINDOW (Windows 7)
+	// et descend d'un niveau supplémentaire pour Windows 8 et 10
 	// les champs id et mdp sont les childs de type ROLE_SYSTEM_TEXT mais comme on veut mettre juste le focus on peut 
-	// s'arrêter au niveau des childs de niveau 2 avec le type ROLE_SYSTEM_WINDOW
+	// s'arrêter au niveau des childs avec le type ROLE_SYSTEM_WINDOW
 	vtSelf.vt=VT_I4;
 	vtSelf.lVal=CHILDID_SELF;
 	for (iL1=1;iL1<=lCountL1;iL1++) // inutile de commencer à 0, c'est CHILDID_SELF
@@ -450,30 +452,81 @@ int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
 			if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
 
-			// Lecture du rôle du child à la recherche de ROLE_SYSTEM_WINDOW
-			hr=pChildL2->get_accRole(vtSelf,&vtRole);
-			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole(%d)=0x%08lx",vtChildL2.lVal,hr)); goto end; }
-			TRACE((TRACE_DEBUG,_F_,"get_accRole(%d) vtRole.lVal=0x%08lx",vtChildL2.lVal,vtRole.lVal));
-
-			if (vtRole.lVal==ROLE_SYSTEM_WINDOW)
+			// si est au 1er child et que c'est le seul, inutile de vérifier le rôle, c'est qu'on est sans doute dans une popup Windows 8 ou 10
+			if (iL2==1 && lCountL2==1)
 			{
-				if (iIndexId==-1)
+				// compte les childs de niveau 3
+				hr=pChildL2->get_accChildCount(&lCountL3);
+				if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"get_accChildCount(L3(%d))=0x%08lx",iL2,hr)); goto end; }
+				TRACE((TRACE_INFO,_F_,"get_accChildCount(L3(%d))=%ld",iL2,lCountL3));
+
+				// enumère les childs de niveau 3 à la recherche du rôle ROLE_SYSTEM_WINDOW
+				for (iL3=1;iL3<=lCountL3;iL3++) // inutile de commencer à 0, c'est CHILDID_SELF
 				{
-					TRACE((TRACE_DEBUG,_F_,"Trouvé champ id : index %d",iIndexId));
-					iIndexId=iL2; // c'est l'id
-				}
-				else 
+					// récup du ième child de niveau 3
+					vtChildL3.vt=VT_I4;
+					vtChildL3.lVal=iL3;
+
+					hr=pChildL2->get_accChild(vtChildL3,&pIDispatch);
+					TRACE((TRACE_DEBUG,_F_,"pChildL2->get_accChild(%ld)=0x%08lx",vtChildL3.lVal,hr));
+					if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChildL3.lVal,hr)); goto end; }
+					hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pChildL3);
+					TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+					if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+					if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
+
+					// Lecture du rôle du child à la recherche de ROLE_SYSTEM_WINDOW
+					hr=pChildL3->get_accRole(vtSelf,&vtRole);
+					if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole(%d)=0x%08lx",vtChildL3.lVal,hr)); goto end; }
+					TRACE((TRACE_DEBUG,_F_,"get_accRole(%d) vtRole.lVal=0x%08lx",vtChildL3.lVal,vtRole.lVal));
+
+					if (vtRole.lVal==ROLE_SYSTEM_WINDOW)
+					{
+						if (iIndexId==-1)
+						{
+							TRACE((TRACE_DEBUG,_F_,"Trouvé champ id : index %d",iIndexId));
+							iIndexId=iL3; // c'est l'id
+						}
+						else 
+						{
+							TRACE((TRACE_DEBUG,_F_,"Trouvé champ pwd : index %d",iIndexPwd));
+							iIndexPwd=iL3; // c'est le pwd
+						}
+						iLevel=3;
+					}
+					if (pChildL3!=NULL) { pChildL3->Release(); pChildL3=NULL; }
+				} // for IL3
+				if (iIndexId!=-1 && iIndexPwd!=-1) goto trouve; // trouvé id et mdp, on arrête !
+			}
+			else
+			{
+				// Lecture du rôle du child à la recherche de ROLE_SYSTEM_WINDOW
+				hr=pChildL2->get_accRole(vtSelf,&vtRole);
+				if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole(%d)=0x%08lx",vtChildL2.lVal,hr)); goto end; }
+				TRACE((TRACE_DEBUG,_F_,"get_accRole(%d) vtRole.lVal=0x%08lx",vtChildL2.lVal,vtRole.lVal));
+
+				if (vtRole.lVal==ROLE_SYSTEM_WINDOW)
 				{
-					TRACE((TRACE_DEBUG,_F_,"Trouvé champ pwd : index %d",iIndexPwd));
-					iIndexPwd=iL2; // c'est le pwd
+					if (iIndexId==-1)
+					{
+						TRACE((TRACE_DEBUG,_F_,"Trouvé champ id : index %d",iIndexId));
+						iIndexId=iL2; // c'est l'id
+					}
+					else 
+					{
+						TRACE((TRACE_DEBUG,_F_,"Trouvé champ pwd : index %d",iIndexPwd));
+						iIndexPwd=iL2; // c'est le pwd
+					}
+					iLevel=2;
 				}
 			}
 			if (pChildL2!=NULL) { pChildL2->Release(); pChildL2=NULL; }
-		}
-		if (iIndexId!=-1 && iIndexPwd!=-1) break; // trouvé id et mdp, on arrête !
+		} // for IL2
+		if (iIndexId!=-1 && iIndexPwd!=-1) goto trouve; // trouvé id et mdp, on arrête !
 		if (pChildL1!=NULL) { pChildL1->Release(); pChildL1=NULL; } // important, n'est pas libéré si on a trouvé id et mdp car besoin + loin
-	}
-	if (iIndexId==-1 || iIndexPwd==-1) // pas trouvé id et mdp --> erreur
+	} // for IL1
+trouve:
+	if (iIndexId==-1 || iIndexPwd==-1 || iLevel==-1) // pas trouvé id et mdp --> erreur
 	{
 		TRACE((TRACE_ERROR,_F_,"Champs id et mdp non trouvés")); 
 		goto end;
@@ -481,11 +534,11 @@ int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 	// champs id et mdp trouvés, on met le focus et on saisit
 	SetForegroundWindow(w); 
 	// id
-	rc=W7PopupSetTabOnField(w,pChildL1,iIndexId);
+	rc=W7PopupSetTabOnField(w,(iLevel==2)?pChildL1:pChildL2,iIndexId);
 	TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
 	KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
 	// mdp
-	rc=W7PopupSetTabOnField(w,pChildL1,iIndexPwd);
+	rc=W7PopupSetTabOnField(w,(iLevel==2)?pChildL1:pChildL2,iIndexPwd);
 	if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 	{
 		char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
@@ -505,6 +558,7 @@ end:
 	if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
 	if (pChildL1!=NULL) { pChildL1->Release(); pChildL1=NULL; }
 	if (pChildL2!=NULL) { pChildL2->Release(); pChildL2=NULL; }
+	if (pChildL3!=NULL) { pChildL3->Release(); pChildL3=NULL; }
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc; 
 }
