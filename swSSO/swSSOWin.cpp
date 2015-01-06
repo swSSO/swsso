@@ -385,146 +385,128 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// FillW7PopupFields() - revu ISSUE#81 pour W7 et W8
-//-----------------------------------------------------------------------------
-// Architecture de la popup IE sous W7 (basic auth)
-// La fenêtre a 4 childs
-// Identifiant et mot de passe se trouvent dans le 2nd child, qui a lui-même 5 childs de niveau 2
-// Identifiant = 3ème child de niveau 2
-// Mot de passe = 4ème child de niveau 2
-//-----------------------------------------------------------------------------
-// Architecture de la popup de partage réseau sous W7
-// La fenêtre a 5 childs de niveau 1
-// Identifiant et mot de passe se trouvent dans le 3ème child, qui a lui-même 6 childs de niveau 2
-// Identifiant = 3ème child de niveau 2
-// Mot de passe = 4ème child de niveau 2
-//-----------------------------------------------------------------------------
-// Architecture de la popup W8
-// La fenêtre a 5 childs
-// Identifiant et mot de passe se trouvent dans le 3ème child, qui lui-même 1 child
-// qui a lui-même 4 childs :
-// Identifiant = 2ème child du 3ème niveau 
-// Mot de passe = 3ème child du 3ème niveau
-// Bouton OK = 4ème child du 1er niveau
+// FillW7PopupFields() - revu complètement en 1.07 pour être générique pour les
+//                       différents types de popup sur Win7, 8, 10,
+//                       avec/sans lecteur de carte, ...
 //-----------------------------------------------------------------------------
 int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 {
 	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d",w,iAction));
 
 	HRESULT hr;
-	IAccessible *pLevel1Child=NULL;
-	IAccessible *pLevel2Child=NULL;
+	VARIANT vtSelf,vtChildL1,vtChildL2;
+	VARIANT vtRole;
+	IAccessible *pChildL1=NULL,*pChildL2=NULL;
 	IDispatch *pIDispatch=NULL;
-	long lFirstLevelChildCount, lSecondLevelChildCount;
-	VARIANT index;
+	long lCountL1,lCountL2;
+	int iL1,iL2;
 	int rc=-1;
-	VARIANT vtSelf;
+	int iIndexId=-1;
+	int iIndexPwd=-1;
+
+	// compte les childs de niveau 1
+	hr=pAccessible->get_accChildCount(&lCountL1);
+	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"get_accChildCount(L1)=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_INFO,_F_,"get_accChildCount(L1)=%ld",lCountL1));
+
+	// énumère les childs de niveau 1 et cherche dans chaque child de niveau 2 ceux qui ont le type ROLE_SYSTEM_WINDOW
+	// les champs id et mdp sont les childs de type ROLE_SYSTEM_TEXT mais comme on veut mettre juste le focus on peut 
+	// s'arrêter au niveau des childs de niveau 2 avec le type ROLE_SYSTEM_WINDOW
 	vtSelf.vt=VT_I4;
 	vtSelf.lVal=CHILDID_SELF;
-
-	// comptage des childs de 1er niveau
-	hr=pAccessible->get_accChildCount(&lFirstLevelChildCount);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount()=0x%08lx",hr)); goto end; }
-	TRACE((TRACE_INFO,_F_,"get_accChildCount()=%ld",lFirstLevelChildCount));
-	if (lFirstLevelChildCount!=4 && lFirstLevelChildCount!=5) { TRACE((TRACE_ERROR,_F_,"Problème : on attendait 4 ou 5 childs de 1er niveau, il y en a %d !",lFirstLevelChildCount)); goto end; }
-
-	// récupération du 2nd ou 3ème child de 1er niveau en fonction du nb de child au total (resp. 4 ou 5)
-	index.vt=VT_I4;
-	
-	if (giOSVersion < OS_WINDOWS_8)
+	for (iL1=1;iL1<=lCountL1;iL1++) // inutile de commencer à 0, c'est CHILDID_SELF
 	{
-		index.lVal=lFirstLevelChildCount-2; // 2eme child si nb total=4, 3ème child si nb total=5
-		hr=pAccessible->get_accChild(index,&pIDispatch);
-		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",index.lVal,hr));
-		if (FAILED(hr)) goto end;
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pLevel1Child);
-		pIDispatch->Release(); pIDispatch=NULL;
+		// récup du ième child de niveau 1
+		vtChildL1.vt=VT_I4;
+		vtChildL1.lVal=iL1;
+		hr=pAccessible->get_accChild(vtChildL1,&pIDispatch);
+		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChildL1.lVal,hr));
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChildL1.lVal,hr)); goto end; }
+		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pChildL1);
 		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
-		if (FAILED(hr)) goto end;
-		hr=pLevel1Child->get_accChildCount(&lSecondLevelChildCount);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pLevel1Child->get_accChildCount()=0x%08lx",hr)); goto end; }
-		TRACE((TRACE_DEBUG,_F_,"get_accChildCount()=%ld",lSecondLevelChildCount));
-		if (lSecondLevelChildCount!=5 && lSecondLevelChildCount!=6) { TRACE((TRACE_ERROR,_F_,"Problème : on attendait 5 ou 6 childs de 2nd niveau, il y en a %d !",lSecondLevelChildCount)); goto end; }
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+		if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
 
-		SetForegroundWindow(w); 
-		
-		// Identifiant = child de 2nd niveau n°3 
-		rc=W7PopupSetTabOnField(w,pLevel1Child,3);
-		TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
-		KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
-		
-		// Mot de passe = child de 2nd niveau n°4
-		rc=W7PopupSetTabOnField(w,pLevel1Child,4);
-		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
+		// compte les childs de niveau 2
+		hr=pChildL1->get_accChildCount(&lCountL2);
+		if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"get_accChildCount(L2(%d))=0x%08lx",iL1,hr)); goto end; }
+		TRACE((TRACE_INFO,_F_,"get_accChildCount(L2(%d))=%ld",iL1,lCountL2));
+
+		iIndexId=-1;
+		iIndexPwd=-1;
+
+		// enumère les childs de niveau 2 à la recherche du rôle ROLE_SYSTEM_WINDOW
+		for (iL2=1;iL2<=lCountL2;iL2++) // inutile de commencer à 0, c'est CHILDID_SELF
 		{
-			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
-			if (pszPassword!=NULL) 
+			// récup du ième child de niveau 2
+			vtChildL2.vt=VT_I4;
+			vtChildL2.lVal=iL2;
+
+			hr=pChildL1->get_accChild(vtChildL2,&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pChildL1->get_accChild(%ld)=0x%08lx",vtChildL2.lVal,hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChildL2.lVal,hr)); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pChildL2);
+			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+			if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
+
+			// Lecture du rôle du child à la recherche de ROLE_SYSTEM_WINDOW
+			hr=pChildL2->get_accRole(vtSelf,&vtRole);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole(%d)=0x%08lx",vtChildL2.lVal,hr)); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"get_accRole(%d) vtRole.lVal=0x%08lx",vtChildL2.lVal,vtRole.lVal));
+
+			if (vtRole.lVal==ROLE_SYSTEM_WINDOW)
 			{
-				TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
-				KBSim(FALSE,100,pszPassword,TRUE);
-				// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
-				SecureZeroMemory(pszPassword,strlen(pszPassword));
-				free(pszPassword);
+				if (iIndexId==-1)
+				{
+					TRACE((TRACE_DEBUG,_F_,"Trouvé champ id : index %d",iIndexId));
+					iIndexId=iL2; // c'est l'id
+				}
+				else 
+				{
+					TRACE((TRACE_DEBUG,_F_,"Trouvé champ pwd : index %d",iIndexPwd));
+					iIndexPwd=iL2; // c'est le pwd
+				}
 			}
+			if (pChildL2!=NULL) { pChildL2->Release(); pChildL2=NULL; }
+		}
+		if (iIndexId!=-1 && iIndexPwd!=-1) break; // trouvé id et mdp, on arrête !
+		if (pChildL1!=NULL) { pChildL1->Release(); pChildL1=NULL; } // important, n'est pas libéré si on a trouvé id et mdp car besoin + loin
+	}
+	if (iIndexId==-1 || iIndexPwd==-1) // pas trouvé id et mdp --> erreur
+	{
+		TRACE((TRACE_ERROR,_F_,"Champs id et mdp non trouvés")); 
+		goto end;
+	}
+	// champs id et mdp trouvés, on met le focus et on saisit
+	SetForegroundWindow(w); 
+	// id
+	rc=W7PopupSetTabOnField(w,pChildL1,iIndexId);
+	TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
+	KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
+	// mdp
+	rc=W7PopupSetTabOnField(w,pChildL1,iIndexPwd);
+	if ((*gptActions[iAction].szPwdEncryptedValue!=0))
+	{
+		char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+		if (pszPassword!=NULL) 
+		{
+			TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
+			KBSim(FALSE,100,pszPassword,TRUE);
+			SecureZeroMemory(pszPassword,strlen(pszPassword));
+			free(pszPassword);
 		}
 	}
-	else // W8 
-	{
-		index.lVal=3; 
-		hr=pAccessible->get_accChild(index,&pIDispatch);
-		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",index.lVal,hr));
-		if (FAILED(hr)) goto end;
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pLevel1Child);
-		pIDispatch->Release(); pIDispatch=NULL;
-		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
-		if (FAILED(hr)) goto end;
-		hr=pLevel1Child->get_accChildCount(&lSecondLevelChildCount);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pLevel1Child->get_accChildCount()=0x%08lx",hr)); goto end; }
-		TRACE((TRACE_DEBUG,_F_,"get_accChildCount()=%ld",lSecondLevelChildCount));
-		
-		index.lVal=1; 
-		pLevel1Child->get_accChild(index,&pIDispatch);
-		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",index.lVal,hr));
-		if (FAILED(hr)) goto end;
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pLevel2Child);
-		pIDispatch->Release(); pIDispatch=NULL;
-		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
-		if (FAILED(hr)) goto end;
-		
-		SetForegroundWindow(w); 
-		
-		// Identifiant = child n°2 
-		rc=W7PopupSetTabOnField(w,pLevel2Child,2);
-		TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
-		KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
-		
-		// Mot de passe = child n°2
-		rc=W7PopupSetTabOnField(w,pLevel2Child,3);
-		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
-		{
-			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
-			if (pszPassword!=NULL) 
-			{
-				TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
-				KBSim(FALSE,100,pszPassword,TRUE);
-				// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
-				SecureZeroMemory(pszPassword,strlen(pszPassword));
-				free(pszPassword);
-			}
-		}
-	}
-
+	// validation
 	Sleep(20);
 	KBSimEx(w,"[ENTER]","","","","","");
 	rc=0;
 end:
-	if (pIDispatch!=NULL) pIDispatch->Release(); 
-	if (pLevel1Child!=NULL) pLevel1Child->Release();
-	if (pLevel2Child!=NULL) pLevel2Child->Release();
+	if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
+	if (pChildL1!=NULL) { pChildL1->Release(); pChildL1=NULL; }
+	if (pChildL2!=NULL) { pChildL2->Release(); pChildL2=NULL; }
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc; // ISSUE#188
+	return rc; 
 }
 
 //-----------------------------------------------------------------------------
@@ -726,3 +708,149 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "%d",rc));
 	return rc; 
 }
+
+
+#if 0
+//-----------------------------------------------------------------------------
+// FillW7PopupFields() - revu ISSUE#81 pour W7 et W8
+//-----------------------------------------------------------------------------
+// Architecture de la popup IE sous W7 (basic auth)
+// La fenêtre a 4 childs
+// Identifiant et mot de passe se trouvent dans le 2nd child, qui a lui-même 5 childs de niveau 2
+// Identifiant = 3ème child de niveau 2
+// Mot de passe = 4ème child de niveau 2
+//-----------------------------------------------------------------------------
+// Architecture de la popup de partage réseau sous W7
+// La fenêtre a 5 childs de niveau 1
+// Identifiant et mot de passe se trouvent dans le 3ème child, qui a lui-même 6 childs de niveau 2
+// Identifiant = 3ème child de niveau 2
+// Mot de passe = 4ème child de niveau 2
+//-----------------------------------------------------------------------------
+// Architecture de la popup W8
+// La fenêtre a 5 childs
+// Identifiant et mot de passe se trouvent dans le 3ème child, qui lui-même 1 child
+// qui a lui-même 4 childs :
+// Identifiant = 2ème child du 3ème niveau 
+// Mot de passe = 3ème child du 3ème niveau
+// Bouton OK = 4ème child du 1er niveau
+//-----------------------------------------------------------------------------
+int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
+{
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d",w,iAction));
+
+	HRESULT hr;
+	IAccessible *pLevel1Child=NULL;
+	IAccessible *pLevel2Child=NULL;
+	IDispatch *pIDispatch=NULL;
+	long lFirstLevelChildCount, lSecondLevelChildCount;
+	VARIANT index;
+	int rc=-1;
+	VARIANT vtSelf;
+	vtSelf.vt=VT_I4;
+	vtSelf.lVal=CHILDID_SELF;
+
+	// comptage des childs de 1er niveau
+	hr=pAccessible->get_accChildCount(&lFirstLevelChildCount);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount()=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_INFO,_F_,"get_accChildCount()=%ld",lFirstLevelChildCount));
+	if (lFirstLevelChildCount!=4 && lFirstLevelChildCount!=5) { TRACE((TRACE_ERROR,_F_,"Problème : on attendait 4 ou 5 childs de 1er niveau, il y en a %d !",lFirstLevelChildCount)); goto end; }
+
+	// récupération du 2nd ou 3ème child de 1er niveau en fonction du nb de child au total (resp. 4 ou 5)
+	index.vt=VT_I4;
+	
+	if (giOSVersion < OS_WINDOWS_8)
+	{
+		index.lVal=lFirstLevelChildCount-2; // 2eme child si nb total=4, 3ème child si nb total=5
+		hr=pAccessible->get_accChild(index,&pIDispatch);
+		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",index.lVal,hr));
+		if (FAILED(hr)) goto end;
+		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pLevel1Child);
+		pIDispatch->Release(); pIDispatch=NULL;
+		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+		if (FAILED(hr)) goto end;
+		hr=pLevel1Child->get_accChildCount(&lSecondLevelChildCount);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pLevel1Child->get_accChildCount()=0x%08lx",hr)); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"get_accChildCount()=%ld",lSecondLevelChildCount));
+		if (lSecondLevelChildCount!=5 && lSecondLevelChildCount!=6) { TRACE((TRACE_ERROR,_F_,"Problème : on attendait 5 ou 6 childs de 2nd niveau, il y en a %d !",lSecondLevelChildCount)); goto end; }
+
+		SetForegroundWindow(w); 
+		
+		// Identifiant = child de 2nd niveau n°3 
+		rc=W7PopupSetTabOnField(w,pLevel1Child,3);
+		TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
+		KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
+		
+		// Mot de passe = child de 2nd niveau n°4
+		rc=W7PopupSetTabOnField(w,pLevel1Child,4);
+		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
+		{
+			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+			if (pszPassword!=NULL) 
+			{
+				TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
+				KBSim(FALSE,100,pszPassword,TRUE);
+				// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
+				SecureZeroMemory(pszPassword,strlen(pszPassword));
+				free(pszPassword);
+			}
+		}
+	}
+	else // W8 
+	{
+		index.lVal=3; 
+		hr=pAccessible->get_accChild(index,&pIDispatch);
+		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",index.lVal,hr));
+		if (FAILED(hr)) goto end;
+		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pLevel1Child);
+		pIDispatch->Release(); pIDispatch=NULL;
+		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+		if (FAILED(hr)) goto end;
+		hr=pLevel1Child->get_accChildCount(&lSecondLevelChildCount);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pLevel1Child->get_accChildCount()=0x%08lx",hr)); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"get_accChildCount()=%ld",lSecondLevelChildCount));
+		
+		index.lVal=1; 
+		pLevel1Child->get_accChild(index,&pIDispatch);
+		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",index.lVal,hr));
+		if (FAILED(hr)) goto end;
+		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pLevel2Child);
+		pIDispatch->Release(); pIDispatch=NULL;
+		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+		if (FAILED(hr)) goto end;
+		
+		SetForegroundWindow(w); 
+		
+		// Identifiant = child n°2 
+		rc=W7PopupSetTabOnField(w,pLevel2Child,2);
+		TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
+		KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
+		
+		// Mot de passe = child n°2
+		rc=W7PopupSetTabOnField(w,pLevel2Child,3);
+		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
+		{
+			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+			if (pszPassword!=NULL) 
+			{
+				TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
+				KBSim(FALSE,100,pszPassword,TRUE);
+				// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
+				SecureZeroMemory(pszPassword,strlen(pszPassword));
+				free(pszPassword);
+			}
+		}
+	}
+
+	Sleep(20);
+	KBSimEx(w,"[ENTER]","","","","","");
+	rc=0;
+end:
+	if (pIDispatch!=NULL) pIDispatch->Release(); 
+	if (pLevel1Child!=NULL) pLevel1Child->Release();
+	if (pLevel2Child!=NULL) pLevel2Child->Release();
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc; // ISSUE#188
+}
+#endif

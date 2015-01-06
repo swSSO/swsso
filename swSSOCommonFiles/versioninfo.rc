@@ -17,7 +17,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
         {
             VALUE "FileVersion", "1.07"
             VALUE "ProductVersion", "1.07"
-            VALUE "LegalCopyright", "Copyright 2004-2014"
+            VALUE "LegalCopyright", "Copyright 2004-2015"
             VALUE "Comments", ""
             VALUE "CompanyName", "Sylvain WERDEFROY"
 #ifdef TRACES_ACTIVEES

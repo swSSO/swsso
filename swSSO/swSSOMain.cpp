@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="106";	// 101 = 1.01
-const char gcszCurrentBeta[]="1075";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1076";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -1081,8 +1081,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				gptActions[i].wLastSSO=w;
 				LastDetect_AddOrUpdateWindow(w,iPopupType);
 				if (_strnicmp(gptActions[i].szKBSim,"[WAIT]",strlen("[WAIT]"))==0) gptActions[i].bWaitForUserAction=TRUE;
-				//goto suite; // 0.90 XXXXXXXXX ICI XXXXXXXXXXXXX
-				// ISSUE#61 / 0.93 : on ne traite les popup W7 en simulation de frappe, marche pas avec IE9 ou W7 SP1 ?
+				//goto suite; // 0.90
+				// ISSUE#61 / 0.93 : on ne traite plus les popup W7 en simulation de frappe, marche pas avec IE9 ou W7 SP1 ?
 				// if (iPopupType==POPUP_W7 || iPopupType==POPUP_CHROME) { gptActions[i].bKBSim=FALSE; *(gptActions[i].szKBSim)=0; }
 				if (iPopupType==POPUP_CHROME) { gptActions[i].bKBSim=FALSE; *(gptActions[i].szKBSim)=0; }
 				switch (gptActions[i].iType)

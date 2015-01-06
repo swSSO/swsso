@@ -75,7 +75,7 @@ char *GetChromePopupURL(HWND w)
 	hr=pNiveau0->get_accChildCount(&lCount);
 	TRACE((TRACE_DEBUG,_F_,"get_accChildCount() hr=0x%08lx lCount=%ld",hr,lCount));
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount() hr=0x%08lx",hr)); goto end; }
-	if (lCount<2) { TRACE((TRACE_ERROR,_F_,"Niveau 0 : %d fils, on en attendait au moins 2 --> ce n'est pas une popup",lCount)); goto end; }
+	if (lCount<2) { TRACE((TRACE_DEBUG,_F_,"Niveau 0 : %d fils, on en attendait au moins 2 --> ce n'est pas une popup",lCount)); goto end; }
 
 	// Récupère le niveau 1 (fils n°2 du niveau 0)
 	vtChild.vt=VT_I4;
