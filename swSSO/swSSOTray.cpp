@@ -960,7 +960,9 @@ int BeginChangeAppPassword(void)
 					int i;
 					for (i=0;i<giNbActions;i++)
 					{
-						if (gptActions[i].iPwdGroup==gptActions[giLastApplicationSSO].iPwdGroup)
+						if ((gptActions[i].iPwdGroup==gptActions[giLastApplicationSSO].iPwdGroup) &&
+							(*gptActions[i].szId1Value!=0) && (*gptActions[giLastApplicationSSO].szId1Value!=0) && // nouvelle condition ISSUE#235
+							(stricmp(gptActions[i].szId1Value,gptActions[giLastApplicationSSO].szId1Value)==0))    // nouvelle condition ISSUE#235
 						{
 							pszEncryptedPassword=swCryptEncryptString(gszNewAppPwd,ghKey1);
 							if (pszEncryptedPassword==NULL) goto end;
