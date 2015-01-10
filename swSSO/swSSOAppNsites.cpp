@@ -2641,7 +2641,7 @@ void GetApplicationDetails(HWND w,int iAction)
 			{
 				if ((gptActions[i].iPwdGroup==gptActions[iAction].iPwdGroup) &&
 					(*gptActions[i].szId1Value!=0) && (*gptActions[iAction].szId1Value!=0) && // nouvelle condition ISSUE#235
-					(stricmp(gptActions[i].szId1Value,gptActions[iAction].szId1Value)==0))    // nouvelle condition ISSUE#235
+					(_stricmp(gptActions[i].szId1Value,gptActions[iAction].szId1Value)==0))    // nouvelle condition ISSUE#235
 				{
 					TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli %s induit par appli %s",gptActions[i].szApplication,gptActions[iAction].szApplication));
 					pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
