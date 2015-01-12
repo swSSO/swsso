@@ -90,21 +90,21 @@ int swCryptInit()
 		brc=CryptAcquireContext(&ghProv,NULL,MS_ENH_RSA_AES_PROV,PROV_RSA_AES,CRYPT_VERIFYCONTEXT); 
 		if (brc) { rc=0; goto end; }
 		dwLastError=GetLastError();
-		TRACE((TRACE_ERROR,_F_,"CryptAcquireContext(MS_ENH_RSA_AES_PROV | PROV_RSA_AES | CRYPT_NEWKEYSET)=0x%08lx",dwLastError)); 
+		TRACE((TRACE_ERROR,_F_,"CryptAcquireContext(MS_ENH_RSA_AES_PROV | PROV_RSA_AES | CRYPT_VERIFYCONTEXT)=0x%08lx",dwLastError)); 
 	}
 	else if (dwLastError==NTE_KEYSET_NOT_DEF) // provider non disponible, on doit être sous XP, on essaie l'autre
 	{
-		brc=CryptAcquireContext(&ghProv,"swSSOGenKey.MS_ENH_RSA_AES_PROV",MS_ENH_RSA_AES_PROV_XP,PROV_RSA_AES,0);
+		brc=CryptAcquireContext(&ghProv,NULL,MS_ENH_RSA_AES_PROV_XP,PROV_RSA_AES,0);
 		if (brc) { rc=0; goto end; }
 
 		dwLastError=GetLastError();
 		TRACE((TRACE_INFO,_F_,"CryptAcquireContext(MS_ENH_RSA_AES_PROV_XP | PROV_RSA_AES)=0x%08lx",dwLastError)); 
 		if (dwLastError==NTE_BAD_KEYSET) 
 		{
-			brc=CryptAcquireContext(&ghProv,"swSSOGenKey.MS_ENH_RSA_AES_PROV",MS_ENH_RSA_AES_PROV_XP,PROV_RSA_AES,CRYPT_VERIFYCONTEXT); 
+			brc=CryptAcquireContext(&ghProv,NULL,MS_ENH_RSA_AES_PROV_XP,PROV_RSA_AES,CRYPT_VERIFYCONTEXT); 
 			if (brc) { rc=0; goto end; }
 			dwLastError=GetLastError();
-			TRACE((TRACE_ERROR,_F_,"CryptAcquireContext(MS_ENH_RSA_AES_PROV_XP | PROV_RSA_AES | CRYPT_NEWKEYSET)=0x%08lx",dwLastError)); 
+			TRACE((TRACE_ERROR,_F_,"CryptAcquireContext(MS_ENH_RSA_AES_PROV_XP | PROV_RSA_AES | CRYPT_VERIFYCONTEXT)=0x%08lx",dwLastError)); 
 		}
 	}
 end:
