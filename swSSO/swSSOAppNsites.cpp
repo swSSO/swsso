@@ -2315,9 +2315,9 @@ void ShowApplicationDetails(HWND w,int iAction)
 
 	wsprintf(buf2048,GetString(IDS_TX_INFO_PWD_GROUP),gptActions[iAction].szId1Value);	
 	SetDlgItemText(w,TX_INFO_PWD_GROUP,buf2048);
-	ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),gptActions[iAction].iPwdGroup==-1?SW_HIDE:SW_SHOW);
 	
-
+	ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),((gptActions[iAction].iPwdGroup!=-1) && (gptActions[iAction].iPwdGroup<giNbPwdGroupColors))?SW_SHOW:SW_HIDE);
+	
 	// 1.03 : ne pas dévoiler les mots de passe imposés par le serveur
 	// 1.05 : sauf pour l'admin
 	if ((gptActions[iAction].iWithIdPwd & CONFIG_WITH_PWD) && !gbInternetManualPutConfig) gbShowPwd=FALSE;
@@ -2627,7 +2627,6 @@ void GetApplicationDetails(HWND w,int iAction)
 		GetDlgItemText(w,TB_ID2,gptActions[iAction].szId2Value,sizeof(gptActions[iAction].szId2Value));
 		GetDlgItemText(w,TB_ID3,gptActions[iAction].szId3Value,sizeof(gptActions[iAction].szId3Value));
 		GetDlgItemText(w,TB_ID4,gptActions[iAction].szId4Value,sizeof(gptActions[iAction].szId4Value));
-
 	}
 	GetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,szPassword,sizeof(szPassword));
 	if (*szPassword!=0)
@@ -3062,6 +3061,7 @@ void ClearApplicationDetails(HWND w)
 	EnableControls(w,UNK,FALSE);
 	// 0.90 : affichage de l'application en cours de modification dans la barre de titre
 	SetWindowText(w,GetString(IDS_TITRE_APPNSITES));
+	ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),SW_HIDE);
 	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
@@ -3165,11 +3165,11 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		{
 			SetWindowPos(GetDlgItem(w,CK_AD_ID),NULL,rect.right*2/5+25+80,47+yOffset+25,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			SetWindowPos(GetDlgItem(w,CK_AD_PWD),NULL,rect.right*2/5+25+80,79+yOffset+43,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
-			SetWindowPos(GetDlgItem(w,TX_INFO_PWD_GROUP),NULL,rect.right*2/5+25,79+yOffset+61,rect.right*3/5-40,52,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TX_INFO_PWD_GROUP),NULL,rect.right*2/5+25,79+yOffset+61,rect.right*3/5-40,52,SWP_NOZORDER);
 		}
 		else
 		{
-			SetWindowPos(GetDlgItem(w,TX_INFO_PWD_GROUP),NULL,rect.right*2/5+25,79+yOffset+25,rect.right*3/5-40,52,SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TX_INFO_PWD_GROUP),NULL,rect.right*2/5+25,79+yOffset+25,rect.right*3/5-40,52,SWP_NOZORDER);
 		}
 	}
 	else // onglet sélectionné = identifiants complémentaires
@@ -4098,7 +4098,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				KillTimer(w,giSetForegroundTimer);
 				SetForegroundWindow(w); 
 				SetFocus(w); 
-			}
+			} 
 			break;
 		case WM_COMMAND:		// ------------------------------------------------------- WM_COMMAND
 			TRACE((TRACE_DEBUG,_F_,"WM_COMMAND LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",LOWORD(wp),HIWORD(wp),lp));
@@ -4319,6 +4319,19 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							EnableWindow(GetDlgItem(w,TB_ID),TRUE);
 						}
 					}
+					if (HIWORD(wp)==EN_CHANGE)
+					{
+						if (giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions)
+						{
+							if (gptActions[giLastApplicationConfig].iPwdGroup!=-1 && gptActions[giLastApplicationConfig].iPwdGroup<giNbPwdGroupColors)
+							{
+								char szId1Value[LEN_ID+1];
+								GetDlgItemText(w,TB_ID,szId1Value,sizeof(szId1Value));
+								wsprintf(buf2048,GetString(IDS_TX_INFO_PWD_GROUP),szId1Value);	
+								SetDlgItemText(w,TX_INFO_PWD_GROUP,buf2048);
+							}
+						}
+					}
 					break;
 				case TB_PWD:
 					if (gbAdmin)
@@ -4351,6 +4364,36 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						{
 							CheckDlgButton(w,CK_AD_PWD,BST_UNCHECKED);
 							EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),TRUE);
+						}
+					}
+					break;
+				case TB_PWD_GROUP:
+					if (HIWORD(wp)==EN_CHANGE)
+					{
+						if (giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions)
+						{
+							char szPwdGroup[2+1];
+							GetDlgItemText(w,TB_PWD_GROUP,szPwdGroup,sizeof(szPwdGroup));
+							
+							if (*szPwdGroup!=0)
+							{
+								int iPwdGroup=atoi(szPwdGroup);
+								if (iPwdGroup>=0 && iPwdGroup<giNbPwdGroupColors)
+								{
+									ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),SW_SHOW);
+									RECT rect;
+									GetClientRect(GetDlgItem(w,TX_INFO_PWD_GROUP),&rect);
+									InvalidateRect(GetDlgItem(w,TX_INFO_PWD_GROUP),&rect,FALSE);
+								}
+								else
+								{
+									ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),SW_HIDE);
+								}
+							}
+							else
+							{
+								ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),SW_HIDE);
+							}
 						}
 					}
 					break;
@@ -4441,14 +4484,23 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					break;
 				case TX_INFO_PWD_GROUP:
-					if (giLastApplicationConfig!=-1)
+					if (giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions)
 					{
-						if (gptActions[giLastApplicationConfig].iPwdGroup!=-1 && gptActions[giLastApplicationConfig].iPwdGroup<giNbPwdGroupColors)
-							SetBkColor((HDC)wp,gtabPwdGroupColors[gptActions[giLastApplicationConfig].iPwdGroup]);
-						RECT rect;
-						GetClientRect(GetDlgItem(w,TX_INFO_PWD_GROUP),&rect);
-						InvalidateRect(GetDlgItem(w,TX_INFO_PWD_GROUP),&rect,TRUE);
-						rc=(int)GetStockObject(HOLLOW_BRUSH);
+						char szPwdGroup[2+1];
+						GetDlgItemText(w,TB_PWD_GROUP,szPwdGroup,sizeof(szPwdGroup));
+						if (*szPwdGroup!=0)
+						{
+							int iPwdGroup=atoi(szPwdGroup);
+							if (iPwdGroup>=0 && iPwdGroup<giNbPwdGroupColors)
+							//if (gptActions[giLastApplicationConfig].iPwdGroup!=-1 && gptActions[giLastApplicationConfig].iPwdGroup<giNbPwdGroupColors)
+							{
+								SetBkColor((HDC)wp,gtabPwdGroupColors[iPwdGroup]);
+								if (ghTabBrush==NULL)
+									rc=(int)GetStockObject(DC_BRUSH);
+								else
+									rc=(int)ghTabBrush;
+							}
+						}
 					}
 					break;
 				case CK_AD_ID:
@@ -4797,9 +4849,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 								{
 									if (gptActions[iAction].iPwdGroup!=-1 && gptActions[iAction].iPwdGroup<giNbPwdGroupColors)
 									{
-										// ((LPNMTVCUSTOMDRAW)lp)->clrText=RGB(0,0,0);
 										((LPNMTVCUSTOMDRAW)lp)->clrTextBk=gtabPwdGroupColors[gptActions[iAction].iPwdGroup];
-
 									}
 								}
 							}
