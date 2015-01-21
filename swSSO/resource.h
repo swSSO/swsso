@@ -132,6 +132,7 @@
 #define TX_ID2                          1114
 #define TX_ID3                          1115
 #define TX_ID4                          1116
+#define TX_INFO_PWD_GROUP               1117
 #define TV_APPLICATIONS                 1119
 #define TX_PWD2                         1120
 #define TV_DOMAINS                      1121
@@ -391,6 +392,8 @@
 #define IDS_RENAME_DOMAIN_OK            42018
 #define IDS_UPLOAD_DOMAIN_KO2           42019
 #define IDS_RENAME_DOMAIN_KO            42019
+#define IDS_STRING1                     42020
+#define IDS_TX_INFO_PWD_GROUP           42020
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

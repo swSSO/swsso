@@ -89,7 +89,8 @@ BOOL gbRecoveryRunning=FALSE;
 BOOL gbRegisterSessionNotification=FALSE;
 UINT guiLaunchAppMsg=0;
 UINT guiConnectAppMsg=0;
-UINT guiQuitMsg=0;
+UINT guiStandardQuitMsg=0;
+UINT guiAdminQuitMsg=0;
 
 int giTimer=0;
 static int giRegisterSessionNotificationTimer=0;
@@ -2012,9 +2013,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	guiConnectAppMsg=RegisterWindowMessage("swsso-connectapp");
 	if (guiConnectAppMsg==0) { TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-connectapp)=%d",GetLastError())); }
 	else { TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-connectapp) OK -> msg=0x%08lx",guiConnectAppMsg)); }
-	guiQuitMsg=RegisterWindowMessage("swsso-quit");
-	if (guiQuitMsg==0) { TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-quit)=%d",GetLastError())); }
-	else { TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-quit) OK -> msg=0x%08lx",guiQuitMsg)); }
+	guiStandardQuitMsg=RegisterWindowMessage("swsso-quit");
+	if (guiStandardQuitMsg==0) { TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swsso-quit)=%d",GetLastError())); }
+	else { TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swsso-quit) OK -> msg=0x%08lx",guiStandardQuitMsg)); }
+	guiAdminQuitMsg=RegisterWindowMessage("swssoadmin-quit");
+	if (guiAdminQuitMsg==0) { TRACE((TRACE_ERROR,_F_,"RegisterWindowMessage(swssoadmin-quit)=%d",GetLastError())); }
+	else { TRACE((TRACE_INFO,_F_,"RegisterWindowMessage(swssoadmin-quit) OK -> msg=0x%08lx",guiAdminQuitMsg)); }
 	
 	// 0.92 : récupération version OS pour traitements spécifiques Vista et/ou Seven
 	// Remarque : pas tout à fait juste, mais convient pour les postes de travail. A revoir pour serveurs.
@@ -2073,7 +2077,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
 	}
 	// ISSUE#227 : quitter
-	if (strnistr(lpCmdLine,"/quit",-1)!=NULL && guiQuitMsg!=0) 
+	if (strnistr(lpCmdLine,"/quit",-1)!=NULL) 
 	{
 		bQuit=TRUE;
 		// supprime le paramètre de la ligne de commande 
@@ -2082,7 +2086,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		if (*lpCmdLine==' ') lpCmdLine++;
 		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
 	}
-	else if (strnistr(lpCmdLine,"-quit",-1)!=NULL && guiQuitMsg!=0) 
+	else if (strnistr(lpCmdLine,"-quit",-1)!=NULL) 
 	{
 		bQuit=TRUE;
 		// supprime le paramètre de la ligne de commande 
@@ -2098,6 +2102,13 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	else
 		hMutex=CreateMutex(NULL,TRUE,"swSSO.exe");
 	bAlreadyLaunched=(GetLastError()==ERROR_ALREADY_EXISTS);
+
+	if (bQuit && !bAlreadyLaunched)
+	{
+		TRACE((TRACE_INFO,_F_,"Demande d'arret mais pas demarre (gbAdmin=%d)",gbAdmin));
+		goto end;
+	}
+
 	if (bAlreadyLaunched)
 	{
 		TRACE((TRACE_INFO,_F_,"Une instance est deja lancee"));
@@ -2113,8 +2124,8 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		}
 		if (bQuit)
 		{
-			TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente de s'arrêter"));
-			PostMessage(HWND_BROADCAST,guiQuitMsg,0,0);
+			TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente de s'arrêter gbAdmin=%d",gbAdmin));
+			PostMessage(HWND_BROADCAST,gbAdmin?guiAdminQuitMsg:guiStandardQuitMsg,0,0);
 		}
 		goto end;
 	}
@@ -2638,9 +2649,14 @@ askpwd:
 				TRACE((TRACE_INFO,_F_,"Message recu : swsso-connectapp (0x%08lx)",guiConnectAppMsg));
 				PostMessage(gwMain,WM_COMMAND,MAKEWORD(TRAY_MENU_SSO_NOW,0),0);
 			}
-			else if (msg.message==guiQuitMsg) // ISSUE#227
+			else if (msg.message==guiStandardQuitMsg && !gbAdmin) // ISSUE#227
 			{
-				TRACE((TRACE_INFO,_F_,"Message recu : swsso-quit (0x%08lx)",guiQuitMsg));
+				TRACE((TRACE_INFO,_F_,"Message recu : swsso-quit (0x%08lx)",guiStandardQuitMsg));
+				PostMessage(gwMain,WM_COMMAND,MAKEWORD(TRAY_MENU_QUITTER,0),0);
+			}
+			else if (msg.message==guiAdminQuitMsg && gbAdmin) // ISSUE#239
+			{
+				TRACE((TRACE_INFO,_F_,"Message recu : swssoadmin-quit (0x%08lx)",guiAdminQuitMsg));
 				PostMessage(gwMain,WM_COMMAND,MAKEWORD(TRAY_MENU_QUITTER,0),0);
 			}
 			else

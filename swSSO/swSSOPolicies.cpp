@@ -143,6 +143,10 @@ BOOL gbSSOInternetExplorer_DefaultValue=TRUE;		// 1.04
 BOOL gbSSOFirefox_DefaultValue=TRUE;				// 1.04
 BOOL gbSSOChrome_DefaultValue=TRUE;					// 1.04
 
+// REGKEY_REGKEY_PWDGROUP_COLORS
+COLORREF gtabPwdGroupColors[MAX_COLORS];
+int giNbPwdGroupColors;
+
 char gszPastePwd_Text[100];
 
 //-----------------------------------------------------------------------------
@@ -657,6 +661,40 @@ void LoadPolicies(void)
 			strcpy_s(gszPastePwd_Text,sizeof(gszPastePwd_Text),szValue);
 
 		RegCloseKey(hKey);
+	}
+	//--------------------------------------------------------------
+	// PWD GROUP COLORS
+	//--------------------------------------------------------------
+	giNbPwdGroupColors=0;
+	ZeroMemory(gtabPwdGroupColors,sizeof(gtabPwdGroupColors));
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_PWDGROUP_COLORS_ADMIN:REGKEY_PWDGROUP_COLORS,0,KEY_READ,&hKey);
+	if (rc==ERROR_SUCCESS)
+	{
+		char szId[2+1];
+		rc=0;
+		char *pszR=NULL,*pszG=NULL,*pszB=NULL,*pContext=NULL;
+		while (giNbPwdGroupColors<MAX_COLORS && rc==0)
+		{
+			wsprintf(szId,"%d",giNbPwdGroupColors);
+			dwValueType=REG_SZ;
+			dwValueSize=sizeof(szValue);
+			rc=RegQueryValueEx(hKey,szId,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS)
+			{
+				if (dwValueSize > LEN_COLOR_STRING+1){ TRACE((TRACE_ERROR,_F_,"Longueur PwdGroupColor #%d incorrecte (%d)",giNbPwdGroupColors,dwValueSize)) ; goto suite;}
+				pszR=strtok_s(szValue,",;",&pContext);
+				if (pszR==NULL) { TRACE((TRACE_ERROR,_F_,"PwdGroupColor #%d format incorrect (%s)",giNbPwdGroupColors,szValue)) ; goto suite;}
+				pszG=strtok_s(NULL,",;",&pContext);
+				if (pszG==NULL) { TRACE((TRACE_ERROR,_F_,"PwdGroupColor #%d format incorrect (%s)",giNbPwdGroupColors,szValue)) ; goto suite;}
+				pszB=strtok_s(NULL,",;",&pContext);
+				if (pszB==NULL) { TRACE((TRACE_ERROR,_F_,"PwdGroupColor #%d format incorrect (%s)",giNbPwdGroupColors,szValue)) ; goto suite;}
+				gtabPwdGroupColors[giNbPwdGroupColors]=RGB(atoi(pszR),atoi(pszG),atoi(pszB));
+				TRACE((TRACE_INFO,_F_,"PwdGroupColor #d=(%s,%s,%s) --> 0x%08lx",pszR,pszG,pszB,gtabPwdGroupColors[giNbPwdGroupColors]));
+				giNbPwdGroupColors++;
+			}
+		}
+		RegCloseKey(hKey);
+suite:;
 	}
 #ifdef TRACES_ACTIVEES
 	int i;

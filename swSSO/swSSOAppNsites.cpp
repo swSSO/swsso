@@ -1888,7 +1888,8 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 	
 	// 1.03
 	gptActions[giNbActions-1].iWithIdPwd=bKeepId?0:gptActions[iAction].iWithIdPwd;
-	gptActions[giNbActions-1].iPwdGroup=bKeepId?-1:gptActions[iAction].iPwdGroup;
+	// 1.07 (ISSUE#241) : on reprend toujours le pwd group (de toute façon à la prochaine maj de conf il serait repris)
+	gptActions[giNbActions-1].iPwdGroup=gptActions[iAction].iPwdGroup; 
 
 	ShowApplicationDetails(w,giNbActions-1);
 	rc=0;
@@ -2311,6 +2312,11 @@ void ShowApplicationDetails(HWND w,int iAction)
 	giLastApplicationConfig=iAction;
 
 	if (gbShowGeneratedPwd) { gbShowGeneratedPwd=FALSE; gbShowPwd=FALSE; }
+
+	wsprintf(buf2048,GetString(IDS_TX_INFO_PWD_GROUP),gptActions[iAction].szId1Value);	
+	SetDlgItemText(w,TX_INFO_PWD_GROUP,buf2048);
+	ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),gptActions[iAction].iPwdGroup==-1?SW_HIDE:SW_SHOW);
+	
 
 	// 1.03 : ne pas dévoiler les mots de passe imposés par le serveur
 	// 1.05 : sauf pour l'admin
@@ -2904,7 +2910,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 
 	// Positionnement et dimensionnement de la fenêtre
 	// ISSUE#1 : si Alt enfoncée à l'ouverture, retaillage et repositionnement par défaut
-	if ((gx!=-1 && gy!=-1 && gcx!=-1 && gcy!=-1 && gcx>=560 && (gcy>=540+(gbAdmin?50:0))) && HIBYTE(GetAsyncKeyState(VK_MENU))==0) 
+	if ((gx!=-1 && gy!=-1 && gcx!=-1 && gcy!=-1 && gcx>=560 && (gcy>=560+(gbAdmin?50:0))) && HIBYTE(GetAsyncKeyState(VK_MENU))==0) 
 	{
 		SetWindowPos(w,NULL,gx,gy,gcx,gcy,SWP_NOZORDER);
 	}
@@ -2912,7 +2918,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	{
 		cx = GetSystemMetrics( SM_CXSCREEN );
 		cy = GetSystemMetrics( SM_CYSCREEN );
-		SetWindowPos(w,NULL,0,0,560,540+(gbAdmin?50:0),SWP_NOMOVE | SWP_NOZORDER);
+		SetWindowPos(w,NULL,0,0,560,560+(gbAdmin?50:0),SWP_NOMOVE | SWP_NOZORDER);
 		GetWindowRect(w,&rect);
 		SetWindowPos(w,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
 	}
@@ -3159,6 +3165,11 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		{
 			SetWindowPos(GetDlgItem(w,CK_AD_ID),NULL,rect.right*2/5+25+80,47+yOffset+25,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			SetWindowPos(GetDlgItem(w,CK_AD_PWD),NULL,rect.right*2/5+25+80,79+yOffset+43,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,TX_INFO_PWD_GROUP),NULL,rect.right*2/5+25,79+yOffset+61,rect.right*3/5-40,52,SWP_NOZORDER|SWP_SHOWWINDOW);
+		}
+		else
+		{
+			SetWindowPos(GetDlgItem(w,TX_INFO_PWD_GROUP),NULL,rect.right*2/5+25,79+yOffset+25,rect.right*3/5-40,52,SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 	}
 	else // onglet sélectionné = identifiants complémentaires
@@ -3173,6 +3184,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_LOUPE),SW_HIDE);
 		ShowWindow(GetDlgItem(w,CK_AD_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,CK_AD_PWD),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_ID2),NULL,rect.right*2/5+25,50+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_ID3),NULL,rect.right*2/5+25,80+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_ID4),NULL,rect.right*2/5+25,110+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
@@ -4391,7 +4403,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				RECT *pRectNewSize=(RECT*)lp;
 				TRACE((TRACE_DEBUG,_F_,"RectNewSize=%d,%d,%d,%d",pRectNewSize->top,pRectNewSize->left,pRectNewSize->bottom,pRectNewSize->right));
 				if (pRectNewSize->right-pRectNewSize->left < 560)  pRectNewSize->right=pRectNewSize->left+560;
-				if (pRectNewSize->bottom-pRectNewSize->top < 540+(gbAdmin?50:0))  pRectNewSize->bottom=pRectNewSize->top+540+(gbAdmin?50:0);
+				if (pRectNewSize->bottom-pRectNewSize->top < 560+(gbAdmin?50:0))  pRectNewSize->bottom=pRectNewSize->top+560+(gbAdmin?50:0);
 				rc=TRUE;
 			}
 			break;
@@ -4426,6 +4438,17 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						SetTextColor((HDC)wp,RGB(255,255,255));
 						SetBkMode((HDC)wp,TRANSPARENT);
 						rc=(int)ghRedBrush;
+					}
+					break;
+				case TX_INFO_PWD_GROUP:
+					if (giLastApplicationConfig!=-1)
+					{
+						if (gptActions[giLastApplicationConfig].iPwdGroup!=-1 && gptActions[giLastApplicationConfig].iPwdGroup<giNbPwdGroupColors)
+							SetBkColor((HDC)wp,gtabPwdGroupColors[gptActions[giLastApplicationConfig].iPwdGroup]);
+						RECT rect;
+						GetClientRect(GetDlgItem(w,TX_INFO_PWD_GROUP),&rect);
+						InvalidateRect(GetDlgItem(w,TX_INFO_PWD_GROUP),&rect,TRUE);
+						rc=(int)GetStockObject(HOLLOW_BRUSH);
 					}
 					break;
 				case CK_AD_ID:
@@ -4757,7 +4780,32 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						TVDomainsShowContextMenu(w);
 					}
 					break;
+				case NM_CUSTOMDRAW:
+					if (((LPNMTVCUSTOMDRAW)lp)->nmcd.dwDrawStage==CDDS_PREPAINT)
+					{
+						SetWindowLongPtr(w,DWLP_MSGRESULT,CDRF_NOTIFYITEMDRAW);
+						rc=TRUE;
+					}
+					if (((LPNMTVCUSTOMDRAW)lp)->iLevel==1) // ne traite que applis, pas les catégories
+					{
+						if (((LPNMTVCUSTOMDRAW)lp)->nmcd.dwDrawStage==CDDS_ITEMPREPAINT)
+						{
+							if (!((LPNMTVCUSTOMDRAW)lp)->nmcd.uItemState & CDIS_SELECTED)
+							{
+								int iAction=((LPNMTVCUSTOMDRAW)lp)->nmcd.lItemlParam;
+								if (iAction!=-1 && iAction < giNbActions)
+								{
+									if (gptActions[iAction].iPwdGroup!=-1 && gptActions[iAction].iPwdGroup<giNbPwdGroupColors)
+									{
+										// ((LPNMTVCUSTOMDRAW)lp)->clrText=RGB(0,0,0);
+										((LPNMTVCUSTOMDRAW)lp)->clrTextBk=gtabPwdGroupColors[gptActions[iAction].iPwdGroup];
 
+									}
+								}
+							}
+						}
+					}
+					break;
 			}
 			break;
 	}
@@ -4805,8 +4853,8 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 		}	
 		goto end;
 	}
-
 	DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_APPNSITES),HWND_DESKTOP,AppNsitesDialogProc,(LPARAM)&tAppNsites);
+
 	gwAppNsites=NULL;
 	rc=0;
 end:

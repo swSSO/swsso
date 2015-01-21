@@ -274,3 +274,12 @@ extern char gszPastePwd_Text[];
 // FONCTIONS PUBLIQUES
 void LoadPolicies(void);
 BOOL IsPasswordPolicyCompliant(const char *szPwd);
+
+//-----------------------------------------------------------------------------
+#define REGKEY_PWDGROUP_COLORS "SOFTWARE\\swSSO\\PwdGroupColors"
+#define REGKEY_PWDGROUP_COLORS_ADMIN "SOFTWARE\\swSSOAdmin\\PwdGroupColors"
+//-----------------------------------------------------------------------------
+#define LEN_COLOR_STRING	11
+#define MAX_COLORS			25   
+extern COLORREF gtabPwdGroupColors[MAX_COLORS];
+extern int		giNbPwdGroupColors;
