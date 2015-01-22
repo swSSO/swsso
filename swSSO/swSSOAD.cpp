@@ -169,7 +169,7 @@ end:
 static int CALLBACK AskADPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
-
+	CheckIfQuitMessage(msg);
 	int rc=FALSE;
 	switch (msg)
 	{

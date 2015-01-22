@@ -425,6 +425,7 @@ end:
 static int CALLBACK ChooseConfigDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
+	CheckIfQuitMessage(msg);
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -1373,6 +1374,7 @@ static void UnloadIcons(void)
 static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
+	CheckIfQuitMessage(msg);
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -1491,6 +1493,7 @@ static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
+	CheckIfQuitMessage(msg);
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -1821,6 +1824,7 @@ end:
 static int CALLBACK SelectDomainDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
+	CheckIfQuitMessage(msg);
 	switch (msg)
 	{
 		case WM_INITDIALOG:

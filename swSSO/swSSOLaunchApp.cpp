@@ -143,7 +143,7 @@ static int CALLBACK LaunchAppDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
 //	TRACE((TRACE_DEBUG,_F_,"msg=0x%08lx LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",msg,LOWORD(wp),HIWORD(wp),lp));
-
+	CheckIfQuitMessage(msg);
 	int rc=FALSE;
 	switch (msg)
 	{

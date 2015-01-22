@@ -62,6 +62,9 @@ extern BOOL gbRecoveryRunning;
 extern int giaccChildCountErrors;
 extern int giaccChildErrors;
 
+extern UINT guiStandardQuitMsg;
+extern UINT guiAdminQuitMsg;
+
 // #define PP_NONE 1		--> supprimé en 0.98 : ISSUE#83
 // #define PP_ENCODED 2		--> supprimé en 0.98 : ISSUE#83
 #define PP_ENCRYPTED 3

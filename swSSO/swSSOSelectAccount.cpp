@@ -139,6 +139,7 @@ static int CALLBACK SelectAccountDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 //	TRACE((TRACE_DEBUG,_F_,"msg=0x%08lx LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",msg,LOWORD(wp),HIWORD(wp),lp));
 
 	int rc=FALSE;
+	CheckIfQuitMessage(msg);
 	switch (msg)
 	{
 		case WM_INITDIALOG:		// ------------------------------------------------------- WM_INITDIALOG

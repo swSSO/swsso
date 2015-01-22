@@ -148,6 +148,7 @@ end:
 static int CALLBACK ChallengeDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
+	CheckIfQuitMessage(msg);
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -333,6 +334,7 @@ end:
 static int CALLBACK ResponseDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
+	CheckIfQuitMessage(msg);
 	switch (msg)
 	{
 		case WM_INITDIALOG:

@@ -590,8 +590,8 @@ char *strnistr (const char *szStringToBeSearched,
 //-----------------------------------------------------------------------------
 static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
-	
 	int rc=FALSE;
+	CheckIfQuitMessage(msg);
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -1554,7 +1554,7 @@ typedef struct
 } T_ENUM_BROWSER;
 
 //-----------------------------------------------------------------------------
-// EnumWindowsProc()
+// EnumBrowserProc()
 //-----------------------------------------------------------------------------
 // Callback d'énumération de fenêtres présentes sur le bureau et déclenchement
 // du SSO le cas échéant
@@ -1890,5 +1890,29 @@ int CheckIniHash(void)
 end:
 	if (hf!=INVALID_HANDLE_VALUE) CloseHandle(hf); 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// CheckIfQuitMessage()
+//-----------------------------------------------------------------------------
+// Vérifie si reçu un message d'arrêt. A appeler dans toutes les DialogProc
+//-----------------------------------------------------------------------------
+BOOL CheckIfQuitMessage(UINT msg)
+{
+	BOOL rc=FALSE;
+	if (msg==guiStandardQuitMsg && !gbAdmin) // ISSUE#227
+	{
+		TRACE((TRACE_INFO,_F_,"Message recu : swsso-quit (0x%08lx)",guiStandardQuitMsg));
+		rc=TRUE;
+	}
+	else if (msg==guiAdminQuitMsg && gbAdmin) // ISSUE#239
+	{
+		TRACE((TRACE_INFO,_F_,"Message recu : swssoadmin-quit (0x%08lx)",guiAdminQuitMsg));
+		rc=TRUE;
+	}
+	
+	if (rc) PostMessage(gwMain,WM_COMMAND,MAKEWORD(TRAY_MENU_QUITTER,0),0);
+
 	return rc;
 }

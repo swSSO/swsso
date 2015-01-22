@@ -109,7 +109,7 @@ static int HowManyComputerNames(void);
 static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
-
+	
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -351,7 +351,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
-
+	
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -539,7 +539,7 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 static int CALLBACK PSPBrowserProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
-
+	
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -623,7 +623,7 @@ static int CALLBACK PSPBrowserProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
-	
+	CheckIfQuitMessage(msg);
 	int rc=FALSE;
 	switch (msg)
 	{
@@ -949,8 +949,12 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 int ShowConfig(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	int rc;
+
+	MSG msg;
+	BOOL bRet;
+	BOOL bQuit=FALSE;
 	int iPage;
+
 	if (gwPropertySheet!=NULL)
 	{
 		ShowWindow(gwPropertySheet,SW_SHOW);
@@ -969,7 +973,7 @@ int ShowConfig(void)
 	psp.dwFlags=PSP_DEFAULT;
 
 	psh.dwSize=sizeof(PROPSHEETHEADER);
-	psh.dwFlags=PSH_DEFAULT; // PSH_PROPTITLE
+	psh.dwFlags=PSH_MODELESS; //PSH_DEFAULT; // PSH_PROPTITLE
 
 	psh.hwndParent=HWND_DESKTOP;
 	psh.pszCaption="swSSO - Options";
@@ -1004,13 +1008,28 @@ int ShowConfig(void)
 	psh.nPages=iPage+1;
 	psh.phpage=hpsp;
 	
-	rc=PropertySheet(&psh);
-	gwPropertySheet=NULL;
-	if (rc==-1)
+	gwPropertySheet=(HWND)PropertySheet(&psh);
+	// boucle de message (propertysheet modeless)
+	while ((bRet=GetMessage(&msg,NULL,0,0))!=0)
 	{
-		TRACE((TRACE_ERROR,_F_, "PropertySheet()"));
+		if(bRet==-1) { TRACE((TRACE_ERROR,_F_,"GetMessage()=-1")); goto end; }
+		CheckIfQuitMessage(msg.message);
+		if(!PropSheet_IsDialogMessage(gwPropertySheet,&msg))
+		{
+			TranslateMessage (&msg);
+			DispatchMessage (&msg);
+		}
+		if (PropSheet_GetCurrentPageHwnd(gwPropertySheet)==NULL)
+		{  
+			DestroyWindow(gwPropertySheet);
+			gwPropertySheet=NULL;
+			break;
+		}
 	}
-
+	if (bQuit || bRet==0)
+	{
+		PostMessage(gwMain,WM_COMMAND,MAKEWORD(TRAY_MENU_QUITTER,0),0);
+	}
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 	return 0;
@@ -2092,7 +2111,7 @@ end:
 static int CALLBACK ChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
-
+	CheckIfQuitMessage(msg);
 	int rc=FALSE;
 	switch (msg)
 	{
@@ -2230,7 +2249,7 @@ static int CALLBACK ChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM wp,LPA
 static int CALLBACK ForceChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
-
+	CheckIfQuitMessage(msg);
 	int rc=FALSE;
 	switch (msg)
 	{
@@ -2681,7 +2700,7 @@ end:
 static int CALLBACK ChangeApplicationPasswordDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
-
+	CheckIfQuitMessage(msg);
 	int rc=FALSE;
 	switch (msg)
 	{

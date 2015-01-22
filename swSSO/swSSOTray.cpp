@@ -492,6 +492,7 @@ void DestroySystray(HWND wMain)
 static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	int rc=FALSE;
+	CheckIfQuitMessage(msg);
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -689,7 +690,7 @@ int UninstallHotKey(void)
 static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
-
+	CheckIfQuitMessage(msg);
 	int rc=FALSE;
 	switch (msg)
 	{
@@ -811,7 +812,7 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 static int CALLBACK ConfirmNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
-
+	CheckIfQuitMessage(msg);
 	int rc=FALSE;
 	switch (msg)
 	{
