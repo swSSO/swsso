@@ -2040,6 +2040,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	giOSBits=b64?OS_64:OS_32;
 	TRACE((TRACE_INFO,_F_,"giOSVersion=%d giOSBits=%d",giOSVersion,giOSBits));
 
+	// ISSUE#227 : quitter
+	if (strnistr(lpCmdLine,"/quit",-1)!=NULL || strnistr(lpCmdLine,"-quit",-1)!=NULL) 
+	{
+		bQuit=TRUE;
+	}
+
 	// 0.91 : si la ligne de commande contient le paramètre -launchapp, ouvre la fenêtre de lancement d'appli
 	//        soit en postant à message à swsso si déjà lancé, soit par appel à ShowAppNsites en fin de WinMain()
 	if (strnistr(lpCmdLine,"-launchapp",-1)!=NULL && guiLaunchAppMsg!=0) 
@@ -2077,25 +2083,6 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		// supprime le paramètre de la ligne de commande 
 		// pour traitement du path éventuellement spécifié pour le .ini
 		lpCmdLine+=strlen("-admin");
-		if (*lpCmdLine==' ') lpCmdLine++;
-		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
-	}
-	// ISSUE#227 : quitter
-	if (strnistr(lpCmdLine,"/quit",-1)!=NULL) 
-	{
-		bQuit=TRUE;
-		// supprime le paramètre de la ligne de commande 
-		// pour traitement du path éventuellement spécifié pour le .ini
-		lpCmdLine+=strlen("/quit");
-		if (*lpCmdLine==' ') lpCmdLine++;
-		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
-	}
-	else if (strnistr(lpCmdLine,"-quit",-1)!=NULL) 
-	{
-		bQuit=TRUE;
-		// supprime le paramètre de la ligne de commande 
-		// pour traitement du path éventuellement spécifié pour le .ini
-		lpCmdLine+=strlen("-quit");
 		if (*lpCmdLine==' ') lpCmdLine++;
 		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
 	}
