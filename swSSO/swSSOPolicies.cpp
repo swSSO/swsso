@@ -121,7 +121,8 @@ BOOL gbDisplayWindowsPasswordChange=TRUE;	// 1.05 - affiche / masque le message 
 BOOL gbCategoryAutoUpdate=FALSE;			// 1.06 - ISSUE#206 : met à jour la catégorie sur le serveur lorsqu'une application est déplacée dans l'IHM client
 BOOL gbRemoveDeletedConfigsAtStart=FALSE;	// 1.07 - ISSUE#214
 BOOL gbAdminDeleteConfigsOnServer=FALSE;	// 1.07 - ISSUE#223
-extern int giRefreshRightsFrequency=0;		// 1.07 - ISSUE#220
+int giRefreshRightsFrequency=0;				// 1.07 - ISSUE#220
+BOOL gbAllowManagedConfigsModification=TRUE;	// 1.07 : ISSUE#238
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -473,6 +474,10 @@ void LoadPolicies(void)
 		if (rc==ERROR_SUCCESS) gbAllowManagedConfigsDeletion=(BOOL)dwValue; 
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ALLOW_MANAGED_CONFIGS_MODIFICATION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbAllowManagedConfigsModification=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_ACTIVATE_NEW_CONFIGS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbActivateNewConfigs=(BOOL)dwValue; 
 
@@ -771,6 +776,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbRemoveDeletedConfigsAtStart=%d"	,gbRemoveDeletedConfigsAtStart));
 	TRACE((TRACE_INFO,_F_,"gbAdminDeleteConfigsOnServer=%d"		,gbAdminDeleteConfigsOnServer));
 	TRACE((TRACE_INFO,_F_,"giRefreshRightsFrequency=%d"			,giRefreshRightsFrequency));
+	TRACE((TRACE_INFO,_F_,"gbAllowManagedConfigsModification=%d",gbAllowManagedConfigsModification));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));

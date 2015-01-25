@@ -689,7 +689,8 @@ void HideConfigControls(HWND w)
 void DisableConfigControls(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	if (!gbEnableOption_ModifyAppConfig)
+	if (!gbEnableOption_ModifyAppConfig || 
+		(!gbAllowManagedConfigsModification && giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions && gptActions[giLastApplicationConfig].iConfigId!=0))
 	{
 		EnableWindow(GetDlgItem(w,TB_TITRE),FALSE);
 		EnableWindow(GetDlgItem(w,TB_URL),FALSE);
