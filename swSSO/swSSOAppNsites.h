@@ -120,6 +120,7 @@ typedef struct
 {
 	int id;
 	HTREEITEM hItem;
+	HTREEITEM hItemSelectAccount;
 	char szLabel[LEN_CATEGORY_LABEL+1];
 	BOOL bExpanded;
 }
@@ -148,7 +149,7 @@ int UploadConfig(HWND w, char *pszDomainIds);
 
 // ATTENTION, ces deux fonctions sont utilisées par swSSOLaunchApp.cpp, cela suppose
 // que l'identifiant du treeview TV_APPLICATIONS soit bien identique dans les 2 fenêtres !
-void FillTreeView(HWND w,BOOL bWithId);
+void FillTreeView(HWND w);
 void LaunchSelectedApp(HWND w);
 
 void FillTreeViewDomains(HWND w);
@@ -156,3 +157,5 @@ void AddDomain(HWND w);
 void DeleteDomain(HWND w);
 int GetDomainIndex(int id);
 int UploadDomain(HWND w,int iDomain);
+
+extern BOOL gbAjoutDeCompteEnCours;

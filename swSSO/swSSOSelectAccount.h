@@ -32,5 +32,5 @@
 //-----------------------------------------------------------------------------
 
 extern int giSelectedAccount;
-int ShowSelectAccount(void);
+int ShowSelectAccount(HWND w);
 

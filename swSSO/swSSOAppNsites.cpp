@@ -76,6 +76,7 @@ static BOOL gbTVApplicationsLabelEditing=FALSE;
 static BOOL gbTVDomainsLabelEditing=FALSE;
 // static BOOL gbAtLeastOneAppRenamed=FALSE; // 0.90B1 : renommage direct, flag inutile
 static BOOL gbEffacementEnCours=FALSE;
+BOOL gbAjoutDeCompteEnCours=FALSE;
 static BOOL gbShowPwd;
 static BOOL gbShowGeneratedPwd;
 static char buf2048[2048]; // gros buffer pas beau
@@ -153,7 +154,7 @@ static int giSetForegroundTimer=20;
 
 void TVItemSetLParam(HWND w,HTREEITEM hItem,LPARAM lp);
 int TVItemGetText(HWND w,HTREEITEM hItem,char *pszText,int sizeofText);
-HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication,BOOL bWithId);
+HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication);
 HTREEITEM TVAddCategory(HWND w,int iCategory);
 void ClearApplicationDetails(HWND w);
 void ShowApplicationDetails(HWND w,int iAction);
@@ -1227,7 +1228,7 @@ end:
 //-----------------------------------------------------------------------------
 // Ajout d'une nouvelle application (suite menu clic-droit ajouter)
 //-----------------------------------------------------------------------------
-int NewApplication(HWND w,char *szAppName,BOOL bActive)
+int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
@@ -1263,13 +1264,17 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive)
 	// génère le nom de l'application
 	GenerateApplicationName(giNbActions,szAppName);
 	
-	hNewItem=TVAddApplication(w,giNbActions,NULL,FALSE);
-	if (hNewItem!=NULL) 
+	if (bAddInTreeView)
 	{
-		TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
-		TreeView_EditLabel(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
+		hNewItem=TVAddApplication(w,giNbActions,NULL);
+		if (hNewItem!=NULL) 
+		{
+			TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
+			TreeView_EditLabel(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
+		}
+		ShowApplicationDetails(w,giNbActions);
 	}
-	ShowApplicationDetails(w,giNbActions);
+
 	giNbActions++;
 	//ClearApplicationDetails(w);
 	rc=0;
@@ -1841,6 +1846,7 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 	int rc=-1;
 	
 	HTREEITEM hItem;
+	//HTREEITEM hNewItem;
 	char szAppName[LEN_APPLICATION_NAME+1];
 	int iAction;
 
@@ -1849,9 +1855,37 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 	TVItemGetText(w,hItem,szAppName,sizeof(szAppName));
 	iAction=TVItemGetLParam(w,hItem);
 	TRACE((TRACE_INFO,_F_,"Duplication application %s (%d)",szAppName,iAction));
-		
+	
 	// création de la nouvelle application
-	NewApplication(w,szAppName,TRUE);
+	NewApplication(w,szAppName,TRUE,!bKeepId); // un giNbActions++ est fait à l'intérieur
+	// ISSUE#240
+	if (bKeepId) // cas de l'ajout de compte, on demande les infos de login et mdp à renseigner dans le nouveau compte
+	{
+		gbAjoutDeCompteEnCours=TRUE;
+		T_IDANDPWDDIALOG params;
+		params.bCenter=TRUE;
+		params.iAction=giNbActions-1;
+		params.iTitle=IDS_IDANDPWDTITLE_NEWACCOUNT;
+		wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_NEWACCOUNT),gptActions[iAction].szApplication);
+		gbDontAskId=(*gptActions[iAction].szId1Name==0);
+		gbDontAskId2=(*gptActions[iAction].szId2Name==0);
+		gbDontAskId3=(*gptActions[iAction].szId3Name==0);
+		gbDontAskId4=(*gptActions[iAction].szId4Name==0);
+		gbDontAskPwd=(*gptActions[iAction].szPwdName==0);
+		if (gptActions[iAction].iType==POPSSO) { gbDontAskId=FALSE; gbDontAskPwd=FALSE; }
+		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),w,IdAndPwdDialogProc,(LPARAM)&params)!=IDOK) // l'utilisateur a annulé
+		{
+			giNbActions--;
+			goto end;
+		}
+		HTREEITEM hNewItem=TVAddApplication(w,giNbActions-1,NULL);
+		if (hNewItem!=NULL) 
+		{
+			TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
+			TreeView_EditLabel(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
+		}
+	}
+
 	// 0.93B6
 	TRACE((TRACE_INFO,_F_,"Nouvelle application créée %s (%d)",gptActions[giNbActions-1].szApplication,giNbActions-1));
 
@@ -1896,7 +1930,8 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 
 	ShowApplicationDetails(w,giNbActions-1);
 	rc=0;
-//end:
+end:
+	gbAjoutDeCompteEnCours=FALSE;
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -2687,13 +2722,12 @@ end:
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication,BOOL bWithId)
+HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication)
 {
-	TRACE((TRACE_ENTER,_F_, "Label=%s iCategoryId=%d bWithId=%d",gptActions[iAction].szApplication,gptActions[iAction].iCategoryId,bWithId));
+	TRACE((TRACE_ENTER,_F_, "Label=%s iCategoryId=%d",gptActions[iAction].szApplication,gptActions[iAction].iCategoryId));
 	HTREEITEM hItem=NULL;
 	TVINSERTSTRUCT tvis;
 	int iCategory;
-	char buf[LEN_APPLICATION_NAME+LEN_ID+10];
 
 	iCategory=GetCategoryIndex(gptActions[iAction].iCategoryId);
 	if (iCategory==-1) iCategory=0;
@@ -2703,15 +2737,7 @@ HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication,BOOL bWithId)
 	tvis.itemex.cchTextMax=0;
 	if (pszApplication==NULL)
 	{
-		if (bWithId)
-		{
-			sprintf_s(buf,sizeof(buf),"%s (identifiant : %s)",gptActions[iAction].szApplication,gptActions[iAction].szId1Value);
-			tvis.itemex.pszText=buf;
-		}
-		else
-		{
-			tvis.itemex.pszText=gptActions[iAction].szApplication;
-		}
+		tvis.itemex.pszText=gptActions[iAction].szApplication;
 	}
 	else
 	{
@@ -2723,7 +2749,7 @@ HTREEITEM TVAddApplication(HWND w,int iAction,char *pszApplication,BOOL bWithId)
 	//tvis.itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?(gptActions[iAction].bConfigSent?1:3):2);
 
 	hItem=TreeView_InsertItem(GetDlgItem(w,TV_APPLICATIONS),&tvis);
-	if (hItem==NULL) { TRACE((TRACE_ERROR,_F_,"TreeView_InsertItem()")) ; goto end; }
+	if (hItem==NULL) { TRACE((TRACE_ERROR,_F_,"TreeView_InsertItem()=0x%08lx",GetLastError())) ; goto end; }
 
 	TVUpdateItemState(w,hItem,iAction);
 
@@ -2763,7 +2789,7 @@ end:
 //-----------------------------------------------------------------------------
 // Remplit la TreeView TV_APPLICATIONS
 //-----------------------------------------------------------------------------
-void FillTreeView(HWND w,BOOL bWithId)
+void FillTreeView(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -2780,10 +2806,9 @@ void FillTreeView(HWND w,BOOL bWithId)
 	// Ajout des actions
 	for (i=0;i<giNbActions;i++) 
 	{
-		if (bWithId && i==giActionIdPwdAsked) continue; // ISSUE#225
 		if (gptActions[i].iType!=WEBPWD)
 		{
-			hItem=TVAddApplication(w,i,NULL,bWithId); if (hItem==NULL) goto end;
+			hItem=TVAddApplication(w,i,NULL); if (hItem==NULL) goto end;
 		}
 	}
 end:
@@ -3017,7 +3042,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	TreeView_SetImageList(GetDlgItem(w,TV_APPLICATIONS),ghImageList,TVSIL_STATE);
 
 	// Remplissage de la treeview
-	FillTreeView(w,FALSE);
+	FillTreeView(w);
 	if (gbAdmin) FillTreeViewDomains(w);
 
 	// Sélectionne l'application
@@ -3431,7 +3456,7 @@ void MoveApp(HWND w,HTREEITEM hItem,int iNewCategoryIndex)
 	// modification de la catégorie dans la table des actions
 	gptActions[tvItem.lParam].iCategoryId=gptCategories[iNewCategoryIndex].id;
 	// ajout de l'élément avec sa nouvelle catégorie mais en conservant le titre existant (correction #99)
-	hNewItem=TVAddApplication(w,tvItem.lParam,szApplication,FALSE);
+	hNewItem=TVAddApplication(w,tvItem.lParam,szApplication);
 	// effacement de l'élément dans son ancienne catégorie
 	TreeView_DeleteItem(GetDlgItem(w,TV_APPLICATIONS),hItem);
 	if (hNewItem!=NULL) TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
@@ -4239,7 +4264,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_AJOUTER_APPLI:
-					NewApplication(w,GetString(IDS_NEW_APP),TRUE);
+					NewApplication(w,GetString(IDS_NEW_APP),TRUE,TRUE);
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_AJOUTER_CATEG:
@@ -4552,7 +4577,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					MoveControls(w,NULL); // 0.90, avant il y avait (w,w), correction bug#102
 					break;
 				case TVN_SELCHANGED:
-					if (wp==TV_APPLICATIONS && !gbEffacementEnCours)
+					if (wp==TV_APPLICATIONS && !gbEffacementEnCours && !gbAjoutDeCompteEnCours)
 					{
 						HTREEITEM hParentItem;
 						LPNMTREEVIEW pnmtv = (LPNMTREEVIEW)lp;
@@ -4903,7 +4928,7 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 		// SAUF si la demande de réaffichage vient du systray (dans ce cas on met juste au premier plan)
 		if (!bFromSystray)
 		{
-			FillTreeView(gwAppNsites,FALSE);
+			FillTreeView(gwAppNsites);
 			TVSelectItemFromLParam(gwAppNsites,TYPE_APPLICATION,iSelected);
 		}	
 		goto end;

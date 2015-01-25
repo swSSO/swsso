@@ -86,6 +86,94 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// TVSelectAccountAddApplication(HWND w,int iAction)
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+HTREEITEM TVSelectAccountAddApplication(HWND w,int iAction)
+{
+	TRACE((TRACE_ENTER,_F_, "Label=%s iCategoryId=%d",gptActions[iAction].szApplication,gptActions[iAction].iCategoryId));
+	HTREEITEM hItem=NULL;
+	TVINSERTSTRUCT tvis;
+	int iCategory;
+	char buf[LEN_APPLICATION_NAME+LEN_ID+10];
+
+	iCategory=GetCategoryIndex(gptActions[iAction].iCategoryId);
+	if (iCategory==-1) iCategory=0;
+	tvis.hParent=gptCategories[iCategory].hItemSelectAccount;
+	tvis.hInsertAfter=TVI_SORT;
+	tvis.itemex.mask=TVIF_TEXT|TVIF_PARAM|TVIF_STATE;
+	tvis.itemex.stateMask=TVIS_STATEIMAGEMASK;
+	tvis.itemex.cchTextMax=0;
+	tvis.itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2);
+	sprintf_s(buf,sizeof(buf),"%s (identifiant : %s)",gptActions[iAction].szApplication,gptActions[iAction].szId1Value);
+	tvis.itemex.pszText=buf;
+	tvis.itemex.lParam=iAction;
+	hItem=TreeView_InsertItem(GetDlgItem(w,TV_APPLICATIONS),&tvis);
+	if (hItem==NULL) { TRACE((TRACE_ERROR,_F_,"TreeView_InsertItem()=0x%08lx",GetLastError())) ; goto end; }
+end:
+	TRACE((TRACE_LEAVE,_F_, "hItem=0x%08lx",hItem));
+	return hItem;
+}	
+
+//-----------------------------------------------------------------------------
+// TVSelectAccountAddCategory(HWND w,int iAction)
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+HTREEITEM TVSelectAccountAddCategory(HWND w,int iCategIndex)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	TVINSERTSTRUCT tvis;
+
+	tvis.hParent=TVI_ROOT;
+	tvis.hInsertAfter=TVI_SORT;
+	tvis.itemex.mask=TVIF_TEXT|TVIF_STATE|TVIF_PARAM;
+	tvis.itemex.state=TVIS_BOLD|TVIS_EXPANDED;
+	tvis.itemex.stateMask=TVIS_EXPANDED|TVIS_BOLD ;
+	tvis.itemex.cchTextMax=0;
+	tvis.itemex.pszText=gptCategories[iCategIndex].szLabel;
+	tvis.itemex.lParam=gptCategories[iCategIndex].id;
+	gptCategories[iCategIndex].hItemSelectAccount=TreeView_InsertItem(GetDlgItem(w,TV_APPLICATIONS),&tvis);
+	if (gptCategories[iCategIndex].hItemSelectAccount==NULL) { TRACE((TRACE_ERROR,_F_,"TreeView_InsertItem()==NULL")); goto end; }
+end:
+	TRACE((TRACE_LEAVE,_F_, "hItem=0x%08lx",gptCategories[iCategIndex].hItemSelectAccount));
+	return gptCategories[iCategIndex].hItemSelectAccount;
+}		
+
+//-----------------------------------------------------------------------------
+// FillTreeViewSelectAccount()
+//-----------------------------------------------------------------------------
+// Remplit la TreeView TV_APPLICATIONS
+//-----------------------------------------------------------------------------
+void FillTreeViewSelectAccount(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+
+	int i;
+	HTREEITEM hItem=NULL;
+
+	TreeView_DeleteAllItems(GetDlgItem(w,TV_APPLICATIONS));
+
+	// Ajout des catégories
+	for (i=0;i<giNbCategories;i++) 
+	{
+		hItem=TVSelectAccountAddCategory(w,i); if (hItem==NULL) goto end;
+	}
+	// Ajout des actions
+	for (i=0;i<giNbActions;i++) 
+	{
+		if (i==giActionIdPwdAsked) continue; // ISSUE#225
+		if (gptActions[i].iType!=WEBPWD)
+		{
+			hItem=TVSelectAccountAddApplication(w,i); if (hItem==NULL) goto end;
+		}
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
 // SelectAccountOnInitDialog()
 //-----------------------------------------------------------------------------
 void SelectAccountOnInitDialog(HWND w)
@@ -119,7 +207,7 @@ void SelectAccountOnInitDialog(HWND w)
 	TreeView_SetImageList(GetDlgItem(w,TV_APPLICATIONS),ghImageList,TVSIL_STATE);
 
 	// Remplissage de la treeview
-	FillTreeView(w,TRUE);
+	FillTreeViewSelectAccount(w);
 
 	// timer de refresh
 	if (giSetForegroundTimer==giTimer) giSetForegroundTimer=21;
@@ -230,7 +318,7 @@ static int CALLBACK SelectAccountDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 // ----------------------------------------------------------------------------------
 // Fenêtre de séléction d'un compte existant
 // ----------------------------------------------------------------------------------
-int ShowSelectAccount(void)
+int ShowSelectAccount(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
@@ -243,7 +331,7 @@ int ShowSelectAccount(void)
 		goto end;
 	}
 
-	rc=DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SELECT_ACCOUNT),HWND_DESKTOP,SelectAccountDialogProc);
+	rc=DialogBox(ghInstance,MAKEINTRESOURCE(IDD_SELECT_ACCOUNT),w,SelectAccountDialogProc);
 	gwSelectAccount=NULL;
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));

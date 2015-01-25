@@ -820,7 +820,7 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						strcpy_s(gptActions[params->iAction].szPwdEncryptedValue,sizeof(gptActions[params->iAction].szPwdEncryptedValue),szPassword);
 					}
 					// ISSUE#113 : refresh sur la fenêtre gestion des sites et applications
-					if (gwAppNsites!=NULL && IsWindow(gwAppNsites))
+					if (gwAppNsites!=NULL && IsWindow(gwAppNsites) && !gbAjoutDeCompteEnCours)
 					{
 						ShowApplicationDetails(gwAppNsites,params->iAction);
 					}
@@ -901,7 +901,7 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			if ((pt.x >= rect.left)&&(pt.x <= rect.right)&& (pt.y >= rect.top) &&(pt.y <= rect.bottom))
 			{
 				int iAction;
-				iAction=ShowSelectAccount();
+				iAction=ShowSelectAccount(w);
 				if (iAction!=-1) // l'utilisateur a sélectionné une appli dans la liste
 				{
 					SetDlgItemText(w,TB_ID,gptActions[iAction].szId1Value);

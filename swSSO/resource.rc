@@ -897,6 +897,9 @@ BEGIN
     IDS_RENAME_DOMAIN_OK    "Le domaine a bien été renommé sur le serveur."
     IDS_RENAME_DOMAIN_KO    "Une erreur est survenue. Le domaine n'a pas été renommé."
     IDS_TX_INFO_PWD_GROUP   "Cette application appartient à un groupement de mot de passe. Le changement de mot de passe de l'identifiant %s sera également réalisé dans tous vos enregistrements de ce groupe (surlignés de la même couleur)."
+    IDS_IDANDPWDTITLE_NEWACCOUNT "Ajout d'un compte"
+    IDS_IDANDPWDTEXT_NEWACCOUNT 
+                            "Informations de connexion pour le nouveau compte de :\r\n%s"
 END
 
 #endif    // French (France) resources

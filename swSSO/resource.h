@@ -394,6 +394,8 @@
 #define IDS_RENAME_DOMAIN_KO            42019
 #define IDS_STRING1                     42020
 #define IDS_TX_INFO_PWD_GROUP           42020
+#define IDS_IDANDPWDTITLE_NEWACCOUNT    42021
+#define IDS_IDANDPWDTEXT_NEWACCOUNT     42022
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

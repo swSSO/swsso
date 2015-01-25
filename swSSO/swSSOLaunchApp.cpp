@@ -121,7 +121,7 @@ void OnInitDialog(HWND w)
 	TreeView_SetImageList(GetDlgItem(w,TV_APPLICATIONS),ghImageList,TVSIL_STATE);
 
 	// Remplissage de la treeview
-	FillTreeView(w,FALSE);
+	FillTreeView(w);
 
 	// case à cocher "Toujours visible"
 	CheckDlgButton(w,CK_VISIBLE,gbLaunchTopMost?BST_CHECKED:BST_UNCHECKED);
@@ -207,7 +207,7 @@ static int CALLBACK LaunchAppDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						switch (ptvkd->wVKey)
 						{
 							case VK_F5:
-								FillTreeView(w,FALSE);
+								FillTreeView(w);
 								break;
 						}
 					}
