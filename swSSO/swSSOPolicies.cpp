@@ -670,7 +670,6 @@ void LoadPolicies(void)
 	//--------------------------------------------------------------
 	// PWD GROUP COLORS
 	//--------------------------------------------------------------
-	int iNbPwdGroupColors=5;
 	ZeroMemory(gtabPwdGroupColors,sizeof(gtabPwdGroupColors));
 	// initialisation avec 5 couleurs par défaut
 	gtabPwdGroupColors[0]=RGB(255,255,128);
@@ -706,7 +705,7 @@ void LoadPolicies(void)
 		RegCloseKey(hKey);
 suite:;
 	}
-	giNbPwdGroupColors=max(giNbPwdGroupColors,iNbPwdGroupColors);
+	giNbPwdGroupColors=max(giNbPwdGroupColors,5);
 #ifdef TRACES_ACTIVEES
 	int i;
 	if (gbAdmin)
