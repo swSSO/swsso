@@ -670,8 +670,14 @@ void LoadPolicies(void)
 	//--------------------------------------------------------------
 	// PWD GROUP COLORS
 	//--------------------------------------------------------------
-	giNbPwdGroupColors=0;
+	int iNbPwdGroupColors=5;
 	ZeroMemory(gtabPwdGroupColors,sizeof(gtabPwdGroupColors));
+	// initialisation avec 5 couleurs par défaut
+	gtabPwdGroupColors[0]=RGB(255,255,128);
+	gtabPwdGroupColors[1]=RGB(128,255,128);
+	gtabPwdGroupColors[2]=RGB(128,128,255);
+	gtabPwdGroupColors[3]=RGB(255,128,128);
+	gtabPwdGroupColors[4]=RGB(128,192,192);
 	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_PWDGROUP_COLORS_ADMIN:REGKEY_PWDGROUP_COLORS,0,KEY_READ,&hKey);
 	if (rc==ERROR_SUCCESS)
 	{
@@ -694,13 +700,13 @@ void LoadPolicies(void)
 				pszB=strtok_s(NULL,",;",&pContext);
 				if (pszB==NULL) { TRACE((TRACE_ERROR,_F_,"PwdGroupColor #%d format incorrect (%s)",giNbPwdGroupColors,szValue)) ; goto suite;}
 				gtabPwdGroupColors[giNbPwdGroupColors]=RGB(atoi(pszR),atoi(pszG),atoi(pszB));
-				TRACE((TRACE_INFO,_F_,"PwdGroupColor #d=(%s,%s,%s) --> 0x%08lx",pszR,pszG,pszB,gtabPwdGroupColors[giNbPwdGroupColors]));
 				giNbPwdGroupColors++;
 			}
 		}
 		RegCloseKey(hKey);
 suite:;
 	}
+	giNbPwdGroupColors=max(giNbPwdGroupColors,iNbPwdGroupColors);
 #ifdef TRACES_ACTIVEES
 	int i;
 	if (gbAdmin)
@@ -801,6 +807,11 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbSSOChrome_DefaultValue=%d",gbSSOChrome_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"REGKEY_HOTKEY ---------"));
 	TRACE((TRACE_INFO,_F_,"gszPastePwd_Text=%s",gszPastePwd_Text));
+	for (i=0;i<giNbPwdGroupColors;i++)
+	{
+		TRACE((TRACE_INFO,_F_,"PwdGroupColor[%d]=0x%08lx",i,gtabPwdGroupColors[i]));
+	}
+
 #endif
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
