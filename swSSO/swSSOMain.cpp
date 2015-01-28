@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="106";	// 101 = 1.01
-const char gcszCurrentBeta[]="1078";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1079";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -1970,11 +1970,11 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	BOOL bMigrationWindowsSSO=FALSE;
 	BOOL bForcePwdChangeNow=FALSE;
 	BOOL bQuit=FALSE;
+	int iWaitBeforeKill=5000; //en ms
 	
 	// init des traces
 	TRACE_OPEN();
 	TRACE((TRACE_ENTER,_F_, ""));
-	
 	// init de toutes les globales
 	ghInstance=hInstance;
 	gptActions=NULL;
@@ -2041,9 +2041,26 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	TRACE((TRACE_INFO,_F_,"giOSVersion=%d giOSBits=%d",giOSVersion,giOSBits));
 
 	// ISSUE#227 : quitter
-	if (strnistr(lpCmdLine,"/quit",-1)!=NULL || strnistr(lpCmdLine,"-quit",-1)!=NULL) 
+	if (strnistr(lpCmdLine,"/quit:",-1)!=NULL || strnistr(lpCmdLine,"-quit:",-1)!=NULL)
 	{
+		char *p=strnistr(lpCmdLine,"quit:",-1);
+		char szWaitBeforeKill[2+1]={0,0,0};
+		if (p!=NULL)
+		{
+			if (*(p+5)!=0) 
+			{
+				szWaitBeforeKill[0]=*(p+5);
+				if (*(p+6)!=0) szWaitBeforeKill[1]=*(p+6);
+			}
+		}
 		bQuit=TRUE;
+		iWaitBeforeKill=atoi(szWaitBeforeKill)*1000;
+		TRACE((TRACE_INFO,_F_,"Quit iWaitBeforeKill=%d",iWaitBeforeKill));
+	}
+	else if (strnistr(lpCmdLine,"/quit",-1)!=NULL || strnistr(lpCmdLine,"-quit",-1)!=NULL) 
+	{ 
+		bQuit=TRUE;
+		TRACE((TRACE_INFO,_F_,"Quit iWaitBeforeKill=%d",iWaitBeforeKill));
 	}
 
 	// 0.91 : si la ligne de commande contient le paramètre -launchapp, ouvre la fenêtre de lancement d'appli
@@ -2117,6 +2134,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		{
 			TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente de s'arrêter gbAdmin=%d",gbAdmin));
 			PostMessage(HWND_BROADCAST,gbAdmin?guiAdminQuitMsg:guiStandardQuitMsg,0,0);
+			// attend 5 secondes et si toujours là on le shoote
+			Sleep(iWaitBeforeKill);
+			KillswSSO();
 		}
 		goto end;
 	}

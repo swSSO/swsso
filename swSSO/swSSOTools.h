@@ -106,6 +106,7 @@ int GetIniHash(unsigned char *pBufHashValue);
 int StoreIniEncryptedHash();
 int CheckIniHash();
 BOOL CheckIfQuitMessage(UINT msg);
+void KillswSSO(void);
 
 // comme RESEDIT est un peu merdique et me change la taille du séparateur quand il a envie
 // cette macro (à positionner dans WM_INITDIALOG) le replace correctement !

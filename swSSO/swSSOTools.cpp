@@ -1916,3 +1916,74 @@ BOOL CheckIfQuitMessage(UINT msg)
 
 	return rc;
 }
+
+//-----------------------------------------------------------------------------
+// KillswSSO()
+//-----------------------------------------------------------------------------
+// Tue le process swSSO si toujours présent
+//-----------------------------------------------------------------------------
+void KillswSSO(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	char szCurrentProcessFullPathName[MAX_PATH];
+	DWORD dwCurrentProcessId=GetCurrentProcessId();
+	HANDLE hProcessSnap=INVALID_HANDLE_VALUE;
+	HANDLE hProcess=NULL;
+	PROCESSENTRY32 pe32;
+
+	TRACE((TRACE_INFO,_F_,"GetCurrentProcessId()=%ld",dwCurrentProcessId));
+
+	hProcessSnap=CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);
+	if(hProcessSnap==INVALID_HANDLE_VALUE)
+	{
+		TRACE((TRACE_ERROR,_F_,"CreateToolhelp32Snapshot() KO"));
+		goto end;
+	}
+	// on fait un premier tour pour déterminer le nom du process courant
+	pe32.dwSize=sizeof(PROCESSENTRY32);
+	if (!Process32First(hProcessSnap,&pe32))
+	{
+		TRACE((TRACE_ERROR,_F_,"Process32First() KO"));
+		goto end;
+	}
+	do
+	{
+		TRACE((TRACE_DEBUG,_F_,"Process : %s (pid=%ld)",pe32.szExeFile,pe32.th32ProcessID));
+		if (pe32.th32ProcessID==dwCurrentProcessId)
+		{
+			strcpy_s(szCurrentProcessFullPathName,sizeof(szCurrentProcessFullPathName),pe32.szExeFile);
+			TRACE((TRACE_INFO,_F_,"Trouvé ! Process : %s (pid=%ld)",szCurrentProcessFullPathName,dwCurrentProcessId));
+			goto suite;
+		}
+	} while (Process32Next(hProcessSnap,&pe32));
+suite:
+	// on fait un second tour pour tuer tous les process qui ont le même nom que le process courant
+	pe32.dwSize=sizeof(PROCESSENTRY32);
+	if (!Process32First(hProcessSnap,&pe32))
+	{
+		TRACE((TRACE_ERROR,_F_,"Process32First() KO"));
+		goto end;
+	}
+	do
+	{
+		TRACE((TRACE_DEBUG,_F_,"Process : %s (pid=%ld)",pe32.szExeFile,pe32.th32ProcessID));
+		if (_stricmp(szCurrentProcessFullPathName,pe32.szExeFile)==0 && pe32.th32ProcessID!=dwCurrentProcessId)
+		{
+			TRACE((TRACE_INFO,_F_,"Trouvé on le tue (pid=%ld) !",pe32.th32ProcessID));
+			hProcess=OpenProcess(PROCESS_TERMINATE,FALSE,pe32.th32ProcessID);
+			if (hProcess!=NULL)
+			{
+				TerminateProcess(hProcess,0);
+				CloseHandle(hProcess);
+				hProcess=NULL;
+				// remarque : on continue pour tuer tous les swSSO.exe lancés
+			}
+		}
+	} while (Process32Next(hProcessSnap,&pe32));
+
+
+end:
+  if (hProcessSnap!=INVALID_HANDLE_VALUE) CloseHandle(hProcessSnap);
+  if (hProcess!=NULL) CloseHandle(hProcess);
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
