@@ -29,13 +29,13 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.3
+// VERSION INTERNE : 6.4
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
 // showAll -> appelé par showall et showold 
 // ------------------------------------------------------------
-function showAll($active,$domain,$title)
+function showAll($active,$domain,$title,$export)
 {
 	$cnx=dbConnect();
 	if (!$cnx) return;
@@ -398,4 +398,26 @@ function menuShowDomains()
 	
 	dbClose($cnx);
 }
-?>
+// ------------------------------------------------------------
+// exportStats
+// ------------------------------------------------------------
+function exportStats()
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+
+	$szRequest="select shausername,logindate,nconfigs,nsso,nenrolled from "._TABLE_PREFIX_."stats order by logindate";      
+
+	$req=mysql_query($szRequest,$cnx);
+	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+	$csv=fopen('php://output','w');
+	header('Content-Type: application/csv');
+	header('Content-Disposition: attachement; filename="swsso-statistiques.csv";');
+	for ($i=0;$i<mysql_num_rows($req);$i++)
+	{
+		$ligne = mysql_fetch_row($req);
+		fputcsv($csv,$ligne,_SEPARATOR_);
+	}
+	fclose($csv);
+	dbClose($cnx);
+}?>

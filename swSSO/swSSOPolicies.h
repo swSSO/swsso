@@ -209,7 +209,7 @@ extern BOOL gbDisplayConfigsNotifications;	// 0.92 : affiche les messages de not
 extern BOOL gbWindowsEventLog;				// 0.93 : log dans le journal d'événements de Windows
 extern char gszLogFileName[];				// 0.93 : chemin complet du fichier de log
 extern int  giLogLevel;						// 0.93 : niveau de log
-extern BOOL gbStat;							// 0.99 : statistiques - ISSUE#106
+extern int  giStat;							// 0.99 : statistiques - ISSUE#106 + ISSUE#244
 extern char gszWelcomeMessage[];			// 1.01 : message de définition du mot de passe maitre dans la fenêtre bienvenue - ISSUE#146
 extern int  giMaxConfigs;					// 1.01 : nb max de configurations - ISSUE#149
 extern BOOL gbServerHTTPS;					// 1.03 - ISSUE#162

@@ -180,6 +180,7 @@ int swStat(void)
 	DWORD lenHash;
 	unsigned char bufHashValue[HASH_LEN];
 	char szHashValue[HASH_LEN*2+1];
+	char *pszResult=NULL;
 	
 	if (gLastLoginTime.wYear==0) // ISSUE#171
 	{ 
@@ -193,13 +194,6 @@ int swStat(void)
 	if (p==NULL) { TRACE((TRACE_ERROR,_F_,"gszCfgFile=%s",gszCfgFile)); goto end; }
 	memcpy(p+1,"stat",5);
 	
-	// ouverture du fichier
-	hfStat=CreateFile(szFilename,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-	if (hfStat==INVALID_HANDLE_VALUE)
-	{
-		TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFilename,GetLastError()));
-		goto end;
-	}
 	// récup du nb d'applis
 	GetNbActiveApps(&iNbActiveApps,&iNbActiveAppsFromServer);
 	
@@ -211,19 +205,40 @@ int swStat(void)
 	TRACE_BUFFER((TRACE_DEBUG,_F_,bufHashValue,lenHash,"hash"));
 	swCryptEncodeBase64(bufHashValue,HASH_LEN,szHashValue);
 
-	// SHA1(USERNAME);date dernière connexion réussie AAAAMMJJ;nb applis actives;nbsssoréalisés;nb applis actives enrôlées depuis le serveur
-	len=wsprintf(buf2048,"%s;%04d%02d%02d;%d;%d;%d",
-		szHashValue,
-		(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
-		iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer); 
-	if (!WriteFile(hfStat,buf2048,len,&dw,NULL))
+	if (giStat==1) // stats fichier
 	{
-		TRACE((TRACE_ERROR,_F_,"WriteFile(%s,%ld)=%d",szFilename,len,GetLastError()));
-		goto end;
+		// ouverture du fichier
+		hfStat=CreateFile(szFilename,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+		if (hfStat==INVALID_HANDLE_VALUE)
+		{
+			TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFilename,GetLastError()));
+			goto end;
+		}
+
+		// SHA1(USERNAME);date dernière connexion réussie AAAAMMJJ;nb applis actives;nbsssoréalisés;nb applis actives enrôlées depuis le serveur
+		len=wsprintf(buf2048,"%s;%04d%02d%02d;%d;%d;%d",
+			szHashValue,
+			(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
+			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer); 
+		if (!WriteFile(hfStat,buf2048,len,&dw,NULL))
+		{
+			TRACE((TRACE_ERROR,_F_,"WriteFile(%s,%ld)=%d",szFilename,len,GetLastError()));
+			goto end;
+		}
 	}
-		
+	else if (giStat==2) // stat upload
+	{
+		sprintf_s(buf2048,sizeof(buf2048),"%s?action=uploadstats&shausername=%s&logindate=%04d%02d%02d&nconfigs=%d&nsso=%d&nenrolled=%d",
+			gszWebServiceAddress,
+			szHashValue,
+			(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
+			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer); 
+		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",buf2048));
+		pszResult=HTTPRequest(buf2048,8,NULL); // remarque : RAF du résultat
+	}
 	rc=0;
 end:
+	if (pszResult!=NULL) free(pszResult);
 	if (hHash!=NULL) CryptDestroyHash(hHash);
 	if (hfStat!=INVALID_HANDLE_VALUE) CloseHandle(hfStat); 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));

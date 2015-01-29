@@ -111,7 +111,7 @@ BOOL gbDisplayConfigsNotifications=TRUE;	// 0.92 : affiche les messages de notif
 BOOL gbWindowsEventLog=FALSE;				// 0.93 : log dans le journal d'événements de Windows
 char gszLogFileName[_MAX_PATH+1];			// 0.93 : chemin complet du fichier de log
 int  giLogLevel=LOG_LEVEL_NONE;				// 0.93 : niveau de log
-BOOL gbStat=FALSE;							// 0.99 : statistiques - ISSUE#106
+BOOL giStat=0;								// 0.99 : statistiques - ISSUE#106 + ISSUE#244
 char gszWelcomeMessage[512+1];				// 1.01 : message de définition du mot de passe maitre dans la fenêtre bienvenue - ISSUE#146
 int  giMaxConfigs=500;						// 1.01 : nb max de configurations - ISSUE#149
 BOOL gbServerHTTPS=FALSE;						// 1.03 - ISSUE#162
@@ -491,7 +491,7 @@ void LoadPolicies(void)
 		
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_STAT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbStat=(BOOL)dwValue; 
+		if (rc==ERROR_SUCCESS) giStat=(int)dwValue; 
 		
 		dwValueType=REG_SZ;
 		dwValueSize=sizeof(szValue);
@@ -773,7 +773,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"giLogLevel=%d"						,giLogLevel));
 	TRACE((TRACE_INFO,_F_,"gszLogFileName=%s"					,gszLogFileName));
 	TRACE((TRACE_INFO,_F_,"gbWindowsEventLog=%d"				,gbWindowsEventLog));
-	TRACE((TRACE_INFO,_F_,"gbStat=%d"							,gbStat));
+	TRACE((TRACE_INFO,_F_,"giStat=%d"							,giStat));
 	TRACE((TRACE_INFO,_F_,"giMaxConfigs=%d"						,giMaxConfigs));
 	TRACE((TRACE_INFO,_F_,"gbUseADPasswordForAppLogin=%d"		,gbUseADPasswordForAppLogin));
 	TRACE((TRACE_INFO,_F_,"gbDisplayWindowsPasswordChange=%d"	,gbDisplayWindowsPasswordChange));

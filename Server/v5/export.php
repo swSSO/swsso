@@ -1,11 +1,14 @@
 <?php
+include('variables.php');
+include('util.php');
+include('functions.php');
 //-----------------------------------------------------------------------------
 //
 //                                  swSSO
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2015 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -29,61 +32,30 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.4
+// VERSION INTERNE : 5.6
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
-// dbConnect()
+// export des stats
 // ------------------------------------------------------------
-function dbConnect() 
+if ($_GET['data']=="stats")
 {
-	$cnx = mysql_connect(_HOST_,_USER_,_PWD_,false,2); //CLIENT_FOUND_ROWS=2
-	if (!$cnx) 
-	{
-		dbError($cnx,"mysql_connect");
-	}
-	else 
-	{
-		$ok = mysql_select_db(_DB_, $cnx);
-		if (!$ok)
-		{
-			dbError($cnx,"mysql_select_db");
-			$cnx=null;
-		}
-	}
-	return $cnx;
+	exportStats();
 }
 // ------------------------------------------------------------
-// dbClose()
+// export des config actives
 // ------------------------------------------------------------
-function dbClose($cnx)
+else if ($_GET['data']=="configs")
 {
-	if ($cnx) mysql_close($cnx);
-	$cnx=null;
+	$var_domain=utf8_decode(addslashes($_GET['domain']));
+  	showAll(1,$var_domain,1);
 }
 // ------------------------------------------------------------
-// dbError()
+// export des config archivees
 // ------------------------------------------------------------
-function dbError($cnx,$szRequest)
+else if ($_GET['data']=="archived")
 {
-	echo "<error>";
-	echo "+ Serveur : "._HOST_."</br>";
-	echo "+ Base    : "._DB_."</br>";
-	echo "+ Request : ".$szRequest."</br>";
-	if ($cnx) echo "+ Error   : ".mysql_errno($cnx)." (".mysql_error($cnx).")</br>";
-	echo "</error>";
-}
-// ------------------------------------------------------------
-// myaddslashes()
-// ------------------------------------------------------------
-function myaddslashes($str)
-{
-	if (!get_magic_quotes_gpc()) 
-	{
-		return addslashes($str);
-	} else 
-	{
-		return $str;
-	}
+	$var_domain=utf8_decode(addslashes($_GET['domain']));
+  	showAll(0,$var_domain,1);
 }
 ?>

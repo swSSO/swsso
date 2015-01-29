@@ -2694,7 +2694,7 @@ end:
 	else
 	{
 		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_QUIT,NULL,NULL,NULL,NULL,0);
-		if (gbStat) swStat(); // 0.99 - ISSUE#106
+		if (giStat!=0 && !gbAdmin) swStat(); // 0.99 - ISSUE#106 + ISSUE#244
 	}
 
 	// on libère tout avant de terminer

@@ -32,6 +32,8 @@ include('functions.php');
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
+// VERSION INTERNE : 5.6
+//------------------------------------------------------------------------------
 
 $title="<title>swSSO - Serveur de configuration v1.04</title>";
 
@@ -97,55 +99,6 @@ else if ($_GET['action']=="deletelogs"._WRITESUFFIX_)
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 	echo "<font face=verdana size=2>";
 	echo "Tous les logs ont &eacute;t&eacute; effac&eacute;s.<br/>";
-	echo "</font>";
-	echo "</html>";
-	dbClose($cnx);
-}
-// ------------------------------------------------------------
-// showstats : génère une page html avec le compteur de stat
-// ------------------------------------------------------------
-else if ($_GET['action']=="showstats"._READSUFFIX_)
-{
-	$cnx=dbConnect();
-	if (!$cnx) return;
-
-	header("Content-type: text/html; charset=UTF-8");
-	echo "<html>";
-	echo $title;
-	echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > Statistiques</b><br/><br/>";
-
-	$szRequest="select getversion from "._TABLE_PREFIX_."stats where id=0";
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-	$ligne=mysql_fetch_row($req);
-	echo "<font face=verdana size=2>";
-	echo "Nombre d'appels getversion : ".$ligne[0]."<br/><br/>";
-	echo "<td><a href=\"./admin.php?action=razstats"._WRITESUFFIX_."\" ".
-		" onclick=\"return confirm('Confirmez-vous la remise &agrave; z&eacute;ro des statistiques ?');\">Remise &agrave; z&eacute;ro des statistiques</a></td>";
-	echo "<br/>";
-	echo "</font>";
-	echo "</html>";
-	dbClose($cnx);
-}
-// ------------------------------------------------------------
-// razstats : remise à 0 des stats
-// ------------------------------------------------------------
-else if ($_GET['action']=="razstats"._WRITESUFFIX_)
-{
-	$cnx=dbConnect();
-	if (!$cnx) return;
-
-	header("Content-type: text/html; charset=UTF-8");
-	echo "<html>";
-	echo $title;
-	echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > Statistiques</b><br/><br/>";
-	
-	$szRequest="update "._TABLE_PREFIX_."stats set getversion=0 where id=0";      
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-	echo "<font face=verdana size=2>";
-	echo "Remise &agrave; z&eacute;ro des statistiques effectu&eacute;e.<br/>";
 	echo "</font>";
 	echo "</html>";
 	dbClose($cnx);
@@ -243,7 +196,7 @@ else if ($_GET['action']=="menu"._MENUSUFFIX_)
 			echo "<br/>+ G&eacute;rer mes domaines";
 			menuShowDomains();
 			echo "<br/>+ <a href=./admin.php?action=showdomains"._READSUFFIX_.">Ajouter ou supprimer un domaine</a>";
-			if (_STATS_=="TRUE") echo "<br/>+ <a href=./admin.php?action=showstats"._READSUFFIX_.">Statistiques</a>";      
+			echo "<br/>+ <a href=./export.php?data=stats>T&eacute;l&eacute;charger les statistiques (csv)</a>";    
 			echo "<br/>+ <a href=./webservice5.php?action=isalive>Test \"isalive\"</a>";   
 			if (_ENCRYPT_=="TRUE")
 				echo "<br/><br/>Chiffrement : activ&eacute;";

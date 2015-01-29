@@ -364,7 +364,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			break;
 		case WM_QUERYENDSESSION:
 			TRACE((TRACE_INFO,_F_,"WM_QUERYENDSESSION"));
-			if (gbStat) swStat();
+			if (giStat!=0 && !gbAdmin) swStat();
 			return TRUE;
 		default:
 			if(msg==gMsgTaskbarRestart) // notif recréation systray

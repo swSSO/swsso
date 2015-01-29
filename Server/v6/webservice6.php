@@ -35,7 +35,7 @@ include('util.php');
 //                   Le client 1.05 et les suivants resteront compatibles avec webservice5.php tant
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
 //------------------------------------------------------------------------------
-// VERSION INTERNE : 6.3.1
+// VERSION INTERNE : 6.4
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
@@ -507,15 +507,6 @@ else if ($_GET['action']=="putconfig")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getversion")
 {
-	// compteur de stat, ne doit pas être bloquant en cas d'erreur
-	if (_STATS_=="TRUE")
-	{
-		$cnx=dbConnect();
-		if (!$cnx) return;
-		$szCountRequest="update "._TABLE_PREFIX_."stats set getversion=getversion+1 where id=0";
-		mysql_query($szCountRequest,$cnx);
-		dbClose($cnx);
-	}
 	header("Content-type: text/xml; charset=UTF-8");
 	echo $swssoVersion;
 }
@@ -856,6 +847,37 @@ else if ($_GET['action']=="renamedomain")
 	if (isset($_GET["debug"])) echo $szRequest;
 	$result=mysql_query($szRequest,$cnx);
 	echo "OK";
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// uploadstats
+// ------------------------------------------------------------
+else if ($_GET['action']=="uploadstats")
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	$var_shausername=utf8_decode(myaddslashes($_GET['shausername']));
+	$var_logindate=utf8_decode(myaddslashes($_GET['logindate']));
+	$var_nconfigs=utf8_decode(myaddslashes($_GET['nconfigs']));
+	$var_nsso=utf8_decode(myaddslashes($_GET['nsso']));
+	$var_nenrolled=utf8_decode(myaddslashes($_GET['nenrolled']));
+	$statRecorded=0;
+	if (_STATOVERWRITE_=="TRUE")
+	{
+		// commence par tenter un update, si échec on fera un insert
+		$szRequest="update "._TABLE_PREFIX_."stats set logindate='".$var_logindate."',nconfigs='".$var_nconfigs."',nsso='".$var_nsso."',nenrolled='".$var_nenrolled."' ".
+				   "WHERE shausername='".$var_shausername."'";
+    	$result=mysql_query($szRequest,$cnx);
+		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+		if (mysql_affected_rows()!=0) $statRecorded=1;
+	}
+	if ($statRecorded==0)
+	{
+		$szRequest="insert into "._TABLE_PREFIX_."stats (shausername,logindate,nconfigs,nsso,nenrolled) ".
+				   "values ('".$var_shausername."','".$var_logindate."','".$var_nconfigs."','".$var_nsso."','".$var_nenrolled."')";
+		mysql_query($szRequest,$cnx);
+	}
 	dbClose($cnx);
 }
 ?>
