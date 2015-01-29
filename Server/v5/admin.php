@@ -43,7 +43,7 @@ $title="<title>swSSO - Serveur de configuration v1.04</title>";
 if ($_GET['action']=="showall"._READSUFFIX_)
 {
 	$var_domain=utf8_decode(addslashes($_GET['domain']));
-	showAll(1,$var_domain);
+	showAll(1,$var_domain,0);
 }
 // ------------------------------------------------------------
 // showold : génère une page html avec l'ensemble des configs archivées
@@ -52,7 +52,7 @@ if ($_GET['action']=="showall"._READSUFFIX_)
 else if ($_GET['action']=="showold"._READSUFFIX_)
 {
 	$var_domain=utf8_decode(addslashes($_GET['domain']));
-	showAll(0,$var_domain);
+	showAll(0,$var_domain,0);
 }
 // ------------------------------------------------------------
 // showlogs : génère une page html avec les logs
@@ -121,7 +121,7 @@ else if ($_GET['action']=="archiveconfig"._WRITESUFFIX_)
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
 	dbClose($cnx);
-	showAll($var_active,$var_domain);
+	showAll($var_active,$var_domain,0);
 }
 // ------------------------------------------------------------
 // deleteconfig : suppression définitive d'une configuration
@@ -141,7 +141,7 @@ else if ($_GET['action']=="deleteconfig"._WRITESUFFIX_)
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
 	dbClose($cnx);
-	showAll($var_active,$var_domain);
+	showAll($var_active,$var_domain,0);
 }
 // ------------------------------------------------------------
 // deletecateg : suppression définitive d'une configuration

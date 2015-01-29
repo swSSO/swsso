@@ -205,7 +205,7 @@ int swStat(void)
 	TRACE_BUFFER((TRACE_DEBUG,_F_,bufHashValue,lenHash,"hash"));
 	swCryptEncodeBase64(bufHashValue,HASH_LEN,szHashValue);
 
-	if (giStat==1) // stats fichier
+	if (giStat & 1) // stats fichier
 	{
 		// ouverture du fichier
 		hfStat=CreateFile(szFilename,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
@@ -226,7 +226,7 @@ int swStat(void)
 			goto end;
 		}
 	}
-	else if (giStat==2) // stat upload
+	if (giStat & 2) // stat upload
 	{
 		sprintf_s(buf2048,sizeof(buf2048),"%s?action=uploadstats&shausername=%s&logindate=%04d%02d%02d&nconfigs=%d&nsso=%d&nenrolled=%d",
 			gszWebServiceAddress,

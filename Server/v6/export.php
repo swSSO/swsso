@@ -47,15 +47,17 @@ if ($_GET['data']=="stats")
 // ------------------------------------------------------------
 else if ($_GET['data']=="configs")
 {
-	$var_domain=utf8_decode(addslashes($_GET['domain']));
-  	showAll(1,$var_domain,"",1);
+	$var_domain="0";
+	if (isset($_GET["domain"])) $var_domain=utf8_decode(addslashes($_GET['domain']));
+ 	showAll(1,$var_domain,"",1);
 }
 // ------------------------------------------------------------
 // export des config archivees
 // ------------------------------------------------------------
 else if ($_GET['data']=="archived")
 {
-	$var_domain=utf8_decode(addslashes($_GET['domain']));
+	$var_domain="0";
+	if (isset($_GET["domain"])) $var_domain=utf8_decode(addslashes($_GET['domain']));
   	showAll(0,$var_domain,"",1);
 }
 ?>
