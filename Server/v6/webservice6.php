@@ -54,6 +54,10 @@ if ($_GET['action']=="isalive")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getconfig")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 
@@ -277,6 +281,10 @@ else if ($_GET['action']=="getconfig")
 // ------------------------------------------------------------
 else if ($_GET['action']=="putconfig")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
     if (!$cnx) return;
 
@@ -507,6 +515,10 @@ else if ($_GET['action']=="putconfig")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getversion")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	header("Content-type: text/xml; charset=UTF-8");
 	echo $swssoVersion;
 }
@@ -515,6 +527,10 @@ else if ($_GET['action']=="getversion")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getdomains")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 
@@ -562,6 +578,10 @@ else if ($_GET['action']=="getdomains")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getconfigdomains")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -601,6 +621,10 @@ else if ($_GET['action']=="getconfigdomains")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getdomainconfigs")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -636,6 +660,10 @@ else if ($_GET['action']=="getdomainconfigs")
 // ------------------------------------------------------------
 else if ($_GET['action']=="isadminpwdset")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -659,6 +687,10 @@ else if ($_GET['action']=="isadminpwdset")
 // ------------------------------------------------------------
 else if ($_GET['action']=="checkadminpwd")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -703,6 +735,10 @@ else if ($_GET['action']=="checkadminpwd")
 // ------------------------------------------------------------
 else if ($_GET['action']=="setadminpwd")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -735,6 +771,10 @@ else if ($_GET['action']=="setadminpwd")
 // ------------------------------------------------------------
 else if ($_GET['action']=="deleteconfig")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -760,6 +800,10 @@ else if ($_GET['action']=="deleteconfig")
 // ------------------------------------------------------------
 else if ($_GET['action']=="deletecateg")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -780,6 +824,10 @@ else if ($_GET['action']=="deletecateg")
 // ------------------------------------------------------------
 else if ($_GET['action']=="deletedomain")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -813,6 +861,10 @@ else if ($_GET['action']=="deletedomain")
 // ------------------------------------------------------------
 else if ($_GET['action']=="adddomain")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -837,6 +889,10 @@ else if ($_GET['action']=="adddomain")
 // ------------------------------------------------------------
 else if ($_GET['action']=="renamedomain")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -854,6 +910,10 @@ else if ($_GET['action']=="renamedomain")
 // ------------------------------------------------------------
 else if ($_GET['action']=="uploadstats")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	

@@ -54,6 +54,11 @@ if ($_GET['action']=="isalive")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getconfig")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
+	
 	$cnx=dbConnect();
 	if (!$cnx) return;
 
@@ -261,6 +266,10 @@ else if ($_GET['action']=="getconfig")
 // ------------------------------------------------------------
 else if ($_GET['action']=="putconfig")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
 	$cnx=dbConnect();
     if (!$cnx) return;
 
@@ -443,6 +452,11 @@ else if ($_GET['action']=="putconfig")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getversion")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
+
 	header("Content-type: text/xml; charset=UTF-8");
 	echo $swssoVersion;
 }
@@ -451,6 +465,11 @@ else if ($_GET['action']=="getversion")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getdomains")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
+
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -485,6 +504,11 @@ else if ($_GET['action']=="getdomains")
 // ------------------------------------------------------------
 else if ($_GET['action']=="uploadstats")
 {
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
+
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
