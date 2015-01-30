@@ -124,6 +124,26 @@ else if ($_GET['action']=="archiveconfig"._WRITESUFFIX_)
 	showAll($var_active,$var_domain,0);
 }
 // ------------------------------------------------------------
+// restoreconfig : restauration d'une configuration
+// ------------------------------------------------------------
+else if ($_GET['action']=="restoreconfig"._WRITESUFFIX_)
+{
+	$cnx=dbConnect();
+	if (!$cnx) return;
+
+	$var_id=utf8_decode(addslashes($_GET['id']));
+	$var_active=utf8_decode(addslashes($_GET['active']));
+	$var_domain=utf8_decode(addslashes($_GET['domain']));
+	
+	$szRequest="update "._TABLE_PREFIX_."config set active=1, lastModified=NOW() where id=".$var_id." AND active=0";    
+
+	$req=mysql_query($szRequest,$cnx);
+	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+
+	dbClose($cnx);
+	showAll($var_active,$var_domain,0);
+}
+// ------------------------------------------------------------
 // deleteconfig : suppression définitive d'une configuration
 // ------------------------------------------------------------
 else if ($_GET['action']=="deleteconfig"._WRITESUFFIX_)
@@ -135,7 +155,7 @@ else if ($_GET['action']=="deleteconfig"._WRITESUFFIX_)
 	$var_active=utf8_decode(addslashes($_GET['active']));
 	$var_domain=utf8_decode(addslashes($_GET['domain']));
 	
-	$szRequest="delete from "._TABLE_PREFIX_."config where id=".$var_id." AND active=0";
+	$szRequest="delete from "._TABLE_PREFIX_."config where id=".$var_id." AND active=".$var_active;
 
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }

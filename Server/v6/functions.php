@@ -111,6 +111,7 @@ function showAll($active,$domain,$title,$export)
 		else
 			echo "<table border=1 style=\"font-family:Verdana; font-size:11px;\">";
 		echo "<tr>";
+		echo "<th>Action</th>";
 		echo "<th>Id.</th>";
 		echo "<th>Categ.</th>";
 		echo "<th>Domaine</th>";
@@ -166,11 +167,18 @@ function showAll($active,$domain,$title,$export)
 		{
 			echo "<tr>";
 			if ($active==1)
-				echo "<td><a href=\"./admin.php?action=archiveconfig"._WRITESUFFIX_."&id=".$ligne[0]."&domain=".$domain."&active=".$active."\" ".
-					" onclick=\"return confirm('Confirmez-vous l\'archivage de ".utf8_encode($ligne[3])." [".$ligne[0]."] ?');\">".$ligne[0]."</a></td>";
+				echo "<td><a href=\"./admin.php?action=archiveconfig"._WRITESUFFIX_."&id=".$ligne[0]."&active=".$active."\" ".
+					" onclick=\"return confirm('Confirmez-vous l\'archivage de ".utf8_encode($ligne[4])." [".$ligne[0]."] ?');\">Archiver</a></br/>".
+					"<a href=\"./admin.php?action=deleteconfig"._WRITESUFFIX_."&id=".$ligne[0]."&active=".$active."\" ".
+					" onclick=\"return confirm('Confirmez-vous la SUPPRESSION de ".utf8_encode($ligne[4])." [".$ligne[0]."] ?');\">Supprimer</a></td>";
 			else
-				echo "<td><a href=\"./admin.php?action=deleteconfig"._WRITESUFFIX_."&id=".$ligne[0]."&domain=".$domain."&active=".$active."\" ".
-					" onclick=\"return confirm('Confirmez-vous la suppression de ".utf8_encode($ligne[3])." [".$ligne[0]."] ?');\">".$ligne[0]."</a></td>";
+			{
+				echo "<td><a href=\"./admin.php?action=restoreconfig"._WRITESUFFIX_."&id=".$ligne[0]."&active=".$active."\" ".
+					" onclick=\"return confirm('Confirmez-vous la restauration de ".utf8_encode($ligne[4])." [".$ligne[0]."] ?');\">Restaurer</a><br/>".
+					"<a href=\"./admin.php?action=deleteconfig"._WRITESUFFIX_."&id=".$ligne[0]."&active=".$active."\" ".
+					" onclick=\"return confirm('Confirmez-vous la SUPPRESSION de ".utf8_encode($ligne[4])." [".$ligne[0]."] ?');\">Supprimer</a></td>";
+			}
+			echo "<td>".utf8_encode($ligne[0])."</td>";    
 			if ($ligne[1]!="") echo "<td>".utf8_encode($ligne[2]."(".$ligne[1].")")."</td>"; else echo "<td align=center>-</td>";   // categId
 			if ($ligne[3]!="") // domainId
 			{
