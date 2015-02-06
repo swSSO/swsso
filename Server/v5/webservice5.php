@@ -508,7 +508,6 @@ else if ($_GET['action']=="uploadstats")
 	{
 		header("HTTP/1.0 404 Not Found"); return;
 	}
-
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	
@@ -517,11 +516,13 @@ else if ($_GET['action']=="uploadstats")
 	$var_nconfigs=utf8_decode(myaddslashes($_GET['nconfigs']));
 	$var_nsso=utf8_decode(myaddslashes($_GET['nsso']));
 	$var_nenrolled=utf8_decode(myaddslashes($_GET['nenrolled']));
+	$var_computername=utf8_decode(myaddslashes($_GET['computername']));
 	$statRecorded=0;
 	if (_STATOVERWRITE_=="TRUE")
 	{
 		// commence par tenter un update, si échec on fera un insert
-		$szRequest="update "._TABLE_PREFIX_."stats set logindate='".$var_logindate."',nconfigs='".$var_nconfigs."',nsso='".$var_nsso."',nenrolled='".$var_nenrolled."' ".
+		$szRequest="update "._TABLE_PREFIX_."stats set logindate='".$var_logindate."',nconfigs='".$var_nconfigs.
+					"',nsso='".$var_nsso."',nenrolled='".$var_nenrolled."',computername='".$var_computername."' ".
 				   "WHERE shausername='".$var_shausername."'";
     	$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -529,8 +530,8 @@ else if ($_GET['action']=="uploadstats")
 	}
 	if ($statRecorded==0)
 	{
-		$szRequest="insert into "._TABLE_PREFIX_."stats (shausername,logindate,nconfigs,nsso,nenrolled) ".
-				   "values ('".$var_shausername."','".$var_logindate."','".$var_nconfigs."','".$var_nsso."','".$var_nenrolled."')";
+		$szRequest="insert into "._TABLE_PREFIX_."stats (shausername,logindate,nconfigs,nsso,nenrolled,computername) ".
+				   "values ('".$var_shausername."','".$var_logindate."','".$var_nconfigs."','".$var_nsso."','".$var_nenrolled."','".$var_computername."')";
 		mysql_query($szRequest,$cnx);
 	}
 	dbClose($cnx);

@@ -181,7 +181,8 @@ int swStat(void)
 	unsigned char bufHashValue[HASH_LEN];
 	char szHashValue[HASH_LEN*2+1];
 	char *pszResult=NULL;
-	
+	char szTruncatedComputerName[7+1];
+			
 	if (gLastLoginTime.wYear==0) // ISSUE#171
 	{ 
 		TRACE((TRACE_INFO,_F_,"gLastLoginTime=0, utilisateur non connecte --> ne génère pas de stat"));
@@ -205,6 +206,9 @@ int swStat(void)
 	TRACE_BUFFER((TRACE_DEBUG,_F_,bufHashValue,lenHash,"hash"));
 	swCryptEncodeBase64(bufHashValue,HASH_LEN,szHashValue);
 
+	// tronque le computer name
+	strncpy_s(szTruncatedComputerName,sizeof(szTruncatedComputerName),gszComputerName,7);
+
 	if (giStat & 1) // stats fichier
 	{
 		// ouverture du fichier
@@ -216,10 +220,10 @@ int swStat(void)
 		}
 
 		// SHA1(USERNAME);date dernière connexion réussie AAAAMMJJ;nb applis actives;nbsssoréalisés;nb applis actives enrôlées depuis le serveur
-		len=wsprintf(buf2048,"%s;%04d%02d%02d;%d;%d;%d",
+		len=wsprintf(buf2048,"%s;%04d%02d%02d;%d;%d;%d;%s",
 			szHashValue,
 			(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
-			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer); 
+			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer,szTruncatedComputerName); 
 		if (!WriteFile(hfStat,buf2048,len,&dw,NULL))
 		{
 			TRACE((TRACE_ERROR,_F_,"WriteFile(%s,%ld)=%d",szFilename,len,GetLastError()));
@@ -228,11 +232,11 @@ int swStat(void)
 	}
 	if (giStat & 2) // stat upload
 	{
-		sprintf_s(buf2048,sizeof(buf2048),"%s?action=uploadstats&shausername=%s&logindate=%04d%02d%02d&nconfigs=%d&nsso=%d&nenrolled=%d",
+		sprintf_s(buf2048,sizeof(buf2048),"%s?action=uploadstats&shausername=%s&logindate=%04d%02d%02d&nconfigs=%d&nsso=%d&nenrolled=%d&computername=%s",
 			gszWebServiceAddress,
 			szHashValue,
 			(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
-			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer); 
+			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer,szTruncatedComputerName); 
 		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",buf2048));
 		pszResult=HTTPRequest(buf2048,8,NULL); // remarque : RAF du résultat
 	}

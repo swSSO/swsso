@@ -30,7 +30,7 @@ include('variables.php');
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 5.6
+// VERSION INTERNE : 5.6.1
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
@@ -428,7 +428,7 @@ function exportStats()
 	$cnx=dbConnect();
 	if (!$cnx) return;
 
-	$szRequest="select shausername,logindate,nconfigs,nsso,nenrolled from "._TABLE_PREFIX_."stats order by logindate";      
+	$szRequest="select shausername,logindate,nconfigs,nsso,nenrolled,computername from "._TABLE_PREFIX_."stats order by logindate";      
 
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -442,5 +442,4 @@ function exportStats()
 	}
 	fclose($csv);
 	dbClose($cnx);
-}
-?>
+}?>

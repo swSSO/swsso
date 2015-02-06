@@ -34,5 +34,6 @@ CREATE TABLE IF NOT EXISTS `stats` (
   `logindate` varchar(8) NOT NULL,
   `nconfigs` int(11) NOT NULL,
   `nsso` int(11) NOT NULL,
-  `nenrolled` int(11) NOT NULL
+  `nenrolled` int(11) NOT NULL,
+  `computername` varchar(40) NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

@@ -35,7 +35,7 @@ include('util.php');
 //                   Le client 1.05 et les suivants resteront compatibles avec webservice5.php tant
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
 //------------------------------------------------------------------------------
-// VERSION INTERNE : 6.4
+// VERSION INTERNE : 6.4.1
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
@@ -922,11 +922,13 @@ else if ($_GET['action']=="uploadstats")
 	$var_nconfigs=utf8_decode(myaddslashes($_GET['nconfigs']));
 	$var_nsso=utf8_decode(myaddslashes($_GET['nsso']));
 	$var_nenrolled=utf8_decode(myaddslashes($_GET['nenrolled']));
+	$var_computername=utf8_decode(myaddslashes($_GET['computername']));
 	$statRecorded=0;
 	if (_STATOVERWRITE_=="TRUE")
 	{
 		// commence par tenter un update, si échec on fera un insert
-		$szRequest="update "._TABLE_PREFIX_."stats set logindate='".$var_logindate."',nconfigs='".$var_nconfigs."',nsso='".$var_nsso."',nenrolled='".$var_nenrolled."' ".
+		$szRequest="update "._TABLE_PREFIX_."stats set logindate='".$var_logindate."',nconfigs='".$var_nconfigs.
+					"',nsso='".$var_nsso."',nenrolled='".$var_nenrolled."',computername='".$var_computername."' ".
 				   "WHERE shausername='".$var_shausername."'";
     	$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -934,14 +936,10 @@ else if ($_GET['action']=="uploadstats")
 	}
 	if ($statRecorded==0)
 	{
-		$szRequest="insert into "._TABLE_PREFIX_."stats (shausername,logindate,nconfigs,nsso,nenrolled) ".
-				   "values ('".$var_shausername."','".$var_logindate."','".$var_nconfigs."','".$var_nsso."','".$var_nenrolled."')";
+		$szRequest="insert into "._TABLE_PREFIX_."stats (shausername,logindate,nconfigs,nsso,nenrolled,computername) ".
+				   "values ('".$var_shausername."','".$var_logindate."','".$var_nconfigs."','".$var_nsso."','".$var_nenrolled."','".$var_computername."')";
 		mysql_query($szRequest,$cnx);
 	}
 	dbClose($cnx);
 }
 ?>
-
-
-
-
