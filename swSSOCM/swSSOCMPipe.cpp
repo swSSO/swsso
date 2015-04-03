@@ -30,9 +30,6 @@
 //-----------------------------------------------------------------------------
 
 #include "stdafx.h"
-#define PWD_LEN 256
-#define USER_LEN 256	// limite officielle
-#define DOMAIN_LEN 256	// limite à moi...
 
 //-----------------------------------------------------------------------------
 // swBuildAndSendRequest()
@@ -72,33 +69,24 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 		TRACE((TRACE_ERROR,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
 		goto end;
 	}
-	TRACE((TRACE_DEBUG,_F_,"usUserName       =0x%08lx",usUserName.Buffer));
-	TRACE((TRACE_DEBUG,_F_,"usPassword       =0x%08lx",usPassword.Buffer));
-	TRACE((TRACE_DEBUG,_F_,"usLogonDomainName=0x%08lx",usLogonDomainName.Buffer));
 
 	// Conversion de chaînes UNICODE_STRING
 	memset(szUserName,0,sizeof(szUserName));
 	memset(bufPassword,0,sizeof(bufPassword));
 	memset(szLogonDomainName,0,sizeof(szLogonDomainName));
-	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)usLogonDomainName.Buffer,usLogonDomainName.Length,"usLogonDomainName"));
-	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)usUserName.Buffer,usUserName.Length,"usUserName"));
-	TRACE_BUFFER((TRACE_PWD,_F_,(unsigned char*)usPassword.Buffer,usPassword.Length,"usPassword"));
 	// domaine
 	ret=WideCharToMultiByte(CP_ACP,0,usLogonDomainName.Buffer,usLogonDomainName.Length/2,szLogonDomainName,sizeof(szLogonDomainName),NULL,NULL);
 	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usLogonDomainName)=%d",GetLastError())); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"szLogonDomainName=%s",szLogonDomainName));
 	lenLogonDomainName=(int)strlen(szLogonDomainName);
 	// utilisateur
 	ret=WideCharToMultiByte(CP_ACP,0,usUserName.Buffer,usUserName.Length/2,szUserName,sizeof(szUserName),NULL,NULL);
 	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usUserName)=%d",GetLastError())); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"szUserName=%s",szUserName));
 	lenUserName=(int)strlen(szUserName);
 	// mot de passe
 	TRACE((TRACE_DEBUG,_F_,"usPassword.MaximumLength=%d",usPassword.MaximumLength));
 	ret=WideCharToMultiByte(CP_ACP,0,usPassword.Buffer,usPassword.Length/2,bufPassword,sizeof(bufPassword),NULL,NULL);
 	SecureZeroMemory(usPassword.Buffer,usPassword.MaximumLength);
 	if (ret==0) { TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usPassword)=%d",GetLastError())); goto end; }
-	TRACE((TRACE_PWD,_F_,"bufPassword=%s",bufPassword));
 	// ISSUE#173
 	// Si le mot de passe est vide, on sort (cas du NPLogonNotify/lpPreviousAuthentInfo après changement de mot de passe)
 	if (*bufPassword==0) { TRACE((TRACE_INFO,_F_,"MOT DE PASSE VIDE, ON SORT")); rc=1; goto end; }

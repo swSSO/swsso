@@ -34,6 +34,10 @@
 
 #include "targetver.h"
 
+#define PWD_LEN 256
+#define USER_LEN 256	// limite officielle
+#define DOMAIN_LEN 256	// limite à moi...
+
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
