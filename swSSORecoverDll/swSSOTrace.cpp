@@ -78,7 +78,8 @@ void swTraceOpen(void)
 	dwValueType=REG_SZ;
 	dwValueSize=sizeof(szValue);
 	rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILENAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-	if (rc==ERROR_SUCCESS) wsprintf(gszTraceFileName,"%s-%08lx",szValue,GetTickCount());
+	//if (rc==ERROR_SUCCESS) wsprintf(gszTraceFileName,"%s-%08lx",szValue,GetTickCount());
+	if (rc==ERROR_SUCCESS) strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),szValue);
 
 end:
 	// ouverture du fichier (fermé uniquement sur appel de swTraceClose)

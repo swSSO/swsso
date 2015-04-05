@@ -44,15 +44,16 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-4;
 
-	if (szChallenge==NULL) { TRACE((TRACE_INFO,_F_, "szChallenge=NULL",szChallenge)); goto end; }
-	if (szDomainUserName==NULL) { TRACE((TRACE_INFO,_F_, "szDomainUserName=NULL",szDomainUserName)); goto end; }
-	if (szResponse==NULL) { TRACE((TRACE_INFO,_F_, "szResponse=NULL",szResponse)); goto end; }
-
-	TRACE((TRACE_INFO,_F_, "szChallenge=%s",szChallenge));
-	TRACE((TRACE_INFO,_F_, "szDomainUserName=%s",szDomainUserName));
 	TRACE((TRACE_INFO,_F_, "iMaxCount=%d",iMaxCount));
+	if (szDomainUserName==NULL) { TRACE((TRACE_ERROR,_F_, "szDomainUserName=NULL",szDomainUserName)); goto end; }
+	TRACE((TRACE_INFO,_F_, "szDomainUserName=%s",szDomainUserName));
+	if (szChallenge==NULL) { TRACE((TRACE_ERROR,_F_, "szChallenge=NULL",szChallenge)); goto end; }
+	TRACE((TRACE_INFO,_F_, "szChallenge=%s",szChallenge));
+	if (szResponse==NULL) { TRACE((TRACE_ERROR,_F_, "szResponse=NULL",szResponse)); goto end; }
 	
 	*szResponse=0;
+	strcpy_s(szResponse,iMaxCount,"---swSSO RESPONSE---9876543210ABCDEFGHI---swSSO RESPONSE---");
+	TRACE((TRACE_INFO,_F_, "szResponse=%s",szResponse));
 
 	rc=0;
 end:
