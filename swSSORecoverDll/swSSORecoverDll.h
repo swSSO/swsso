@@ -47,3 +47,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 		char *szResponse,
 		int iMaxCount);
 
+#define ERR_BAD_CHALLENGE		-1
+#define ERR_BAD_ERROR			-2
+#define ERR_BUFFER_TOO_SMALL	-3
+#define ERR_OTHER				-4

@@ -30,10 +30,19 @@
 //-----------------------------------------------------------------------------
 #include "stdafx.h"
 
+const char gcszBeginChallenge[]="---swSSO CHALLENGE---";
+const char gcszEndChallenge[]="---swSSO CHALLENGE---";
+
+const char gcszBeginResponse[]="---swSSO RESPONSE---";
+const char gcszEndResponse[]="---swSSO RESPONSE---";
+
 //-----------------------------------------------------------------------------
-// ()
+// RecoveryGetResponse()
 //-----------------------------------------------------------------------------
-// 
+// [in] szChallenge		 : Challenge
+// [in] szDomainUsername : Identifiant et domaine de l'utilisateur sous la forme domaine\identifiant 
+// [out] szResponse		 : Réponse (buffer alloué et libéré par l'appelant)
+// [in] iMaxCount		 : Taille du buffer alloué par l'appelant recevoir la réponse. Taille à prévoir : 257 octets – 256 + 0 de fin de chaine.
 //-----------------------------------------------------------------------------
 SWSSORECOVERDLL_API int RecoveryGetResponse(
 		const char *szChallenge,
@@ -42,7 +51,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 		int iMaxCount)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=-4;
+	int rc=ERR_OTHER;
 
 	TRACE((TRACE_INFO,_F_, "iMaxCount=%d",iMaxCount));
 	if (szDomainUserName==NULL) { TRACE((TRACE_ERROR,_F_, "szDomainUserName=NULL",szDomainUserName)); goto end; }
