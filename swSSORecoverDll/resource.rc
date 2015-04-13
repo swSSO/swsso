@@ -1,0 +1,18 @@
+#ifndef APSTUDIO_INVOKED
+#ifdef SW_64BITS
+#define PRODUCT_NAME "swSSORecoverDll x64" 
+#define PRODUCT_NAME_TRACE "swSSORecoverDll x64 (traces)"
+#else
+#define PRODUCT_NAME "swSSORecoverDll x86"
+#define PRODUCT_NAME_TRACE "swSSORecoverDll x86 (traces)"
+#endif
+#define EXECUTABLE_NAME "swSSORecoverDll.dll"
+#define EXECUTABLE_NAME_TRACE "swSSORecoverDll.dll"
+#include <windows.h>
+#include <commctrl.h>
+#include <richedit.h>
+#include "..\swssocommonfiles\versioninfo.rc"
+#endif
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
