@@ -51,3 +51,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 #define ERR_BAD_USER			-2
 #define ERR_BUFFER_TOO_SMALL	-3
 #define ERR_OTHER				-4
+#define ERR_CONFIG_NOT_FOUND	-5
+#define ERR_KEYSTORE_NOT_FOUND	-6
+#define ERR_KEYSTORE_BAD_PWD	-7
+#define ERR_KEYSTORE_CORRUPTED	-8

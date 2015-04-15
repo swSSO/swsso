@@ -36,8 +36,9 @@ const char gcszEndChallenge[]="---swSSO CHALLENGE---";
 const char gcszBeginResponse[]="---swSSO RESPONSE---";
 const char gcszEndResponse[]="---swSSO RESPONSE---";
 
-char gszKeystorePwd[]="toto"; // POUR TEST
-char gszKeystoreFile[]="c:\\swSSO.Recover\\swSSO-Keystore.txt" ; // POUR TEST
+char gszKeystorePwd[100];
+char gszKeystoreFile[1024]; 
+char gszConfigFile[1024];
 
 //-----------------------------------------------------------------------------
 // RecoveryGetResponse()
@@ -53,10 +54,26 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 		char *szFormattedResponse,
 		int iMaxCount)
 {
+	TRACE_OPEN();
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=ERR_OTHER;
-	
+
+#ifdef BOUCHON
+	// trace et vérification des paramètres
+	TRACE((TRACE_INFO,_F_, "iMaxCount=%d",iMaxCount));
+	if (szDomainUserName==NULL) { TRACE((TRACE_ERROR,_F_, "szDomainUserName=NULL")); goto end; }
+	TRACE((TRACE_INFO,_F_, "szDomainUserName=%s",szDomainUserName));
+	if (szFormattedChallenge == NULL) { TRACE((TRACE_ERROR, _F_, "szFormattedChallenge=NULL")); goto end; }
+	TRACE((TRACE_INFO, _F_, "szFormattedChallenge=%s", szFormattedChallenge));
+	if (szFormattedResponse == NULL) { TRACE((TRACE_ERROR, _F_, "szFormattedResponse=NULL")); goto end; }
+	*szFormattedResponse=0;
+	strcpy_s(szFormattedResponse,iMaxCount,"---swSSO RESPONSE---9876543210ABCDEFGHI---swSSO RESPONSE---");
+	TRACE((TRACE_INFO,_F_, "szFormattedResponse=%s",szFormattedResponse));
+	goto end;
+#endif
+
 	int lenFormattedChallenge;
+	int lenFormattedResponse;
 	char szChallenge[2048];
 	char szFormattedChallengeCopy[2048];
 	BYTE Challenge[512];		//  (AESKeyData+UserId)Kpub + (Ks)Kpub
@@ -66,6 +83,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	BYTE *pDecryptedChallengePart2 = NULL; // Ks
 	DWORD lenDecryptedChallengePart1;
 	DWORD lenDecryptedChallengePart2;
+	DWORD lenConfigFile;
 	char *p;
 	int i;
 	char bufKeyId[5];
@@ -82,6 +100,22 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	TRACE((TRACE_INFO, _F_, "szFormattedChallenge=%s", szFormattedChallenge));
 	if (szFormattedResponse == NULL) { TRACE((TRACE_ERROR, _F_, "szFormattedResponse=NULL")); goto end; }
 	
+	*szFormattedResponse=0;
+	
+	if (swCryptInit()!=0) goto end;
+
+	// reconstitue le chemin complet du fichier de configuration
+	lenConfigFile=GetModuleFileName(ghModule,gszConfigFile,sizeof(gszConfigFile));
+	if (lenConfigFile<10) { TRACE((TRACE_ERROR, _F_, "GetModuleFileName() error")); }
+	memcpy(gszConfigFile+lenConfigFile-3,"ini",3);
+	TRACE((TRACE_INFO, _F_, "gszConfigFile=%s", gszConfigFile));
+
+	// lit les infos du keystore dans le fichier de configuration
+	GetPrivateProfileString("Keystore","Filename","",gszKeystoreFile,sizeof(gszKeystoreFile),gszConfigFile);
+	if (*gszKeystoreFile==0) { TRACE((TRACE_ERROR, _F_, "Keystore filename not found in %s", gszConfigFile)); rc=ERR_CONFIG_NOT_FOUND; goto end; }
+	GetPrivateProfileString("Keystore","Password","",gszKeystorePwd,sizeof(gszKeystorePwd),gszConfigFile);
+	if (*gszKeystorePwd==0) { TRACE((TRACE_ERROR, _F_, "Keystore password not found in %s", gszConfigFile)); rc=ERR_CONFIG_NOT_FOUND; goto end; }
+
 	// extraction du coeur du challenge
 	lenFormattedChallenge=strlen(szFormattedChallenge);
 	if (lenFormattedChallenge>(sizeof(szFormattedChallengeCopy)-1)) 
@@ -139,13 +173,15 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	if (ret!=0)
 	{
 		TRACE((TRACE_ERROR,_F_,"swKeystoreLoad(%s)=%d",gszKeystoreFile,ret));
+		if (ret==SWCRYPT_FILENOTFOUND) rc=ERR_KEYSTORE_NOT_FOUND;
+		else if (ret==SWCRYPT_FILEREAD) rc=ERR_KEYSTORE_CORRUPTED;
 		goto end;
 	}
 
 	// déchiffre les 2 parties du challenge
-	if (swCryptDecryptDataRSA(iKeyId,gszKeystorePwd,pChallengePart1,256,&pDecryptedChallengePart1,&lenDecryptedChallengePart1)!=0) goto end;
+	if (swCryptDecryptDataRSA(iKeyId,gszKeystorePwd,pChallengePart1,256,&pDecryptedChallengePart1,&lenDecryptedChallengePart1)!=0) { rc=ERR_KEYSTORE_BAD_PWD; goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,pDecryptedChallengePart1,lenDecryptedChallengePart1,"pDecryptedChallengePart1")); 
-	if (swCryptDecryptDataRSA(iKeyId,gszKeystorePwd,pChallengePart2,256,&pDecryptedChallengePart2,&lenDecryptedChallengePart2)!=0) goto end;
+	if (swCryptDecryptDataRSA(iKeyId,gszKeystorePwd,pChallengePart2,256,&pDecryptedChallengePart2,&lenDecryptedChallengePart2)!=0) { rc=ERR_KEYSTORE_BAD_PWD; goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,pDecryptedChallengePart2,lenDecryptedChallengePart2,"pDecryptedChallengePart2")); 
 	
 	// affiche le nom de l'utilisateur et demande confirmation
@@ -153,10 +189,11 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	{
 		TRACE((TRACE_ERROR,_F_,"Utilisateur recu en paramètre=%s",szDomainUserName)); 
 		TRACE((TRACE_ERROR,_F_,"Utilisateur dans le challenge=%s",(char*)(pChallengePart1+AES256_KEY_LEN)));
+		rc=ERR_BAD_USER;
 		goto end;
 	}
 	// récupère Ks dans la partie 2 du challenge
-	//if (swCreateAESKeyFromKeyData(pDecryptedChallengePart2,&hKs)!=0) goto end;
+	//if (swCreateAESKeyFromKeyData(pDecryptedChallengePart2,&hKs)!=0) goto end; // TODO : comprendre pourquoi c'est en commentaire !
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)pDecryptedChallengePart2,lenDecryptedChallengePart2,"Ks (len=%d)",lenDecryptedChallengePart2)); 
 	if (!CryptImportKey(ghProv,pDecryptedChallengePart2,lenDecryptedChallengePart2,NULL,0,&hKs))
 	{ TRACE((TRACE_ERROR,_F_,"CryptImportKey()=%ld",GetLastError())); goto end; }
@@ -165,27 +202,31 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	pszCoreResponse=swCryptEncryptAES(pDecryptedChallengePart1,AES256_KEY_LEN,hKs);
 	if (pszCoreResponse==NULL) goto end;
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)pszCoreResponse,strlen(pszCoreResponse),"pszCoreResponse")); 
-	// formatte la response
-	strcpy_s(szFormattedResponse,2048,gcszBeginResponse);
-	strcat_s(szFormattedResponse,2048,"\n");
-	for (i=0;i<(int)strlen(pszCoreResponse);i+=64)
+	
+	// calcule la longueur de la réponse
+	lenFormattedResponse=strlen(gcszBeginResponse)+strlen(pszCoreResponse)+strlen(gcszEndResponse);
+	if (lenFormattedResponse+1>iMaxCount)
 	{
-		strncat_s(szFormattedResponse,2048,pszCoreResponse+i,64);
-		strcat_s(szFormattedResponse,2048,"\n");
+		TRACE((TRACE_ERROR,_F_,"Buffer reponse trop court=%d (%d necessaire)",iMaxCount,lenFormattedResponse+1)); 
+		rc=ERR_BUFFER_TOO_SMALL;
+		goto end;
 	}
-	strcat_s(szFormattedResponse,2048,gcszEndResponse);	
 
-	/* bouchon (début)
-	*szResponse=0;
-	strcpy_s(szResponse,iMaxCount,"---swSSO RESPONSE---9876543210ABCDEFGHI---swSSO RESPONSE---");
-	TRACE((TRACE_INFO,_F_, "szResponse=%s",szResponse));
-	bouchon (fin) */
-
+	// formatte la response
+	strcpy_s(szFormattedResponse,iMaxCount,gcszBeginResponse);
+	strcat_s(szFormattedResponse,iMaxCount,pszCoreResponse);
+	strcat_s(szFormattedResponse,iMaxCount,gcszEndResponse);	
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)szFormattedResponse,strlen(szFormattedResponse),"szFormattedResponse")); 
+	
 	rc=0;
 end:
+#ifndef BOUCHON
 	if (pDecryptedChallengePart1 != NULL) free(pDecryptedChallengePart1);
 	if (pDecryptedChallengePart2 != NULL) free(pDecryptedChallengePart2);
 	if (hKs != NULL) CryptDestroyKey(hKs);
+#endif
+	swCryptTerm();
 	TRACE((TRACE_LEAVE, _F_, "rc=%d", rc));
+	TRACE_CLOSE();
 	return rc;
 }

@@ -57,8 +57,8 @@ void swTraceOpen(void)
 	int rc;
 	char szValue[1024+1];
 	DWORD dwValue,dwValueSize,dwValueType;
-	int len;
-	DWORD dw;
+	//int len;
+	//DWORD dw;
 
 	// valeurs par défaut pour les chaines de caractères
 	// les valeurs par défaut pour les DWORD sont initialisées dans la déclaration des variables globales
@@ -87,8 +87,8 @@ end:
 	// si fichier existe, se positionne à la fin du fichier pour écritures ultérieures
 	if (ghfTrace!=INVALID_HANDLE_VALUE) SetFilePointer(ghfTrace,0,0,FILE_END);
 	//
-	len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : taille max fichier=%d octets ===================\r\n",gdwTraceFileSize);
-	WriteFile(ghfTrace,gszTraceBuf,len,&dw,NULL);
+	// len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : taille max fichier=%d octets ===================\r\n",gdwTraceFileSize);
+	// WriteFile(ghfTrace,gszTraceBuf,len,&dw,NULL);
 }
 
 //-----------------------------------------------------------------------------

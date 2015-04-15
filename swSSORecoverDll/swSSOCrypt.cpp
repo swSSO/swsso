@@ -272,7 +272,8 @@ int swKeystoreGetPrivateKey(int iKeyId,char *szPassword,HCRYPTKEY *phPrivateKey)
 	int rc=SWCRYPT_ERROR;
 	BOOL bFound=FALSE;
 	int i;
-	TRACE((TRACE_PWD,_F_,"swPassword=%s",szPassword));
+
+	TRACE((TRACE_PWD,_F_,"szPassword=%s",szPassword));
 	// cherche l'id de la clé dans le keystore
 	for (i=0;i<giNbPrivateKeys;i++)
 	{

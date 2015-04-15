@@ -37,5 +37,5 @@
 #include "swSSORecoverDll.h"
 #include "swSSOCrypt.h"
 
-
+extern HMODULE ghModule;
 
