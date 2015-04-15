@@ -36,10 +36,6 @@ const char gcszEndChallenge[]="---swSSO CHALLENGE---";
 const char gcszBeginResponse[]="---swSSO RESPONSE---";
 const char gcszEndResponse[]="---swSSO RESPONSE---";
 
-char gszKeystorePwd[100];
-char gszKeystoreFile[1024]; 
-char gszConfigFile[1024];
-
 //-----------------------------------------------------------------------------
 // RecoveryGetResponse()
 //-----------------------------------------------------------------------------
@@ -91,6 +87,15 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	HCRYPTKEY hKs = NULL;
 	char *pszCoreResponse = NULL;
 	int ret;
+	DATA_BLOB DataIn;
+	DATA_BLOB DataOut;
+	DATA_BLOB DataSalt;
+	char szClearKeystorePwd[100];
+	char szEncryptedKeystorePwd[512];
+	char EncryptedKeystorePwd[256];
+	char szKeystoreFile[1024]; 
+	char szConfigFile[1024];
+	DWORD dwEncryptedKeystorePwdLen;
 
 	// trace et vérification des paramètres
 	TRACE((TRACE_INFO,_F_, "iMaxCount=%d",iMaxCount));
@@ -105,16 +110,35 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	if (swCryptInit()!=0) goto end;
 
 	// reconstitue le chemin complet du fichier de configuration
-	lenConfigFile=GetModuleFileName(ghModule,gszConfigFile,sizeof(gszConfigFile));
+	lenConfigFile=GetModuleFileName(ghModule,szConfigFile,sizeof(szConfigFile));
 	if (lenConfigFile<10) { TRACE((TRACE_ERROR, _F_, "GetModuleFileName() error")); }
-	memcpy(gszConfigFile+lenConfigFile-3,"ini",3);
-	TRACE((TRACE_INFO, _F_, "gszConfigFile=%s", gszConfigFile));
+	memcpy(szConfigFile+lenConfigFile-3,"ini",3);
+	TRACE((TRACE_INFO, _F_, "szConfigFile=%s", szConfigFile));
 
 	// lit les infos du keystore dans le fichier de configuration
-	GetPrivateProfileString("Keystore","Filename","",gszKeystoreFile,sizeof(gszKeystoreFile),gszConfigFile);
-	if (*gszKeystoreFile==0) { TRACE((TRACE_ERROR, _F_, "Keystore filename not found in %s", gszConfigFile)); rc=ERR_CONFIG_NOT_FOUND; goto end; }
-	GetPrivateProfileString("Keystore","Password","",gszKeystorePwd,sizeof(gszKeystorePwd),gszConfigFile);
-	if (*gszKeystorePwd==0) { TRACE((TRACE_ERROR, _F_, "Keystore password not found in %s", gszConfigFile)); rc=ERR_CONFIG_NOT_FOUND; goto end; }
+	GetPrivateProfileString("Keystore","Filename","",szKeystoreFile,sizeof(szKeystoreFile),szConfigFile);
+	if (*szKeystoreFile==0) { TRACE((TRACE_ERROR, _F_, "Keystore filename not found in %s", szConfigFile)); rc=ERR_CONFIG_NOT_FOUND; goto end; }
+	GetPrivateProfileString("Keystore","Password","",szEncryptedKeystorePwd,sizeof(szEncryptedKeystorePwd),szConfigFile);
+	if (*szEncryptedKeystorePwd==0) { TRACE((TRACE_ERROR, _F_, "Keystore password not found in %s", szConfigFile)); rc=ERR_CONFIG_NOT_FOUND; goto end; }
+	TRACE((TRACE_INFO,_F_,"szEncryptedKeystorePwd=%s",szEncryptedKeystorePwd));
+
+	dwEncryptedKeystorePwdLen=strlen(szEncryptedKeystorePwd)/2;
+	if (swCryptDecodeBase64(szEncryptedKeystorePwd,EncryptedKeystorePwd,dwEncryptedKeystorePwdLen)!=0) goto end;
+
+	// déchiffre le mot de passe du keystore
+	DataOut.pbData=NULL;
+	DataOut.cbData=0;
+	DataSalt.pbData=NULL;
+	DataSalt.cbData=0;
+	DataIn.pbData=(BYTE*)EncryptedKeystorePwd;
+	DataIn.cbData=dwEncryptedKeystorePwdLen;
+	if (!CryptUnprotectData(&DataIn,NULL,&DataSalt,NULL,NULL,0,&DataOut))
+	{
+		TRACE((TRACE_ERROR,_F_, "CryptUnprotectData()")); rc=ERR_KEYSTORE_BAD_PWD; goto end;
+	}
+	DataOut.pbData[DataOut.cbData]=0;
+	strcpy_s(szClearKeystorePwd,sizeof(szClearKeystorePwd),(char*)DataOut.pbData);
+	TRACE((TRACE_PWD,_F_,"szClearKeystorePwd=%s",szClearKeystorePwd));
 
 	// extraction du coeur du challenge
 	lenFormattedChallenge=strlen(szFormattedChallenge);
@@ -169,19 +193,19 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	TRACE_BUFFER((TRACE_DEBUG,_F_,pChallengePart2,256,"ChallengePart2"));
 	
 	// charge le keystore
-	ret=swKeystoreLoad(gszKeystoreFile);
+	ret=swKeystoreLoad(szKeystoreFile);
 	if (ret!=0)
 	{
-		TRACE((TRACE_ERROR,_F_,"swKeystoreLoad(%s)=%d",gszKeystoreFile,ret));
+		TRACE((TRACE_ERROR,_F_,"swKeystoreLoad(%s)=%d",szKeystoreFile,ret));
 		if (ret==SWCRYPT_FILENOTFOUND) rc=ERR_KEYSTORE_NOT_FOUND;
 		else if (ret==SWCRYPT_FILEREAD) rc=ERR_KEYSTORE_CORRUPTED;
 		goto end;
 	}
 
 	// déchiffre les 2 parties du challenge
-	if (swCryptDecryptDataRSA(iKeyId,gszKeystorePwd,pChallengePart1,256,&pDecryptedChallengePart1,&lenDecryptedChallengePart1)!=0) { rc=ERR_KEYSTORE_BAD_PWD; goto end; }
+	if (swCryptDecryptDataRSA(iKeyId,szClearKeystorePwd,pChallengePart1,256,&pDecryptedChallengePart1,&lenDecryptedChallengePart1)!=0) { rc=ERR_KEYSTORE_BAD_PWD; goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,pDecryptedChallengePart1,lenDecryptedChallengePart1,"pDecryptedChallengePart1")); 
-	if (swCryptDecryptDataRSA(iKeyId,gszKeystorePwd,pChallengePart2,256,&pDecryptedChallengePart2,&lenDecryptedChallengePart2)!=0) { rc=ERR_KEYSTORE_BAD_PWD; goto end; }
+	if (swCryptDecryptDataRSA(iKeyId,szClearKeystorePwd,pChallengePart2,256,&pDecryptedChallengePart2,&lenDecryptedChallengePart2)!=0) { rc=ERR_KEYSTORE_BAD_PWD; goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,pDecryptedChallengePart2,lenDecryptedChallengePart2,"pDecryptedChallengePart2")); 
 	
 	// affiche le nom de l'utilisateur et demande confirmation
