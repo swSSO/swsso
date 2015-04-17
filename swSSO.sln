@@ -120,7 +120,7 @@ Global
 		{4EB7D0AD-0923-4640-97BB-D193979D4731}.fr|x64.ActiveCfg = Release|Win32
 		{4EB7D0AD-0923-4640-97BB-D193979D4731}.Release|Win32.ActiveCfg = Release|Win32
 		{4EB7D0AD-0923-4640-97BB-D193979D4731}.Release|Win32.Build.0 = Release|Win32
-		{4EB7D0AD-0923-4640-97BB-D193979D4731}.Release|x64.ActiveCfg = Release|Win32
+		{4EB7D0AD-0923-4640-97BB-D193979D4731}.Release|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

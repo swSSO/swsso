@@ -207,7 +207,7 @@ int swKeystoreLoad(char *szKeystoreFile)
 		if (gtabPrivateKey[giNbPrivateKeys].szPrivateKeyData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",strlen(pszPrivateKeyData)+1)); goto end; }
 		strcpy_s(gtabPrivateKey[giNbPrivateKeys].szPrivateKeyData,strlen(pszPrivateKeyData)+1,pszPrivateKeyData);
 		//TRACE((TRACE_DEBUG,_F_,"szPrivateKeyData=%s",pszPrivateKeyData));
-		TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)gtabPrivateKey[giNbPrivateKeys].szPrivateKeyData,strlen(gtabPrivateKey[giNbPrivateKeys].szPrivateKeyData),"gtabPrivateKey[giNbPrivateKeys].szPrivateKeyData"));
+		TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)gtabPrivateKey[giNbPrivateKeys].szPrivateKeyData,(int)strlen(gtabPrivateKey[giNbPrivateKeys].szPrivateKeyData),"gtabPrivateKey[giNbPrivateKeys].szPrivateKeyData"));
 		
 		giNbPrivateKeys++;
 	}
@@ -239,7 +239,7 @@ int swCryptGetPrivateKeyFromSZData(char *szSaltData,char *szPrivateKeyData,char 
 
 	TRACE((TRACE_PWD,_F_,"swPassword=%s",szPassword));
 	// décodage (pseudo) base 64
-	dwPrivateKeyStringLen=strlen(szPrivateKeyData);
+	dwPrivateKeyStringLen=(int)strlen(szPrivateKeyData);
 	TRACE((TRACE_DEBUG,_F_,"dwPrivateKeyStringLen=%d",dwPrivateKeyStringLen));
 	dwPrivateKeyDataLen=dwPrivateKeyStringLen/2;
 	TRACE((TRACE_DEBUG,_F_,"dwPrivateKeyDataLen=%d",dwPrivateKeyDataLen));
@@ -336,7 +336,7 @@ int swCryptDecodeBase64(const char *szSrcString,char *pDestData,int lenDestData)
 	unsigned char uc;
 
 	// si la longueur de la chaine n'est pas paire, on arrête tout de suite !
-	lenSrcString=strlen(szSrcString);
+	lenSrcString=(int)strlen(szSrcString);
 	TRACE((TRACE_DEBUG,_F_,"lenSrcString=%d lenDestData=%d",lenSrcString,lenDestData)); 
 	if ((lenSrcString%2)!=0) { TRACE((TRACE_ERROR,_F_,"lenSrcString=%d",lenSrcString)); goto end; }
 
@@ -484,7 +484,7 @@ int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufS
 	if (bufSaltLen!=PBKDF2_SALT_LEN) { TRACE((TRACE_ERROR,_F_,"bufSaltLen=%d != valeur imposée PBKDF2_SALT_LEN=%d",bufSaltLen,PBKDF2_SALT_LEN)); goto end; }
 
     // Création de la clé HMAC en mode PLAINTEXTKEYBLOB, à partir du mot de passe
-	iKeySize=sizeof(KEYBLOB)+strlen(szPwd);
+	iKeySize=(int)sizeof(KEYBLOB)+(int)strlen(szPwd);
     pKey=(KEYBLOB*)malloc(iKeySize);
 	if (pKey==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",iKeySize)); goto end; }
     ZeroMemory(pKey,iKeySize);
@@ -500,7 +500,7 @@ int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufS
     pKey->header.bVersion=CUR_BLOB_VERSION;
     pKey->header.reserved=0;
     pKey->header.aiKeyAlg=CALG_RC2;
-    pKey->dwKeySize=strlen(szPwd);
+    pKey->dwKeySize=(int)strlen(szPwd);
 	memcpy(pKey->KeyData,szPwd,pKey->dwKeySize);
 
 	// test case 1 RFC 2202 HMAC-SHA1

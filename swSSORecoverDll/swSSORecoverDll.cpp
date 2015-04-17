@@ -122,7 +122,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	if (*szEncryptedKeystorePwd==0) { TRACE((TRACE_ERROR, _F_, "Keystore password not found in %s", szConfigFile)); rc=ERR_CONFIG_NOT_FOUND; goto end; }
 	TRACE((TRACE_INFO,_F_,"szEncryptedKeystorePwd=%s",szEncryptedKeystorePwd));
 
-	dwEncryptedKeystorePwdLen=strlen(szEncryptedKeystorePwd)/2;
+	dwEncryptedKeystorePwdLen=(DWORD)strlen(szEncryptedKeystorePwd)/2;
 	if (swCryptDecodeBase64(szEncryptedKeystorePwd,EncryptedKeystorePwd,dwEncryptedKeystorePwdLen)!=0) goto end;
 
 	// déchiffre le mot de passe du keystore
@@ -141,7 +141,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	TRACE((TRACE_PWD,_F_,"szClearKeystorePwd=%s",szClearKeystorePwd));
 
 	// extraction du coeur du challenge
-	lenFormattedChallenge=strlen(szFormattedChallenge);
+	lenFormattedChallenge=(int)strlen(szFormattedChallenge);
 	if (lenFormattedChallenge>(sizeof(szFormattedChallengeCopy)-1)) 
 	{
 		TRACE((TRACE_ERROR,_F_,"Challenge trop long (%d)",lenFormattedChallenge)); rc=ERR_BAD_CHALLENGE; goto end;
@@ -225,10 +225,10 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	// chiffre AESKeyData avec Ks
 	pszCoreResponse=swCryptEncryptAES(pDecryptedChallengePart1,AES256_KEY_LEN,hKs);
 	if (pszCoreResponse==NULL) goto end;
-	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)pszCoreResponse,strlen(pszCoreResponse),"pszCoreResponse")); 
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)pszCoreResponse,(int)strlen(pszCoreResponse),"pszCoreResponse")); 
 	
 	// calcule la longueur de la réponse
-	lenFormattedResponse=strlen(gcszBeginResponse)+strlen(pszCoreResponse)+strlen(gcszEndResponse);
+	lenFormattedResponse=(int)strlen(gcszBeginResponse)+(int)strlen(pszCoreResponse)+(int)strlen(gcszEndResponse);
 	if (lenFormattedResponse+1>iMaxCount)
 	{
 		TRACE((TRACE_ERROR,_F_,"Buffer reponse trop court=%d (%d necessaire)",iMaxCount,lenFormattedResponse+1)); 
@@ -240,7 +240,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	strcpy_s(szFormattedResponse,iMaxCount,gcszBeginResponse);
 	strcat_s(szFormattedResponse,iMaxCount,pszCoreResponse);
 	strcat_s(szFormattedResponse,iMaxCount,gcszEndResponse);	
-	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)szFormattedResponse,strlen(szFormattedResponse),"szFormattedResponse")); 
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)szFormattedResponse,(int)strlen(szFormattedResponse),"szFormattedResponse")); 
 	
 	rc=0;
 end:
