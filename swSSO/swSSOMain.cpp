@@ -2149,7 +2149,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		if (gszCfgFile[len-1]!='\\') { gszCfgFile[len]='\\'; len++; }
 		strcpy_s(gszCfgFile+len,_MAX_PATH+1,"swSSO.ini");
 	}
-	else 
+	else
 	{
 		ExpandFileName(lpCmdLine,gszCfgFile,_MAX_PATH+1); // ISSUE#104 et ISSUE#109
 	}

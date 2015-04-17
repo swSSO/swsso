@@ -48,6 +48,7 @@ const char gcszBeginResponse[]="---swSSO RESPONSE---";
 const char gcszEndResponse[]="---swSSO RESPONSE---";
 char gszFormattedChallengeForDisplay[2048];
 char gszFormattedChallengeForSave[2048];
+char gszFormattedChallengeForWebservice[2048];
 char gszFormattedResponse[1024];
 
 static int giRefreshTimer=10;
@@ -521,13 +522,14 @@ end:
 //-----------------------------------------------------------------------------
 // RecoveryChallenge()
 //-----------------------------------------------------------------------------
-// Génération du challenge qui sera affiché à l'utilisateur et qu'il devra
-// envoyer par ses propres moyens au support
+// Génère le challenge formatté et le stocke dans les 3 globales :
+// - gszFormattedChallengeForDisplay
+// - gszFormattedChallengeForSave
+// - gszFormattedChallengeForWebservice
 // Contenu (AESKeyData+UserId)Kpub + (Ks)Kpub
 // En fait (AESKeyData+UserId)Kpub correspond aux RecoveryInfos stockées dans le .ini
 // Stockage de la Ks dans le .ini 
-// Affichage d'un message qui indique à l'utilsateur que swSSO va se fermer
-// et qu'il devra le relancer quand il aura reçu le challenge ?
+// En fonction de la config, affiche le challenge à l'utilisateur ou l'envoie au WS
 //-----------------------------------------------------------------------------
 // [in] w : handle fenêtre parent pour affichage messages
 //-----------------------------------------------------------------------------
@@ -577,30 +579,40 @@ int RecoveryChallenge(HWND w)
 	strcat_s(gszFormattedChallengeForDisplay,sizeof(gszFormattedChallengeForDisplay),"\r\n");
 	strcpy_s(gszFormattedChallengeForSave,sizeof(gszFormattedChallengeForSave),gcszBeginChallenge);
 	strcat_s(gszFormattedChallengeForSave,sizeof(gszFormattedChallengeForSave),"\n");
+	strcpy_s(gszFormattedChallengeForWebservice,sizeof(gszFormattedChallengeForWebservice),gcszBeginChallenge);
 	for (i=0;i<strlen(szChallenge);i+=64)
 	{
 		strncat_s(gszFormattedChallengeForDisplay,sizeof(gszFormattedChallengeForDisplay),szChallenge+i,64);
 		strcat_s(gszFormattedChallengeForDisplay,sizeof(gszFormattedChallengeForDisplay),"\r\n");
 		strncat_s(gszFormattedChallengeForSave,sizeof(gszFormattedChallengeForSave),szChallenge+i,64);
 		strcat_s(gszFormattedChallengeForSave,sizeof(gszFormattedChallengeForSave),"\n");
+		strncat_s(gszFormattedChallengeForWebservice,sizeof(gszFormattedChallengeForWebservice),szChallenge+i,64);
 	}
 	strcat_s(gszFormattedChallengeForDisplay,sizeof(gszFormattedChallengeForDisplay),gcszEndChallenge);
 	strcat_s(gszFormattedChallengeForSave,sizeof(gszFormattedChallengeForSave),gcszEndChallenge);
+	strcat_s(gszFormattedChallengeForWebservice,sizeof(gszFormattedChallengeForWebservice),gcszEndChallenge);
 
-	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_CHALLENGE),w,ChallengeDialogProc,(LPARAM)0)==IDOK)
+	if (gbRecoveryWebserviceActive) // 1.08
 	{
-		// encodage base 64 et stockage dans le .ini
-		pszKsData=(char*)malloc(dwKsDataLen*2+1);
-		if (pszKsData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwKsDataLen*2+1)); goto end; }
-		swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData);
-		WritePrivateProfileString("swSSO","recoveryRunning",pszKsData,gszCfgFile);
-		StoreIniEncryptedHash(); // ISSUE#164
-		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,NULL,0);
-		rc=0;
+		rc=RecoveryWebservice();
 	}
 	else
 	{
-		rc=-2;
+		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_CHALLENGE),w,ChallengeDialogProc,(LPARAM)0)==IDOK)
+		{
+			// encodage base 64 et stockage dans le .ini
+			pszKsData=(char*)malloc(dwKsDataLen*2+1);
+			if (pszKsData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwKsDataLen*2+1)); goto end; }
+			swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData);
+			WritePrivateProfileString("swSSO","recoveryRunning",pszKsData,gszCfgFile);
+			StoreIniEncryptedHash(); // ISSUE#164
+			swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,NULL,0);
+			rc=0;
+		}
+		else
+		{
+			rc=-2;
+		}
 	}
 end:
 	if (pKsData!=NULL) free(pKsData);
@@ -727,10 +739,32 @@ end:
 		MessageBox(w,GetString(IDS_RECOVERY_ERROR_FORMAT),"swSSO",MB_ICONEXCLAMATION | MB_OK);
 		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_RECOVERY_FAIL,NULL,NULL,NULL,NULL,0);
 	}
-	
-
 	if (pKsData!=NULL) free(pKsData);
 	if (hKs!=NULL) CryptDestroyKey(hKs);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// RecoveryWebservice()
+//-----------------------------------------------------------------------------
+// Appelle le webservice en fournissant le challenge et traite la réponse
+//-----------------------------------------------------------------------------
+int RecoveryWebservice(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char *pszResult=NULL;
+	char szRequest[2048];
+
+	sprintf_s(szRequest,"%s?challenge=%s",gszRecoveryWebserviceURL,gszFormattedChallengeForWebservice);
+	
+	pszResult=HTTPRequest(gszRecoveryWebserviceServer,giRecoveryWebservicePort,szRequest,giRecoveryWebserviceTimeout,NULL);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	
+	rc=0;
+end:
+	if (pszResult!=NULL) free(pszResult);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

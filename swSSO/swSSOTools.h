@@ -37,7 +37,7 @@ char *GetString(UINT uiString);
 BSTR GetBSTRFromSZ(const char *sz);
 char *GetSZFromBSTR(BSTR bstr);
 BOOL CompareBSTRtoSZ(BSTR bstr,const char *sz);
-char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams);
+char *HTTPRequest(const char *szServer,int iPort,const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams);
 char *HTTPEncodeParam(char *pszToEncode);
 char *HTTPDecodeParam(char *pszToDecode);
 int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle);

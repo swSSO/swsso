@@ -43,5 +43,7 @@ void RecoveryFirstUse(HWND w,BYTE *pAESKeyData);
 
 int RecoveryChallenge(HWND w);
 int RecoveryResponse(HWND w);
+int RecoveryWebservice(void);
+
 
 

@@ -185,6 +185,11 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_ADMIN_DELETE_CONFIGS_ON_SERVER		"AdminDeleteConfigsOnServer"
 #define REGVALUE_REFRESH_RIGHTS_FREQUENCY			"RefreshRightsFrequency"
 #define REGVALUE_ALLOW_MANAGED_CONFIGS_MODIFICATION "AllowManagedConfigsModification"
+#define REGVALUE_RECOVERY_WEBSERVICE_ACTIVE			"RecoveryWebserviceActive"
+#define REGVALUE_RECOVERY_WEBSERVICE_SERVER			"RecoveryWebserviceServer"
+#define REGVALUE_RECOVERY_WEBSERVICE_ADDRESS		"RecoveryWebserviceURL"
+#define REGVALUE_RECOVERY_WEBSERVICE_PORT			"RecoveryWebservicePort"
+#define REGVALUE_RECOVERY_WEBSERVICE_TIMEOUT		"RecoveryWebserviceTimeout"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -221,6 +226,11 @@ extern BOOL gbRemoveDeletedConfigsAtStart;	// 1.07 - ISSUE#214
 extern BOOL gbAdminDeleteConfigsOnServer;	// 1.07 - ISSUE#223
 extern int  giRefreshRightsFrequency;		// 1.07 - ISSUE#220
 extern BOOL gbAllowManagedConfigsModification;  // 1.07 : ISSUE#238
+extern BOOL gbRecoveryWebserviceActive;		// 1.08
+extern char gszRecoveryWebserviceServer[];		// 1.08
+extern char gszRecoveryWebserviceURL[];		// 1.08
+extern int  giRecoveryWebservicePort;			// 1.08
+extern int  giRecoveryWebserviceTimeout;		// 1.08
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

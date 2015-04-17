@@ -123,6 +123,11 @@ BOOL gbRemoveDeletedConfigsAtStart=FALSE;	// 1.07 - ISSUE#214
 BOOL gbAdminDeleteConfigsOnServer=FALSE;	// 1.07 - ISSUE#223
 int giRefreshRightsFrequency=0;				// 1.07 - ISSUE#220
 BOOL gbAllowManagedConfigsModification=TRUE;	// 1.07 : ISSUE#238
+BOOL gbRecoveryWebserviceActive=FALSE;			// 1.08
+char gszRecoveryWebserviceServer[128+1];		// 1.08
+char gszRecoveryWebserviceURL[255+1];		// 1.08
+int  giRecoveryWebservicePort=INTERNET_DEFAULT_HTTP_PORT;	// 1.08
+int  giRecoveryWebserviceTimeout=10;			// 1.08
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -174,6 +179,7 @@ void LoadPolicies(void)
 	*gszLogFileName=0;
 	*gszWelcomeMessage=0;
 	*gszPastePwd_Text=0;
+	*gszWebServiceAddress=0;
 
 	//--------------------------------------------------------------
 	// GLOBAL POLICY
@@ -558,6 +564,30 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_REFRESH_RIGHTS_FREQUENCY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) giRefreshRightsFrequency=(int)dwValue; 
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_ACTIVE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbRecoveryWebserviceActive=(BOOL)dwValue; 
+
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_SERVER,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+			strcpy_s(gszRecoveryWebserviceServer,sizeof(gszRecoveryWebserviceServer),szValue);
+
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_ADDRESS,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+			strcpy_s(gszRecoveryWebserviceURL,sizeof(gszRecoveryWebserviceURL),szValue);
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_PORT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giRecoveryWebservicePort=(int)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_TIMEOUT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giRecoveryWebserviceTimeout=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -782,6 +812,10 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbAdminDeleteConfigsOnServer=%d"		,gbAdminDeleteConfigsOnServer));
 	TRACE((TRACE_INFO,_F_,"giRefreshRightsFrequency=%d"			,giRefreshRightsFrequency));
 	TRACE((TRACE_INFO,_F_,"gbAllowManagedConfigsModification=%d",gbAllowManagedConfigsModification));
+	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceActive=%d"		,gbRecoveryWebserviceActive));
+	TRACE((TRACE_INFO,_F_,"gszRecoveryWebserviceServer=%s"		,gszRecoveryWebserviceServer));
+	TRACE((TRACE_INFO,_F_,"gszRecoveryWebserviceURL=%s"			,gszRecoveryWebserviceURL));
+	TRACE((TRACE_INFO,_F_,"giRecoveryWebserviceTimeout=%d"		,giRecoveryWebserviceTimeout));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));

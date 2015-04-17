@@ -153,7 +153,7 @@ end:
 // Exécute la requête HTTP passée en paramètre
 // L'appelant doit libérer le resultat !
 // ----------------------------------------------------------------------------------
-char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams)
+char *HTTPRequest(const char *szServer,int iPort,const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -206,10 +206,10 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	WinHttpSetTimeouts(hSession, timeout*1000, timeout*1000, timeout*1000, timeout*1000); 
 
 	// WinHttpConnect
-	bstrServerAddress=GetBSTRFromSZ(gszServerAddress);
+	bstrServerAddress=GetBSTRFromSZ(szServer);
 	if (bstrServerAddress==NULL) goto end;
-	hConnect = WinHttpConnect(hSession,bstrServerAddress,(INTERNET_PORT)giServerPort, 0); // ISSUE€162 (port configurable)
-	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s) - port : %d",gszServerAddress,giServerPort)); goto end; }
+	hConnect = WinHttpConnect(hSession,bstrServerAddress,(INTERNET_PORT)iPort, 0); // ISSUE€162 (port configurable)
+	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s) - port : %d",szServer,iPort)); goto end; }
     
 	// WinHttpOpenRequest
 	bstrRequest=GetBSTRFromSZ(szRequest);
@@ -217,7 +217,7 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	dwFlags=WINHTTP_FLAG_ESCAPE_PERCENT;
 	if (gbServerHTTPS) dwFlags|=WINHTTP_FLAG_SECURE;
     hRequest = WinHttpOpenRequest(hConnect,L"GET",bstrRequest,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,dwFlags); // ISSUE#162 (HTTPS possible)
-	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",gbServerHTTPS?"https":"http",gszServerAddress,giServerPort,szRequest)); 
+	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",gbServerHTTPS?"https":"http",szServer,iPort,szRequest)); 
 	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(GET %s)",szRequest)); goto end; }
 
 	if (gbServerHTTPS)
@@ -239,7 +239,7 @@ char *HTTPRequest(const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParam
 	}
 
 	brc = WinHttpSendRequest(hRequest,WINHTTP_NO_ADDITIONAL_HEADERS, 0,WINHTTP_NO_REQUEST_DATA,0,0,0);
-	if (!brc) { swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,gszServerAddress,(char*)szRequest,NULL,NULL,0); TRACE((TRACE_ERROR,_F_,"WinHttpSendRequest()")); goto end; }
+	if (!brc) { swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,(char*)szServer,(char*)szRequest,NULL,NULL,0); TRACE((TRACE_ERROR,_F_,"WinHttpSendRequest()")); goto end; }
  
     brc = WinHttpReceiveResponse(hRequest, NULL);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpReceiveResponse()")); goto end; }
