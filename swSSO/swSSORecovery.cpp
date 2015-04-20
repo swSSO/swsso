@@ -549,6 +549,8 @@ int RecoveryChallenge(HWND w)
 	unsigned int i;
 	char szChallenge[5+512+512+1]; // 5 (0000:) + 512 par bloc chiffré RSA + 0
 
+	*gszFormattedResponse=0;
+
 	// gszRecoveryInfos=0000:(AESKeyData+UserId)Kpub
 	if (*gszRecoveryInfos==0) { TRACE((TRACE_ERROR,_F_,"recoveryInfos=vide !")); goto end; }
 	strcpy_s(szChallenge,sizeof(szChallenge),gszRecoveryInfos);
@@ -592,13 +594,9 @@ int RecoveryChallenge(HWND w)
 	strcat_s(gszFormattedChallengeForSave,sizeof(gszFormattedChallengeForSave),gcszEndChallenge);
 	strcat_s(gszFormattedChallengeForWebservice,sizeof(gszFormattedChallengeForWebservice),gcszEndChallenge);
 
-	if (gbRecoveryWebserviceActive) // 1.08
+	if (gbRecoveryWebserviceActive && giPwdProtection==PP_WINDOWS) // 1.08
 	{
-		rc=RecoveryWebservice();
-	}
-	else
-	{
-		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_CHALLENGE),w,ChallengeDialogProc,(LPARAM)0)==IDOK)
+		if (RecoveryWebservice()==0) // le web service a retourné une réponse correctement formattée, on sort
 		{
 			// encodage base 64 et stockage dans le .ini
 			pszKsData=(char*)malloc(dwKsDataLen*2+1);
@@ -608,11 +606,24 @@ int RecoveryChallenge(HWND w)
 			StoreIniEncryptedHash(); // ISSUE#164
 			swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,NULL,0);
 			rc=0;
+			goto end;
 		}
-		else
-		{
-			rc=-2;
-		}
+		// sinon, on bascule sur le mode manuel : la fenêtre de challenge s'affiche
+	}
+	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_CHALLENGE),w,ChallengeDialogProc,(LPARAM)0)==IDOK)
+	{
+		// encodage base 64 et stockage dans le .ini
+		pszKsData=(char*)malloc(dwKsDataLen*2+1);
+		if (pszKsData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwKsDataLen*2+1)); goto end; }
+		swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData);
+		WritePrivateProfileString("swSSO","recoveryRunning",pszKsData,gszCfgFile);
+		StoreIniEncryptedHash(); // ISSUE#164
+		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,NULL,0);
+		rc=0;
+	}
+	else
+	{
+		rc=-2;
 	}
 end:
 	if (pKsData!=NULL) free(pKsData);
@@ -654,24 +665,28 @@ int RecoveryResponse(HWND w)
 	TRACE((TRACE_DEBUG, _F_, "recoveryRunning=%s len=%d",szKs,dwKsStringLen));
 	if (dwKsStringLen==0) { rc=-2; goto end; }// pas de recouvrement en cours
 
-	// affiche la fenêtre de saisie de la response
-	ret=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_RESPONSE),w,ResponseDialogProc,(LPARAM)0);
-	if (ret==PB_MDP_RETROUVE) // ISSUE#138
+	// si web service activé et une réponse recue, on n'affiche pas la fenêtre
+	if (!gbRecoveryWebserviceActive || *gszFormattedResponse==0)
 	{
-		gbRecoveryRunning=FALSE;
-		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile);
-		StoreIniEncryptedHash(); // ISSUE#164
-		rc=-2;
-		goto end;
+		// affiche la fenêtre de saisie de la response
+		ret=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_RESPONSE),w,ResponseDialogProc,(LPARAM)0);
+		if (ret==PB_MDP_RETROUVE) // ISSUE#138
+		{
+			gbRecoveryRunning=FALSE;
+			WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile);
+			StoreIniEncryptedHash(); // ISSUE#164
+			rc=-2;
+			goto end;
+		}
+		if (ret==PB_RECHALLENGE) // ISSUE#121
+		{ 
+			WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile); // ISSUE#177
+			StoreIniEncryptedHash(); // ISSUE#164
+			rc=-5; 
+			goto end; 
+		} 
+		if (ret!=IDOK) { rc=-4; goto end; }
 	}
-	if (ret==PB_RECHALLENGE) // ISSUE#121
-	{ 
-		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile); // ISSUE#177
-		StoreIniEncryptedHash(); // ISSUE#164
-		rc=-5; 
-		goto end; 
-	} 
-	if (ret!=IDOK) { rc=-4; goto end; }
 
 	// vérifie le format de la response
 	lenFormattedResponse=strlen(gszFormattedResponse);
@@ -748,7 +763,8 @@ end:
 //-----------------------------------------------------------------------------
 // RecoveryWebservice()
 //-----------------------------------------------------------------------------
-// Appelle le webservice en fournissant le challenge et traite la réponse
+// Appelle le webservice en fournissant le challenge
+// En sortie, si OK, la réponse est copiée dans gszFormattedResponse
 //-----------------------------------------------------------------------------
 int RecoveryWebservice(void)
 {
@@ -756,12 +772,27 @@ int RecoveryWebservice(void)
 	int rc=-1;
 	char *pszResult=NULL;
 	char szRequest[2048];
+	DWORD dwHTTPReturnCode;
+	char *p1,*p2=NULL;
 
+	// formatte la requete au web service
 	sprintf_s(szRequest,"%s?challenge=%s",gszRecoveryWebserviceURL,gszFormattedChallengeForWebservice);
-	
-	pszResult=HTTPRequest(gszRecoveryWebserviceServer,giRecoveryWebservicePort,szRequest,giRecoveryWebserviceTimeout,NULL);
+
+	// envoie la requete
+	pszResult=HTTPRequest(gszRecoveryWebserviceServer,giRecoveryWebservicePort,szRequest,giRecoveryWebserviceTimeout,NULL,&dwHTTPReturnCode);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
-	
+	if (dwHTTPReturnCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szRequest,dwHTTPReturnCode)); goto end; }
+
+	// ici on a reçu une réponse au format JSON, on extrait la partie utile dans gszFormattedResponse
+	// Format de la réponse JSON : {<br/>"response" : "------swSSO RESPONSE---.....---swSSO RESPONSE---"<br/>"}
+	p1=strstr(pszResult,gcszBeginResponse);
+	if (p1==NULL) { TRACE((TRACE_ERROR,_F_,"Format réponse incorrect (marque début non trouvée) : %s",pszResult)); goto end; }
+	p2=strstr(p1+strlen(gcszBeginResponse),gcszEndResponse);
+	if (p2==NULL) { TRACE((TRACE_ERROR,_F_,"Format réponse incorrect (marque fin non trouvée) : %s",pszResult)); goto end; }
+	strncpy_s(gszFormattedResponse,sizeof(gszFormattedResponse),p1,p2+strlen(gcszEndResponse)-p1);
+
+	TRACE((TRACE_DEBUG,_F_,"Response=%s",gszFormattedResponse));
+
 	rc=0;
 end:
 	if (pszResult!=NULL) free(pszResult);

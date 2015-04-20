@@ -2259,7 +2259,7 @@ askpwd:
 			char szSynchroValue[192+1]; // (16+64+16)*2+1 = 193
 			int len;
 			len=GetPrivateProfileString("swSSO","CheckSynchro","",szSynchroValue,sizeof(szSynchroValue),gszCfgFile);
-			if (len!=0) // ISSUE#181 (découplage) : l'utilisateur étant en PP_WINDOWS et passe PP_ENCRYPTED
+			if (len!=0) // ISSUE#181 (découplage) : l'utilisateur était en PP_WINDOWS et passe PP_ENCRYPTED
 			{
 				// demande le mot de passe à l'utilisateur (pas le choix, pour hasher, il faut le connaitre)
 				// bidouille pour se retrouver dans le même cas que le clic sur la loupe et vérifier le mot de passe windows facilement...

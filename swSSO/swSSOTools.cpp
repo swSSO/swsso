@@ -153,7 +153,7 @@ end:
 // Exécute la requête HTTP passée en paramètre
 // L'appelant doit libérer le resultat !
 // ----------------------------------------------------------------------------------
-char *HTTPRequest(const char *szServer,int iPort,const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams)
+char *HTTPRequest(const char *szServer,int iPort,const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams,DWORD *pdwStatusCode)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -170,7 +170,7 @@ char *HTTPRequest(const char *szServer,int iPort,const char *szRequest,int timeo
 	DWORD dwHTTPResultMaxSize;
 	DWORD dwOptions;
 	DWORD dwFlags;
-
+	DWORD dwStatusCodeSize=sizeof(DWORD);
 	BSTR bstrProxyURL=NULL;
 	BSTR bstrProxyUser=NULL;
 	BSTR bstrProxyPwd=NULL;
@@ -263,6 +263,12 @@ char *HTTPRequest(const char *szServer,int iPort,const char *szRequest,int timeo
 		p+=dwSize;
 		dwLenResult+=dwDownloaded;
     } while (dwSize>0);
+
+	if (pdwStatusCode!=NULL)
+	{
+		WinHttpQueryHeaders(hRequest,WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,NULL,pdwStatusCode,&dwStatusCodeSize,NULL);
+		TRACE((TRACE_INFO,_F_,"dwStatusCode=%d",*pdwStatusCode));
+	}
 #ifdef TRACES_ACTIVEES	
 	if (dwLenResult>2048)
 	{
