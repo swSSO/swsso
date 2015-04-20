@@ -1991,7 +1991,9 @@ end:
 		}
 		else // une clé de recouvrement existe et que les recoveryInfos ont déjà été stockées
 		{
-			if (MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_LOGON2),"swSSO",MB_OKCANCEL | MB_ICONEXCLAMATION)==IDOK)
+			// nouveau en 1.08, un web service permet de faire la resynchro de manière transparente.
+			// donc si le webservice est activé et qu'on est en mode synchro mdp, n'affiche pas le message
+			if (gbRecoveryWebserviceActive || MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_LOGON2),"swSSO",MB_OKCANCEL | MB_ICONEXCLAMATION)==IDOK)
 			{
 				// ISSUE#165
 				if (RecoveryChallenge(NULL)==0) // 0=OK, -1=erreur, -2=l'utilisateur a annulé

@@ -2607,7 +2607,14 @@ askpwd:
 		// supprime le recovery running
 		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile);
 		StoreIniEncryptedHash(); // ISSUE#164
-		MessageBox(NULL,GetString(giPwdProtection==PP_ENCRYPTED?IDS_RECOVERY_ENCRYPTED_OK:IDS_RECOVERY_WINDOWS_OK),"swSSO",MB_ICONINFORMATION | MB_OK);
+		if (giPwdProtection==PP_ENCRYPTED)
+		{
+			MessageBox(NULL,GetString(IDS_RECOVERY_ENCRYPTED_OK),"swSSO",MB_ICONINFORMATION | MB_OK);
+		}
+		else 
+		{
+			if (!gbRecoveryWebserviceActive) MessageBox(NULL,GetString(IDS_RECOVERY_WINDOWS_OK),"swSSO",MB_ICONINFORMATION | MB_OK);
+		}
 		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_SUCCESS,NULL,NULL,NULL,NULL,0);
 	}
 

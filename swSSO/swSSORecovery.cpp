@@ -775,6 +775,18 @@ int RecoveryWebservice(void)
 	DWORD dwHTTPReturnCode;
 	char *p1,*p2=NULL;
 
+	NOTIFYICONDATA nid;
+	ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+	nid.cbSize=sizeof(NOTIFYICONDATA);
+	nid.hWnd=gwMain;
+	nid.uID=0; 
+	//nid.hIcon=;
+	nid.uFlags=NIF_INFO; // szInfo, szInfoTitle, dwInfoFlags, and uTimeout
+	nid.uTimeout=30000;
+	strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),"Veuillez patienter...");
+	strcpy_s(nid.szInfo,sizeof(nid.szInfo),"Resynchronisation du mot de passe en cours...");
+	Shell_NotifyIcon(NIM_MODIFY, &nid); 
+	
 	// formatte la requete au web service
 	sprintf_s(szRequest,"%s?challenge=%s",gszRecoveryWebserviceURL,gszFormattedChallengeForWebservice);
 
@@ -795,6 +807,11 @@ int RecoveryWebservice(void)
 
 	rc=0;
 end:
+
+	*(nid.szInfoTitle)=0;
+	*(nid.szInfo)=0;
+	Shell_NotifyIcon(NIM_MODIFY, &nid); 
+
 	if (pszResult!=NULL) free(pszResult);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
