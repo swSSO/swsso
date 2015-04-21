@@ -490,15 +490,17 @@ void Help(void)
 	int len;
 	int rc;
 	BOOL bFound=FALSE;
+	char *p;
 
 	// construit le nom du fichier chm
-	len=GetCurrentDirectory(_MAX_PATH-50,szHelpFile);
+	// ISSUE#249 il faut chercher le .chm dans le dossier de l'exécutable et pas dans le current directory qui peut-être ailleurs...
+	// len=GetCurrentDirectory(_MAX_PATH-50,szHelpFile);
+	len=GetModuleFileName(ghInstance,szHelpFile,_MAX_PATH-10);
 	if (len==0) goto end;
-	if (szHelpFile[len-1]!='\\')
-	{
-		szHelpFile[len]='\\';
-		len++;
-	}
+	p=strrchr(szHelpFile,'\\');
+	if (p==NULL) goto end;
+	len=p+1-szHelpFile;
+
 	// 1er essai : swsso.chm
 	strcpy_s(szHelpFile+len,_MAX_PATH-len,"swSSO.chm"); // ISSUE #110 : correction plantage
 	rc=(int)ShellExecute(NULL,"open",szHelpFile,NULL,"",SW_SHOW);
