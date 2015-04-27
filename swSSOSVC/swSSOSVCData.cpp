@@ -146,7 +146,7 @@ end:
 //-----------------------------------------------------------------------------
 // Attend un message et le traite. Commandes supportées :
 // 1.08+ :
-// V03:GETPASS:domain(256octets)username(256octets) > demande à SVC de fournir le mot de passe Windows (chiffré par PHKD)
+// V02:GETPASS:domain(256octets)username(256octets) > demande à SVC de fournir le mot de passe Windows (chiffré par PHKD)
 // 1.08- :
 // V02:PUTPASS:domain(256octets)username(256octets)password(256octets) (chiffré par CryptProtectMemory avec flag CRYPTPROTECTMEMORY_CROSS_PROCESS)
 // V02:GETPHKD:CUR:domain(256octets)username(256octets) > demande à SVC de fournir le KeyData courant
@@ -218,7 +218,7 @@ int swWaitForMessage()
 			{
 				if (cbRead!=12+DOMAIN_LEN+USER_LEN+PWD_LEN)
 				{
-					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+256));
+					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+DOMAIN_LEN+USER_LEN+PWD_LEN));
 					strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
 					lenResponse=strlen(bufResponse);
 				}
@@ -378,12 +378,12 @@ int swWaitForMessage()
 				}
 			}
 			//-------------------------------------------------------------------------------------------------------------
-			if (memcmp(bufRequest+4,"GETPASS:",8)==0) // Format = V03:GETPASS:domain(256octets)username(256octets)
+			else if (memcmp(bufRequest+4,"GETPASS:",8)==0) // Format = V02:GETPASS:domain(256octets)username(256octets)
 			//-------------------------------------------------------------------------------------------------------------
 			{
-				if (cbRead!=12+DOMAIN_LEN+USER_LEN+PWD_LEN)
+				if (cbRead!=12+DOMAIN_LEN+USER_LEN)
 				{
-					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+256));
+					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+DOMAIN_LEN+USER_LEN));
 					strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
 					lenResponse=strlen(bufResponse);
 				}
@@ -413,7 +413,6 @@ int swWaitForMessage()
 							TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
 							// Crée la clé de chiffrement des mots de passe secondaires
 							if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-							memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
 							if (swCreateAESKeyFromKeyData(AESKeyData,&hKey)) goto end;
 							// Chiffre le mot de passe
 							pszEncryptedPwd=swCryptEncryptString(tmpBufPwd,hKey);
