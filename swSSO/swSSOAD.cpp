@@ -370,7 +370,7 @@ char *GetDecryptedPwd(char *szPwdEncryptedValue)
 	{
 		if (strcmp(pszPassword,"%ADPASSWORD%")==0)
 		{
-			TRACE((TRACE_DEBUG,_F_,"%%ADPASSWORD%%"));
+			TRACE((TRACE_DEBUG,_F_,"%%ADPASSWORD%% giPwdProtection=%d",giPwdProtection));
 			pszADPassword=swCryptDecryptString(gszEncryptedADPwd,ghKey1);
 			free(pszPassword); pszPassword=NULL;
 			ret=pszADPassword;
