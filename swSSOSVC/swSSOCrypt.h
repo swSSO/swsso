@@ -70,3 +70,5 @@ char *swCryptDecryptString(const char *pszSource,HCRYPTKEY hKey);
 int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufSalt,int bufSaltLen,int iNbIterations);
 
 void swGenerateRandomPwd(char *pszPwd,int iPwdLen,int iPwdType);
+int swCreateAESKeyFromKeyData(BYTE *pAESKeyData,HCRYPTKEY *phKey);
+char *swCryptEncryptString(const char *pszSource,HCRYPTKEY hKey);

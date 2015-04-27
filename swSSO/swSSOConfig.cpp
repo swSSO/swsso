@@ -1972,6 +1972,19 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 			goto end;
 		}
 	}
+
+	// Demande le mot de passe à swSSOSVC
+	// Construit la requête à envoyer à swSSOSVC : V03:GETPASS:domain(256octets)username(256octets)
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
+	memcpy(bufRequest,"V03:GETPASS:",12);
+	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
+	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
+	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+	{
+		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+	}
+
+
 	RecoveryFirstUse(NULL,AESKeyData);
 	rc=0;
 end:

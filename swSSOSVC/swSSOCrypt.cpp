@@ -332,6 +332,39 @@ void swCryptTerm()
 }
 
 //-----------------------------------------------------------------------------
+// swCryptDestroyKey()
+//-----------------------------------------------------------------------------
+// Libération d'une clé
+//-----------------------------------------------------------------------------
+void swCryptDestroyKey(HCRYPTKEY hKey)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	if (hKey!=NULL) CryptDestroyKey(hKey); 
+	TRACE((TRACE_LEAVE,_F_,""));
+}
+
+//-----------------------------------------------------------------------------
+// swCryptEncodeBase64()
+//-----------------------------------------------------------------------------
+// Le relecteur attentif verra tout de suite que ce n'est pas un encodage
+// base 64... Au moment où j'ai écrit ça, j'ai voulu me simplifier la vie...
+// Et maintenant, pour des raisons de compatibilité ascendante, je préfère
+// laisser comme ça pour l'instant... Comme d'hab, le provisoire dure ;-)
+//-----------------------------------------------------------------------------
+// TODO : faire un vrai encodage base64
+//-----------------------------------------------------------------------------
+void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	int i;
+    for (i=0;i<lenSrcData;i++) 
+    {
+		wsprintf(pszDestString+2*i,"%02X",pSrcData[i]);
+	}
+	TRACE((TRACE_LEAVE,_F_,""));
+}
+
+//-----------------------------------------------------------------------------
 // swCryptDecodeBase64()
 //-----------------------------------------------------------------------------
 // Cf. remarque dans swCryptEncodeBase64()
@@ -427,4 +460,139 @@ end:
 	if (pBuffer128Ko!=NULL) free(pBuffer128Ko);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// swCreateAESKeyFromKeyData()
+//-----------------------------------------------------------------------------
+// Crée la clé AES à partir de données de la clé (256 bits / 32 octets)
+// et l'importe dans le ghProv
+//-----------------------------------------------------------------------------
+// [in] cszMasterPwd = mot de passe maitre
+// [in/out] hKey = handle de clé
+//-----------------------------------------------------------------------------
+// Retour : 0 si OK
+//-----------------------------------------------------------------------------
+int swCreateAESKeyFromKeyData(BYTE *pAESKeyData,HCRYPTKEY *phKey)
+{
+	int iAESKeySize;
+	KEYBLOB *pAESKey=NULL;
+	BOOL brc;
+	int rc=-1;
+	TRACE((TRACE_ENTER,_F_,""));
+	BYTE ZeroBuf[AES256_KEY_LEN];
+
+	// 
+	ZeroMemory(ZeroBuf,AES256_KEY_LEN);
+	if (memcmp(pAESKeyData,ZeroBuf,AES256_KEY_LEN)==0) 
+	{
+		TRACE((TRACE_ERROR,_F_,"pAESKeyData is zerobuf")); 
+		goto end;
+	}
+
+	// Crée la clé AES
+	iAESKeySize=sizeof(KEYBLOB)+AES256_KEY_LEN;
+	pAESKey=(KEYBLOB*)malloc(iAESKeySize);
+	if (pAESKey==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",iAESKeySize)); goto end; }
+	ZeroMemory(pAESKey,iAESKeySize);
+	pAESKey->header.bType=PLAINTEXTKEYBLOB;
+	pAESKey->header.bVersion=CUR_BLOB_VERSION;
+	pAESKey->header.reserved=0;
+	pAESKey->header.aiKeyAlg=CALG_AES_256;
+	pAESKey->dwKeySize=AES256_KEY_LEN;
+	memcpy(pAESKey->KeyData,pAESKeyData,AES256_KEY_LEN);
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)pAESKey,iAESKeySize,"pAESKey (iAESKeySize=%d)",iAESKeySize));
+	brc= CryptImportKey(ghProv,(LPBYTE)pAESKey,iAESKeySize,NULL,0,phKey);
+	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptImportKey()=0x%08lx",GetLastError())); goto end; }
+	rc=0;
+end:
+	if (pAESKey!=NULL) free(pAESKey);
+	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// swCryptEncryptData()
+//-----------------------------------------------------------------------------
+// [in] iv = vecteur d'initialisation
+// [in/out] pData = pointeur vers les données à chiffrer / chiffrées
+// [in] lData = taille des données à chiffrer (lData en entrée = lData en sortie)
+// [in] hKey = clé de chiffrement
+//-----------------------------------------------------------------------------
+// Retour : 0 si OK
+//-----------------------------------------------------------------------------
+int swCryptEncryptData(unsigned char *iv, unsigned char *pData,DWORD lData,HCRYPTKEY hKey)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	BOOL brc;
+	int rc=-1;
+	DWORD dwMode=CRYPT_MODE_CBC;
+
+	brc=CryptSetKeyParam(hKey,KP_IV,iv,0);
+	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptSetKeyParam(KP_IV)")); goto end; }
+	brc=CryptSetKeyParam(hKey,KP_MODE,(BYTE*)&dwMode,0);
+	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptSetKeyParam(KP_MODE)")); goto end; }
+
+	brc=CryptEncrypt(hKey,0,TRUE,0,pData,&lData,lData+16);
+	if (!brc) 
+	{
+		TRACE((TRACE_ERROR,_F_,"CryptEncrypt()=0x%08lx",GetLastError()));
+		goto end;
+	}
+	TRACE_BUFFER((TRACE_DEBUG,_F_,iv,16,"iv"));
+	TRACE_BUFFER((TRACE_DEBUG,_F_,pData,64,"Donnees chiffrees"));
+	TRACE_BUFFER((TRACE_DEBUG,_F_,pData+64,16,"ov"));
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// swCryptEncryptString()
+//-----------------------------------------------------------------------------
+// Chiffrement d'une chaine de caractère. LA SOURCE N'EST PAS MODIFIEE
+//-----------------------------------------------------------------------------
+// [in] pszSource = chaine source (terminée par 0 !)
+// [in] hKey = clé de chiffrement
+// [rc] chaine chiffrée encodée base64 terminée par 0. A libérer par l'appelant.
+//      Format du buffer de sortie (avant encodage base64) :
+//      iv 16 octets (alea) + 64 octets (4 blocs de 16 octets) + ov 16 octets
+///-----------------------------------------------------------------------------
+char *swCryptEncryptString(const char *pszSource,HCRYPTKEY hKey)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	char *pszDest=NULL;
+	char unsigned *pSourceCopy=NULL;
+	int lenSource,lenSourceCopy,lenDest;
+	BOOL brc;
+	
+	lenSource=strlen(pszSource);
+	lenSourceCopy=16+64+16; // iv + taille d'un multiple de 16 (128 bits) pour chiffrement AES
+	lenDest=lenSourceCopy*2+1;
+	TRACE((TRACE_PWD,_F_,"pszSource=%s",pszSource));
+	TRACE((TRACE_DEBUG,_F_,"lenSource=%d lenSourceCopy=%d lenDest=%d",lenSource,lenSourceCopy,lenDest));
+
+	// 0.51 : init avec random sur taille max, puis copie du mot de passe.
+	pSourceCopy=(unsigned char*)malloc(lenSourceCopy);
+	if (pSourceCopy==NULL) goto end;
+
+	brc = CryptGenRandom(ghProv,lenSourceCopy,pSourceCopy);
+	if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptGenRandom()")); goto end; }
+	// on laisse les 16 premiers octets en alea (c'est l'iv)
+	// on prend le 0 de fin de chaine qui permettra de distingue le mdp du padding
+	memcpy(pSourceCopy+16,pszSource,lenSource+1); 
+	
+	if (swCryptEncryptData(pSourceCopy,pSourceCopy+16,64,hKey)!=0) goto end;
+
+	pszDest=(char*)malloc(lenDest); // sera libéré par l'appelant
+	if (pszDest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenDest)); goto end; }
+	swCryptEncodeBase64(pSourceCopy,lenSourceCopy,pszDest);
+
+	TRACE((TRACE_DEBUG,_F_,"pszDest=%s",pszDest));
+
+end:
+	if (pSourceCopy!=NULL) free(pSourceCopy); // free ajouté en 0.93B6
+	TRACE((TRACE_LEAVE,_F_,"pszDest=0x%08lx",pszDest));
+	return pszDest;
 }

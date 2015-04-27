@@ -145,6 +145,9 @@ end:
 // swWaitForMessage()
 //-----------------------------------------------------------------------------
 // Attend un message et le traite. Commandes supportées :
+// 1.08+ :
+// V03:GETPASS:domain(256octets)username(256octets) > demande à SVC de fournir le mot de passe Windows (chiffré par PHKD)
+// 1.08- :
 // V02:PUTPASS:domain(256octets)username(256octets)password(256octets) (chiffré par CryptProtectMemory avec flag CRYPTPROTECTMEMORY_CROSS_PROCESS)
 // V02:GETPHKD:CUR:domain(256octets)username(256octets) > demande à SVC de fournir le KeyData courant
 // V02:GETPHKD:OLD:domain(256octets)username(256octets) > demande à SVC de fournir le KeyData précédent (si chgt de mdp par exemple)
@@ -172,7 +175,9 @@ int swWaitForMessage()
 	// PHKD (Password Hash + Key Data)
 	BYTE PBKDF2Pwd[PBKDF2_PWD_LEN];
 	BYTE AESKeyData[AES256_KEY_LEN];
-	
+	HCRYPTKEY hKey=NULL;
+	char *pszEncryptedPwd=NULL;
+
 	TRACE((TRACE_ENTER,_F_,""));	
 	
 	// Se met en attente d'un message
@@ -373,6 +378,62 @@ int swWaitForMessage()
 				}
 			}
 			//-------------------------------------------------------------------------------------------------------------
+			if (memcmp(bufRequest+4,"GETPASS:",8)==0) // Format = V03:GETPASS:domain(256octets)username(256octets)
+			//-------------------------------------------------------------------------------------------------------------
+			{
+				if (cbRead!=12+DOMAIN_LEN+USER_LEN+PWD_LEN)
+				{
+					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+256));
+					strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
+					lenResponse=strlen(bufResponse);
+				}
+				else
+				{
+					iUserDataIndex=swGetUserDataIndex(bufRequest,12);
+					if (iUserDataIndex==-1) // utilisateur non connu, erreur !
+					{
+						TRACE((TRACE_ERROR,_F_,"Unknown user"));
+						strcpy_s(bufResponse,sizeof(bufResponse),"UNKNOWN_USER");
+						lenResponse=strlen(bufResponse);
+					}
+					else
+					{
+						TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
+						if (!gUserData[iUserDataIndex].bPasswordStored)
+						{
+							TRACE((TRACE_ERROR,_F_,"Pas de mot de passe connu pour cet utilisateur",iUserDataIndex));
+							strcpy_s(bufResponse,sizeof(bufResponse),"NO PASSWORD");
+							lenResponse=strlen(bufResponse);
+						}
+						else // Prépare la réponse, format = ?
+						{
+							// Déchiffre le mot de passe
+							memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
+							if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
+							TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
+							// Crée la clé de chiffrement des mots de passe secondaires
+							if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+							memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
+							if (swCreateAESKeyFromKeyData(AESKeyData,&hKey)) goto end;
+							// Chiffre le mot de passe
+							pszEncryptedPwd=swCryptEncryptString(tmpBufPwd,hKey);
+							if (pszEncryptedPwd==NULL)
+							{
+								TRACE((TRACE_ERROR,_F_,"Erreur lors du chiffrement du mot de passe"));
+								strcpy_s(bufResponse,sizeof(bufResponse),"PASSWORD ENCRYPT ERROR");
+								lenResponse=strlen(bufResponse);
+							}
+							else
+							{
+								// Réponse
+								lenResponse=strlen(pszEncryptedPwd);
+								memcpy(bufResponse,pszEncryptedPwd,lenResponse);
+							}
+						}
+					}
+				}
+			}
+			//-------------------------------------------------------------------------------------------------------------
 			else
 			//-------------------------------------------------------------------------------------------------------------
 			{
@@ -400,6 +461,8 @@ int swWaitForMessage()
 	DisconnectNamedPipe(ghPipe); 
 	rc=0;
 end:
+	swCryptDestroyKey(hKey);
+	if (pszEncryptedPwd!=NULL) free(pszEncryptedPwd);
 	// Efface la requête de manière sécurisée (elle peut contenir un mot de passe !)
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	SecureZeroMemory(tmpBufPwd,sizeof(tmpBufPwd));
