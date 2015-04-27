@@ -96,6 +96,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	char szKeystoreFile[1024]; 
 	char szConfigFile[1024];
 	DWORD dwEncryptedKeystorePwdLen;
+	char *pszUsername;
 
 	// trace et vérification des paramètres
 	TRACE((TRACE_INFO,_F_, "iMaxCount=%d",iMaxCount));
@@ -208,10 +209,19 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	if (swCryptDecryptDataRSA(iKeyId,szClearKeystorePwd,pChallengePart2,256,&pDecryptedChallengePart2,&lenDecryptedChallengePart2)!=0) { rc=ERR_KEYSTORE_BAD_PWD; goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,pDecryptedChallengePart2,lenDecryptedChallengePart2,"pDecryptedChallengePart2")); 
 	
-	// affiche le nom de l'utilisateur et demande confirmation
-	if (_stricmp((char*)(pChallengePart1+AES256_KEY_LEN),szDomainUserName)!=0)
+	// compare le nom de l'utilisateur
+	pszUsername=(char*)strchr(szDomainUserName,'\\');
+	if (pszUsername==NULL) 
 	{
-		TRACE((TRACE_ERROR,_F_,"Utilisateur recu en paramètre=%s",szDomainUserName)); 
+		TRACE((TRACE_ERROR,_F_,"Le nom du user n'est pas au format domaine\\user : %s",szDomainUserName));
+		rc=ERR_BAD_USER;
+		goto end;
+
+	}
+	pszUsername++;
+	if (_stricmp((char*)(pChallengePart1+AES256_KEY_LEN),pszUsername)!=0)
+	{
+		TRACE((TRACE_ERROR,_F_,"Utilisateur recu en parametre=%s",szDomainUserName)); 
 		TRACE((TRACE_ERROR,_F_,"Utilisateur dans le challenge=%s",(char*)(pChallengePart1+AES256_KEY_LEN)));
 		rc=ERR_BAD_USER;
 		goto end;
