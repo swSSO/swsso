@@ -531,7 +531,14 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			Sleep(100); // ISSUE#163 (et autres problèmes, notamment identifiant saisi tronqué avec le reste dans le mot de passe)
 
 			hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
-			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accSelect(SELFLAG_TAKEFOCUS)=0x%08lx",hr)); } 
+			if (FAILED(hr)) // ISSUE#251 : en cas d'erreur du accSelect (vu UNE fois), on fait TAB à l'aveugle, ça évite de taper le mdp dans le champ id
+			{ 
+				TRACE((TRACE_ERROR,_F_,"accSelect(SELFLAG_TAKEFOCUS)=0x%08lx",hr)); 
+				// remarque : nombre de tab à faire = fonction de la position relative du champ id par rapport au champ mdp
+				Sleep(100);
+				for (i=0; i<abs(atoi(gptActions[ptSuivi->iAction].szId1Name));i++) { KBSimEx(w,"[TAB]","","","","",""); }
+				Sleep(100);
+			} 
 			if ((*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0))
 			{
 				//char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);

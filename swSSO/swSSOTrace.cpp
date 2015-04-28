@@ -39,7 +39,7 @@
 #define REGVALUE_TRACE_FILESIZE "FileSize"
 
 static char gszTraceFileName[_MAX_PATH+1];
-static int giTraceLevel=TRACE_INFO;
+static int giTraceLevel=TRACE_DEBUG;
 static DWORD gdwTraceFileSize=20000000; 
 static char gszTraceBuf[4096];
 HANDLE ghfTrace=INVALID_HANDLE_VALUE;
