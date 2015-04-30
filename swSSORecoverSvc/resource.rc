@@ -1,0 +1,54 @@
+#ifndef APSTUDIO_INVOKED
+#define PRODUCT_NAME "svczgpkidae"
+#define PRODUCT_NAME_TRACE "svczgpkidae (traces)"
+#define EXECUTABLE_NAME "svczgpkidae.exe"
+#define EXECUTABLE_NAME_TRACE "svczgpkidae.exe"
+#include <windows.h>
+#include <commctrl.h>
+#include <richedit.h>
+//
+// Version Information resources
+//
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+1 VERSIONINFO
+    FILEVERSION     1,0,0,0
+    PRODUCTVERSION  1,0,0,0
+    FILEOS          VOS_UNKNOWN
+    FILETYPE        VFT_UNKNOWN
+    FILESUBTYPE     VFT2_UNKNOWN
+    FILEFLAGSMASK   0x00000000
+    FILEFLAGS       0x00000000
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040C04B0"
+        {
+            VALUE "FileVersion", "1.00"
+            VALUE "ProductVersion", "1.00"
+            VALUE "LegalCopyright", "SNCF"
+            VALUE "Comments", ""
+            VALUE "CompanyName", "SNCF"
+#ifdef TRACES_ACTIVEES
+			VALUE "FileDescription", PRODUCT_NAME_TRACE
+			VALUE "InternalName", PRODUCT_NAME_TRACE
+            VALUE "OriginalFilename", EXECUTABLE_NAME_TRACE
+#else
+			VALUE "FileDescription", PRODUCT_NAME
+			VALUE "InternalName", PRODUCT_NAME_TRACE
+            VALUE "OriginalFilename", EXECUTABLE_NAME
+#endif
+            VALUE "LegalTrademarks", ""
+            VALUE "PrivateBuild", ""
+            VALUE "ProductName", "svczgpkidae"
+            VALUE "SpecialBuild", ""
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x040C, 0x04B0
+    }
+}
+#endif
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
