@@ -190,6 +190,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_RECOVERY_WEBSERVICE_ADDRESS		"RecoveryWebserviceURL"
 #define REGVALUE_RECOVERY_WEBSERVICE_PORT			"RecoveryWebservicePort"
 #define REGVALUE_RECOVERY_WEBSERVICE_TIMEOUT		"RecoveryWebserviceTimeout"
+#define REGVALUE_RECOVERY_WEBSERVICE_HTTPS			"RecoveryWebserviceHTTPS"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -227,10 +228,11 @@ extern BOOL gbAdminDeleteConfigsOnServer;	// 1.07 - ISSUE#223
 extern int  giRefreshRightsFrequency;		// 1.07 - ISSUE#220
 extern BOOL gbAllowManagedConfigsModification;  // 1.07 : ISSUE#238
 extern BOOL gbRecoveryWebserviceActive;		// 1.08
-extern char gszRecoveryWebserviceServer[];		// 1.08
+extern char gszRecoveryWebserviceServer[];	// 1.08
 extern char gszRecoveryWebserviceURL[];		// 1.08
-extern int  giRecoveryWebservicePort;			// 1.08
-extern int  giRecoveryWebserviceTimeout;		// 1.08
+extern int  giRecoveryWebservicePort;		// 1.08
+extern int  giRecoveryWebserviceTimeout;	// 1.08
+extern BOOL gbRecoveryWebserviceHTTPS;		// 1.08
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

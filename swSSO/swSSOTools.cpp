@@ -153,7 +153,7 @@ end:
 // Exécute la requête HTTP passée en paramètre
 // L'appelant doit libérer le resultat !
 // ----------------------------------------------------------------------------------
-char *HTTPRequest(const char *szServer,int iPort,const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams,DWORD *pdwStatusCode)
+char *HTTPRequest(const char *szServer,int iPort,BOOL bHTTPS,const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams,DWORD *pdwStatusCode)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -215,12 +215,12 @@ char *HTTPRequest(const char *szServer,int iPort,const char *szRequest,int timeo
 	bstrRequest=GetBSTRFromSZ(szRequest);
 	if (bstrRequest==NULL) goto end;
 	dwFlags=WINHTTP_FLAG_ESCAPE_PERCENT;
-	if (gbServerHTTPS) dwFlags|=WINHTTP_FLAG_SECURE;
+	if (bHTTPS) dwFlags|=WINHTTP_FLAG_SECURE;
     hRequest = WinHttpOpenRequest(hConnect,L"GET",bstrRequest,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,dwFlags); // ISSUE#162 (HTTPS possible)
-	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",gbServerHTTPS?"https":"http",szServer,iPort,szRequest)); 
+	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",bHTTPS?"https":"http",szServer,iPort,szRequest)); 
 	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(GET %s)",szRequest)); goto end; }
 
-	if (gbServerHTTPS)
+	if (bHTTPS)
 	{
 		dwOptions=SECURITY_FLAG_IGNORE_CERT_CN_INVALID | SECURITY_FLAG_IGNORE_CERT_DATE_INVALID | SECURITY_FLAG_IGNORE_UNKNOWN_CA;
 		brc=WinHttpSetOption(hRequest,WINHTTP_OPTION_SECURITY_FLAGS,&dwOptions,sizeof(dwOptions));

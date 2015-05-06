@@ -791,7 +791,7 @@ int RecoveryWebservice(void)
 	sprintf_s(szRequest,"%s?challenge=%s",gszRecoveryWebserviceURL,gszFormattedChallengeForWebservice);
 
 	// envoie la requete
-	pszResult=HTTPRequest(gszRecoveryWebserviceServer,giRecoveryWebservicePort,szRequest,giRecoveryWebserviceTimeout,NULL,&dwHTTPReturnCode);
+	pszResult=HTTPRequest(gszRecoveryWebserviceServer,giRecoveryWebservicePort,gbRecoveryWebserviceHTTPS,szRequest,giRecoveryWebserviceTimeout,NULL,&dwHTTPReturnCode);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	if (dwHTTPReturnCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szRequest,dwHTTPReturnCode)); goto end; }
 

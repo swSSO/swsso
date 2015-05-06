@@ -58,7 +58,7 @@ int CheckAdminPwd(char *szPwd)
 	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szSalt+48);
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szSalt,strlen(szSalt),"szSalt :"));
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=checkadminpwd&salt=%s&pwd=%s",gszWebServiceAddress,szSalt,szPwd);
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,szRequest,8,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,8,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 
 	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
@@ -91,7 +91,7 @@ int StoreAdminPwd(char *szNewPwd)
 	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szSalt+48);
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szSalt,strlen(szSalt),"szSalt :"));
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=setadminpwd&salt=%s&pwd=%s",gszWebServiceAddress,szSalt,szNewPwd);
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,szRequest,8,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,8,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	
 	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
@@ -345,7 +345,7 @@ BOOL IsAdminPwdSet()
 	hCursorOld=SetCursor(ghCursorWait);
 
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=isadminpwdset",gszWebServiceAddress);
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,szRequest,8,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,8,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	
 	if (pszResult[0]=='Y' && pszResult[1]=='E' && pszResult[2]=='S') rc=TRUE;

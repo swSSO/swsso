@@ -125,9 +125,10 @@ int giRefreshRightsFrequency=0;				// 1.07 - ISSUE#220
 BOOL gbAllowManagedConfigsModification=TRUE;	// 1.07 : ISSUE#238
 BOOL gbRecoveryWebserviceActive=FALSE;			// 1.08
 char gszRecoveryWebserviceServer[128+1];		// 1.08
-char gszRecoveryWebserviceURL[255+1];		// 1.08
+char gszRecoveryWebserviceURL[255+1];			// 1.08
 int  giRecoveryWebservicePort=INTERNET_DEFAULT_HTTP_PORT;	// 1.08
 int  giRecoveryWebserviceTimeout=10;			// 1.08
+BOOL gbRecoveryWebserviceHTTPS=FALSE;			// 1.08
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -586,7 +587,11 @@ void LoadPolicies(void)
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_TIMEOUT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) giRecoveryWebserviceTimeout=(BOOL)dwValue; 
+		if (rc==ERROR_SUCCESS) giRecoveryWebserviceTimeout=(int)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_HTTPS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbRecoveryWebserviceHTTPS=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -816,6 +821,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gszRecoveryWebserviceServer=%s"		,gszRecoveryWebserviceServer));
 	TRACE((TRACE_INFO,_F_,"gszRecoveryWebserviceURL=%s"			,gszRecoveryWebserviceURL));
 	TRACE((TRACE_INFO,_F_,"giRecoveryWebserviceTimeout=%d"		,giRecoveryWebserviceTimeout));
+	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceHTTPS=%d"		,gbRecoveryWebserviceHTTPS));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
