@@ -156,7 +156,14 @@ void swCryptTerm()
 	TRACE((TRACE_ENTER,_F_,""));
 	int i;
 
-	if (ghProv!=NULL) { CryptReleaseContext(ghProv,0); ghProv=NULL; }
+	if (ghProv!=NULL) 
+	{ 
+		if (!CryptReleaseContext(ghProv,0))
+		{
+			TRACE((TRACE_ERROR,_F_,"CryptReleaseContext=%d",GetLastError())); 
+		}
+		ghProv=NULL; 
+	}
 
 	if (gbCryptInitCalled) // nécessaire car si tableau non ZeroMémorySé, risque de free hasardeux...
 	{
