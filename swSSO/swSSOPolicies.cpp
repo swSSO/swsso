@@ -180,7 +180,8 @@ void LoadPolicies(void)
 	*gszLogFileName=0;
 	*gszWelcomeMessage=0;
 	*gszPastePwd_Text=0;
-	*gszWebServiceAddress=0;
+	*gszRecoveryWebserviceServer=0;
+	*gszRecoveryWebserviceURL=0;
 
 	//--------------------------------------------------------------
 	// GLOBAL POLICY
