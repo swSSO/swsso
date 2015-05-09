@@ -45,6 +45,7 @@ static char gszTraceBuf[2048];
 HANDLE ghfTrace=INVALID_HANDLE_VALUE;
 
 static char gszTraceLevelLabel[5+1];
+HANDLE ghTraceMutex=NULL;
 
 //-----------------------------------------------------------------------------
 // swTraceOpen()
@@ -59,6 +60,15 @@ void swTraceOpen(void)
 	DWORD dwValue,dwValueSize,dwValueType;
 	//int len;
 	//DWORD dw;
+
+	DWORD dwWaitForSingleObject;
+	ghTraceMutex=CreateMutex(NULL,TRUE,"Global\\swSSORecoverDll.traces");
+	if (ghTraceMutex==NULL) goto end;
+	if (GetLastError()==ERROR_ALREADY_EXISTS)
+	{
+		dwWaitForSingleObject=WaitForSingleObject(ghTraceMutex,2000);
+		if (dwWaitForSingleObject!=WAIT_OBJECT_0) goto end;
+	}
 
 	// valeurs par défaut pour les chaines de caractères
 	// les valeurs par défaut pour les DWORD sont initialisées dans la déclaration des variables globales
@@ -101,6 +111,12 @@ void swTraceClose(void)
 	if (ghfTrace==INVALID_HANDLE_VALUE) goto end;
 	CloseHandle(ghfTrace); 
 	ghfTrace=INVALID_HANDLE_VALUE; 
+	if (ghTraceMutex!=NULL)
+	{
+		ReleaseMutex(ghTraceMutex);
+		CloseHandle(ghTraceMutex);
+		ghTraceMutex=NULL;
+	}
 end:;
 }
 

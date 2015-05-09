@@ -53,21 +53,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	TRACE_OPEN();
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=ERR_OTHER;
-
-#ifdef BOUCHON
-	// trace et vérification des paramètres
-	TRACE((TRACE_INFO,_F_, "iMaxCount=%d",iMaxCount));
-	if (szDomainUserName==NULL) { TRACE((TRACE_ERROR,_F_, "szDomainUserName=NULL")); goto end; }
-	TRACE((TRACE_INFO,_F_, "szDomainUserName=%s",szDomainUserName));
-	if (szFormattedChallenge == NULL) { TRACE((TRACE_ERROR, _F_, "szFormattedChallenge=NULL")); goto end; }
-	TRACE((TRACE_INFO, _F_, "szFormattedChallenge=%s", szFormattedChallenge));
-	if (szFormattedResponse == NULL) { TRACE((TRACE_ERROR, _F_, "szFormattedResponse=NULL")); goto end; }
-	*szFormattedResponse=0;
-	strcpy_s(szFormattedResponse,iMaxCount,"---swSSO RESPONSE---9876543210ABCDEFGHI---swSSO RESPONSE---");
-	TRACE((TRACE_INFO,_F_, "szFormattedResponse=%s",szFormattedResponse));
-	goto end;
-#endif
-
+	
 	int lenFormattedChallenge;
 	int lenFormattedResponse;
 	char szChallenge[2048];
@@ -97,7 +83,31 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	char szConfigFile[1024];
 	DWORD dwEncryptedKeystorePwdLen;
 	char *pszUsername;
-
+	HANDLE hMutex=NULL;
+	DWORD dwWaitForSingleObject;
+	
+	hMutex=CreateMutex(NULL,TRUE,"Global\\swSSORecoverDll.dll");
+	if (hMutex==NULL) { TRACE((TRACE_INFO,_F_, "CreateMutex(swSSORecoverDll)=%d",GetLastError())); goto end; }
+	if (GetLastError()==ERROR_ALREADY_EXISTS)
+	{
+		TRACE((TRACE_INFO,_F_, "(Mutex) Autre operation en cours, attente..."));
+		dwWaitForSingleObject=WaitForSingleObject(hMutex,2000);
+		if (dwWaitForSingleObject==WAIT_OBJECT_0)
+		{
+			TRACE((TRACE_INFO,_F_, "(Mutex) Autre operation terminee"));
+		}
+		else if (dwWaitForSingleObject==WAIT_ABANDONED)
+		{
+				TRACE((TRACE_ERROR,_F_, "(Mutex) Abandon attente fin operation")); 
+				goto end;
+		}
+		else 
+		{
+			TRACE((TRACE_INFO,_F_, "(Mutex) WaitForSingleObject=%d",dwWaitForSingleObject));
+			goto end;
+		}
+	}	
+	TRACE((TRACE_INFO,_F_, "Mutex pris"));
 	// trace et vérification des paramètres
 	TRACE((TRACE_INFO,_F_, "iMaxCount=%d",iMaxCount));
 	if (szDomainUserName==NULL) { TRACE((TRACE_ERROR,_F_, "szDomainUserName=NULL")); goto end; }
@@ -254,12 +264,13 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	
 	rc=0;
 end:
-#ifndef BOUCHON
-	if (pDecryptedChallengePart1 != NULL) free(pDecryptedChallengePart1);
-	if (pDecryptedChallengePart2 != NULL) free(pDecryptedChallengePart2);
-	if (hKs != NULL) CryptDestroyKey(hKs);
-#endif
 	swCryptTerm();
+	if (hMutex!=NULL)
+	{
+		ReleaseMutex(hMutex);
+		TRACE((TRACE_INFO,_F_, "Mutex relache"));
+		CloseHandle(hMutex);
+	}
 	TRACE((TRACE_LEAVE, _F_, "rc=%d", rc));
 	TRACE_CLOSE();
 	return rc;

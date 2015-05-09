@@ -80,6 +80,33 @@ int swCryptInit()
 	int rc=SWCRYPT_ERROR;
 	DWORD dwLastError=0;
 
+	brc=CryptAcquireContext(&ghProv,NULL,MS_ENH_RSA_AES_PROV,PROV_RSA_AES,CRYPT_VERIFYCONTEXT);
+	if (!brc) 
+	{ 
+		dwLastError=GetLastError();
+		TRACE((TRACE_INFO,_F_,"CryptAcquireContext(MS_ENH_RSA_AES_PROV | PROV_RSA_AES)=0x%08lx",dwLastError)); 
+		goto end; 
+	}
+	 rc=0;
+end:
+	if (rc==0)
+	{
+		giNbPrivateKeys=0;
+		ZeroMemory(gtabPrivateKey,sizeof(SWCRYPTKEY)*MAX_NB_PRIVATEKEYS);
+		gbCryptInitCalled=TRUE;
+	}
+	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	return rc;
+}
+
+/*
+int swCryptInit()
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	BOOL brc;
+	int rc=SWCRYPT_ERROR;
+	DWORD dwLastError=0;
+
 	brc=CryptAcquireContext(&ghProv,"swSSO.MS_ENH_RSA_AES_PROV",MS_ENH_RSA_AES_PROV,PROV_RSA_AES,0);
 	if (brc) { rc=0; goto end; }
 
@@ -117,6 +144,7 @@ end:
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
 	return rc;
 }
+*/
 
 //-----------------------------------------------------------------------------
 // swCryptTerm()
