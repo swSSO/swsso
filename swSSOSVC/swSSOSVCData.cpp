@@ -230,6 +230,8 @@ int swWaitForMessage()
 						iUserDataIndex=giMaxUserDataIndex;
 						memcpy(gUserData[iUserDataIndex].szLogonDomainName,bufRequest+12,DOMAIN_LEN);
 						memcpy(gUserData[iUserDataIndex].szUserName,bufRequest+12+DOMAIN_LEN,USER_LEN);
+						// ISSUE#247 : passage du username en majuscule pour éviter les pb de différences de casse (vu avec POA Sophos)
+						CharUpper(gUserData[iUserDataIndex].szUserName);
 						TRACE((TRACE_INFO,_F_,"Utilisateur %s\\%s pas encore connu, on le crée",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName));
 						giMaxUserDataIndex++;
 					}

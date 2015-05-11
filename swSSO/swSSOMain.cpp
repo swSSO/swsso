@@ -2621,7 +2621,11 @@ askpwd:
 	if (giPwdProtection==PP_WINDOWS)
 	{
 		char szEventName[1024];
-		sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gpszRDN,gszUserName);
+		// ISSUE#247 : passage du username en majuscule pour éviter les pb de différences de casse (vu avec POA Sophos)
+		char szUpperUserName[UNLEN+1];
+		strcpy_s(szUpperUserName,sizeof(szUpperUserName),gszUserName);
+		CharUpper(szUpperUserName);
+		sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gpszRDN,szUpperUserName);
 		ghPwdChangeEvent=CreateEvent(NULL,FALSE,FALSE,szEventName);
 		if (ghPwdChangeEvent==NULL)
 		{
