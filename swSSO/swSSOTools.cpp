@@ -153,7 +153,16 @@ end:
 // Exécute la requête HTTP passée en paramètre
 // L'appelant doit libérer le resultat !
 // ----------------------------------------------------------------------------------
-char *HTTPRequest(const char *szServer,int iPort,BOOL bHTTPS,const char *szRequest,int timeout,T_PROXYPARAMS *pInProxyParams,DWORD *pdwStatusCode)
+char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
+				  int iPort,						// [in] port
+				  BOOL bHTTPS,						// [in] TRUE=https, FALSE=http
+				  const char *pszRequest,			// [in] Requete : /contextRoot/webservice.php?param1=...&param2=...
+				  LPCWSTR pwszMethod,				// [in] Données à envoyer avec la requête (NULL si aucune)
+				  void *pRequestData,				// [in] Données à envoyer avec la requête (NULL si aucune)
+				  DWORD dwLenRequestData,			// [in] Taille des données à envoyer avec la requête (0 si aucune)
+				  int timeout,						// [in] timeout
+				  T_PROXYPARAMS *pInProxyParams,	// [in] paramètre proxy ou NULL si pas de proxy
+				  DWORD *pdwStatusCode)				// [out] status http renseigné (l'appelant peut passer NULL s'il veut pas le statut http)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -206,19 +215,19 @@ char *HTTPRequest(const char *szServer,int iPort,BOOL bHTTPS,const char *szReque
 	WinHttpSetTimeouts(hSession, timeout*1000, timeout*1000, timeout*1000, timeout*1000); 
 
 	// WinHttpConnect
-	bstrServerAddress=GetBSTRFromSZ(szServer);
+	bstrServerAddress=GetBSTRFromSZ(pszServer);
 	if (bstrServerAddress==NULL) goto end;
 	hConnect = WinHttpConnect(hSession,bstrServerAddress,(INTERNET_PORT)iPort, 0); // ISSUE€162 (port configurable)
-	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s) - port : %d",szServer,iPort)); goto end; }
+	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s) - port : %d",pszServer,iPort)); goto end; }
     
 	// WinHttpOpenRequest
-	bstrRequest=GetBSTRFromSZ(szRequest);
+	bstrRequest=GetBSTRFromSZ(pszRequest);
 	if (bstrRequest==NULL) goto end;
 	dwFlags=WINHTTP_FLAG_ESCAPE_PERCENT;
 	if (bHTTPS) dwFlags|=WINHTTP_FLAG_SECURE;
-    hRequest = WinHttpOpenRequest(hConnect,L"GET",bstrRequest,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,dwFlags); // ISSUE#162 (HTTPS possible)
-	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",bHTTPS?"https":"http",szServer,iPort,szRequest)); 
-	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(GET %s)",szRequest)); goto end; }
+    hRequest = WinHttpOpenRequest(hConnect,pwszMethod,bstrRequest,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,dwFlags); // ISSUE#162 (HTTPS possible)
+	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",bHTTPS?"https":"http",pszServer,iPort,pszRequest)); 
+	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(%s %s)",pwszMethod,pszRequest)); goto end; }
 
 	if (bHTTPS)
 	{
@@ -237,9 +246,14 @@ char *HTTPRequest(const char *szServer,int iPort,BOOL bHTTPS,const char *szReque
 		TRACE((TRACE_INFO,_F_,"WinHttpSetCredentials(user:%s)",pProxyParams->szProxyUser)); 
 		if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpSetCredentials()=0x%08lx",GetLastError())); goto end; }
 	}
-
-	brc = WinHttpSendRequest(hRequest,WINHTTP_NO_ADDITIONAL_HEADERS, 0,WINHTTP_NO_REQUEST_DATA,0,0,0);
-	if (!brc) { swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,(char*)szServer,(char*)szRequest,NULL,NULL,0); TRACE((TRACE_ERROR,_F_,"WinHttpSendRequest()")); goto end; }
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)pRequestData,dwLenRequestData,"pRequestData (methode %S)",pwszMethod));
+	brc = WinHttpSendRequest(hRequest,WINHTTP_NO_ADDITIONAL_HEADERS, 0,pRequestData,dwLenRequestData,dwLenRequestData,0);
+	if (!brc) 
+	{ 
+		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,(char*)pszServer,(char*)pszRequest,NULL,NULL,0); 
+		TRACE((TRACE_ERROR,_F_,"WinHttpSendRequest()=%ld",GetLastError())); 
+		goto end; 
+	}
  
     brc = WinHttpReceiveResponse(hRequest, NULL);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpReceiveResponse()")); goto end; }

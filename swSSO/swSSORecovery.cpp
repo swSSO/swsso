@@ -771,9 +771,9 @@ int RecoveryWebservice(void)
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 	char *pszResult=NULL;
-	char szRequest[2048];
 	DWORD dwHTTPReturnCode;
 	char *p1,*p2=NULL;
+	char szData[2048];
 
 	NOTIFYICONDATA nid;
 	ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
@@ -786,14 +786,16 @@ int RecoveryWebservice(void)
 	strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),"Veuillez patienter...");
 	strcpy_s(nid.szInfo,sizeof(nid.szInfo),"Resynchronisation du mot de passe en cours...");
 	Shell_NotifyIcon(NIM_MODIFY, &nid); 
-	
-	// formatte la requete au web service
-	sprintf_s(szRequest,"%s?challenge=%s",gszRecoveryWebserviceURL,gszFormattedChallengeForWebservice);
+
+	// formatte le json à envoyer en post
+	sprintf_s(szData,sizeof(szData),"{\"Challenge\":\"%s\"}",gszFormattedChallengeForWebservice);
+	TRACE((TRACE_INFO,_F_,"Requete POST : %s%s:%d",gszRecoveryWebserviceServer,gszRecoveryWebserviceURL,giRecoveryWebservicePort));
+	TRACE((TRACE_INFO,_F_,"Donnees POST : %s",szData));
 
 	// envoie la requete
-	pszResult=HTTPRequest(gszRecoveryWebserviceServer,giRecoveryWebservicePort,gbRecoveryWebserviceHTTPS,szRequest,giRecoveryWebserviceTimeout,NULL,&dwHTTPReturnCode);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
-	if (dwHTTPReturnCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szRequest,dwHTTPReturnCode)); goto end; }
+	pszResult=HTTPRequest(gszRecoveryWebserviceServer,giRecoveryWebservicePort,gbRecoveryWebserviceHTTPS,gszRecoveryWebserviceURL,L"POST",szData,strlen(szData),giRecoveryWebserviceTimeout,NULL,&dwHTTPReturnCode);
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",gszRecoveryWebserviceURL)); goto end; }
+	if (dwHTTPReturnCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",gszRecoveryWebserviceURL,dwHTTPReturnCode)); goto end; }
 
 	// ici on a reçu une réponse au format JSON, on extrait la partie utile dans gszFormattedResponse
 	// Format de la réponse JSON : {<br/>"response" : "------swSSO RESPONSE---.....---swSSO RESPONSE---"<br/>"}

@@ -238,7 +238,7 @@ int swStat(void)
 			(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
 			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer,szTruncatedComputerName); 
 		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",buf2048));
-		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,buf2048,8,NULL,NULL); // remarque : RAF du résultat
+		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,buf2048,L"GET",NULL,0,8,NULL,NULL); // remarque : RAF du résultat
 	}
 	rc=0;
 end:

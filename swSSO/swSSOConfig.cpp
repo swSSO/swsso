@@ -1974,7 +1974,7 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	}
 
 	// Demande le mot de passe à swSSOSVC
-	// Construit la requête à envoyer à swSSOSVC : V03:GETPASS:domain(256octets)username(256octets)
+	// Construit la requête à envoyer à swSSOSVC : V02:GETPASS:domain(256octets)username(256octets)
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:GETPASS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
@@ -3086,7 +3086,7 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 			*szDate==0?"20000101000000":szDate,
 			bNew,bMod,bOld,szType,giDomainId,szVersion);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",pszRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,pszRequest,8,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,pszRequest,L"GET",NULL,0,8,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",pszRequest)); goto end; }
 
 	bstrXML=GetBSTRFromSZ(pszResult);
@@ -3226,7 +3226,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 	}
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
 	
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,5,NULL,NULL); // timeout : 5 secondes
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,5,NULL,NULL); // timeout : 5 secondes
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	TRACE((TRACE_INFO,_F_,"Result : %s",pszResult));
 
@@ -4186,7 +4186,7 @@ int DeleteConfigsNotOnServer(void)
 	// appel webservice
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getdomainconfigs&domainId=%d",gszWebServiceAddress,giDomainId);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,8,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,8,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 
 	if (pszResult[0]=='N' && pszResult[1]=='O' && pszResult[2]=='N' && pszResult[3]=='E') 
@@ -4279,7 +4279,7 @@ int DeleteConfigOnServer(int iAction)
 	// appel webservice
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deleteconfig&configId=%d",gszWebServiceAddress,gptActions[iAction].iConfigId);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,8,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,8,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 
 	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
@@ -4306,7 +4306,7 @@ int DeleteCategOnServer(int iCategory)
 	// appel webservice
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deletecateg&categId=%d",gszWebServiceAddress,gptCategories[iCategory].id);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,8,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,8,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 
 	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
@@ -4814,7 +4814,7 @@ int InternetCheckProxyParams(HWND w)
 	// effectue la requête getversion avec ces paramètres
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getversion",gszWebServiceAddress);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,5,&ProxyParams,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,5,&ProxyParams,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 
 	rc=0;
@@ -4848,7 +4848,7 @@ void InternetCheckVersion()
 
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getversion",gszWebServiceAddress);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,3,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,3,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	
 	TRACE((TRACE_INFO,_F_,"Version sur internet = %s",pszResult));
@@ -4998,7 +4998,7 @@ int GetDomains(BOOL bAllDomains,int iConfigId,T_DOMAIN *pgtabDomain)
 		sprintf_s(szRequest,sizeof(szRequest),"%s?action=getconfigdomains&configId=%d",gszWebServiceAddress,iConfigId);
 	}
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,8,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,8,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	bstrXML=GetBSTRFromSZ(pszResult);
 	if (bstrXML==NULL) goto end;
