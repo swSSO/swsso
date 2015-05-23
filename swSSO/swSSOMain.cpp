@@ -2535,7 +2535,6 @@ askpwd:
 		if (bOK) ReportConfigSync(0,gbDisplayConfigsNotifications,gbAdmin);
 	}
 	
-
 	// ISSUE#59 : ce code était avant dans LoadCategories().
 	// Déplacé dans winmain pour ne pas l'exécuter si des catégories ont été récupérées depuis le serveur
 	if (giNbCategories==0) // si aucune catégorie, crée la catégorie "non classé"
@@ -2558,6 +2557,11 @@ askpwd:
 	if (!gbAdmin) // 1.07 : ne le demande pas en mode admin
 	{
 		if (gbUseADPasswordForAppLogin) CheckADPwdChange(); // ne doit pas être bloquant si échoue, car peut être lié à AD non joignable par ex.
+	}
+	// 1.08 ISSUE#248 : si configuré, synchronise un groupe de mot de passe secondaires avec le mot de passe AD
+	if (!gbAdmin && gbSyncSecondaryPasswordActive)
+	{
+		if (CheckUserInOU()) SyncSecondaryPasswordGroup();
 	}
 	
 	// inscription pour réception des notifs de verrouillage de session

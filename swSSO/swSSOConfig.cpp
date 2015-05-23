@@ -5064,6 +5064,45 @@ end:
 	return rc;
 }
 
+//-----------------------------------------------------------------------------
+// SyncSecondaryPasswordGroup()
+//-----------------------------------------------------------------------------
+// Modifie les mots de passe du groupe avec le mot de passe AD
+//-----------------------------------------------------------------------------
+int SyncSecondaryPasswordGroup(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	int i;
+	char *pszADPassword=NULL;
+	char *pszEncryptedPassword=NULL;
+	
+	if (!gbSyncSecondaryPasswordActive) goto end;
+	if (giSyncSecondaryPasswordGroup==-1) goto end;
+
+	// récupère le mot de passe AD
+	pszADPassword=swCryptDecryptString(gszEncryptedADPwd,ghKey1);
+	if (pszADPassword==NULL) goto end;
+
+	for (i=0;i<giNbActions;i++)
+	{
+		if (gptActions[i].iPwdGroup==giSyncSecondaryPasswordGroup)
+		{
+			TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli #%d (%s) avec mot de passe AD",i,gptActions[i].szApplication));
+			pszEncryptedPassword=swCryptEncryptString(pszADPassword,ghKey1);
+			if (pszEncryptedPassword==NULL) goto end;
+			strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
+			free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
+			pszEncryptedPassword=NULL;
+		}
+	}
+	rc=0;
+end:
+	if (pszADPassword!=NULL) { SecureZeroMemory(pszADPassword,strlen(pszADPassword)); free (pszADPassword); }
+	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
 
 //////////////////////// WM_PAINT pour bitmap dans onglet about
 #if 0

@@ -385,3 +385,35 @@ char *GetDecryptedPwd(char *szPwdEncryptedValue)
 	return ret;
 }
 
+//-----------------------------------------------------------------------------
+// isUserInSyncOU()
+//-----------------------------------------------------------------------------
+// Vérifie si l'utilisateur est dans l'OU configurée en base de registre
+//-----------------------------------------------------------------------------
+BOOL CheckUserInOU(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	BOOL brc=FALSE;
+	HRESULT hr;
+	IADsADSystemInfo *pIADsADSystemInfo=NULL;
+	char *pszUserDN=NULL;
+	BSTR bstrUserDN=NULL;
+	
+	// récupération du DN de l'utilisateur -- remarque : échoue si pas connecté au réseau, mais pas grave, on retourne FALSE
+	// et donc rien ne sera mis à jour
+	hr=CoCreateInstance(CLSID_ADSystemInfo,NULL,CLSCTX_INPROC_SERVER,IID_IADsADSystemInfo,(void**)&pIADsADSystemInfo);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(IID_IADsADSystemInfo) hr=0x%08lx",hr)); goto end; }
+	hr=pIADsADSystemInfo->get_UserName(&bstrUserDN);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pIADsADSystemInfo->get_UserName() hr=0x%08lx",hr)); goto end; }
+	pszUserDN=GetSZFromBSTR(bstrUserDN); if (pszUserDN==NULL) goto end;
+	TRACE((TRACE_INFO,_F_,"pIADsADSystemInfo->get_UserName()=%s",pszUserDN));
+
+	// vérif, retour TRUE si utilisateur dans l'OU
+	brc=(strstr(pszUserDN,gszSyncSecondaryPasswordOU)!=NULL);
+
+end:
+	if (pIADsADSystemInfo!=NULL) pIADsADSystemInfo->Release();
+	if (pszUserDN!=NULL) free(pszUserDN);
+	TRACE((TRACE_LEAVE,_F_, "brc=%d",brc));
+	return brc;
+}

@@ -177,3 +177,4 @@ typedef struct
 
 extern T_CONFIG_SYNC gtConfigSync;
 void ReportConfigSync(int iErrorMessage,BOOL bShowMessage,BOOL bShowIfZero);
+int SyncSecondaryPasswordGroup(void);

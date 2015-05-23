@@ -36,3 +36,4 @@ int GetLastADPwdChange(char *pszLastADPwdChange);
 int AskADPwd(BOOL bWarningIfNoADPwd);
 int CheckADPwdChange();
 char *GetDecryptedPwd(char *szPwdEncryptedValue);
+BOOL CheckUserInOU(void);

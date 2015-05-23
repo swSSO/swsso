@@ -129,6 +129,9 @@ char gszRecoveryWebserviceURL[255+1];			// 1.08
 int  giRecoveryWebservicePort=INTERNET_DEFAULT_HTTP_PORT;	// 1.08
 int  giRecoveryWebserviceTimeout=10;			// 1.08
 BOOL gbRecoveryWebserviceHTTPS=FALSE;			// 1.08
+BOOL gbSyncSecondaryPasswordActive=FALSE;		// 1.08
+int  giSyncSecondaryPasswordGroup=-1;			// 1.08
+char gszSyncSecondaryPasswordOU[255+1];			// 1.08
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -182,6 +185,7 @@ void LoadPolicies(void)
 	*gszPastePwd_Text=0;
 	*gszRecoveryWebserviceServer=0;
 	*gszRecoveryWebserviceURL=0;
+	*gszSyncSecondaryPasswordOU=0;
 
 	//--------------------------------------------------------------
 	// GLOBAL POLICY
@@ -594,6 +598,20 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_HTTPS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbRecoveryWebserviceHTTPS=(BOOL)dwValue; 
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SYNC_SECONDARY_PASSWORD_ACTIVE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbSyncSecondaryPasswordActive=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SYNC_SECONDARY_PASSWORD_GROUP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giSyncSecondaryPasswordGroup=(int)dwValue; 
+
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SYNC_SECONDARY_PASSWORD_OU,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+			strcpy_s(gszSyncSecondaryPasswordOU,sizeof(gszSyncSecondaryPasswordOU),szValue);
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -823,6 +841,9 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gszRecoveryWebserviceURL=%s"			,gszRecoveryWebserviceURL));
 	TRACE((TRACE_INFO,_F_,"giRecoveryWebserviceTimeout=%d"		,giRecoveryWebserviceTimeout));
 	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceHTTPS=%d"		,gbRecoveryWebserviceHTTPS));
+	TRACE((TRACE_INFO,_F_,"gbSyncSecondaryPasswordActive=%d"	,gbSyncSecondaryPasswordActive));
+	TRACE((TRACE_INFO,_F_,"giSyncSecondaryPasswordGroup=%d"		,giSyncSecondaryPasswordGroup));
+	TRACE((TRACE_INFO,_F_,"gszSyncSecondaryPasswordOU=%s"		,gszSyncSecondaryPasswordOU));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
