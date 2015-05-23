@@ -37,7 +37,18 @@ char *GetString(UINT uiString);
 BSTR GetBSTRFromSZ(const char *sz);
 char *GetSZFromBSTR(BSTR bstr);
 BOOL CompareBSTRtoSZ(BSTR bstr,const char *sz);
-char *HTTPRequest(const char *pszServer,int iPort,BOOL bHTTPS,const char *pszRequest,LPCWSTR pwszMethod,void *pRequestData,DWORD dwLenRequestData,int timeout,T_PROXYPARAMS *pInProxyParams,DWORD *pdwStatusCode);
+char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
+				  int iPort,						// [in] port
+				  BOOL bHTTPS,						// [in] TRUE=https, FALSE=http
+				  const char *pszRequest,			// [in] Requete : /contextRoot/webservice.php?param1=...&param2=...
+				  LPCWSTR pwszMethod,				// [in] Méthode : GET | POST | PUT | ...
+				  void *pRequestData,				// [in] Données à envoyer avec la requête (NULL si aucune)
+				  DWORD dwLenRequestData,			// [in] Taille des données à envoyer avec la requête (0 si aucune)
+				  LPCWSTR pwszHeaders,				// [in] Entêtes à envoyer (NULL si aucune)
+				  DWORD dwAutologonSecurityLevel,	// [in] WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW | MEDIUM | HIGH
+				  int timeout,						// [in] timeout
+				  T_PROXYPARAMS *pInProxyParams,	// [in] paramètre proxy ou NULL si pas de proxy
+				  DWORD *pdwStatusCode);			// [out] status http renseigné (l'appelant peut passer NULL s'il veut pas le statut http)
 char *HTTPEncodeParam(char *pszToEncode);
 char *HTTPDecodeParam(char *pszToDecode);
 int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle);

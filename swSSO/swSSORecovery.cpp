@@ -788,12 +788,23 @@ int RecoveryWebservice(void)
 	Shell_NotifyIcon(NIM_MODIFY, &nid); 
 
 	// formatte le json à envoyer en post
-	sprintf_s(szData,sizeof(szData),"{\"Challenge\":\"%s\"}",gszFormattedChallengeForWebservice);
+	sprintf_s(szData,sizeof(szData),"{\"challenge\":\"%s\"}",gszFormattedChallengeForWebservice);
 	TRACE((TRACE_INFO,_F_,"Requete POST : %s%s:%d",gszRecoveryWebserviceServer,gszRecoveryWebserviceURL,giRecoveryWebservicePort));
 	TRACE((TRACE_INFO,_F_,"Donnees POST : %s",szData));
 
 	// envoie la requete
-	pszResult=HTTPRequest(gszRecoveryWebserviceServer,giRecoveryWebservicePort,gbRecoveryWebserviceHTTPS,gszRecoveryWebserviceURL,L"POST",szData,strlen(szData),giRecoveryWebserviceTimeout,NULL,&dwHTTPReturnCode);
+	pszResult=HTTPRequest(gszRecoveryWebserviceServer,
+						  giRecoveryWebservicePort,
+						  gbRecoveryWebserviceHTTPS,
+						  gszRecoveryWebserviceURL,
+						  L"POST",
+						  szData,
+						  strlen(szData),
+						  L"Content-Type: application/json",
+						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW,
+						  giRecoveryWebserviceTimeout,
+						  NULL,
+						  &dwHTTPReturnCode);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",gszRecoveryWebserviceURL)); goto end; }
 	if (dwHTTPReturnCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",gszRecoveryWebserviceURL,dwHTTPReturnCode)); goto end; }
 

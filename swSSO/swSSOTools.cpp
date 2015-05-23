@@ -157,9 +157,11 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 				  int iPort,						// [in] port
 				  BOOL bHTTPS,						// [in] TRUE=https, FALSE=http
 				  const char *pszRequest,			// [in] Requete : /contextRoot/webservice.php?param1=...&param2=...
-				  LPCWSTR pwszMethod,				// [in] Données à envoyer avec la requête (NULL si aucune)
+				  LPCWSTR pwszMethod,				// [in] Méthode : GET | POST | PUT | ...
 				  void *pRequestData,				// [in] Données à envoyer avec la requête (NULL si aucune)
 				  DWORD dwLenRequestData,			// [in] Taille des données à envoyer avec la requête (0 si aucune)
+				  LPCWSTR pwszHeaders,				// [in] Entêtes à envoyer (NULL si aucune)
+				  DWORD dwAutologonSecurityLevel,	// [in] WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW | MEDIUM | HIGH
 				  int timeout,						// [in] timeout
 				  T_PROXYPARAMS *pInProxyParams,	// [in] paramètre proxy ou NULL si pas de proxy
 				  DWORD *pdwStatusCode)				// [out] status http renseigné (l'appelant peut passer NULL s'il veut pas le statut http)
@@ -236,6 +238,10 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 		if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpSetOption(0x%08lx)=0x%08lx",dwOptions,GetLastError())); goto end; }
 	}
 
+	dwOptions=dwAutologonSecurityLevel;
+	brc=WinHttpSetOption(hRequest,WINHTTP_OPTION_AUTOLOGON_POLICY,&dwOptions,sizeof(dwOptions));
+	if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpSetOption(WINHTTP_OPTION_AUTOLOGON_POLICY %ld)=0x%08lx",dwAutologonSecurityLevel,GetLastError())); goto end; }
+
 	if (*(pProxyParams->szProxyUser)!=0)
 	{
 		bstrProxyUser=GetBSTRFromSZ(pProxyParams->szProxyUser);
@@ -247,7 +253,8 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 		if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpSetCredentials()=0x%08lx",GetLastError())); goto end; }
 	}
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)pRequestData,dwLenRequestData,"pRequestData (methode %S)",pwszMethod));
-	brc = WinHttpSendRequest(hRequest,WINHTTP_NO_ADDITIONAL_HEADERS, 0,pRequestData,dwLenRequestData,dwLenRequestData,0);
+	
+	brc = WinHttpSendRequest(hRequest,pwszHeaders==NULL?WINHTTP_NO_ADDITIONAL_HEADERS:pwszHeaders,(DWORD)-1L,pRequestData,dwLenRequestData,dwLenRequestData,0);
 	if (!brc) 
 	{ 
 		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,(char*)pszServer,(char*)pszRequest,NULL,NULL,0); 

@@ -5013,7 +5013,7 @@ int UploadDomain(HWND w,int iDomain)
 		// ajout dans la base et récupération de l'identifiant du domaine
 		sprintf_s(szRequest,sizeof(szRequest),"%s?action=adddomain&domainLabel=%s",gszWebServiceAddress,gtabDomains[iDomain].szDomainLabel);
 		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,8,NULL,NULL);
+		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
 		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 
 		// lecture du domainId généré en base de données et remplissage du champ iDomainId
@@ -5027,7 +5027,7 @@ int UploadDomain(HWND w,int iDomain)
 		// renommage du domaine
 		sprintf_s(szRequest,sizeof(szRequest),"%s?action=renamedomain&domainId=%d&domainLabel=%s",gszWebServiceAddress,gtabDomains[iDomain].iDomainId,gtabDomains[iDomain].szDomainLabel);
 		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,8,NULL,NULL);
+		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
 		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 		if (pszResult[0]!='O' || pszResult[1]!='K') { TRACE((TRACE_ERROR,_F_,"Result=%s",pszResult)); goto end; }
 	}
@@ -5104,7 +5104,7 @@ void DeleteDomain(HWND w)
 	// appel webservice
 	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deletedomain&domainId=%d",gszWebServiceAddress,gtabDomains[iDomain].iDomainId);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,8,NULL,NULL);
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
 	if (pszResult[0]=='O' && pszResult[1]=='K')
 	{
