@@ -161,7 +161,22 @@ static void CALLBACK TimerProc(HWND w,UINT msg,UINT idEvent,DWORD dwTime)
 		TRACE((TRACE_INFO,_F_,"WaitForSingleObject : swsso-pwdchange event received"));
 		if (ChangeWindowsPwd()==0)
 		{
-			if (gbDisplayWindowsPasswordChange) MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+			if (gbDisplayWindowsPasswordChange)
+			{
+				// En 1.08, n'affiche plus de MessageBox mais une info bulle
+				// MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+				NOTIFYICONDATA nid;
+				ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+				nid.cbSize=sizeof(NOTIFYICONDATA);
+				nid.hWnd=gwMain;
+				nid.uID=0; 
+				//nid.hIcon=;
+				nid.uFlags=NIF_INFO; // szInfo, szInfoTitle, dwInfoFlags, and uTimeout
+				nid.uTimeout=2000;
+				strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),"Changement de mot de passe réussi");
+				strcpy_s(nid.szInfo,sizeof(nid.szInfo),GetString(IDS_CHANGE_PWD_OK));
+				Shell_NotifyIcon(NIM_MODIFY, &nid); 
+			}
 		}
 		else
 		{
