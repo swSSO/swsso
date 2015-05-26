@@ -2558,11 +2558,6 @@ askpwd:
 	{
 		if (gbUseADPasswordForAppLogin) CheckADPwdChange(); // ne doit pas être bloquant si échoue, car peut être lié à AD non joignable par ex.
 	}
-	// 1.08 ISSUE#248 : si configuré, synchronise un groupe de mot de passe secondaires avec le mot de passe AD
-	if (!gbAdmin && gbSyncSecondaryPasswordActive)
-	{
-		if (CheckUserInOU()) SyncSecondaryPasswordGroup();
-	}
 	
 	// inscription pour réception des notifs de verrouillage de session
 	gbRegisterSessionNotification=WTSRegisterSessionNotification(gwMain,NOTIFY_FOR_THIS_SESSION);
@@ -2649,10 +2644,20 @@ askpwd:
 		if (ghPwdChangeEvent==NULL)
 		{
 			TRACE((TRACE_ERROR,_F_,"CreateEvent(swsso-pwdchange)=%d",GetLastError()));
-				iError=-1;
-				goto end;
+			iError=-1;
+			goto end;
 		}
 	}
+
+	// ISSUE#169 : Demande le mot de passe à swSSOSVC et le stocke pour répondre aux demandes ultérieures traitées par GetDecryptedPwd() dans swSSOAD.cpp
+	if (GetADPassword()!=0) { iError=-1; goto end; }
+
+	// 1.08 ISSUE#248 : si configuré, synchronise un groupe de mot de passe secondaires avec le mot de passe AD
+	if (!gbAdmin && gbSyncSecondaryPasswordActive)
+	{
+		if (CheckUserInOU()) SyncSecondaryPasswordGroup();
+	}
+
 	if (!gbAdmin)
 	{
 		if (LaunchTimer()!=0)

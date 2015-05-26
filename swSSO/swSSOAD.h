@@ -37,3 +37,4 @@ int AskADPwd(BOOL bWarningIfNoADPwd);
 int CheckADPwdChange();
 char *GetDecryptedPwd(char *szPwdEncryptedValue);
 BOOL CheckUserInOU(void);
+int GetADPassword(void);

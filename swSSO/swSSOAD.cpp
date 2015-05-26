@@ -417,3 +417,42 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "brc=%d",brc));
 	return brc;
 }
+
+//-----------------------------------------------------------------------------
+// GetADPassword()
+//-----------------------------------------------------------------------------
+// Demande le mot de passe à swSSOSVC et le stocke 
+// Remarque : swSSO le chiffre par la clé dérivée de lui même ;-)
+//-----------------------------------------------------------------------------
+int GetADPassword(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char bufRequest[1024];
+	char bufResponse[1024];
+	DWORD dwLenResponse;
+
+	// Demande le mot de passe à swSSOSVC
+	// Construit la requête à envoyer à swSSOSVC : V02:GETPASS:domain(256octets)username(256octets)
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
+	memcpy(bufRequest,"V02:GETPASS:",12);
+	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
+	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
+	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+	{
+		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+	}
+	// en retour, on a reçu le mot de passe chiffré par la clé dérivée du mot de passe (si, si)
+	if (dwLenResponse!=LEN_ENCRYPTED_AES256)
+	{
+		TRACE((TRACE_ERROR,_F_,"Longueur reponse attendue=LEN_ENCRYPTED_AES256=%d, recue=%d",LEN_ENCRYPTED_AES256,dwLenResponse)); goto end;
+	}
+	bufResponse[dwLenResponse]=0;
+	// stocke le mot de passe chiffré, pour répondre aux demandes ultérieures traitées par GetDecryptedPwd() dans swSSOAD.cpp
+	strcpy_s(gszEncryptedADPwd,sizeof(gszEncryptedADPwd),bufResponse);	
+
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}

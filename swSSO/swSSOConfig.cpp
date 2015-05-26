@@ -60,7 +60,7 @@ int  giDomainId=1;						// 0.94B1 : gestion des domaines
 char gszDomainLabel[LEN_DOMAIN+1]="";
 BOOL gbDisplayChangeAppPwdDialog ; // ISSUE#107
 char gszLastADPwdChange[14+1]="";					// 1.03 : date de dernier changement de mdp dans l'AD, format AAAAMMJJHHMMSS
-char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1]="";	// 1.03 : valeur du mot de passe AD (fourni par l'utilisateur)
+char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1]="";	// 1.03 : valeur du mot de passe AD (fourni par l'utilisateur) ou en 1.08 récupéré en mode chainé Windows
 BOOL gbSSOInternetExplorer=TRUE;		// ISSUE#176
 BOOL gbSSOFirefox=TRUE;					// ISSUE#176
 BOOL gbSSOChrome=TRUE;					// ISSUE#176
@@ -1973,25 +1973,6 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 		}
 	}
 
-	// Demande le mot de passe à swSSOSVC
-	// Construit la requête à envoyer à swSSOSVC : V02:GETPASS:domain(256octets)username(256octets)
-	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:GETPASS:",12);
-	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
-	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
-	{
-		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
-	}
-	// en retour, on a reçu le mot de passe chiffré par la clé dérivée du mot de passe (si, si)
-	if (dwLenResponse!=LEN_ENCRYPTED_AES256)
-	{
-		TRACE((TRACE_ERROR,_F_,"Longueur reponse attendue=LEN_ENCRYPTED_AES256=%d, recue=%d",LEN_ENCRYPTED_AES256,dwLenResponse)); goto end;
-	}
-	bufResponse[dwLenResponse]=0;
-	// stocke le mot de passe chiffré, pour répondre aux demandes ultérieures traitées par GetDecryptedPwd() dans swSSOAD.cpp
-	strcpy_s(gszEncryptedADPwd,sizeof(gszEncryptedADPwd),bufResponse);
-	
 	RecoveryFirstUse(NULL,AESKeyData);
 	rc=0;
 end:
