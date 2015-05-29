@@ -2601,7 +2601,19 @@ askpwd:
 	{
 		rc=MigrationWindowsSSO();
 		if (rc!=0) goto end;
-		MessageBox(NULL,GetString(IDS_SYNCHRO_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+		// En 1.08, n'affiche plus de MessageBox mais une info bulle
+		// MessageBox(NULL,GetString(IDS_SYNCHRO_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+		NOTIFYICONDATA nid;
+		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+		nid.cbSize=sizeof(NOTIFYICONDATA);
+		nid.hWnd=gwMain;
+		nid.uID=0; 
+		//nid.hIcon=;
+		nid.uFlags=NIF_INFO; // szInfo, szInfoTitle, dwInfoFlags, and uTimeout
+		nid.uTimeout=2000;
+		strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),"Changement de mot de passe réussi");
+		strcpy_s(nid.szInfo,sizeof(nid.szInfo),GetString(IDS_SYNCHRO_PWD_OK));
+		Shell_NotifyIcon(NIM_MODIFY, &nid); 
 	}
 
 	if (gbRecoveryRunning)

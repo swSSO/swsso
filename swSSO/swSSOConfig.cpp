@@ -2539,6 +2539,13 @@ int ChangeWindowsPwd(void)
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()"));
 		goto end;
 	}
+
+	// 1.08 ISSUE#248 : si configuré, synchronise un groupe de mot de passe secondaires avec le mot de passe AD
+	if (!gbAdmin && gbSyncSecondaryPasswordActive)
+	{
+		if (CheckUserInOU()) SyncSecondaryPasswordGroup();
+	}
+
 	rc=0;
 end:
 	if (rc==0)
@@ -5048,7 +5055,8 @@ end:
 //-----------------------------------------------------------------------------
 // SyncSecondaryPasswordGroup()
 //-----------------------------------------------------------------------------
-// Modifie les mots de passe du groupe avec le mot de passe AD
+// Modifie les mots de passe du groupe avec le mot de passe AD, uniquement
+// pour les configs qui ont l'ID AD
 //-----------------------------------------------------------------------------
 int SyncSecondaryPasswordGroup(void)
 {
@@ -5067,9 +5075,11 @@ int SyncSecondaryPasswordGroup(void)
 
 	for (i=0;i<giNbActions;i++)
 	{
-		if (gptActions[i].iPwdGroup==giSyncSecondaryPasswordGroup)
+		if ((gptActions[i].iPwdGroup==giSyncSecondaryPasswordGroup) &&
+			(*gptActions[i].szId1Value!=0) && (*gszUserName!=0) && 
+			(_stricmp(gptActions[i].szId1Value,gszUserName)==0))
 		{
-			TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli #%d (%s) avec mot de passe AD",i,gptActions[i].szApplication));
+			TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli #%d (%s) avec mdp AD pour le user %s",i,gptActions[i].szApplication,gszUserName));
 			pszEncryptedPassword=swCryptEncryptString(pszADPassword,ghKey1);
 			if (pszEncryptedPassword==NULL) goto end;
 			strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
@@ -5077,6 +5087,7 @@ int SyncSecondaryPasswordGroup(void)
 			pszEncryptedPassword=NULL;
 		}
 	}
+	SaveApplications();
 	rc=0;
 end:
 	if (pszADPassword!=NULL) { SecureZeroMemory(pszADPassword,strlen(pszADPassword)); free (pszADPassword); }
