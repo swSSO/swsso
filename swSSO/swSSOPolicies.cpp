@@ -132,6 +132,7 @@ BOOL gbRecoveryWebserviceHTTPS=FALSE;			// 1.08
 BOOL gbSyncSecondaryPasswordActive=FALSE;		// 1.08
 int  giSyncSecondaryPasswordGroup=-1;			// 1.08
 char gszSyncSecondaryPasswordOU[255+1];			// 1.08
+BOOL gbCheckCertificates=TRUE;
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -612,6 +613,10 @@ void LoadPolicies(void)
 		if (rc==ERROR_SUCCESS) 
 			strcpy_s(gszSyncSecondaryPasswordOU,sizeof(gszSyncSecondaryPasswordOU),szValue);
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_CHECK_CERTIFICATES,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbCheckCertificates=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -844,6 +849,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbSyncSecondaryPasswordActive=%d"	,gbSyncSecondaryPasswordActive));
 	TRACE((TRACE_INFO,_F_,"giSyncSecondaryPasswordGroup=%d"		,giSyncSecondaryPasswordGroup));
 	TRACE((TRACE_INFO,_F_,"gszSyncSecondaryPasswordOU=%s"		,gszSyncSecondaryPasswordOU));
+	TRACE((TRACE_INFO,_F_,"gbCheckCertificates=%d"				,gbCheckCertificates));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));

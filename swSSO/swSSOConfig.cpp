@@ -2525,6 +2525,8 @@ int ChangeWindowsPwd(void)
 			if (RecoveryChangeAESKeyData(AESKeyData)!=0) goto end;
 			// enregistrement des actions, comme ça les identifiants sont rechiffrés automatiquement avec la nouvelle clé
 			if(SaveApplications()!=0) goto end;
+			// Récupère le nouveau mot de passe AD chiffré
+			if (GetADPassword()!=0) goto end;
 			// Met à jour la valeur de checksynchro
 			if (GenWriteCheckSynchroValue()!=0) goto end;
 		}
