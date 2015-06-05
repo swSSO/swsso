@@ -132,7 +132,10 @@ BOOL gbRecoveryWebserviceHTTPS=FALSE;			// 1.08
 BOOL gbSyncSecondaryPasswordActive=FALSE;		// 1.08
 int  giSyncSecondaryPasswordGroup=-1;			// 1.08
 char gszSyncSecondaryPasswordOU[255+1];			// 1.08
-BOOL gbCheckCertificates=TRUE;
+BOOL gbCheckCertificates=TRUE;					// 1.08
+char gszConfigNotFoundMailTo[128+1]; // 1.08
+char *gpszConfigNotFoundMailSubject=NULL;		// 1.08
+char *gpszConfigNotFoundMailBody=NULL;			// 1.08
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -187,6 +190,8 @@ void LoadPolicies(void)
 	*gszRecoveryWebserviceServer=0;
 	*gszRecoveryWebserviceURL=0;
 	*gszSyncSecondaryPasswordOU=0;
+	gpszConfigNotFoundMailSubject=NULL;
+	gpszConfigNotFoundMailBody=NULL;
 
 	//--------------------------------------------------------------
 	// GLOBAL POLICY
@@ -617,6 +622,46 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_CHECK_CERTIFICATES,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbCheckCertificates=(BOOL)dwValue; 
 
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_CONFIG_NOT_FOUND_MAILTO,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+			strcpy_s(gszConfigNotFoundMailTo,sizeof(gszConfigNotFoundMailTo),szValue);
+
+		dwValueType=REG_SZ;
+		dwValueSize=0;
+		rc=RegQueryValueEx(hKey,REGVALUE_CONFIG_NOT_FOUND_MAILSUBJECT,NULL,&dwValueType,NULL,&dwValueSize);
+		if (rc==ERROR_SUCCESS)
+		{
+			gpszConfigNotFoundMailSubject=(char*)malloc(dwValueSize);
+			if (gpszConfigNotFoundMailSubject==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwValueSize)); goto end; }
+			rc=RegQueryValueEx(hKey,REGVALUE_CONFIG_NOT_FOUND_MAILSUBJECT,NULL,&dwValueType,(LPBYTE)gpszConfigNotFoundMailSubject,&dwValueSize);
+			if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(MailObject)")); goto end; }
+		}
+
+		dwValueType=REG_SZ;
+		dwValueSize=0;
+		rc=RegQueryValueEx(hKey,REGVALUE_CONFIG_NOT_FOUND_MAILBODY,NULL,&dwValueType,NULL,&dwValueSize);
+		if (rc==ERROR_SUCCESS)
+		{
+			gpszConfigNotFoundMailBody=(char*)malloc(dwValueSize);
+			if (gpszConfigNotFoundMailBody==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwValueSize)); goto end; }
+			rc=RegQueryValueEx(hKey,REGVALUE_CONFIG_NOT_FOUND_MAILBODY,NULL,&dwValueType,(LPBYTE)gpszConfigNotFoundMailBody,&dwValueSize);
+			if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(MailObject)")); goto end; }
+		}
+
+		if (gpszConfigNotFoundMailSubject==NULL)
+		{
+			gpszConfigNotFoundMailSubject=(char*)malloc(10);
+			if (gpszConfigNotFoundMailSubject==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(10)")); goto end; }
+			strcpy_s(gpszConfigNotFoundMailSubject,10,"[swSSO]");
+		}
+		if (gpszConfigNotFoundMailBody==NULL)
+		{
+			gpszConfigNotFoundMailBody=(char*)malloc(1);
+			if (gpszConfigNotFoundMailBody==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(1)")); goto end; }
+			*gpszConfigNotFoundMailBody=0;
+		}
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -850,6 +895,10 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"giSyncSecondaryPasswordGroup=%d"		,giSyncSecondaryPasswordGroup));
 	TRACE((TRACE_INFO,_F_,"gszSyncSecondaryPasswordOU=%s"		,gszSyncSecondaryPasswordOU));
 	TRACE((TRACE_INFO,_F_,"gbCheckCertificates=%d"				,gbCheckCertificates));
+	TRACE((TRACE_INFO,_F_,"gszErrorServerConfigNotFound=%s",	gszErrorServerConfigNotFound));
+	TRACE((TRACE_INFO,_F_,"gszConfigNotFoundMailTo=%s",			gszConfigNotFoundMailTo));
+	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailSubject=%s",	gpszConfigNotFoundMailSubject));
+	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailBody=%s",		gpszConfigNotFoundMailBody));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
@@ -880,6 +929,7 @@ suite:;
 	}
 
 #endif
+end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 

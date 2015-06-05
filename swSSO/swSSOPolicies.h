@@ -195,6 +195,9 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_SYNC_SECONDARY_PASSWORD_GROUP		"SyncSecondaryPasswordGroup"
 #define REGVALUE_SYNC_SECONDARY_PASSWORD_OU			"SyncSecondaryPasswordOU"
 #define REGVALUE_CHECK_CERTIFICATES					"CheckCertificates"
+#define REGVALUE_CONFIG_NOT_FOUND_MAILTO			"ConfigNotFoundMailTo"
+#define REGVALUE_CONFIG_NOT_FOUND_MAILSUBJECT		"ConfigNotFoundMailSubject"
+#define REGVALUE_CONFIG_NOT_FOUND_MAILBODY			"ConfigNotFoundMailBody"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -241,6 +244,9 @@ extern BOOL gbSyncSecondaryPasswordActive;	// 1.08
 extern int  giSyncSecondaryPasswordGroup;	// 1.08
 extern char gszSyncSecondaryPasswordOU[];	// 1.08
 extern BOOL gbCheckCertificates;			// 1.08
+extern char gszConfigNotFoundMailTo[];		// 1.08
+extern char *gpszConfigNotFoundMailSubject;	// 1.08
+extern char *gpszConfigNotFoundMailBody;	// 1.08
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

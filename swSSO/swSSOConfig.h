@@ -108,6 +108,8 @@ extern BOOL gbSSOFirefox;					// ISSUE#176
 extern BOOL gbSSOChrome;					// ISSUE#176
 
 extern int giActionIdPwdAsked;
+extern char *gpszURLBeingAdded;
+extern char *gpszTitleBeingAdded;
 
 #define LEN_DOMAIN 50
 typedef struct 

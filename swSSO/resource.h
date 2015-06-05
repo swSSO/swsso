@@ -150,6 +150,8 @@
 #define TX_MESSAGE                      1171
 #define STATIC_ICONE                    1172
 #define TB_KBSIM                        1173
+#define TX_MESSAGE2                     1173
+#define TX_MAILTO                       1173
 #define CK_KBSIM                        1174
 #define IDC_SEPARATOR                   1175
 #define IDD_CHANGE_IDS                  1177
@@ -396,6 +398,7 @@
 #define IDS_TX_INFO_PWD_GROUP           42020
 #define IDS_IDANDPWDTITLE_NEWACCOUNT    42021
 #define IDS_IDANDPWDTEXT_NEWACCOUNT     42022
+#define IDS_FERMER                      42023
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

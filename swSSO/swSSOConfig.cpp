@@ -89,6 +89,9 @@ char gcszK2[]="22222222";
 
 static int giRefreshTimer=10;
 
+char *gpszURLBeingAdded=NULL;
+char *gpszTitleBeingAdded=NULL;
+
 T_SALT gSalts; // sels pour le stockage du mdp primaire et la dérivation de clé de chiffrement des mdp secondaires
 int giActionIdPwdAsked=-1;
 const char gcszCfgVersion[]="093";
@@ -4654,7 +4657,31 @@ doConfig:
 			 // + n'affichage pas ce message si le serveur n'est pas joignable car une 
 			 // erreur a déjà été présentée à l'utilisateur
 		{
-			if (bServerAvailable && gbInternetGetConfig) MessageBox(NULL,gszErrorServerConfigNotFound,"swSSO",MB_ICONEXCLAMATION);
+			if (bServerAvailable && gbInternetGetConfig) 
+			{
+				/*if (*gszErrorServerConfigNotFoundMailto==0)
+					MessageBox(NULL,gszErrorServerConfigNotFound,"swSSO",MB_ICONEXCLAMATION);
+				else*/
+				char szSubTitle[256];
+				//char szMsg[256];
+				T_MESSAGEBOX3B_PARAMS params;
+				params.szIcone=IDI_EXCLAMATION;
+				params.iB1String=-1; // réessayer
+				params.iB2String=IDS_FERMER; // changer le mdp
+				params.iB3String=-1; // désactiver
+				params.wParent=w;
+				params.iTitleString=IDS_MESSAGEBOX_TITLE;
+				params.bVCenterSubTitle=TRUE;
+				strcpy_s(szSubTitle,sizeof(szSubTitle),"Configuration non trouvée");
+				params.szSubTitle=szSubTitle;
+				//strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_DESACTIVATE_MESSAGE));
+				params.szMessage=gszErrorServerConfigNotFound;
+				params.szMailTo=gszConfigNotFoundMailTo;
+				gpszURLBeingAdded=pszURL;
+				gpszTitleBeingAdded=szTitle;
+				//if (MessageBox(w,szMsg,"swSSO", MB_YESNO | MB_ICONQUESTION)==IDYES)
+				MessageBox3B(&params);
+			}
 		}
 		goto end;
 	}
@@ -4683,10 +4710,12 @@ doConfig:
 		params.iB3String=IDS_CONFIG_EXISTS_B3;
 		params.wParent=HWND_DESKTOP;
 		params.iTitleString=IDS_MESSAGEBOX_TITLE;
+		params.bVCenterSubTitle=FALSE;
 		strcpy_s(szSubTitle,sizeof(szSubTitle),GetString(IDS_CONFIG_EXISTS_SUBTITLE));
 		params.szSubTitle=szSubTitle;
 		strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_CONFIG_EXISTS_MESSAGE));
 		params.szMessage=szMsg;
+		params.szMailTo=NULL;
 		reponse=MessageBox3B(&params);
 		if (reponse==B3) // IDCANCEL : conservation de l'ancienne config, pas d'ajout de la nouvelle
 			goto end;

@@ -937,10 +937,12 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 								params.iB3String=IDS_DESACTIVATE_B3; // désactiver
 								params.wParent=w;
 								params.iTitleString=IDS_MESSAGEBOX_TITLE;
+								params.bVCenterSubTitle=FALSE;
 								wsprintf(szSubTitle,GetString(IDS_DESACTIVATE_SUBTITLE),gptActions[i].szApplication);
 								params.szSubTitle=szSubTitle;
 								strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_DESACTIVATE_MESSAGE));
 								params.szMessage=szMsg;
+								params.szMailTo=NULL;
 								//if (MessageBox(w,szMsg,"swSSO", MB_YESNO | MB_ICONQUESTION)==IDYES)
 								int reponse=MessageBox3B(&params);
 								if (reponse==B1) // réessayer
@@ -2769,6 +2771,8 @@ end:
 	if (gpRecoveryKeyValue!=NULL) free(gpRecoveryKeyValue);
 	if (gpSid!=NULL) free(gpSid);
 	if (gpszRDN!=NULL) free(gpszRDN);
+	if (gpszConfigNotFoundMailSubject!=NULL) free(gpszConfigNotFoundMailSubject) ;
+	if (gpszConfigNotFoundMailBody!=NULL) free(gpszConfigNotFoundMailBody) ;
 
 	TRACE((TRACE_LEAVE,_F_, ""));
 	TRACE_CLOSE();

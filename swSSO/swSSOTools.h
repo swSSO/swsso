@@ -67,11 +67,13 @@ typedef struct
 	HWND wParent;
 	int  iTitleString;
 	char *szSubTitle;
+	BOOL bVCenterSubTitle;
 	char *szMessage;
 	char *szIcone;
 	int  iB1String;
 	int  iB2String;
 	int  iB3String;
+	char *szMailTo;
 } T_MESSAGEBOX3B_PARAMS;
 
 int MessageBox3B(T_MESSAGEBOX3B_PARAMS *pParams);

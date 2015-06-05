@@ -636,11 +636,45 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				// libellés 
 				SetDlgItemText(w,TX_SUBTITLE,pParams->szSubTitle);
 				SetDlgItemText(w,TX_MESSAGE,pParams->szMessage);
-				SetDlgItemText(w,PB_B1,GetString(pParams->iB1String));
-				SetDlgItemText(w,PB_B2,GetString(pParams->iB2String));
-				SetDlgItemText(w,IDCANCEL,GetString(pParams->iB3String));
+				// boutons
+				if (pParams->iB1String!=-1)
+					SetDlgItemText(w,PB_B1,GetString(pParams->iB1String));
+				else
+					ShowWindow(GetDlgItem(w,PB_B1),SW_HIDE);
+
+				if (pParams->iB2String!=-1)
+					SetDlgItemText(w,PB_B2,GetString(pParams->iB2String));
+				else
+					ShowWindow(GetDlgItem(w,PB_B2),SW_HIDE);
+
+				if (pParams->iB3String!=-1)
+					SetDlgItemText(w,IDCANCEL,GetString(pParams->iB3String));
+				else
+					ShowWindow(GetDlgItem(w,IDCANCEL),SW_HIDE);
+
 				SetWindowText(w,GetString(pParams->iTitleString));
 				SendDlgItemMessage(w,STATIC_ICONE,STM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadIcon(NULL,pParams->szIcone));
+				
+				if (pParams->bVCenterSubTitle)
+				{
+					LONG lStyle=GetWindowLong(GetDlgItem(w,TX_SUBTITLE),GWL_STYLE);
+					SetWindowLong(GetDlgItem(w,TX_SUBTITLE),GWL_STYLE,lStyle | SS_CENTERIMAGE);
+				}
+				if (pParams->szMailTo!=NULL)
+				{
+					ShowWindow(GetDlgItem(w,TX_MAILTO),SW_SHOW);
+					// liens MAILTO soulignes
+					LOGFONT logfont;
+					HFONT hFont;
+					hFont=(HFONT)SendMessage(w,WM_GETFONT,0,0);
+					if(hFont!=NULL)
+					{
+						if(GetObject(hFont, sizeof(LOGFONT), (LPSTR)&logfont)!= NULL) logfont.lfUnderline=TRUE;
+						hFont=CreateFontIndirect(&logfont);
+						if(hFont!=NULL) PostMessage(GetDlgItem(w,TX_MAILTO),WM_SETFONT,(LPARAM)hFont,TRUE);
+					}
+				}
+
 				MACRO_SET_SEPARATOR;
 				// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
 				// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
@@ -680,8 +714,63 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					SetBkMode((HDC)wp,TRANSPARENT);
 					rc=(int)GetStockObject(HOLLOW_BRUSH);
 					break;
+				case TX_MAILTO:
+					SetTextColor((HDC)wp,RGB(0,0,255));
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH); // 0.60
+					break;
 			}
 			break;
+		case WM_SETCURSOR:
+		{
+			POINT point={0,0};
+			HWND hwndChild=NULL;
+			INT iDlgCtrlID=0;
+		
+			GetCursorPos(&point);
+			MapWindowPoints(HWND_DESKTOP,w,&point,1);
+			hwndChild=ChildWindowFromPoint(w,point);
+			iDlgCtrlID=GetDlgCtrlID(hwndChild);
+			if (iDlgCtrlID==TX_MAILTO)
+			{
+				if(IsWindowVisible(hwndChild))
+				{
+					SetCursor(ghCursorHand);
+					rc=TRUE;
+				}
+			}
+			break;
+		}
+		case WM_LBUTTONDOWN:
+		{
+			POINT pt;
+			pt.x=LOWORD(lp); 
+			pt.y=HIWORD(lp);
+			MapWindowPoints(w,HWND_DESKTOP,&pt,1);
+			RECT rect;
+			GetWindowRect(GetDlgItem(w,TX_MAILTO),&rect);
+			if ((pt.x >= rect.left)&&(pt.x <= rect.right)&& (pt.y >= rect.top) &&(pt.y <= rect.bottom))
+			{
+				int lenMailTo;
+				char *pszMailTo=NULL;
+				lenMailTo=50+strlen(gpszTitleBeingAdded)+strlen(gszConfigNotFoundMailTo)+strlen(gpszConfigNotFoundMailSubject)+strlen(gpszConfigNotFoundMailBody);
+				if (gpszURLBeingAdded!=NULL) lenMailTo+=strlen(gpszURLBeingAdded);
+					
+				pszMailTo=(char*)malloc(lenMailTo);
+				if (pszMailTo==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenMailTo)); goto end; }
+				sprintf_s(pszMailTo,lenMailTo,"mailto:%s?subject=%s&body=%s",gszConfigNotFoundMailTo,gpszConfigNotFoundMailSubject,gpszConfigNotFoundMailBody);
+				strcat_s(pszMailTo,lenMailTo,"%0DTitre : ");
+				strcat_s(pszMailTo,lenMailTo,gpszTitleBeingAdded);
+				if (gpszURLBeingAdded!=NULL) 
+				{
+					strcat_s(pszMailTo,lenMailTo,"%0DURL : ");
+					strcat_s(pszMailTo,lenMailTo,gpszURLBeingAdded);
+				}
+				ShellExecute(NULL,"open",pszMailTo,NULL,"",SW_SHOW );
+				free(pszMailTo);
+			}
+			break;
+		}
 		case WM_HELP:
 			Help();
 			break;
@@ -690,6 +779,7 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			rc=TRUE;
 			break;
 	}
+end:
 	return rc;
 }
 
