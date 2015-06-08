@@ -243,7 +243,7 @@ extern BOOL gbRecoveryWebserviceHTTPS;		// 1.08
 extern BOOL gbSyncSecondaryPasswordActive;	// 1.08
 extern int  giSyncSecondaryPasswordGroup;	// 1.08
 extern char gszSyncSecondaryPasswordOU[];	// 1.08
-extern BOOL gbCheckCertificates;			// 1.08
+extern BOOL gbCheckCertificates;			// 1.08 - ISSUE#252
 extern char gszConfigNotFoundMailTo[];		// 1.08
 extern char *gpszConfigNotFoundMailSubject;	// 1.08
 extern char *gpszConfigNotFoundMailBody;	// 1.08

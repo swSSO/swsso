@@ -231,7 +231,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",bHTTPS?"https":"http",pszServer,iPort,pszRequest)); 
 	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(%s %s)",pwszMethod,pszRequest)); goto end; }
 
-	if (bHTTPS && !gbCheckCertificates)
+	if (bHTTPS && !gbCheckCertificates) // ISSUE#252
 	{
 		dwOptions=SECURITY_FLAG_IGNORE_CERT_CN_INVALID | SECURITY_FLAG_IGNORE_CERT_DATE_INVALID | SECURITY_FLAG_IGNORE_UNKNOWN_CA;
 		brc=WinHttpSetOption(hRequest,WINHTTP_OPTION_SECURITY_FLAGS,&dwOptions,sizeof(dwOptions));

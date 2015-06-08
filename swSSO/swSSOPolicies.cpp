@@ -132,7 +132,7 @@ BOOL gbRecoveryWebserviceHTTPS=FALSE;			// 1.08
 BOOL gbSyncSecondaryPasswordActive=FALSE;		// 1.08
 int  giSyncSecondaryPasswordGroup=-1;			// 1.08
 char gszSyncSecondaryPasswordOU[255+1];			// 1.08
-BOOL gbCheckCertificates=TRUE;					// 1.08
+BOOL gbCheckCertificates=TRUE;					// 1.08 - ISSUE#252
 char gszConfigNotFoundMailTo[128+1]; // 1.08
 char *gpszConfigNotFoundMailSubject=NULL;		// 1.08
 char *gpszConfigNotFoundMailBody=NULL;			// 1.08
