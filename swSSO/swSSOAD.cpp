@@ -399,6 +399,14 @@ BOOL CheckUserInOU(void)
 	char *pszUserDN=NULL;
 	BSTR bstrUserDN=NULL;
 	
+	// si OU non définie en base de registre, on retourne TRUE, la synchro sera réalisée
+	if (*gszSyncSecondaryPasswordOU==0) 
+	{ 
+		TRACE((TRACE_INFO,_F_,"Pas d'OU definie en base de registre : go pour la synchro"));
+		brc=TRUE; 
+		goto end; 
+	}
+
 	// récupération du DN de l'utilisateur -- remarque : échoue si pas connecté au réseau, mais pas grave, on retourne FALSE
 	// et donc rien ne sera mis à jour
 	hr=CoCreateInstance(CLSID_ADSystemInfo,NULL,CLSCTX_INPROC_SERVER,IID_IADsADSystemInfo,(void**)&pIADsADSystemInfo);
