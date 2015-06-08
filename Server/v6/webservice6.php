@@ -380,7 +380,7 @@ else if ($_GET['action']=="putconfig")
 		$param_title=         "AES_ENCRYPT('".$var_title."','"._AESPWD_."')";
 		$param_szFullPathName="AES_ENCRYPT('".$var_szFullPathName."','"._AESPWD_."')";
 		$param_szName=        "AES_ENCRYPT('".$var_szName."','"._AESPWD_."')";
-		//if ($var_withIdPwd!=0)
+		if ($var_withIdPwd!=0)
 		{
 			$param_id1Value=  "AES_ENCRYPT('".$var_id1Value."','"._AESPWD_."')";
 			$param_id2Value=  "AES_ENCRYPT('".$var_id2Value."','"._AESPWD_."')";
@@ -410,7 +410,7 @@ else if ($_GET['action']=="putconfig")
 	if ($var_configId!="0")
 	{
 		$szRequestOptions="";
-		//if ($var_withIdPwd!=0) 
+		if ($var_withIdPwd!=0) 
 		{
 			$szRequestOptions=",withIdPwd=".$var_withIdPwd.",".
 								 "id1Value=".$param_id1Value.",".
@@ -455,7 +455,7 @@ else if ($_GET['action']=="putconfig")
 	{
 		$szRequestOptions1="";
 		$szRequestOptions2="";
-		//if ($var_withIdPwd!="0") 
+		if ($var_withIdPwd!="0") 
 		{
 			$szRequestOptions1=",withIdPwd,id1Value,id2Value,id3Value,id4Value,pwdValue";
 			$szRequestOptions2=",".$var_withIdPwd.",".$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue;
