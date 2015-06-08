@@ -663,6 +663,7 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				if (pParams->szMailTo!=NULL)
 				{
 					ShowWindow(GetDlgItem(w,TX_MAILTO),SW_SHOW);
+					SetDlgItemText(w,TX_MAILTO,pParams->szMailTo);
 					// liens MAILTO soulignes
 					LOGFONT logfont;
 					HFONT hFont;
@@ -793,7 +794,7 @@ int MessageBox3B(T_MESSAGEBOX3B_PARAMS *pParams)
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc;
 
-	rc=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_MESSAGEBOX3B),pParams->wParent,MessageBox3BDialogProc,(LPARAM)pParams);
+	rc=DialogBoxParam(ghInstance,MAKEINTRESOURCE(pParams->szMailTo==NULL?IDD_MESSAGEBOX3B:IDD_MESSAGEBOX3BLINK),pParams->wParent,MessageBox3BDialogProc,(LPARAM)pParams);
 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
