@@ -2661,15 +2661,14 @@ askpwd:
 			iError=-1;
 			goto end;
 		}
-	}
+		// ISSUE#169 : Demande le mot de passe à swSSOSVC et le stocke pour répondre aux demandes ultérieures traitées par GetDecryptedPwd() dans swSSOAD.cpp
+		if (GetADPassword()!=0) { iError=-1; goto end; }
 
-	// ISSUE#169 : Demande le mot de passe à swSSOSVC et le stocke pour répondre aux demandes ultérieures traitées par GetDecryptedPwd() dans swSSOAD.cpp
-	if (GetADPassword()!=0) { iError=-1; goto end; }
-
-	// 1.08 ISSUE#248 : si configuré, synchronise un groupe de mot de passe secondaires avec le mot de passe AD
-	if (!gbAdmin && gbSyncSecondaryPasswordActive)
-	{
-		if (CheckUserInOU()) SyncSecondaryPasswordGroup();
+		// 1.08 ISSUE#248 : si configuré, synchronise un groupe de mot de passe secondaires avec le mot de passe AD
+		if (!gbAdmin && gbSyncSecondaryPasswordActive)
+		{
+			if (CheckUserInOU()) SyncSecondaryPasswordGroup();
+		}
 	}
 
 	if (!gbAdmin)
