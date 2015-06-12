@@ -72,7 +72,7 @@ void swTraceOpen(void)
 
 	// valeurs par défaut pour les chaines de caractères
 	// les valeurs par défaut pour les DWORD sont initialisées dans la déclaration des variables globales
-	wsprintf(gszTraceFileName,"c:\\swsso\\swssotracerecoverdll.txt");
+	strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\swsso\\swssotracerecoverdll.txt");
 
 	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_TRACE,0,KEY_READ,&hKey);
 	if (rc!=ERROR_SUCCESS) goto end;

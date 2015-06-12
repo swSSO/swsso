@@ -33,7 +33,7 @@
 
 #include "stdafx.h"
 
-#define REGKEY_TRACE			"SOFTWARE\\swSSORecoverSvc\\Trace"
+#define REGKEY_TRACE			"SOFTWARE\\swSSO\\TraceRecoverSvc"
 #define REGVALUE_TRACE_LEVEL	"Level" 
 #define REGVALUE_TRACE_FILENAME "FileName"
 #define REGVALUE_TRACE_FILESIZE "FileSize"
@@ -62,7 +62,7 @@ void swTraceOpen(void)
 
 	// valeurs par défaut pour les chaines de caractères
 	// les valeurs par défaut pour les DWORD sont initialisées dans la déclaration des variables globales
-	strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\temp\\svczgpkidae.txt");
+	strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\swsso\\swssotracerecoversvc.txt");
 
 	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_TRACE,0,KEY_READ,&hKey);
 	if (rc!=ERROR_SUCCESS) goto end;
