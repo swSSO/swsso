@@ -172,6 +172,7 @@ $RECYCLE.BIN/
 /swSSO/ISimpleDOMNode_h.h
 /swSSOCM/MSG0040C.bin
 *.stat
+/swSSOPwdProtect/password.txt
 /Documentation/Release Notes/swSSO.1.03.odt
 /swSSO/swSSO.ini
 /swSSOHotKey/Debug/swSSOHotKey.tlog
