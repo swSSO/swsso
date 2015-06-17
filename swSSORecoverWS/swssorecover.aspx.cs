@@ -28,7 +28,8 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// Web Service de resynchronisation de mot de passe
+// Web Service de resynchronisation de mot de passe 
+// Fourni à titre d'exemple d'utilisation de la DLL swSSORecoverDll
 //-----------------------------------------------------------------------------
 
 using System;
@@ -45,7 +46,10 @@ using Newtonsoft.Json;
 
 public partial class _Default : System.Web.UI.Page
 {
-    [DllImport(@"c:\dev\debug\swSSORecoverDll.dll", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool SetDllDirectory(string lpPathName);
+    
+    [DllImport(@"swSSORecoverDll.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern int RecoveryGetResponse(String strChallenge, String StrDomainUserName, StringBuilder strResponse, int iMaxCount);
 
     [DllImport("advapi32.dll", CharSet = CharSet.Auto)]
@@ -70,14 +74,19 @@ public partial class _Default : System.Web.UI.Page
     {
         public string response;
     }
+
+    //-----------------------------------------------------------------------------
+    // Classe de déchiffrement de mot de passe chiffré avec DPAPI
+    //-----------------------------------------------------------------------------
     public class swSSOPwdProtect
     {
         public swSSOPwdProtect()
         {
-
         }
         #region InteropServices
-        // déclaration des fonction, structures et constantes DAPI pour le chiffrement / déchiffrement du mot de passe
+        //-----------------------------------------------------------------------------
+        // Déclaration des fonctions, structures et constantes DPAPI pour le chiffrement / déchiffrement du mot de passe
+        //-----------------------------------------------------------------------------
         [DllImport("crypt32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern bool CryptProtectData(ref DATA_BLOB pClearBlob, IntPtr noDescription, IntPtr noEntropy, IntPtr pReserved, IntPtr noPromptStruct, int dwFlags, ref DATA_BLOB pEncryptedBlob);
 
@@ -109,7 +118,6 @@ public partial class _Default : System.Web.UI.Page
 
             try
             {
-                // byte[] encryptedBytes = Convert.FromBase64String(strEncrypted);
                 int len = strEncrypted.Length;
                 byte[] encryptedBytes = new byte[len / 2];
                 for (int i = 0; i < len; i += 2)
@@ -136,9 +144,15 @@ public partial class _Default : System.Web.UI.Page
             return strClear;
         }
     }
+
+    //-----------------------------------------------------------------------------
+    // Code principal : traite le challenge et retourne la réponse
+    //-----------------------------------------------------------------------------
     protected void Page_Load(object sender, EventArgs e)
     {
+        //
         // initialisations
+        //
         String strTrace = "";
         StringBuilder strResponse = new StringBuilder(256);
         WindowsIdentity tempWindowsIdentity;
@@ -146,21 +160,28 @@ public partial class _Default : System.Web.UI.Page
         IntPtr tokenDuplicate = IntPtr.Zero;
         WindowsImpersonationContext impersonationContext;
 
-        // lecture de la configuration dans web.config
+        //
+        // lecture de la configuration dans web.config (infos du compte de service + debug or not debug)
+        //
         string strUser = System.Configuration.ConfigurationManager.AppSettings["user"].ToString();
         string strDomain = System.Configuration.ConfigurationManager.AppSettings["domain"].ToString();
         string strEncryptedPassword = System.Configuration.ConfigurationManager.AppSettings["password"].ToString();
         string strConfigDebug = System.Configuration.ConfigurationManager.AppSettings["debug"].ToString();
-        if (String.IsNullOrEmpty(strConfigDebug)) strConfigDebug = "0";
+        string strRecoverDllPath = System.Configuration.ConfigurationManager.AppSettings["dllpath"].ToString();
         strTrace += "strUser=" + strUser + "<br/>";
         strTrace += "strDomain=" + strDomain + "<br/>";
         strTrace += "strEncryptedPassword=" + strEncryptedPassword + "<br/>";
-        
-        // déchiffrement du mot de passe
+        strTrace += "strRecoverDllPath=" + strRecoverDllPath + "<br/>";
+
+        //
+        // déchiffrement du mot de passe du compte de service
+        //
         string strPassword = swSSOPwdProtect.Decrypt(strEncryptedPassword);
         strTrace += "strPassword=" + strPassword + "<br/>";
 
+        //
         // impersonation avec le compte de service
+        //
         strTrace += "AVANT IMPERSONATION : process=" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "<br/>";
         if (LogonUser(strUser,strDomain, strPassword, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, ref token) != 0)
         {
@@ -173,31 +194,43 @@ public partial class _Default : System.Web.UI.Page
         strTrace += "APRES IMPERSONATION : process=" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "<br/>";
         if (Request.LogonUserIdentity.IsAuthenticated) strTrace += "authenticated!<br/>";
         strTrace += "name=" + HttpContext.Current.Request.LogonUserIdentity.Name + "<br/>";
-        
-        // extraction du challenge de la requete
-        strTrace += "Taille donnees postees ="+Request.TotalBytes+"<br/>";
+
+        //
+        // extraction du challenge de la requete au format JSON
+        //
+        strTrace += "Taille donnees postees =" + Request.TotalBytes + "<br/>";
         string strData="";
         if (Request.TotalBytes>0)
         {
             strData+=Encoding.Default.GetString(Request.BinaryRead(Request.TotalBytes));
         }
+        //
+        // désérialisation du JSON
+        //
         swSSOChallenge objChallenge = JsonConvert.DeserializeObject<swSSOChallenge>(strData);
         strTrace += "objChallenge.challenge=" + objChallenge.challenge;
 
+        //
         // calcul de la réponse
+        //
+        SetDllDirectory(strRecoverDllPath);
         strTrace += "RecoveryGetResponse=" + RecoveryGetResponse(objChallenge.challenge,
             HttpContext.Current.Request.LogonUserIdentity.Name,
             strResponse,
             strResponse.Capacity)+"<br/>";
         strTrace += "strResponse=" + strResponse + "<br/>";
-	    
-        // sérialisation de la réponse
-        swSSOResponse objResponse= new swSSOResponse();
+
+        //
+        // sérialisation de la réponse au format JSON
+        //
+        swSSOResponse objResponse = new swSSOResponse();
         objResponse.response=strResponse.ToString();
         strTrace += "objResponse.response=" + objResponse.response;
-        
-        // envoie de la réponse
-        if (strConfigDebug=="1") Response.Write(strTrace+"---------------------------------------<br/>");
+
+        //
+        // envoi de la réponse
+        //
+        if (strConfigDebug == "1") Response.Write(strTrace + "---------------------------------------<br/>");
         Response.StatusCode = 200;
         Response.Write(JsonConvert.SerializeObject(objResponse));
         Response.End();
