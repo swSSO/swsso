@@ -191,6 +191,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_RECOVERY_WEBSERVICE_PORT			"RecoveryWebservicePort"
 #define REGVALUE_RECOVERY_WEBSERVICE_TIMEOUT		"RecoveryWebserviceTimeout"
 #define REGVALUE_RECOVERY_WEBSERVICE_HTTPS			"RecoveryWebserviceHTTPS"
+#define REGVALUE_RECOVERY_WEBSERVICE_MANUAL_BACKUP	"RecoveryWebserviceManualBackup"
 #define REGVALUE_SYNC_SECONDARY_PASSWORD_ACTIVE		"SyncSecondaryPasswordActive"
 #define REGVALUE_SYNC_SECONDARY_PASSWORD_GROUP		"SyncSecondaryPasswordGroup"
 #define REGVALUE_SYNC_SECONDARY_PASSWORD_OU			"SyncSecondaryPasswordOU"
@@ -240,6 +241,7 @@ extern char gszRecoveryWebserviceURL[];		// 1.08
 extern int  giRecoveryWebservicePort;		// 1.08
 extern int  giRecoveryWebserviceTimeout;	// 1.08
 extern BOOL gbRecoveryWebserviceHTTPS;		// 1.08
+extern BOOL gbRecoveryWebserviceManualBackup; // 1.08
 extern BOOL gbSyncSecondaryPasswordActive;	// 1.08
 extern int  giSyncSecondaryPasswordGroup;	// 1.08
 extern char gszSyncSecondaryPasswordOU[];	// 1.08

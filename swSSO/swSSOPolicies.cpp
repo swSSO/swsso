@@ -129,6 +129,7 @@ char gszRecoveryWebserviceURL[255+1];			// 1.08
 int  giRecoveryWebservicePort=INTERNET_DEFAULT_HTTP_PORT;	// 1.08
 int  giRecoveryWebserviceTimeout=10;			// 1.08
 BOOL gbRecoveryWebserviceHTTPS=FALSE;			// 1.08
+BOOL gbRecoveryWebserviceManualBackup=TRUE;		// 1.08
 BOOL gbSyncSecondaryPasswordActive=FALSE;		// 1.08
 int  giSyncSecondaryPasswordGroup=-1;			// 1.08
 char gszSyncSecondaryPasswordOU[255+1];			// 1.08
@@ -605,6 +606,10 @@ void LoadPolicies(void)
 		if (rc==ERROR_SUCCESS) gbRecoveryWebserviceHTTPS=(BOOL)dwValue; 
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_MANUAL_BACKUP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbRecoveryWebserviceManualBackup=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SYNC_SECONDARY_PASSWORD_ACTIVE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbSyncSecondaryPasswordActive=(BOOL)dwValue; 
 
@@ -891,6 +896,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gszRecoveryWebserviceURL=%s"			,gszRecoveryWebserviceURL));
 	TRACE((TRACE_INFO,_F_,"giRecoveryWebserviceTimeout=%d"		,giRecoveryWebserviceTimeout));
 	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceHTTPS=%d"		,gbRecoveryWebserviceHTTPS));
+	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceManualBackup=%d"	,gbRecoveryWebserviceManualBackup));
 	TRACE((TRACE_INFO,_F_,"gbSyncSecondaryPasswordActive=%d"	,gbSyncSecondaryPasswordActive));
 	TRACE((TRACE_INFO,_F_,"giSyncSecondaryPasswordGroup=%d"		,giSyncSecondaryPasswordGroup));
 	TRACE((TRACE_INFO,_F_,"gszSyncSecondaryPasswordOU=%s"		,gszSyncSecondaryPasswordOU));

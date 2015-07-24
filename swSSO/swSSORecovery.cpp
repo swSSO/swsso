@@ -608,7 +608,18 @@ int RecoveryChallenge(HWND w)
 			rc=0;
 			goto end;
 		}
-		// sinon, on bascule sur le mode manuel : la fenêtre de challenge s'affiche
+		// si on est là, c'est que le web service a échoué
+		if (gbRecoveryWebserviceManualBackup)
+		{
+			// bascule sur le mode manuel : la fenêtre de challenge s'affiche
+			TRACE((TRACE_INFO,_F_,"Erreur web service recover, bascule en manuel (gbRecoveryWebserviceManualBackup=TRUE)"));
+		}
+		else
+		{
+			// sinon erreur : message d'erreur à afficher !
+			TRACE((TRACE_INFO,_F_,"Erreur web service recover, ne bascule pas en manuel (gbRecoveryWebserviceManualBackup=FALSE)")); 
+			rc=-1; goto end;
+		}
 	}
 	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_CHALLENGE),w,ChallengeDialogProc,(LPARAM)0)==IDOK)
 	{

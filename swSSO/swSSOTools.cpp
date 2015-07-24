@@ -264,7 +264,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 	}
  
     brc = WinHttpReceiveResponse(hRequest, NULL);
-	if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpReceiveResponse()")); goto end; }
+	if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpReceiveResponse()=%d",GetLastError())); goto end; }
 
 	dwHTTPResultMaxSize=gdwHTTPResultFactor*(giMaxConfigs<=500?500:giMaxConfigs);
 	TRACE((TRACE_INFO,_F_,"dwHTTPResultMaxSize=%u",dwHTTPResultMaxSize));
