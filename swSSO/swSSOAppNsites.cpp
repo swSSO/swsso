@@ -1242,7 +1242,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView)
 	//gptActions[giNbActions].tLastDetect=-1;
 	gptActions[giNbActions].tLastSSO=-1;
 	gptActions[giNbActions].wLastSSO=NULL;
-	gptActions[giNbActions].iWaitFor=WAIT_IF_SSO_OK;
+	gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
 	gptActions[giNbActions].bActive=bActive; // 0.93B6 (avant c'était FALSE)
 	gptActions[giNbActions].bAutoLock=TRUE;
 	// gptActions[giNbActions].bConfigOK=FALSE; // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
@@ -1587,7 +1587,7 @@ void LaunchSelectedApp(HWND w)
 	//gptActions[iAction].wLastDetect=NULL;
 	gptActions[iAction].tLastSSO=-1;
 	gptActions[iAction].wLastSSO=NULL;
-	gptActions[iAction].iWaitFor=WAIT_IF_SSO_OK;
+	gptActions[iAction].iWaitFor=giWaitBeforeNewSSO;
 
 end:
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
@@ -1996,7 +1996,7 @@ int TVActivateAction(HWND w, HTREEITEM hItem,int iActivate)
 	//gptActions[iAction].tLastDetect=-1;
 	gptActions[iAction].tLastSSO=-1;
 	gptActions[iAction].wLastSSO=NULL;
-	gptActions[iAction].iWaitFor=WAIT_IF_SSO_OK;
+	gptActions[iAction].iWaitFor=giWaitBeforeNewSSO;
 	TVUpdateItemState(w,hItem,iAction);
 
 end:
@@ -2710,7 +2710,7 @@ void GetApplicationDetails(HWND w,int iAction)
 		//gptActions[iAction].wLastDetect=NULL;
 		gptActions[iAction].tLastSSO=-1;
 		gptActions[iAction].wLastSSO=NULL;
-		gptActions[iAction].iWaitFor=WAIT_IF_SSO_OK;
+		gptActions[iAction].iWaitFor=giWaitBeforeNewSSO;
 	}
 end:
 	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);
@@ -3817,7 +3817,7 @@ int LoadApplications(void)
 		//gptActions[i].wLastDetect=NULL;
 		gptActions[i].tLastSSO=-1;
 		gptActions[i].wLastSSO=NULL;
-		gptActions[i].iWaitFor=WAIT_IF_SSO_OK;
+		gptActions[i].iWaitFor=giWaitBeforeNewSSO;
 		gptActions[i].bSaved=TRUE; // 0.93B6 ISSUE#55
 		gptActions[i].iNbEssais=0; // 0.93B7
 		gptActions[i].bAddAccount=GetConfigBoolValue(p,"addAccount",FALSE,TRUE); // 0.97 ISSUE#86
@@ -3867,7 +3867,7 @@ int LoadApplications(void)
 			//gptActions[i].wLastDetect=NULL;
 			gptActions[i].tLastSSO=-1;
 			gptActions[i].wLastSSO=NULL;
-			gptActions[i].iWaitFor=WAIT_IF_SSO_OK;
+			gptActions[i].iWaitFor=giWaitBeforeNewSSO;
 			gptActions[i].bSaved=TRUE;
 			gptActions[i].bPwdChangeInfos=FALSE;
 			gptActions[i].iNbEssais=0;

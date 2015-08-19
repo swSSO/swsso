@@ -3452,7 +3452,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 						//gptActions[iAction].tLastDetect=-1;
 						gptActions[iAction].tLastSSO=-1;
 						gptActions[iAction].wLastSSO=NULL;
-						gptActions[iAction].iWaitFor=WAIT_IF_SSO_OK;
+						gptActions[iAction].iWaitFor=giWaitBeforeNewSSO;
 						gptActions[iAction].bActive=gbActivateNewConfigs;
 						gptActions[iAction].bAutoLock=TRUE;
 						gptActions[iAction].bConfigSent=TRUE;
@@ -4402,7 +4402,7 @@ void ReactivateApplicationFromCurrentWindow(void)
 				LastDetect_RemoveWindow(w);
 				gptActions[i].tLastSSO=-1;
 				gptActions[i].wLastSSO=NULL;
-				gptActions[i].iWaitFor=WAIT_IF_SSO_OK;
+				gptActions[i].iWaitFor=giWaitBeforeNewSSO;
 				gptActions[i].bWaitForUserAction=FALSE;
 			}
 			free(pszURL); pszURL=NULL;
@@ -4421,7 +4421,7 @@ void ReactivateApplicationFromCurrentWindow(void)
 				LastDetect_RemoveWindow(w);
 				gptActions[i].tLastSSO=-1;
 				gptActions[i].wLastSSO=NULL;
-				gptActions[i].iWaitFor=WAIT_IF_SSO_OK;
+				gptActions[i].iWaitFor=giWaitBeforeNewSSO;
 				gptActions[i].bWaitForUserAction=FALSE;
 			}
 		}
@@ -4579,7 +4579,7 @@ doConfig:
 				//gptActions[giNbActions].tLastDetect=-1;
 				gptActions[giNbActions].tLastSSO=-1;
 				gptActions[giNbActions].wLastSSO=NULL;
-				gptActions[giNbActions].iWaitFor=WAIT_IF_SSO_OK;
+				gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
 				gptActions[giNbActions].bActive=TRUE; //0.93B6
 				gptActions[giNbActions].bAutoLock=TRUE;
 				gptActions[giNbActions].bConfigSent=FALSE;

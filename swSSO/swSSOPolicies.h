@@ -199,6 +199,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_CONFIG_NOT_FOUND_MAILTO			"ConfigNotFoundMailTo"
 #define REGVALUE_CONFIG_NOT_FOUND_MAILSUBJECT		"ConfigNotFoundMailSubject"
 #define REGVALUE_CONFIG_NOT_FOUND_MAILBODY			"ConfigNotFoundMailBody"
+#define REGVALUE_WAIT_BEFORE_NEW_SSO				"WaitBeforeNewSSO"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -249,6 +250,7 @@ extern BOOL gbCheckCertificates;			// 1.08 - ISSUE#252
 extern char gszConfigNotFoundMailTo[];		// 1.08
 extern char *gpszConfigNotFoundMailSubject;	// 1.08
 extern char *gpszConfigNotFoundMailBody;	// 1.08
+extern int	giWaitBeforeNewSSO;				// 1.08 - ISSUE#253
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

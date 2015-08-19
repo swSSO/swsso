@@ -864,8 +864,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				// c'est du Web, rien de choquant (le navigateur a toujours le meme handle quel que soit le site accédé !
 				// Par contre, il faut dans les cas suivants ne pas réessayer immédiatement, mais laisser passer
 				// un délai avant le prochain essai (précisé en face de chaque cas) :
-				// - Eviter de griller un compte avec X saisies de mauvais mots de passe de suite (iWaitFor=WAIT_IF_SSO_OK)
-				// - Ne pas bouffer de CPU en cherchant tous les 500ms des champs qu'on n'a pas trouvé dans la page (iWaitFor=WAIT_IF_SSO_KO)
+				// - Eviter de griller un compte avec X saisies de mauvais mots de passe de suite (iWaitFor=giWaitBeforeNewSSO)
+				// - Ne pas bouffer de CPU en cherchant tous les 500ms des champs qu'on n'a pas trouvé dans la page (iWaitFor=WAIT_IF_SSO_NOK)
 				// - Ne pas bouffer de CPU quand l'URL ne correspond pas (alors que le titre correspond) (iWaitFor=WAIT_IF_BAD_URL)
 				if ((tNow-gptActions[i].tLastSSO)<gptActions[i].iWaitFor) 
 				{
@@ -918,7 +918,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 						{
 							TRACE((TRACE_DEBUG,_F_,"La fenêtre précédemment SSOisée est toujours là, celle-ci est donc nouvelle"));
 							// fenêtre toujours là ==> nouvelle fenêtre, on fait le SSO
-							gptActions[i].iWaitFor=WAIT_IF_SSO_OK;
+							gptActions[i].iWaitFor=giWaitBeforeNewSSO;
     						bDoSSO=true;
 						}
 						else // fenêtre plus là, sans doute un échec d'authentification 
@@ -1200,12 +1200,12 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 
 					if (rc==0) // SSO réussi
 					{
-						TRACE((TRACE_INFO,_F_,"SSO réussi, on ne le retente pas avant %d secondes",WAIT_IF_SSO_OK));
+						TRACE((TRACE_INFO,_F_,"SSO réussi, on ne le retente pas avant %d secondes",giWaitBeforeNewSSO));
 						// on ne réessaie pas si le SSO est réussi mais on ne peut pas cramer définitivement
 						// ce SSO sinon un utilisateur qui se déconnecte ne pourra pas se reconnecter
 						// tant qu'il n'aura pas fermé / réouvert son navigateur (handle différent) !
 						gptActions[i].iNbEssais=0;
-						gptActions[i].iWaitFor=WAIT_IF_SSO_OK; 
+						gptActions[i].iWaitFor=giWaitBeforeNewSSO; 
 						// ISSUE#127 (le swLogEvent était fait trop tôt, cf. plus haut)
 						swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,NULL,i);
 					}

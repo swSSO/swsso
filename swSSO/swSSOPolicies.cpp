@@ -137,6 +137,7 @@ BOOL gbCheckCertificates=TRUE;					// 1.08 - ISSUE#252
 char gszConfigNotFoundMailTo[128+1]; // 1.08
 char *gpszConfigNotFoundMailSubject=NULL;		// 1.08
 char *gpszConfigNotFoundMailBody=NULL;			// 1.08
+int	 giWaitBeforeNewSSO=WAIT_IF_SSO_OK;			// 1.08 - ISSUE#253
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -667,6 +668,11 @@ void LoadPolicies(void)
 			if (gpszConfigNotFoundMailBody==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(1)")); goto end; }
 			*gpszConfigNotFoundMailBody=0;
 		}
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_WAIT_BEFORE_NEW_SSO,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giWaitBeforeNewSSO=(int)dwValue; 
+		if (giWaitBeforeNewSSO==WAIT_ONE_MINUTE) giWaitBeforeNewSSO++; // pour assurer que giWaitBeforeNewSSO est toujours différent de WAIT_ONE_MINUTE (cf. commentaire dans swSSOAppNsites.h)
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -901,10 +907,11 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"giSyncSecondaryPasswordGroup=%d"		,giSyncSecondaryPasswordGroup));
 	TRACE((TRACE_INFO,_F_,"gszSyncSecondaryPasswordOU=%s"		,gszSyncSecondaryPasswordOU));
 	TRACE((TRACE_INFO,_F_,"gbCheckCertificates=%d"				,gbCheckCertificates));
-	TRACE((TRACE_INFO,_F_,"gszErrorServerConfigNotFound=%s",	gszErrorServerConfigNotFound));
-	TRACE((TRACE_INFO,_F_,"gszConfigNotFoundMailTo=%s",			gszConfigNotFoundMailTo));
-	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailSubject=%s",	gpszConfigNotFoundMailSubject));
-	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailBody=%s",		gpszConfigNotFoundMailBody));
+	TRACE((TRACE_INFO,_F_,"gszErrorServerConfigNotFound=%s"		,gszErrorServerConfigNotFound));
+	TRACE((TRACE_INFO,_F_,"gszConfigNotFoundMailTo=%s"			,gszConfigNotFoundMailTo));
+	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailSubject=%s"	,gpszConfigNotFoundMailSubject));
+	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailBody=%s"		,gpszConfigNotFoundMailBody));
+	TRACE((TRACE_INFO,_F_,"giWaitBeforeNewSSO=%d"				,giWaitBeforeNewSSO));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
