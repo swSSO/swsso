@@ -4432,6 +4432,100 @@ end:
 }
 
 // ----------------------------------------------------------------------------------
+// GenerateConfigAndOpenAppNsites()
+// ----------------------------------------------------------------------------------
+// Génère une proposition de configuration et l'affiche à l'utilisateur dans la 
+// fenêtre de gestion des sites et applications
+// ----------------------------------------------------------------------------------
+void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, char *pszURL)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	char *pszIEWindowTitle=NULL;
+	char *p=NULL;
+	
+	ZeroMemory(&gptActions[giNbActions],sizeof(T_ACTION));
+	//gptActions[giNbActions].wLastDetect=NULL;
+	//gptActions[giNbActions].tLastDetect=-1;
+	gptActions[giNbActions].tLastSSO=-1;
+	gptActions[giNbActions].wLastSSO=NULL;
+	gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
+	gptActions[giNbActions].bActive=TRUE; //0.93B6
+	gptActions[giNbActions].bAutoLock=TRUE;
+	gptActions[giNbActions].bConfigSent=FALSE;
+	gptActions[giNbActions].bSaved=FALSE; // 0.93B6 ISSUE#55
+	// gptActions[giNbActions].iDomainId=1; //  1.00 ISSUE#112
+	gptActions[giNbActions].iPwdGroup=-1;
+	if (iType==UNK)
+	{
+		// le UNK était utile dans la requete WEB pour récupérer configs WEB et XEB, maintenant il 
+		// s'agit de proposer une config par défaut la plus aboutie possible
+		// ISSUE#162
+		// if (iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
+		if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
+	}
+	gptActions[giNbActions].iType=iType;
+
+	if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4)
+	{
+		strcpy_s(gptActions[giNbActions].szId1Name,sizeof(gptActions[giNbActions].szId1Name),"-1");
+		strcpy_s(gptActions[giNbActions].szPwdName,sizeof(gptActions[giNbActions].szPwdName),"1");
+		strcpy_s(gptActions[giNbActions].szValidateName,sizeof(gptActions[giNbActions].szValidateName),"[ENTER]");
+	}
+	// construction du titre
+	if (iType==WEBSSO || iType==XEBSSO) // tronque la fin du titre qui contient le nom du navigateur
+	{
+		// firefox
+		p=strstr(pszTitle," - Mozilla Firefox");
+		if (p!=NULL) *p=0;
+		// chrome
+		p=strstr(pszTitle," - Google Chrome");
+		if (p!=NULL) *p=0;
+		// ie
+		pszIEWindowTitle=GetIEWindowTitle();
+		if (pszIEWindowTitle!=NULL)
+		{
+			p=strstr(pszTitle,pszIEWindowTitle);
+			if (p!=NULL) *p=0;
+		}
+		else
+		{
+			p=strstr(pszTitle," - Microsoft Internet Explorer");
+			if (p!=NULL) *p=0;
+			p=strstr(pszTitle," - Windows Internet Explorer");
+			if (p!=NULL) *p=0;
+		}
+		// maxthon
+		p=strstr(pszTitle," - Maxthon");
+		if (p!=NULL) *p=0;
+	}
+	strncpy_s(gptActions[giNbActions].szTitle,sizeof(gptActions[giNbActions].szTitle),pszTitle,LEN_TITLE-1);
+	// 0.92B4 : ajoute une * à la fin du titre suggéré
+	// 0.92B6 : sauf si c'est une popup dans ce cas le titre est toujours complet ?
+	if (iType!=POPSSO) strcat_s(gptActions[giNbActions].szTitle,sizeof(gptActions[giNbActions].szTitle),"*"); 
+	// construction du application name
+	strncpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),pszTitle,LEN_APPLICATION_NAME-5);
+	GenerateApplicationName(giNbActions,gptActions[giNbActions].szApplication);
+	// construction URL
+	if (pszURL!=NULL)
+		strncpy_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),pszURL,LEN_URL-1);
+
+	TRACE((TRACE_DEBUG,_F_,"giNbActions=%d iType=%d szURL=%s",giNbActions,gptActions[giNbActions].iType,gptActions[giNbActions].szURL));
+	// et hop, c'est fait (la sauvegarde sera faite ou pas par l'utilisateur dans la fenêtre appNsites)
+	// si la fenêtre appnsites est ouverte, il ne faut pas faire le backup car il a été fait au moment de l'ouverture de la fenêtre 
+	// et on veut que l'annulation annule tout ce qu'il a fait depuis. Sinon on fait le backup avant d'ouvrir la fenêtre.
+	if (gwAppNsites==NULL) BackupAppsNcategs(); // il faut bien le faire avant le ++
+	giNbActions++; 
+	if (gwAppNsites!=NULL) 
+	{
+		EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
+	}
+	ShowAppNsites(giNbActions-1,FALSE);
+
+	if (pszIEWindowTitle!=NULL) free(pszIEWindowTitle);
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+// ----------------------------------------------------------------------------------
 // AddApplicationFromCurrentWindow()
 // ----------------------------------------------------------------------------------
 // Ajoute l'application actuellement affichée sur le dessus
@@ -4449,8 +4543,6 @@ int AddApplicationFromCurrentWindow(void)
 	BOOL bConfigFound=FALSE;
 	BOOL bReplaceOldConfig=FALSE;
 	int iType=UNK;
-	char *p=NULL;
-	char *pszIEWindowTitle=NULL;
 	int i;
 	BOOL bServerAvailable=FALSE;
 	int iBrowser=BROWSER_NONE;
@@ -4562,125 +4654,41 @@ int AddApplicationFromCurrentWindow(void)
 	//             détectées (pour justement pouvoir mettre le focus sur la config dans appnsites)
 	// if (gwAppNsites!=NULL) GetApplicationDetails(gwAppNsites,giLastApplicationConfig);
 
-	if (!bConfigFound) 
+	if (!bConfigFound) // config non trouvée
 	{
 		if (!gbInternetGetConfig) // c'est normal qu'on ne trouve pas la config (interdit d'aller sur le serveur)
-			                      // on fabrique ce qu'on peut localement et l'utilisateur complètera.
-			goto doConfig;// je ne suis pas fier, mais j'ai pas le temps, je corrigerai ça plus tard TODO XXXXXX
-		// 0.90 : message personnalisable. Si message personnalisé, ne pose plus la question.
-		if (gbErrorServerConfigNotFoundDefaultMessage)
 		{
-			// 0.85B7 : propose une config par défaut
-			if (MessageBox(NULL,gszErrorServerConfigNotFound,"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES)
-			{
-doConfig:
-				ZeroMemory(&gptActions[giNbActions],sizeof(T_ACTION));
-				//gptActions[giNbActions].wLastDetect=NULL;
-				//gptActions[giNbActions].tLastDetect=-1;
-				gptActions[giNbActions].tLastSSO=-1;
-				gptActions[giNbActions].wLastSSO=NULL;
-				gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
-				gptActions[giNbActions].bActive=TRUE; //0.93B6
-				gptActions[giNbActions].bAutoLock=TRUE;
-				gptActions[giNbActions].bConfigSent=FALSE;
-				gptActions[giNbActions].bSaved=FALSE; // 0.93B6 ISSUE#55
-				// gptActions[giNbActions].iDomainId=1; //  1.00 ISSUE#112
-				gptActions[giNbActions].iPwdGroup=-1;
-				if (iType==UNK)
-				{
-					// le UNK était utile dans la requete WEB pour récupérer configs WEB et XEB, maintenant il 
-					// s'agit de proposer une config par défaut la plus aboutie possible
-					// ISSUE#162
-					// if (iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
-					if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
-				}
-				gptActions[giNbActions].iType=iType;
-
-				if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4)
-				{
-					strcpy_s(gptActions[giNbActions].szId1Name,sizeof(gptActions[giNbActions].szId1Name),"-1");
-					strcpy_s(gptActions[giNbActions].szPwdName,sizeof(gptActions[giNbActions].szPwdName),"1");
-					strcpy_s(gptActions[giNbActions].szValidateName,sizeof(gptActions[giNbActions].szValidateName),"[ENTER]");
-				}
-				// construction du titre
-				if (iType==WEBSSO || iType==XEBSSO) // tronque la fin du titre qui contient le nom du navigateur
-				{
-					// firefox
-					p=strstr(szTitle," - Mozilla Firefox");
-					if (p!=NULL) *p=0;
-					// chrome
-					p=strstr(szTitle," - Google Chrome");
-					if (p!=NULL) *p=0;
-					// ie
-					pszIEWindowTitle=GetIEWindowTitle();
-					if (pszIEWindowTitle!=NULL)
-					{
-						p=strstr(szTitle,pszIEWindowTitle);
-						if (p!=NULL) *p=0;
-					}
-					else
-					{
-						p=strstr(szTitle," - Microsoft Internet Explorer");
-						if (p!=NULL) *p=0;
-						p=strstr(szTitle," - Windows Internet Explorer");
-						if (p!=NULL) *p=0;
-					}
-					// maxthon
-					p=strstr(szTitle," - Maxthon");
-					if (p!=NULL) *p=0;
-				}
-				strncpy_s(gptActions[giNbActions].szTitle,sizeof(gptActions[giNbActions].szTitle),szTitle,LEN_TITLE-1);
-				// 0.92B4 : ajoute une * à la fin du titre suggéré
-				// 0.92B6 : sauf si c'est une popup dans ce cas le titre est toujours complet ?
-				if (iType!=POPSSO) strcat_s(gptActions[giNbActions].szTitle,sizeof(gptActions[giNbActions].szTitle),"*"); 
-				// construction du application name
-				strncpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),szTitle,LEN_APPLICATION_NAME-5);
-				GenerateApplicationName(giNbActions,gptActions[giNbActions].szApplication);
-				// construction URL
-				if (pszURL!=NULL)
-					strncpy_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),pszURL,LEN_URL-1);
-
-				TRACE((TRACE_DEBUG,_F_,"giNbActions=%d iType=%d szURL=%s",giNbActions,gptActions[giNbActions].iType,gptActions[giNbActions].szURL));
-				// et hop, c'est fait (la sauvegarde sera faite ou pas par l'utilisateur dans la fenêtre appNsites)
-				// si la fenêtre appnsites est ouverte, il ne faut pas faire le backup car il a été fait au moment de l'ouverture de la fenêtre 
-				// et on veut que l'annulation annule tout ce qu'il a fait depuis. Sinon on fait le backup avant d'ouvrir la fenêtre.
-				if (gwAppNsites==NULL) BackupAppsNcategs(); // il faut bien le faire avant le ++
-				giNbActions++; 
-				if (gwAppNsites!=NULL) 
-				{
-					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
-				}
-				ShowAppNsites(giNbActions-1,FALSE);
-			}
+			GenerateConfigAndOpenAppNsites(iType,iBrowser,szTitle,pszURL); // fait une proposition de config, l'utilisateur complètera
 		}
-		else // message personnalisé, ne pose plus la question d'ajout manuel de config
-			 // + n'affichage pas ce message si le serveur n'est pas joignable car une 
-			 // erreur a déjà été présentée à l'utilisateur
+		else
 		{
-			if (bServerAvailable && gbInternetGetConfig) 
+			if (gbErrorServerConfigNotFoundDefaultMessage) // message par défaut : demande à l'utilisateur s'il veut faire la config manuellement
 			{
-				/*if (*gszErrorServerConfigNotFoundMailto==0)
-					MessageBox(NULL,gszErrorServerConfigNotFound,"swSSO",MB_ICONEXCLAMATION);
-				else*/
+				if (MessageBox(NULL,gszErrorServerConfigNotFound,"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES)
+				{
+					GenerateConfigAndOpenAppNsites(iType,iBrowser,szTitle,pszURL); // fait une proposition de config, l'utilisateur complètera
+				}
+			}
+			else // message personnalisé
+			{
 				char szSubTitle[256];
-				//char szMsg[256];
 				T_MESSAGEBOX3B_PARAMS params;
+				int reponse;
 				params.szIcone=IDI_EXCLAMATION;
-				params.iB1String=-1; // réessayer
-				params.iB2String=IDS_FERMER; // changer le mdp
-				params.iB3String=-1; // désactiver
+				params.iB1String=IDS_AJOUTER; // ajouter
+				params.iB2String=IDS_FERMER; // fermer
+				params.iB3String=-1; // rien
 				params.wParent=w;
 				params.iTitleString=IDS_MESSAGEBOX_TITLE;
 				params.bVCenterSubTitle=TRUE;
 				strcpy_s(szSubTitle,sizeof(szSubTitle),"Configuration non trouvée");
 				params.szSubTitle=szSubTitle;
-				//strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_DESACTIVATE_MESSAGE));
 				params.szMessage=gszErrorServerConfigNotFound;
 				params.szMailTo=gszConfigNotFoundMailTo;
 				gpszURLBeingAdded=pszURL;
 				gpszTitleBeingAdded=szTitle;
-				//if (MessageBox(w,szMsg,"swSSO", MB_YESNO | MB_ICONQUESTION)==IDYES)
-				MessageBox3B(&params);
+				reponse=MessageBox3B(&params);
+				if (reponse==B1) GenerateConfigAndOpenAppNsites(iType,iBrowser,szTitle,pszURL);
 			}
 		}
 		goto end;
@@ -4800,7 +4808,6 @@ doConfig:
 
 	rc=0;
 end:
-	if (pszIEWindowTitle!=NULL) free(pszIEWindowTitle);
 	if (pszURL!=NULL) free(pszURL);
 	if (bstrXML!=NULL) SysFreeString(bstrXML);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));

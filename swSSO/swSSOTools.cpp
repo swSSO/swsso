@@ -633,24 +633,30 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
 				// titre en gras
 				SetTextBold(w,TX_SUBTITLE);
-				// libellés 
+				// titre et message 
 				SetDlgItemText(w,TX_SUBTITLE,pParams->szSubTitle);
 				SetDlgItemText(w,TX_MESSAGE,pParams->szMessage);
-				// boutons
+				// cache les boutons non définis et met les libellés dans les boutons définis
 				if (pParams->iB1String!=-1)
 					SetDlgItemText(w,PB_B1,GetString(pParams->iB1String));
 				else
 					ShowWindow(GetDlgItem(w,PB_B1),SW_HIDE);
-
 				if (pParams->iB2String!=-1)
 					SetDlgItemText(w,PB_B2,GetString(pParams->iB2String));
 				else
 					ShowWindow(GetDlgItem(w,PB_B2),SW_HIDE);
-
 				if (pParams->iB3String!=-1)
 					SetDlgItemText(w,IDCANCEL,GetString(pParams->iB3String));
 				else
 					ShowWindow(GetDlgItem(w,IDCANCEL),SW_HIDE);
+				// centre les boutons s'il n'y en a que deux
+				if (pParams->iB3String==-1)
+				{
+					RECT rect;
+					GetClientRect(w,&rect);
+					SetWindowPos(GetDlgItem(w,PB_B1),NULL,((rect.right-rect.left)/2)-90,rect.bottom-30,0,0,SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(GetDlgItem(w,PB_B2),NULL,((rect.right-rect.left)/2)+10,rect.bottom-30,0,0,SWP_NOSIZE | SWP_NOZORDER);
+				}
 
 				SetWindowText(w,GetString(pParams->iTitleString));
 				SendDlgItemMessage(w,STATIC_ICONE,STM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadIcon(NULL,pParams->szIcone));

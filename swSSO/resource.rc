@@ -939,6 +939,7 @@ BEGIN
     IDS_IDANDPWDTEXT_NEWACCOUNT 
                             "Informations de connexion pour le nouveau compte de :\r\n%s"
     IDS_FERMER              "&Fermer"
+    IDS_AJOUTER             "&Ajouter"
 END
 
 #endif    // French (France) resources

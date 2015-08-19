@@ -154,7 +154,6 @@
 #define CK_KBSIM                        1174
 #define IDC_SEPARATOR                   1175
 #define IDD_CHANGE_IDS                  1177
-#define IDD_MESSAGEBOX3B1               1178
 #define IDD_MESSAGEBOX3BLINK            1178
 #define CK_CHROME                       40000
 #define CK_DISPLAY_MSG                  40000
@@ -400,6 +399,7 @@
 #define IDS_IDANDPWDTITLE_NEWACCOUNT    42021
 #define IDS_IDANDPWDTEXT_NEWACCOUNT     42022
 #define IDS_FERMER                      42023
+#define IDS_AJOUTER                     42024
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
