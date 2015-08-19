@@ -940,6 +940,8 @@ BEGIN
                             "Informations de connexion pour le nouveau compte de :\r\n%s"
     IDS_FERMER              "&Fermer"
     IDS_AJOUTER             "&Ajouter"
+    IDS_RECOVER_WEBSERVICE_ERROR 
+                            "Votre mot de passe swSSO est désynchronisé et la procédure de resynchronisation a échoué. Veuillez contacter votre support."
 END
 
 #endif    // French (France) resources

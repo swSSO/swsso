@@ -616,8 +616,9 @@ int RecoveryChallenge(HWND w)
 		}
 		else
 		{
-			// sinon erreur : message d'erreur à afficher !
-			TRACE((TRACE_INFO,_F_,"Erreur web service recover, ne bascule pas en manuel (gbRecoveryWebserviceManualBackup=FALSE)")); 
+			// sinon message d'erreur et on quitte
+			TRACE((TRACE_INFO,_F_,"Erreur web service recover, ne bascule pas en manuel (gbRecoveryWebserviceManualBackup=FALSE)"));
+			MessageBox(w,GetString(IDS_RECOVER_WEBSERVICE_ERROR),"swSSO",MB_ICONEXCLAMATION | MB_OK);
 			rc=-1; goto end;
 		}
 	}
