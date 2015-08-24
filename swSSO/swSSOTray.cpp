@@ -201,8 +201,13 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						TRACE((TRACE_INFO,_F_, "WM_APP + WM_LBUTTONDBLCLK"));
 						// 0.63B3 : le double click déverrouille si verrouillé, ouvre la config sinon
 						if (gbSSOActif)
+						{
 							// ShowAppNsites(-1); ISSUE#108
-							ShowAppNsites(giLastApplicationConfig,TRUE);
+							if (gbShowLaunchAppWithoutCtrl)
+								ShowLaunchApp();
+							else
+								ShowAppNsites(giLastApplicationConfig,TRUE);
+						}
 						else
 							SSOActivate(w);
 					}

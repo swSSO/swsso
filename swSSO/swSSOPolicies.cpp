@@ -158,6 +158,7 @@ BOOL gbDisplayChangeAppPwdDialog_DefaultValue=TRUE;	// 1.04
 BOOL gbSSOInternetExplorer_DefaultValue=TRUE;		// 1.04
 BOOL gbSSOFirefox_DefaultValue=TRUE;				// 1.04
 BOOL gbSSOChrome_DefaultValue=TRUE;					// 1.04
+BOOL gbShowLaunchAppWithoutCtrl_DefaultValue=FALSE;	// 1.08
 
 // REGKEY_REGKEY_PWDGROUP_COLORS
 COLORREF gtabPwdGroupColors[MAX_COLORS];
@@ -765,6 +766,10 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_CHROME,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbSSOChrome_DefaultValue=(BOOL)dwValue; 
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_SHOW_LAUNCHAPP_WITHOUT_CTRL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowLaunchAppWithoutCtrl_DefaultValue=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -934,6 +939,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbSSOInternetExplorer_DefaultValue=%d",gbSSOInternetExplorer_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"gbSSOFirefox_DefaultValue=%d",gbSSOFirefox_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"gbSSOChrome_DefaultValue=%d",gbSSOChrome_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbShowLaunchAppWithoutCtrl_DefaultValue=%d",gbShowLaunchAppWithoutCtrl_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"REGKEY_HOTKEY ---------"));
 	TRACE((TRACE_INFO,_F_,"gszPastePwd_Text=%s",gszPastePwd_Text));
 	for (i=0;i<giNbPwdGroupColors;i++)

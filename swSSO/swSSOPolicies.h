@@ -280,6 +280,8 @@ extern int  giNbExcludedWindows;
 #define REGVALUE_DEFAULT_INTERNET_EXPLORER		"InternetExplorer"
 #define REGVALUE_DEFAULT_FIREFOX				"Firefox"
 #define REGVALUE_DEFAULT_CHROME					"Chrome"
+#define REGVALUE_DEFAULT_SHOW_LAUNCHAPP_WITHOUT_CTRL	"ShowLaunchAppWithoutCtrl"
+
 
 extern BOOL gbSessionLock_DefaultValue;					// 1.04
 extern BOOL gbInternetCheckVersion_DefaultValue;		// 1.04
@@ -295,6 +297,7 @@ extern BOOL gbDisplayChangeAppPwdDialog_DefaultValue;	// 1.04
 extern BOOL gbSSOInternetExplorer_DefaultValue;			// 1.04
 extern BOOL gbSSOFirefox_DefaultValue;					// 1.04
 extern BOOL gbSSOChrome_DefaultValue;					// 1.04
+extern BOOL gbShowLaunchAppWithoutCtrl_DefaultValue;	// 1.08
 
 //-----------------------------------------------------------------------------
 #define REGKEY_HOTKEY "SOFTWARE\\swSSO\\HotKey"

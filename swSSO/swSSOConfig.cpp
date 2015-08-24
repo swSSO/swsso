@@ -64,6 +64,7 @@ char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1]="";	// 1.03 : valeur du mot de pa
 BOOL gbSSOInternetExplorer=TRUE;		// ISSUE#176
 BOOL gbSSOFirefox=TRUE;					// ISSUE#176
 BOOL gbSSOChrome=TRUE;					// ISSUE#176
+BOOL gbShowLaunchAppWithoutCtrl=FALSE;	// ISSUE#254
 
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
@@ -1162,7 +1163,8 @@ int GetConfigHeader()
 	gbSSOInternetExplorer=GetConfigBoolValue("swSSO","InternetExplorer",gbSSOInternetExplorer_DefaultValue,TRUE); // ISSUE#176
 	gbSSOFirefox=GetConfigBoolValue("swSSO","Firefox",gbSSOFirefox_DefaultValue,TRUE); // ISSUE#176
 	gbSSOChrome=GetConfigBoolValue("swSSO","Chrome",gbSSOChrome_DefaultValue,TRUE); // ISSUE#176
-
+	gbShowLaunchAppWithoutCtrl=GetConfigBoolValue("swSSO","ShowLaunchAppWithoutCtrl",gbShowLaunchAppWithoutCtrl_DefaultValue,TRUE); // ISSUE#254
+	
 	gx=GetPrivateProfileInt("swSSO","x",-1,gszCfgFile);
 	gy=GetPrivateProfileInt("swSSO","y",-1,gszCfgFile);
 	gcx=GetPrivateProfileInt("swSSO","cx",-1,gszCfgFile);
@@ -1383,8 +1385,10 @@ int SaveConfigHeader()
 	WritePrivateProfileString("swSSO","InternetExplorer",gbSSOInternetExplorer?"YES":"NO",gszCfgFile);
 	WritePrivateProfileString("swSSO","Firefox",gbSSOFirefox?"YES":"NO",gszCfgFile);
 	WritePrivateProfileString("swSSO","Chrome",gbSSOChrome?"YES":"NO",gszCfgFile);
-
-	StoreIniEncryptedHash(); // ISSUE#164
+	// ISSUE#254
+	WritePrivateProfileString("swSSO","ShowLaunchAppWithoutCtrl",gbShowLaunchAppWithoutCtrl?"YES":"NO",gszCfgFile);
+	// ISSUE#164
+	StoreIniEncryptedHash(); 
 	rc=0;
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
