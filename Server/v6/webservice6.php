@@ -35,7 +35,7 @@ include('util.php');
 //                   Le client 1.05 et les suivants resteront compatibles avec webservice5.php tant
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
 //------------------------------------------------------------------------------
-// VERSION INTERNE : 6.4.1
+// VERSION INTERNE : 6.4.2
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
