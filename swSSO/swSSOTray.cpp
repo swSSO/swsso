@@ -194,7 +194,10 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							if (AskPwd(NULL,TRUE)!=0) goto end;
 							SSOActivate(w);
 						}
-						ShowLaunchApp();
+						if (gbShowLaunchAppWithoutCtrl)
+							ShowAppNsites(giLastApplicationConfig,TRUE);	
+						else
+							ShowLaunchApp();
 					}
 					else
 					{
