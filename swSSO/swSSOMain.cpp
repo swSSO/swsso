@@ -108,7 +108,7 @@ char gszUserName[UNLEN+1]="";
 
 char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-char gcszK1[]="a1111111";
+char gcszK1[]="11111111";
 
 // 0.91 : pour choix de config (fenêtre ChooseConfig)
 typedef struct
