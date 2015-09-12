@@ -80,6 +80,10 @@ BOOL gbEnableOption_ShowBrowsers=TRUE;
 BOOL gbShowMenu_UploadWithIdPwd=FALSE;			// 1.03 - active le menu "Uploader avec identifiant et mot de passe"
 // ISSUE#204
 BOOL gbShowMenu_RefreshRights=FALSE;
+// ISSUE#256
+int giShowPasswordGroup=2;
+// ISSUE#257
+BOOL gbShowMenu_Quit=TRUE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=0;
@@ -351,6 +355,16 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_REFRESH_RIGHTS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowMenu_RefreshRights=(BOOL)dwValue; 
+
+		// ISSUE#256
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOW_PASSWORD_GROUP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giShowPasswordGroup=dwValue; 
+
+		// ISSUE#257
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_QUIT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Quit=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -866,6 +880,8 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbShowAutoLockOption=%d"			,gbShowAutoLockOption));
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowBrowsers=%d"	,gbEnableOption_ShowBrowsers));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_RefreshRights=%d"		,gbShowMenu_RefreshRights));
+	TRACE((TRACE_INFO,_F_,"giShowPasswordGroup=%d"			,giShowPasswordGroup));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Quit=%d"				,gbShowMenu_Quit));
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));

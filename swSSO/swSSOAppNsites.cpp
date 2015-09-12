@@ -3062,7 +3062,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	gbIsChanging=FALSE;
 	EnableWindow(GetDlgItem(w,IDAPPLY),FALSE); // ISSUE#114
 
-	if (gbEnableOption_ManualPutConfig && gbInternetManualPutConfig)
+	if ((giShowPasswordGroup==2 && gbEnableOption_ManualPutConfig && gbInternetManualPutConfig) || giShowPasswordGroup==1) // ISSUE#256 
 	{
 		ShowWindow(GetDlgItem(w,TX_PWD_GROUP),SW_SHOW);
 		ShowWindow(GetDlgItem(w,TB_PWD_GROUP),SW_SHOW);
@@ -3344,7 +3344,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		SetWindowPos(GetDlgItem(w,TB_ID4_ID)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+185-3+yOffset,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,IMG_ID4_ID)	,NULL,rect.right-30,rect.bottom*1/3+185-1+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		yPosAutoLock=215;
-		if (gbEnableOption_ManualPutConfig && gbInternetManualPutConfig)
+		if ((giShowPasswordGroup==2 && gbEnableOption_ManualPutConfig && gbInternetManualPutConfig) || giShowPasswordGroup==1) // ISSUE#256 
 		{
 			SetWindowPos(GetDlgItem(w,TX_PWD_GROUP)	,NULL,rect.right*2/5+25,rect.bottom*1/3+215+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			SetWindowPos(GetDlgItem(w,TB_PWD_GROUP)	,NULL,rect.right*2/5+25+120,rect.bottom*1/3+215-3+yOffset,rect.right*3/5-180,20,SWP_NOZORDER|SWP_SHOWWINDOW);

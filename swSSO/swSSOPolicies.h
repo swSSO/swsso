@@ -78,6 +78,10 @@
 #define REGVALUE_ENABLEOPTION_SHOWBROWSERS			"ShowBrowsers"
 // ISSUE#204
 #define REGVALUE_SHOWMENU_REFRESH_RIGHTS			"ShowRefreshRightsMenu"
+// ISSUE#256
+#define REGVALUE_SHOW_PASSWORD_GROUP				"ShowPasswordGroup"
+// ISSUE#257
+#define REGVALUE_SHOWMENU_QUIT						"ShowQuitMenu"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -122,6 +126,10 @@ extern BOOL gbShowAutoLockOption;
 extern BOOL gbEnableOption_ShowBrowsers;
 // ISSUE#204
 extern BOOL gbShowMenu_RefreshRights;
+// ISSUE#256
+extern int giShowPasswordGroup;
+// ISSUE#257
+extern BOOL gbShowMenu_Quit;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
