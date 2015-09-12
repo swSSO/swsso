@@ -4819,7 +4819,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					break;
 				case NM_DBLCLK:
-					if (wp==TV_APPLICATIONS && !gbAdmin) // 0.90 correction du bug #86
+					if (wp==TV_APPLICATIONS && !gbAdmin && gbShowMenu_EnableDisable) // 1.08 ISSUE#259
 					{
 						TVActivateSelectedAppOrCateg(w,ACTIVATE_TOGGLE);
 						if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114

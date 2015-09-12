@@ -136,6 +136,12 @@ void SSOActivate(HWND w)
 	}
 	else // DESACTIVATION
 	{
+		// ISSUE#258 : en mode de fonctionnement sans mot de passe, demande le mot de passe admin
+		if (gbNoMasterPwd && gcszK1[0]!='1' && !gbAdmin)
+		{
+			if (AskAdminPwd()!=0) { gbSSOActif=!gbSSOActif ; goto end; }
+		}
+		
 		nid.hIcon=ghIconSystrayInactive;
 		strcpy_s(nid.szTip,sizeof(nid.szTip),gbAdmin?GetString(IDS_SYSTRAY_ADMIN):GetString(IDS_DESACTIVE)); //max64
 		//0.83 : supprime la clé de la mémoire
@@ -155,6 +161,7 @@ void SSOActivate(HWND w)
 	{
 		TRACE((TRACE_ERROR,_F_,"Shell_NotifyIcon[hIcon=0x%08lx szTip='%s']",nid.hIcon,nid.szTip));
 	}
+end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -353,6 +360,11 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_QUITTER:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_QUITTER"));
+					// ISSUE#257 : en mode de fonctionnement sans mot de passe, demande le mot de passe admin
+					if (gbNoMasterPwd && gcszK1[0]!='1' && !gbAdmin)
+					{
+						if (AskAdminPwd()!=0) goto end;
+					}
 					gbWillTerminate=TRUE;
 					PostQuitMessage(0);
 					break;

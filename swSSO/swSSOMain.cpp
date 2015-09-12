@@ -38,8 +38,8 @@
 #include "ISimpleDOMDocument_i.c"
 
 // Un peu de globales...
-const char gcszCurrentVersion[]="107";	// 101 = 1.01
-const char gcszCurrentBeta[]="1083";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentVersion[]="108";	// 101 = 1.01
+const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -108,7 +108,7 @@ char gszUserName[UNLEN+1]="";
 
 char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-char gcszK1[]="11111111";
+char gcszK1[]="a1111111";
 
 // 0.91 : pour choix de config (fenêtre ChooseConfig)
 typedef struct
