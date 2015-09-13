@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "swSSO"
-#define MyAppVersion "1.07"
+#define MyAppVersion "1.08"
 #define MyAppURL "www.swsso.fr"
 #define MyAppExeName "swSSO.exe"
 
@@ -40,10 +40,10 @@ Source: "E:\swSSO\Dev\x64\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignorev
 Source: "E:\swSSO\Dev\Release\swSSOHotKey.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-Name: "{commonstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startupicon
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "%appdata%\swSSO\swSSO.ini"
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "%appdata%\swSSO\swSSO.ini"; Tasks: desktopicon
+Name: "{commonstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "%appdata%\swSSO\swSSO.ini"; Tasks: startupicon
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "%appdata%\swSSO\swSSO.ini"; Tasks: quicklaunchicon
 
 [Run]
 Filename: "{app}\swSSOSVC.exe"; Parameters: "install"
@@ -61,7 +61,7 @@ Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\services\swSSOCM\NetworkProvider
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; ValueType: dword; ValueName: "PasswordChoiceLevel"; ValueData: "4"
 
 [UninstallDelete]
-Type: files; Name: "{userappdata}\swSSO.ini"
+Type: files; Name: "%appdata%\swSSO\swSSO.ini"
 
 [CustomMessages]
 french.CreateStartupIcon=Lancer swSSO au démarrage de Windows

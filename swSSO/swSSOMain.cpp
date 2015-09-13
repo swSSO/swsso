@@ -2216,6 +2216,22 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 */
 	if (*gszCfgVersion==0) // version <0.50 ou premier lancement...
 	{
+		// ISSUE#260 : crée le répertoire qui doit contenir le fichier .ini
+		char *p=NULL;
+		p=strrchr(gszCfgFile,'\\');
+		if (p!=NULL)
+		{
+			*p=0;
+			TRACE((TRACE_DEBUG,_F_,"Creation dossier pour le .ini : %s",gszCfgFile));
+			if (!CreateDirectory(gszCfgFile,NULL))
+			{
+				TRACE((TRACE_ERROR,_F_,"CreateDirectory(%s)=%d",gszCfgFile,GetLastError()));
+				iError=-1;
+				goto end;
+			}
+			*p='\\';
+		}
+
 		strcpy_s(gszCfgVersion,4,gcszCfgVersion);
 		if (gbPasswordChoiceLevel==PP_WINDOWS) // MODE chainage mot de passe Windows, transparent pour l'utilisateur
 		{
