@@ -2226,10 +2226,10 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			if (!CreateDirectory(gszCfgFile,NULL))
 			{
 				TRACE((TRACE_ERROR,_F_,"CreateDirectory(%s)=%d",gszCfgFile,GetLastError()));
-				iError=-1;
-				goto end;
+				// on continue quand même, sans doute il existe déjà, sinon pas grave ça merdera plus loin
 			}
 			*p='\\';
+			TRACE((TRACE_DEBUG,_F_,"Chemin complet du .ini : %s",gszCfgFile));
 		}
 
 		strcpy_s(gszCfgVersion,4,gcszCfgVersion);
