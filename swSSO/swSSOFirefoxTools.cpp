@@ -95,8 +95,17 @@ void KBSim(BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 	BYTE hiVk,loVk;
 	WORD wKeyScan;
 	BOOL bCapsLock=FALSE;
-	
-	if (bErase) // pour effacer, je fais tab et shift-tab, ce qui a pour effet
+
+	// en 1.09, déplacement du control du caps lock tout au début
+	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
+	{
+		bCapsLock=TRUE;
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+	}
+
+
+	/*if (bErase) // pour effacer, je fais tab et shift-tab, ce qui a pour effet
 		        // de sélectionner le champ complet.
 	{
 		Sleep(iTempo);
@@ -107,14 +116,16 @@ void KBSim(BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 		keybd_event(VK_TAB,LOBYTE(MapVirtualKey(VK_TAB,0)),0,0);
 		keybd_event(VK_TAB,LOBYTE(MapVirtualKey(VK_TAB,0)),KEYEVENTF_KEYUP,0);
 		keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
-	}
-
-	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
-	{
-		bCapsLock=TRUE;
-		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
-		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
-	}
+	}*/
+	// ISSUE#264 : changement de la technique d'effacement, on fait CTRL+A puis DEL, ça évite les changements de champs.
+	keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0);
+	wKeyScan=VkKeyScan('a');
+	loVk=LOBYTE(wKeyScan);
+	keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
+	keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
+	keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0);
+	keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),0,0);
+	keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),KEYEVENTF_KEYUP,0);
 
 	Sleep(iTempo);
 
@@ -173,11 +184,12 @@ void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szVal
 	hr=pAccessible->accSelect(SELFLAG_TAKEFOCUS,index);
 
 	// bidouille sur 0.95 pour crédit du nord
-	if (SysStringLen(bstrPreviousValue)==17) // votre identifiant ou code confidentiel
+	// 1.09B1 : a priori plus nécessaire avec le nouveau mécanisme de suppression CTRL+A+DEL, c'était le tab qui provoquait le pb
+	/*if (SysStringLen(bstrPreviousValue)==17) // votre identifiant ou code confidentiel
 	{
 		bErase=FALSE;
 		TRACE((TRACE_INFO,_F_,"bidouille credit du nord"));
-	}
+	}*/
 	/*if (bErase) 
 	{
 		KBSim(bErase,0,"",FALSE);
