@@ -108,7 +108,7 @@ char gszUserName[UNLEN+1]="";
 
 char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
-char gcszK1[]="11111111";
+char gcszK1[]="a1111111";
 
 // 0.91 : pour choix de config (fenêtre ChooseConfig)
 typedef struct
@@ -1775,7 +1775,11 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 		memcpy(szTemp+8,gcszK2,8);
 		memcpy(szTemp+16,gcszK3,8);
 		memcpy(szTemp+24,gcszK4,8);
-		memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+		// ISSUE#262 : force le username en minuscule
+		//memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+		int i,len;
+		len=min(strlen(gszUserName),16);
+		for (i=0;i<len;i++) szTemp[32+i]=(char)tolower(gszUserName[i]);
 
 		if (CheckMasterPwd(szTemp)==0)
 		{
@@ -2267,7 +2271,13 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			memcpy(szTemp+8,gcszK2,8);
 			memcpy(szTemp+16,gcszK3,8);
 			memcpy(szTemp+24,gcszK4,8);
-			memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+			
+			// ISSUE#262 : force le username en minuscule
+			//memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+			int i,len;
+			len=min(strlen(gszUserName),16);
+			for (i=0;i<len;i++) szTemp[32+i]=(char)tolower(gszUserName[i]);
+			
 			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData,FALSE);
 			StoreMasterPwd(szTemp);
 			SecureZeroMemory(szTemp,LEN_PWD+1);

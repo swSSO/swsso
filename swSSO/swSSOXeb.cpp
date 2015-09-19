@@ -496,6 +496,36 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		// Vérification OK, on peut mettre la fenêtre au premier plan et démarrer les saisies 
 		TRACE((TRACE_INFO,_F_,"Verifications OK, demarrage des saisies (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
 		SetForegroundWindow(ptSuivi->w);
+		
+		// ISSUE#266 : Bidouille contournement incident ouvert sur chromium : 533830
+		if (iBrowser==BROWSER_CHROME && gpAccessibleChromeURL!=NULL)
+		{
+			VARIANT vtSelf;
+			VARIANT vtURLBarState;
+			vtSelf.vt=VT_I4;
+			vtSelf.lVal=CHILDID_SELF;
+			hr=gpAccessibleChromeURL->get_accState(vtSelf,&vtURLBarState);
+			TRACE((TRACE_DEBUG,_F_,"get_accState() vtURLBarState.lVal=0x%08lx",vtURLBarState.lVal));
+			if (vtURLBarState.lVal & STATE_SYSTEM_FOCUSED)
+			{
+				TRACE((TRACE_INFO,_F_,"BIDOUILLE BARRE URL CHROME !"));
+				KBSimEx(w,"[TAB]","","","","","");
+				int iAntiLoop=0;
+				VARIANT vtId1State;
+				vtId1State.lVal=0;
+				while ((!(vtId1State.lVal & STATE_SYSTEM_FOCUSED)) && iAntiLoop <10)
+				{
+					KBSimEx(w,"[TAB]","","","","","");
+					Sleep(10);
+					hr=ptSuivi->pTextFields[iId1Index]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+					TRACE((TRACE_DEBUG,_F_,"accSelect()=0x%08lx",hr));
+					hr=ptSuivi->pTextFields[iId1Index]->get_accState(vtSelf,&vtId1State);
+					TRACE((TRACE_DEBUG,_F_,"get_accState()=0x%08lx vtId1State.lVal=0x%08lx",hr,vtId1State.lVal));
+					iAntiLoop++;
+				}
+			}
+		}
+		// fin bidouille chrome
 		if (iId1Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId1Index],vtChild,gptActions[ptSuivi->iAction].szId1Value);
 		if (iId2Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,gptActions[ptSuivi->iAction].szId2Value);
 		if (iId3Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,gptActions[ptSuivi->iAction].szId3Value);
@@ -554,8 +584,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		// Validation si demandée
 		if (*gptActions[ptSuivi->iAction].szValidateName!=0)
 		{
-			Sleep(200);
-
+			Sleep(100);
 			// ISSUE#101
 			// KBSimEx(NULL,gptActions[ptSuivi->iAction].szValidateName,"","","","","");
 			// ISSUE#101 suite : on autorise aussi le mot de passe sinon c'est naze...
@@ -591,6 +620,7 @@ end:
 	if (pNiveau0!=NULL) pNiveau0->Release();
 	if (pChildNiveau1!=NULL) pChildNiveau1->Release();
 	if (pChildNiveau2!=NULL) pChildNiveau2->Release();
+	if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
