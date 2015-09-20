@@ -204,7 +204,7 @@ void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szVal
 	}*/
 	
 	// 0.93B1 : si %xxx%, saisie de la valeur de la variable d'environnement
-	KBSim(TRUE,150,GetComputedValue(szValue),FALSE); // 1.09B1 : bErase à TRUE toujours
+	KBSim(TRUE,100,GetComputedValue(szValue),FALSE); // 1.09B1 : bErase à TRUE toujours
 
 	//if (bstrPreviousValue!=NULL) SysFreeString(bstrPreviousValue);
 	TRACE((TRACE_LEAVE,_F_, ""));

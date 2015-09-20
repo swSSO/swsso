@@ -508,19 +508,33 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			TRACE((TRACE_DEBUG,_F_,"get_accState() vtURLBarState.lVal=0x%08lx",vtURLBarState.lVal));
 			if (vtURLBarState.lVal & STATE_SYSTEM_FOCUSED)
 			{
-				TRACE((TRACE_INFO,_F_,"BIDOUILLE BARRE URL CHROME !"));
+				TRACE((TRACE_INFO,_F_,"BIDOUILLE BARRE URL CHROME !")); // on tabule jusqu'à mettre le focus sur champ id1 ou pwd
 				KBSimEx(w,"[TAB]","","","","","");
 				int iAntiLoop=0;
-				VARIANT vtId1State;
-				vtId1State.lVal=0;
-				while ((!(vtId1State.lVal & STATE_SYSTEM_FOCUSED)) && iAntiLoop <10)
+				VARIANT vtIdOrPwdState;
+				vtIdOrPwdState.lVal=0;
+				while ((!(vtIdOrPwdState.lVal & STATE_SYSTEM_FOCUSED)) && iAntiLoop <10)
 				{
 					KBSimEx(w,"[TAB]","","","","","");
 					Sleep(10);
-					hr=ptSuivi->pTextFields[iId1Index]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
-					TRACE((TRACE_DEBUG,_F_,"accSelect()=0x%08lx",hr));
-					hr=ptSuivi->pTextFields[iId1Index]->get_accState(vtSelf,&vtId1State);
-					TRACE((TRACE_DEBUG,_F_,"get_accState()=0x%08lx vtId1State.lVal=0x%08lx",hr,vtId1State.lVal));
+					if (iId1Index>=0)
+					{
+						hr=ptSuivi->pTextFields[iId1Index]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+						TRACE((TRACE_DEBUG,_F_,"accSelect(id1)=0x%08lx",hr));
+						hr=ptSuivi->pTextFields[iId1Index]->get_accState(vtSelf,&vtIdOrPwdState);
+						TRACE((TRACE_DEBUG,_F_,"get_accState(id1)=0x%08lx vtId1State.lVal=0x%08lx",hr,vtIdOrPwdState.lVal));
+					}
+					else if (ptSuivi->iPwdIndex!=-1)
+					{
+						hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+						TRACE((TRACE_DEBUG,_F_,"accSelect(pwd)=0x%08lx",hr));
+						hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->get_accState(vtSelf,&vtIdOrPwdState);
+						TRACE((TRACE_DEBUG,_F_,"get_accState(pwd)=0x%08lx vtId1State.lVal=0x%08lx",hr,vtIdOrPwdState.lVal));
+					}
+					else // tant pis, cas à peu près impossible, on sort
+					{
+						break;
+					}
 					iAntiLoop++;
 				}
 			}
@@ -575,7 +589,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
 				if (pszPassword!=NULL) 
 				{
-					KBSim(FALSE,200,pszPassword,TRUE);				
+					KBSim(FALSE,100,pszPassword,TRUE);				
 					SecureZeroMemory(pszPassword,strlen(pszPassword));
 					free(pszPassword);
 				}
