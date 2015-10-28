@@ -95,8 +95,17 @@ void KBSim(BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 	BYTE hiVk,loVk;
 	WORD wKeyScan;
 	BOOL bCapsLock=FALSE;
-	
-	if (bErase) // pour effacer, je fais tab et shift-tab, ce qui a pour effet
+
+	// en 1.09, déplacement du control du caps lock tout au début
+	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
+	{
+		bCapsLock=TRUE;
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+	}
+
+
+	/*if (bErase) // pour effacer, je fais tab et shift-tab, ce qui a pour effet
 		        // de sélectionner le champ complet.
 	{
 		Sleep(iTempo);
@@ -107,16 +116,17 @@ void KBSim(BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 		keybd_event(VK_TAB,LOBYTE(MapVirtualKey(VK_TAB,0)),0,0);
 		keybd_event(VK_TAB,LOBYTE(MapVirtualKey(VK_TAB,0)),KEYEVENTF_KEYUP,0);
 		keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
-	}
-
-	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
-	{
-		bCapsLock=TRUE;
-		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
-		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
-	}
-
+	}*/
+	// ISSUE#264 : changement de la technique d'effacement, on fait CTRL+A puis DEL, ça évite les changements de champs.
 	Sleep(iTempo);
+	keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0);
+	wKeyScan=VkKeyScan('a');
+	loVk=LOBYTE(wKeyScan);
+	keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
+	keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
+	keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0);
+	keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),0,0);
+	keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),KEYEVENTF_KEYUP,0);
 
 	for (i=0;i<len;i++)
 	{
@@ -157,27 +167,36 @@ void KBSim(BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 //-----------------------------------------------------------------------------
 void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szValue)
 {
-	TRACE((TRACE_ENTER,_F_, "pAccessible=0x%08lx szValue=%s",pAccessible,szValue));
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx pAccessible=0x%08lx szValue=%s",w,pAccessible,szValue));
 	
 	HRESULT hr;
-	BSTR bstrPreviousValue=NULL;
-	BOOL bErase=FALSE;
+	
+	//BSTR bstrPreviousValue=NULL;
+	// BOOL bErase=FALSE;
 
+	// 1.09B1 : bErase à TRUE toujours, inutile de faire ce test
+	/* 
 	hr=pAccessible->get_accValue(index,&bstrPreviousValue);
 	TRACE((TRACE_INFO,_F_,"pAccessible->get_accValue() : hr=0x%08lx value='%S'",hr,bstrPreviousValue));
 	if (FAILED(hr))
 		bErase=TRUE; // pas réussi à lire le champ, on l'efface
 	else
 		bErase=(SysStringLen(bstrPreviousValue)!=0); // efface si champ non vide
+	*/
+
 	SetForegroundWindow(w);
 	hr=pAccessible->accSelect(SELFLAG_TAKEFOCUS,index);
+	TRACE((TRACE_DEBUG,_F_,"pAccessible->accSelect(%d) : hr=0x%08lx",index.lVal,hr));
 
 	// bidouille sur 0.95 pour crédit du nord
-	if (SysStringLen(bstrPreviousValue)==17) // votre identifiant ou code confidentiel
+	// 1.09B1 : a priori plus nécessaire avec le nouveau mécanisme de suppression CTRL+A+DEL, c'était le tab qui provoquait le pb
+	/*if (SysStringLen(bstrPreviousValue)==17) // votre identifiant ou code confidentiel
 	{
 		bErase=FALSE;
 		TRACE((TRACE_INFO,_F_,"bidouille credit du nord"));
-	}
+	}*/
+	
+	// 1.09B1 : bErase à TRUE toujours, inutile de faire ce test
 	/*if (bErase) 
 	{
 		KBSim(bErase,0,"",FALSE);
@@ -185,9 +204,9 @@ void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szVal
 	}*/
 	
 	// 0.93B1 : si %xxx%, saisie de la valeur de la variable d'environnement
-	KBSim(bErase,150,GetComputedValue(szValue),FALSE);
+	KBSim(TRUE,100,GetComputedValue(szValue),FALSE); // 1.09B1 : bErase à TRUE toujours
 
-	if (bstrPreviousValue!=NULL) SysFreeString(bstrPreviousValue);
+	//if (bstrPreviousValue!=NULL) SysFreeString(bstrPreviousValue);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 

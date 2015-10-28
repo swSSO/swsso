@@ -32,6 +32,7 @@
 //-----------------------------------------------------------------------------
 
 #include "stdafx.h"
+IAccessible *gpAccessibleChromeURL=NULL;
 
 //-----------------------------------------------------------------------------
 // GetChromePopupURL()
@@ -290,13 +291,15 @@ char *GetChromeURL(HWND w)
 			vtChild.vt=VT_I4;
 			vtChild.lVal=0; // cette fois, 0, oui, car c'est le nom de l'objet lui-même que l'on cherche.
 			hr=pChildNiveau6->get_accValue(vtChild,&bstrURL);
-			if (hr!=S_OK) { TRACE((TRACE_ERROR,_F_,"pChildNiveau6->get_accName(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			if (hr!=S_OK) { TRACE((TRACE_ERROR,_F_,"pChildNiveau6->get_accValue(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
 			TRACE((TRACE_DEBUG,_F_,"pChildNiveau6->get_accValue(%ld)='%S'",vtChild.lVal,bstrURL));
 			bstrLen=SysStringLen(bstrURL);
 			pszURL=(char*)malloc(bstrLen+1);
 			if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",bstrLen+1)); goto end; }
 			sprintf_s(pszURL,bstrLen+1,"%S",bstrURL);
 			TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
+			gpAccessibleChromeURL=pChildNiveau6;
+			pChildNiveau6->AddRef();
 		}
 	}
 	if (wURL!=NULL)

@@ -82,7 +82,10 @@ static BOOL gbShowGeneratedPwd;
 static char buf2048[2048]; // gros buffer pas beau
 static HBRUSH ghTabBrush=NULL;
 
+int iUsername=0;
 char gcszUsername[]="%USERNAME%";
+char gcszUsernameUpper[]="%UPPER_USERNAME%";
+char gcszUsernameLower[]="%LOWER_USERNAME%";
 char gcszADPassword[]="%ADPASSWORD%";
 
 #define TB_PWD_SUBCLASS_ID 1
@@ -2410,10 +2413,23 @@ void ShowApplicationDetails(HWND w,int iAction)
 	SetDlgItemText(w,TB_ID, gptActions[iAction].szId1Value);
 	if (gbAdmin) 
 	{
-		if (strcmp(gptActions[iAction].szId1Value,gcszUsername)==0) 
+		if (strcmp(gptActions[iAction].szId1Value,gcszUsername)==0)
 		{
 			CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
 			EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+			iUsername=0;
+		}
+		else if (strcmp(gptActions[iAction].szId1Value,gcszUsernameUpper)==0)
+		{
+			CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
+			EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+			iUsername=1;
+		}
+		else if (strcmp(gptActions[iAction].szId1Value,gcszUsernameLower)==0)
+		{
+			CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
+			EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+			iUsername=2;
 		}
 		else
 		{
@@ -4308,7 +4324,21 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case CK_AD_ID:
 					if (IsDlgButtonChecked(w,CK_AD_ID))
 					{
-						SetDlgItemText(w,TB_ID,gcszUsername);
+						if (iUsername==0)
+						{
+							SetDlgItemText(w,TB_ID,gcszUsernameUpper);
+							iUsername=1;
+						}
+						else if (iUsername==1)
+						{
+							SetDlgItemText(w,TB_ID,gcszUsernameLower);
+							iUsername=2;
+						}
+						else if (iUsername==2)
+						{
+							SetDlgItemText(w,TB_ID,gcszUsername);
+							iUsername=0;
+						}
 						EnableWindow(GetDlgItem(w,TB_ID),FALSE);
 					}
 					else
@@ -4342,6 +4372,19 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						{
 							CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
 							EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+							iUsername=0;
+						}
+						else if (strcmp(szId,gcszUsernameUpper)==0)
+						{
+							CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
+							EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+							iUsername=1;
+						}
+						else if (strcmp(szId,gcszUsernameLower)==0)
+						{
+							CheckDlgButton(w,CK_AD_ID,BST_CHECKED);
+							EnableWindow(GetDlgItem(w,TB_ID),FALSE);
+							iUsername=2;
 						}
 						else
 						{

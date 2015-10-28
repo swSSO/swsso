@@ -496,6 +496,50 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		// Vérification OK, on peut mettre la fenêtre au premier plan et démarrer les saisies 
 		TRACE((TRACE_INFO,_F_,"Verifications OK, demarrage des saisies (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
 		SetForegroundWindow(ptSuivi->w);
+		
+		// ISSUE#266 : Bidouille contournement incident ouvert sur chromium : 533830
+		if (iBrowser==BROWSER_CHROME && gpAccessibleChromeURL!=NULL)
+		{
+			VARIANT vtSelf;
+			VARIANT vtURLBarState;
+			vtSelf.vt=VT_I4;
+			vtSelf.lVal=CHILDID_SELF;
+			hr=gpAccessibleChromeURL->get_accState(vtSelf,&vtURLBarState);
+			TRACE((TRACE_DEBUG,_F_,"get_accState() vtURLBarState.lVal=0x%08lx",vtURLBarState.lVal));
+			if (vtURLBarState.lVal & STATE_SYSTEM_FOCUSED)
+			{
+				TRACE((TRACE_INFO,_F_,"BIDOUILLE BARRE URL CHROME !")); // on tabule jusqu'à mettre le focus sur champ id1 ou pwd
+				KBSimEx(w,"[TAB]","","","","","");
+				int iAntiLoop=0;
+				VARIANT vtIdOrPwdState;
+				vtIdOrPwdState.lVal=0;
+				while ((!(vtIdOrPwdState.lVal & STATE_SYSTEM_FOCUSED)) && iAntiLoop <10)
+				{
+					KBSimEx(w,"[TAB]","","","","","");
+					Sleep(10);
+					if (iId1Index>=0)
+					{
+						hr=ptSuivi->pTextFields[iId1Index]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+						TRACE((TRACE_DEBUG,_F_,"accSelect(id1)=0x%08lx",hr));
+						hr=ptSuivi->pTextFields[iId1Index]->get_accState(vtSelf,&vtIdOrPwdState);
+						TRACE((TRACE_DEBUG,_F_,"get_accState(id1)=0x%08lx vtId1State.lVal=0x%08lx",hr,vtIdOrPwdState.lVal));
+					}
+					else if (ptSuivi->iPwdIndex!=-1)
+					{
+						hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+						TRACE((TRACE_DEBUG,_F_,"accSelect(pwd)=0x%08lx",hr));
+						hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->get_accState(vtSelf,&vtIdOrPwdState);
+						TRACE((TRACE_DEBUG,_F_,"get_accState(pwd)=0x%08lx vtId1State.lVal=0x%08lx",hr,vtIdOrPwdState.lVal));
+					}
+					else // tant pis, cas à peu près impossible, on sort
+					{
+						break;
+					}
+					iAntiLoop++;
+				}
+			}
+		}
+		// fin bidouille chrome
 		if (iId1Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId1Index],vtChild,gptActions[ptSuivi->iAction].szId1Value);
 		if (iId2Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,gptActions[ptSuivi->iAction].szId2Value);
 		if (iId3Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,gptActions[ptSuivi->iAction].szId3Value);
@@ -545,7 +589,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
 				if (pszPassword!=NULL) 
 				{
-					KBSim(FALSE,200,pszPassword,TRUE);				
+					KBSim(FALSE,100,pszPassword,TRUE);				
 					SecureZeroMemory(pszPassword,strlen(pszPassword));
 					free(pszPassword);
 				}
@@ -554,8 +598,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		// Validation si demandée
 		if (*gptActions[ptSuivi->iAction].szValidateName!=0)
 		{
-			Sleep(200);
-
+			Sleep(100);
 			// ISSUE#101
 			// KBSimEx(NULL,gptActions[ptSuivi->iAction].szValidateName,"","","","","");
 			// ISSUE#101 suite : on autorise aussi le mot de passe sinon c'est naze...
@@ -591,6 +634,7 @@ end:
 	if (pNiveau0!=NULL) pNiveau0->Release();
 	if (pChildNiveau1!=NULL) pChildNiveau1->Release();
 	if (pChildNiveau2!=NULL) pChildNiveau2->Release();
+	if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;

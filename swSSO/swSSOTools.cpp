@@ -1377,12 +1377,32 @@ char *GetComputedValue(const char *szValue)
 	{
 		if (szValue[0]=='%' && szValue[len-1]=='%')
 		{
-			strncpy_s(szCopyOfValue,sizeof(szCopyOfValue),szValue+1,len-2);
-			rc=GetEnvironmentVariable(szCopyOfValue,gszComputedValue,sizeof(gszComputedValue));
-			if (rc==0)
-			{ 
-				TRACE((TRACE_ERROR,_F_,"GetEnvironmentVariable(%s)=%d",szCopyOfValue,GetLastError()));
-				// Echec, gszComputedValue a déjà été initialisée donc on ne fait rien de plus
+			// ISSUE#261 : expand spécial pour %USERNAME%
+			if (strcmp(szValue,"%USERNAME%")==0)
+			{
+				strcpy_s(gszComputedValue,sizeof(szCopyOfValue),gszUserName);
+			}
+			else if (strcmp(szValue,"%UPPER_USERNAME%")==0)
+			{
+				int i;
+				int lenUserName=strlen(gszUserName);
+				for (i=0;i<=lenUserName;i++) { gszComputedValue[i]=(char)toupper(gszUserName[i]); }
+			}
+			else if (strcmp(szValue,"%LOWER_USERNAME%")==0)
+			{
+				int i;
+				int lenUserName=strlen(gszUserName);
+				for (i=0;i<=lenUserName;i++) { gszComputedValue[i]=(char)tolower(gszUserName[i]); }
+			}
+			else
+			{
+				strncpy_s(szCopyOfValue,sizeof(szCopyOfValue),szValue+1,len-2);
+				rc=GetEnvironmentVariable(szCopyOfValue,gszComputedValue,sizeof(gszComputedValue));
+				if (rc==0)
+				{ 
+					TRACE((TRACE_ERROR,_F_,"GetEnvironmentVariable(%s)=%d",szCopyOfValue,GetLastError()));
+					// Echec, gszComputedValue a déjà été initialisée donc on ne fait rien de plus
+				}
 			}
 		}
 	}
@@ -1714,6 +1734,7 @@ static int CALLBACK EnumBrowserProc(HWND w, LPARAM lp)
 	else if ((strncmp(szClassName,"Chrome_WidgetWin_",17)==0)  && (pEnumBrowser->iPopupType==POPUP_CHROME)) // Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
 	{
 		pszURL=GetChromeURL(w);
+		if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto end; }
 	}
 	if (pszURL!=NULL) // on a trouvé un navigateur du même type que la popup et on a réussi à lire l'URL, on compare avec l'URL recherchée !

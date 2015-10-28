@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="108";	// 101 = 1.01
-const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1091";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -1775,7 +1775,13 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 		memcpy(szTemp+8,gcszK2,8);
 		memcpy(szTemp+16,gcszK3,8);
 		memcpy(szTemp+24,gcszK4,8);
-		memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+
+		// ISSUE#262 : force le username en minuscule
+		//memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+		int i,len;
+		len=min(strlen(gszUserName),16);
+		for (i=0;i<len;i++) szTemp[32+i]=(char)tolower(gszUserName[i]);
+		TRACE((TRACE_PWD,_F_,"sel=%s",szTemp));
 
 		if (CheckMasterPwd(szTemp)==0)
 		{
@@ -2267,7 +2273,14 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			memcpy(szTemp+8,gcszK2,8);
 			memcpy(szTemp+16,gcszK3,8);
 			memcpy(szTemp+24,gcszK4,8);
-			memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+
+			// ISSUE#262 : force le username en minuscule
+			//memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
+			int i,len;
+			len=min(strlen(gszUserName),16);
+			for (i=0;i<len;i++) szTemp[32+i]=(char)tolower(gszUserName[i]);
+			TRACE((TRACE_PWD,_F_,"sel=%s",szTemp));
+
 			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData,FALSE);
 			StoreMasterPwd(szTemp);
 			SecureZeroMemory(szTemp,LEN_PWD+1);
