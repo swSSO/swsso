@@ -589,7 +589,23 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
 				if (pszPassword!=NULL) 
 				{
-					KBSim(FALSE,100,pszPassword,TRUE);				
+					// 1.09B2 : essaie de faire put_accValue avant de se rabattre sur la simulation de frappe
+					BSTR bstrValue=GetBSTRFromSZ(pszPassword);
+					hr=S_OK;
+					if (bstrValue!=NULL)
+					{
+						hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->put_accValue(vtChild,bstrValue);
+						TRACE((TRACE_INFO,_F_,"pAccessible->put_accValue() : hr=0x%08lx",hr));
+					}
+					if (bstrValue==NULL || FAILED(hr))
+					{
+						KBSim(FALSE,100,pszPassword,TRUE);			
+					}
+					if (bstrValue!=NULL)
+					{
+						SecureZeroMemory(bstrValue,SysStringByteLen(bstrValue));
+						SysFreeString(bstrValue); bstrValue=NULL;
+					}
 					SecureZeroMemory(pszPassword,strlen(pszPassword));
 					free(pszPassword);
 				}

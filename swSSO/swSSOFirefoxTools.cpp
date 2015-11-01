@@ -170,43 +170,25 @@ void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szVal
 	TRACE((TRACE_ENTER,_F_, "w=0x%08lx pAccessible=0x%08lx szValue=%s",w,pAccessible,szValue));
 	
 	HRESULT hr;
+	BSTR bstrValue=NULL;
 	
-	//BSTR bstrPreviousValue=NULL;
-	// BOOL bErase=FALSE;
-
-	// 1.09B1 : bErase à TRUE toujours, inutile de faire ce test
-	/* 
-	hr=pAccessible->get_accValue(index,&bstrPreviousValue);
-	TRACE((TRACE_INFO,_F_,"pAccessible->get_accValue() : hr=0x%08lx value='%S'",hr,bstrPreviousValue));
-	if (FAILED(hr))
-		bErase=TRUE; // pas réussi à lire le champ, on l'efface
-	else
-		bErase=(SysStringLen(bstrPreviousValue)!=0); // efface si champ non vide
-	*/
-
 	SetForegroundWindow(w);
 	hr=pAccessible->accSelect(SELFLAG_TAKEFOCUS,index);
 	TRACE((TRACE_DEBUG,_F_,"pAccessible->accSelect(%d) : hr=0x%08lx",index.lVal,hr));
 
-	// bidouille sur 0.95 pour crédit du nord
-	// 1.09B1 : a priori plus nécessaire avec le nouveau mécanisme de suppression CTRL+A+DEL, c'était le tab qui provoquait le pb
-	/*if (SysStringLen(bstrPreviousValue)==17) // votre identifiant ou code confidentiel
+	// 1.09B2 : tente de faire put_accValue : si non implémenté, retour à la simulation de frappe clavier
+	bstrValue=GetBSTRFromSZ(GetComputedValue(szValue));
+	hr=S_OK;
+	if (bstrValue!=NULL)
 	{
-		bErase=FALSE;
-		TRACE((TRACE_INFO,_F_,"bidouille credit du nord"));
-	}*/
-	
-	// 1.09B1 : bErase à TRUE toujours, inutile de faire ce test
-	/*if (bErase) 
+		hr=pAccessible->put_accValue(index,bstrValue);
+		TRACE((TRACE_INFO,_F_,"pAccessible->put_accValue() : hr=0x%08lx",hr));
+	}
+	if (bstrValue==NULL || FAILED(hr))
 	{
-		KBSim(bErase,0,"",FALSE);
-		hr=pAccessible->accSelect(SELFLAG_TAKEFOCUS,index);
-	}*/
-	
-	// 0.93B1 : si %xxx%, saisie de la valeur de la variable d'environnement
-	KBSim(TRUE,100,GetComputedValue(szValue),FALSE); // 1.09B1 : bErase à TRUE toujours
-
-	//if (bstrPreviousValue!=NULL) SysFreeString(bstrPreviousValue);
+		KBSim(TRUE,100,GetComputedValue(szValue),FALSE); // 1.09B1 : bErase à TRUE toujours
+	}
+	if (bstrValue!=NULL) SysFreeString(bstrValue);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
