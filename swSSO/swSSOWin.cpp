@@ -581,7 +581,9 @@ static int CALLBACK CheckURLProc(HWND w, LPARAM lp)
 	BSTR bstrName=NULL;
 
 	TRACE((TRACE_DEBUG,_F_,"GetDlgCtrlID=%d",GetDlgCtrlID(w)));
-	if (GetDlgCtrlID(w)==((T_CHECK_URL*)lp)->iCtrlURL) // champ trouvé, il faut encore vérifier son libellé
+	// champ trouvé ou non recherché car * (ISSUE#271), il faut vérifier son libellé
+	if (GetDlgCtrlID(w)==((T_CHECK_URL*)lp)->iCtrlURL ||
+		((T_CHECK_URL*)lp)->iCtrlURL==-9999)
 	{
 		TRACE((TRACE_DEBUG,_F_,"Champ %d trouve, on verifie son libelle",((T_CHECK_URL*)lp)->iCtrlURL));
 		GetWindowText(w,szCtrlURL,sizeof(szCtrlURL));
@@ -607,7 +609,16 @@ static int CALLBACK CheckURLProc(HWND w, LPARAM lp)
 				((T_CHECK_URL*)lp)->bFound=TRUE;
 			}
 		}
-		rc=FALSE; // libellé correct ou pas, on arrête l'énum car on a trouvé un champ avec le bon ID donc inutile d'espérer en trouver un autre
+		// ISSUE#271 : si *, on ne vérifie
+		if (((T_CHECK_URL*)lp)->iCtrlURL==-9999)
+		{
+			if (((T_CHECK_URL*)lp)->bFound) 
+				rc=FALSE; // si trouvé, on arrête l'énumération
+			else
+				rc=TRUE; // libellé pas trouvé, on continue
+		}
+		else
+			rc=FALSE;// libellé correct ou pas, on arrête l'énum car on a trouvé un champ avec le bon ID donc inutile d'espérer en trouver un autre
 	}
 end:
 	if (bstrName!=NULL) SysFreeString(bstrName);
@@ -640,7 +651,14 @@ BOOL CheckURL(HWND w,int iAction)
 		*pszURL=0;
 		if ((pszURL+1)!=0)
 		{
-			iCtrlURL=atoi(szURL);
+			if (*szURL=='*') // ISSUE#271 : si l'id de contrôle est *, il suffit qu'un champ ait le contenu indiqué après le : pour déclencher le SSO
+			{
+				iCtrlURL=-9999;
+			}
+			else
+			{
+				iCtrlURL=atoi(szURL);
+			}
 			pszURL++;
 		}
 	}
