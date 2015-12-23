@@ -196,7 +196,7 @@ end:
 // Le child de niveau 2 a 4 childs, il faut prendre le 3eme.
 // Le child de niveau 3 a 3 childs, il faut prendre le 2eme.
 // Le child de niveau 4 a 7 childs, il faut prendre le 5eme.
-// Le child de niveau 5 a 32 childs, il faut prendre le 3eme
+// Le child de niveau 5 a 32 childs, il faut prendre le 3eme (à partir de chrome 49 c'est le 2ème...)
 // ----------------------------------------------------------------------------------
 char *GetChromeURL(HWND w)
 {
@@ -211,6 +211,7 @@ char *GetChromeURL(HWND w)
 	IAccessible *pChildNiveau1=NULL, *pChildNiveau2=NULL, *pChildNiveau3=NULL, *pChildNiveau4=NULL, *pChildNiveau5=NULL, *pChildNiveau6=NULL;
 	VARIANT vtChild;
 	int  bstrLen;
+	VARIANT vtRole;
 	//long lCount;
 
 	// recherche la fenêtre fille de classe "Chrome_AutocompleteEditView"
@@ -278,9 +279,11 @@ char *GetChromeURL(HWND w)
 			TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
 			pIDispatch->Release(); pIDispatch=NULL;
-			// Le child de niveau 5 a 32 childs, il faut prendre le 3eme
+			// Le child de niveau 5 a 32 childs, il faut prendre le 3eme 
+			// ISSUE#272 : à partir de chrome 49 c'est le 2ème. Du coup on commence par regarder le 2ème, 
+			//			   si c'est bien un texte editable c'est que c'est la barre d'URL, sinon on regarde le 3ème
 			vtChild.vt=VT_I4;
-			vtChild.lVal=3;
+			vtChild.lVal=2;
 			hr=pChildNiveau5->get_accChild(vtChild,&pIDispatch);
 			TRACE((TRACE_DEBUG,_F_,"pChildNiveau5->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
@@ -290,6 +293,24 @@ char *GetChromeURL(HWND w)
 			pIDispatch->Release(); pIDispatch=NULL;
 			vtChild.vt=VT_I4;
 			vtChild.lVal=0; // cette fois, 0, oui, car c'est le nom de l'objet lui-même que l'on cherche.
+			// ISSUE#272: vérification du rôle 
+			hr=pChildNiveau6->get_accRole(vtChild,&vtRole);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChildNiveau6(2)->get_accRole()=0x%08lx",hr)); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"pChildNiveau6(2)->get_accRole()=0x%08lx",vtRole.lVal));
+			if (vtRole.lVal != ROLE_SYSTEM_TEXT) // si pas rôle texte, on essaie le suivant
+			{
+				pChildNiveau6->Release();
+				vtChild.lVal=3;
+				hr=pChildNiveau5->get_accChild(vtChild,&pIDispatch);
+				TRACE((TRACE_DEBUG,_F_,"pChildNiveau5->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+				if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+				hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau6);
+				TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+				if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+				pIDispatch->Release(); pIDispatch=NULL;
+				vtChild.vt=VT_I4;
+				vtChild.lVal=0; // cette fois, 0, oui, car c'est le nom de l'objet lui-même que l'on cherche.
+			}
 			hr=pChildNiveau6->get_accValue(vtChild,&bstrURL);
 			if (hr!=S_OK) { TRACE((TRACE_ERROR,_F_,"pChildNiveau6->get_accValue(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
 			TRACE((TRACE_DEBUG,_F_,"pChildNiveau6->get_accValue(%ld)='%S'",vtChild.lVal,bstrURL));
