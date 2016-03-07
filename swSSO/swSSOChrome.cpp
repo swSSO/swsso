@@ -351,6 +351,83 @@ end:
 	return pszURL;
 }
 
+typedef struct 
+{
+	HWND w;
+	char szClassName[128+1]; // classe de fenêtre recherchée
+	char szExclude[128+1]; // classe de fenêtre à exclure : si trouvée, on arrête l'énum avec retour null
+} T_SUIVI_NEW_CHROME_URL;
+
+// ----------------------------------------------------------------------------------
+// NewChromeURLEnumChildProc()
+// ----------------------------------------------------------------------------------
+// enum des fils à la recherche de la fenêtre de rendu de Chrome pour lire l'URL (ISSUE#273)
+// ----------------------------------------------------------------------------------
+static int CALLBACK NewChromeURLEnumChildProc(HWND w, LPARAM lp)
+{
+	int rc=TRUE;
+	char szClassName[50+1];
+
+	GetClassName(w,szClassName,sizeof(szClassName));
+	TRACE((TRACE_DEBUG,_F_,"Fenetre classe=%s w=0x%08lx",szClassName,w));
+	if (strcmp(szClassName,((T_SUIVI_NEW_CHROME_URL*)lp)->szExclude)==0)
+	{
+		((T_SUIVI_NEW_CHROME_URL*)lp)->w=NULL;
+		TRACE((TRACE_INFO,_F_,"Fenetre classe=%s w=0x%08lx --> stoppe l'enumeration, retourne NULL",szClassName,w));
+		rc=FALSE;
+	}
+	else if (strcmp(szClassName,((T_SUIVI_NEW_CHROME_URL*)lp)->szClassName)==0)
+	{
+		((T_SUIVI_NEW_CHROME_URL*)lp)->w=w;
+		TRACE((TRACE_INFO,_F_,"Fenetre classe=%s w=0x%08lx",szClassName,w));
+		rc=FALSE;
+	}
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// NewGetChromeURL()
+// ----------------------------------------------------------------------------------
+// Nouvelle fonction de lecture d'URL Chrome (ISSUE#273) 
+// ----------------------------------------------------------------------------------
+char *NewGetChromeURL(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	T_SUIVI_NEW_CHROME_URL tSuivi;
+	char *pszURL=NULL;
+	HRESULT hr;
+	IAccessible *pAccessible=NULL;
+	BSTR bstrURL=NULL;
+	
+	// recherche le document 
+	strcpy_s(tSuivi.szExclude,sizeof(tSuivi.szExclude),"Static");
+	strcpy_s(tSuivi.szClassName,sizeof(tSuivi.szClassName),"Chrome_RenderWidgetHostHWND");
+	EnumChildWindows(w,NewChromeURLEnumChildProc,(LPARAM)&tSuivi);
+	if (tSuivi.w==NULL) { TRACE((TRACE_ERROR,_F_,"Fenetre Chrome_RenderWidgetHostHWND non trouvee")); goto end; }
+	// Obtient un IAccessible
+	hr=AccessibleObjectFromWindow(tSuivi.w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	// vérifie que c'est bien le ROLE_SYSTEM_DOCUMENT
+	VARIANT vtMe,vtRole;
+	vtMe.vt=VT_I4;
+	vtMe.lVal=CHILDID_SELF;
+	hr=pAccessible->get_accRole(vtMe,&vtRole);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"get_accRole() vtRole.lVal=0x%08lx",vtRole.lVal));
+	if (vtRole.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole()!=ROLE_SYSTEM_DOCUMENT")); goto end; }
+	// si OK, récupère la value qui contient l'URL
+	hr=pAccessible->get_accValue(vtMe,&bstrURL);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accValue() hr=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"get_accValue() hr=0x%08lx bstrURL=%S",hr,bstrURL));
+	pszURL=GetSZFromBSTR(bstrURL);
+
+end:
+	SysFreeString(bstrURL);
+	if (pAccessible!=NULL) pAccessible->Release();
+	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
+	return pszURL;
+}
+
 // conservé au cas où, mais plus utilisé depuis 1.07 B4 (cf. ISSUE#215)
 #if 0
 typedef struct 

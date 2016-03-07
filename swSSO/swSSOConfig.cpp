@@ -4618,6 +4618,7 @@ int AddApplicationFromCurrentWindow(void)
 		{
 			iType=UNK; // permet de récupérer les configs WEB ou XEB 
 			pszURL=GetChromeURL(w);
+			if (pszURL==NULL) pszURL=NewGetChromeURL(w); // ISSUE#273
 			if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 			// ISSUE#142 : si pszURL=NULL, mieux vaut s'arrêter même si en fait ça ne crashe pas car bien géré partout
 			// ISSUE#155

@@ -803,6 +803,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					goto suite;
 				}*/
 				pszURL=GetChromeURL(w);
+				if (pszURL==NULL) pszURL=NewGetChromeURL(w); // ISSUE#273
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto suite; }
 			}
 			else // autre ??
