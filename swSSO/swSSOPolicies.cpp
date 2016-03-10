@@ -138,10 +138,12 @@ BOOL gbSyncSecondaryPasswordActive=FALSE;		// 1.08
 int  giSyncSecondaryPasswordGroup=-1;			// 1.08
 char gszSyncSecondaryPasswordOU[255+1];			// 1.08
 BOOL gbCheckCertificates=TRUE;					// 1.08 - ISSUE#252
-char gszConfigNotFoundMailTo[128+1]; // 1.08
+char gszConfigNotFoundMailTo[128+1];			// 1.08
 char *gpszConfigNotFoundMailSubject=NULL;		// 1.08
 char *gpszConfigNotFoundMailBody=NULL;			// 1.08
 int	 giWaitBeforeNewSSO=WAIT_IF_SSO_OK;			// 1.08 - ISSUE#253
+int  giRecoveryWebserviceNbTry=1;				// 1.10 - ISSUE#275
+int  giRecoveryWebserviceWaitBeforeRetry=1000;	// 1.10 - ISSUE#275
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -688,6 +690,15 @@ void LoadPolicies(void)
 		if (rc==ERROR_SUCCESS) giWaitBeforeNewSSO=(int)dwValue; 
 		if (giWaitBeforeNewSSO==WAIT_ONE_MINUTE) giWaitBeforeNewSSO++; // pour assurer que giWaitBeforeNewSSO est toujours différent de WAIT_ONE_MINUTE (cf. commentaire dans swSSOAppNsites.h)
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_NB_TRY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giRecoveryWebserviceNbTry=(int)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_WAIT_BEFORE_RETRY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giRecoveryWebserviceWaitBeforeRetry=(int)dwValue; 
+
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -924,6 +935,8 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"giRecoveryWebserviceTimeout=%d"		,giRecoveryWebserviceTimeout));
 	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceHTTPS=%d"		,gbRecoveryWebserviceHTTPS));
 	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceManualBackup=%d"	,gbRecoveryWebserviceManualBackup));
+	TRACE((TRACE_INFO,_F_,"giRecoveryWebserviceNbTry=%d"		,giRecoveryWebserviceNbTry));
+	TRACE((TRACE_INFO,_F_,"giRecoveryWebserviceWaitBeforeRetry=%d",giRecoveryWebserviceWaitBeforeRetry));
 	TRACE((TRACE_INFO,_F_,"gbSyncSecondaryPasswordActive=%d"	,gbSyncSecondaryPasswordActive));
 	TRACE((TRACE_INFO,_F_,"giSyncSecondaryPasswordGroup=%d"		,giSyncSecondaryPasswordGroup));
 	TRACE((TRACE_INFO,_F_,"gszSyncSecondaryPasswordOU=%s"		,gszSyncSecondaryPasswordOU));

@@ -786,6 +786,8 @@ int RecoveryWebservice(void)
 	DWORD dwHTTPReturnCode;
 	char *p1,*p2=NULL;
 	char szData[2048];
+	BOOL bRetry,bHTTPRequestOK;
+	int iNbTry;
 
 	NOTIFYICONDATA nid;
 	ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
@@ -805,21 +807,38 @@ int RecoveryWebservice(void)
 	TRACE((TRACE_INFO,_F_,"Donnees POST : %s",szData));
 
 	// envoie la requete
-	pszResult=HTTPRequest(gszRecoveryWebserviceServer,
-						  giRecoveryWebservicePort,
-						  gbRecoveryWebserviceHTTPS,
-						  gszRecoveryWebserviceURL,
-						  L"POST",
-						  szData,
-						  strlen(szData),
-						  L"Content-Type: application/json",
-						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW,
-						  giRecoveryWebserviceTimeout,
-						  NULL,
-						  &dwHTTPReturnCode);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",gszRecoveryWebserviceURL)); goto end; }
-	if (dwHTTPReturnCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",gszRecoveryWebserviceURL,dwHTTPReturnCode)); goto end; }
-
+	// ISSUE#275 : giRecoveryWebserviceNbTry essais espacés de giRecoveryWebserviceWaitBeforeRetry millisecondes
+	iNbTry=0;
+	bRetry=TRUE;
+	bHTTPRequestOK=FALSE;
+	while (bRetry)
+	{
+		pszResult=HTTPRequest(gszRecoveryWebserviceServer,
+							  giRecoveryWebservicePort,
+							  gbRecoveryWebserviceHTTPS,
+							  gszRecoveryWebserviceURL,
+							  L"POST",
+							  szData,
+							  strlen(szData),
+							  L"Content-Type: application/json",
+							  WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW,
+							  giRecoveryWebserviceTimeout,
+							  NULL,
+							  &dwHTTPReturnCode);
+		iNbTry++;
+		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",gszRecoveryWebserviceURL)); }
+		else if (dwHTTPReturnCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",gszRecoveryWebserviceURL,dwHTTPReturnCode)); }
+		else { bRetry=FALSE; bHTTPRequestOK=TRUE; }
+		
+		if (bRetry)
+		{
+			if (iNbTry<giRecoveryWebserviceNbTry)
+				Sleep(giRecoveryWebserviceWaitBeforeRetry);
+			else
+				bRetry=FALSE;
+		}
+	}
+	if (!bHTTPRequestOK) { TRACE((TRACE_ERROR,_F_,"HTTPRequest KO après %d essais",iNbTry)); goto end;}
 	// ici on a reçu une réponse au format JSON, on extrait la partie utile dans gszFormattedResponse
 	// Format de la réponse JSON : {<br/>"response" : "------swSSO RESPONSE---.....---swSSO RESPONSE---"<br/>"}
 	p1=strstr(pszResult,gcszBeginResponse);

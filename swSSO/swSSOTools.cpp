@@ -258,8 +258,8 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 	brc = WinHttpSendRequest(hRequest,pwszHeaders==NULL?WINHTTP_NO_ADDITIONAL_HEADERS:pwszHeaders,(DWORD)-1L,pRequestData,dwLenRequestData,dwLenRequestData,0);
 	if (!brc) 
 	{ 
+		TRACE((TRACE_ERROR,_F_,"WinHttpSendRequest()=%ld",GetLastError())); // ISSUE#275, déplacement de la trace avant le logevent
 		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,(char*)pszServer,(char*)pszRequest,NULL,NULL,0); 
-		TRACE((TRACE_ERROR,_F_,"WinHttpSendRequest()=%ld",GetLastError())); 
 		goto end; 
 	}
  

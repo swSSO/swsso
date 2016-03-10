@@ -200,6 +200,8 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_RECOVERY_WEBSERVICE_TIMEOUT		"RecoveryWebserviceTimeout"
 #define REGVALUE_RECOVERY_WEBSERVICE_HTTPS			"RecoveryWebserviceHTTPS"
 #define REGVALUE_RECOVERY_WEBSERVICE_MANUAL_BACKUP	"RecoveryWebserviceManualBackup"
+#define REGVALUE_RECOVERY_WEBSERVICE_NB_TRY			"RecoveryWebserviceNbTry"
+#define REGVALUE_RECOVERY_WEBSERVICE_WAIT_BEFORE_RETRY	"RecoveryWebserviceWaitBeforeRetry"
 #define REGVALUE_SYNC_SECONDARY_PASSWORD_ACTIVE		"SyncSecondaryPasswordActive"
 #define REGVALUE_SYNC_SECONDARY_PASSWORD_GROUP		"SyncSecondaryPasswordGroup"
 #define REGVALUE_SYNC_SECONDARY_PASSWORD_OU			"SyncSecondaryPasswordOU"
@@ -259,6 +261,8 @@ extern char gszConfigNotFoundMailTo[];		// 1.08
 extern char *gpszConfigNotFoundMailSubject;	// 1.08
 extern char *gpszConfigNotFoundMailBody;	// 1.08
 extern int	giWaitBeforeNewSSO;				// 1.08 - ISSUE#253
+extern int  giRecoveryWebserviceNbTry;		// 1.10 - ISSUE#275
+extern int  giRecoveryWebserviceWaitBeforeRetry;	// 1.10 - ISSUE#275
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

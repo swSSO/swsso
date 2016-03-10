@@ -941,7 +941,7 @@ BEGIN
     IDS_FERMER              "&Fermer"
     IDS_AJOUTER             "&Ajouter"
     IDS_RECOVER_WEBSERVICE_ERROR 
-                            "Votre mot de passe swSSO est désynchronisé et la procédure de resynchronisation a échoué. Veuillez contacter votre support."
+                            "Votre mot de passe swSSO est désynchronisé et le service de resynchronisation est injoignable. Veuillez retenter ultérieurement ou contacter votre support."
 END
 
 #endif    // French (France) resources
