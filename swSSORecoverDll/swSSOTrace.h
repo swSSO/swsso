@@ -38,17 +38,18 @@
 #define TRACE_DEBUG     5 // pour debug : très verbeux !
 #define TRACE_PWD		6 // encore pire, trace des mots de passe
 
-#ifdef TRACES_ACTIVEES
+// ISSUE#277 : les traces sont toujours actives (fonction de la config dans le .ini)
+//#ifdef TRACES_ACTIVEES
 #define TRACE_OPEN() swTraceOpen();
 #define TRACE(zzz) swTraceWrite zzz
 #define TRACE_BUFFER(zzz) swTraceWriteBuffer zzz
 #define TRACE_CLOSE() swTraceClose();
-#else
-#define TRACE_OPEN()
-#define TRACE(zzz)
-#define TRACE_BUFFER(zzz)
-#define TRACE_CLOSE()
-#endif
+//#else
+//#define TRACE_OPEN()
+//#define TRACE(zzz)
+//#define TRACE_BUFFER(zzz)
+//#define TRACE_CLOSE()
+//#endif
 
 #define _F_ __FUNCTION__
 void swTraceOpen(void);

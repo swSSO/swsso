@@ -264,6 +264,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	
 	rc=0;
 end:
+	SecureZeroMemory(szClearKeystorePwd,sizeof(szClearKeystorePwd));
 	swCryptTerm();
 	if (hMutex!=NULL)
 	{

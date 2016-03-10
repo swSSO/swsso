@@ -39,7 +39,7 @@
 #define REGVALUE_TRACE_FILESIZE "FileSize"
 
 static char gszTraceFileName[260+1];
-static int giTraceLevel=TRACE_INFO;
+static int giTraceLevel=TRACE_ERROR;
 static DWORD gdwTraceFileSize=20000000; 
 static char gszTraceBuf[2048];
 HANDLE ghfTrace=INVALID_HANDLE_VALUE;
@@ -50,16 +50,14 @@ HANDLE ghTraceMutex=NULL;
 //-----------------------------------------------------------------------------
 // swTraceOpen()
 //-----------------------------------------------------------------------------
-// Lecture de la configuration en base de registre et ouverture du fichier trace
+// Lecture de la configuration des traces et ouverture du fichier trace
+// ISSUE#277 : la configuration ds traces est désormais lue dans le .ini 
+//             et les traces sont produites même par la version release
 //-----------------------------------------------------------------------------
 void swTraceOpen(void)
 {
-	HKEY hKey=NULL;
-	int rc;
-	char szValue[1024+1];
-	DWORD dwValue,dwValueSize,dwValueType;
-	//int len;
-	//DWORD dw;
+	DWORD lenConfigFile;
+	char szConfigFile[1024];
 
 	DWORD dwWaitForSingleObject;
 	ghTraceMutex=CreateMutex(NULL,TRUE,"Global\\swSSORecoverDll.traces");
@@ -70,35 +68,24 @@ void swTraceOpen(void)
 		if (dwWaitForSingleObject!=WAIT_OBJECT_0) goto end;
 	}
 
-	// valeurs par défaut pour les chaines de caractères
-	// les valeurs par défaut pour les DWORD sont initialisées dans la déclaration des variables globales
-	strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\swsso\\swssotracerecoverdll.txt");
+	// reconstitue le chemin complet du fichier de configuration
+	lenConfigFile=GetModuleFileName(ghModule,szConfigFile,sizeof(szConfigFile));
+	if (lenConfigFile<10) goto end;
+	memcpy(szConfigFile+lenConfigFile-3,"ini",3);
 
-	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_TRACE,0,KEY_READ,&hKey);
-	if (rc!=ERROR_SUCCESS) goto end;
-
-	dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-	rc=RegQueryValueEx(hKey,REGVALUE_TRACE_LEVEL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-	if (rc==ERROR_SUCCESS) giTraceLevel=dwValue; 
-
-	dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-	rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILESIZE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-	if (rc==ERROR_SUCCESS) gdwTraceFileSize=dwValue*1000000; 
-
-	dwValueType=REG_SZ;
-	dwValueSize=sizeof(szValue);
-	rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILENAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-	//if (rc==ERROR_SUCCESS) wsprintf(gszTraceFileName,"%s-%08lx",szValue,GetTickCount());
-	if (rc==ERROR_SUCCESS) strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),szValue);
-
-end:
+	// lit les infos du keystore dans le fichier de configuration
+	GetPrivateProfileString("Logs","Filename","",gszTraceFileName,sizeof(gszTraceFileName),szConfigFile);
+	if (*gszTraceFileName==0) goto end; // nom de fichier pas trouvé, pas de traces
+	gdwTraceFileSize=GetPrivateProfileInt("Logs","Filesize",20,szConfigFile)*1000000;
+	giTraceLevel=GetPrivateProfileInt("Logs","Level",1,szConfigFile);
+	if (giTraceLevel>=TRACE_PWD) giTraceLevel=TRACE_DEBUG;
+	
 	// ouverture du fichier (fermé uniquement sur appel de swTraceClose)
 	ghfTrace=CreateFile(gszTraceFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	// si fichier existe, se positionne à la fin du fichier pour écritures ultérieures
 	if (ghfTrace!=INVALID_HANDLE_VALUE) SetFilePointer(ghfTrace,0,0,FILE_END);
-	//
-	// len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : taille max fichier=%d octets ===================\r\n",gdwTraceFileSize);
-	// WriteFile(ghfTrace,gszTraceBuf,len,&dw,NULL);
+
+end:;
 }
 
 //-----------------------------------------------------------------------------

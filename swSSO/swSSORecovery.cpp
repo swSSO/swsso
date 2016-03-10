@@ -837,6 +837,8 @@ int RecoveryWebservice(void)
 			else
 				bRetry=FALSE;
 		}
+		// if (iNbTry<1000) bRetry=TRUE; // POUR FAIRE UN TEST DE ROBUSTESSE, résultat :
+		// 1000 requetes traitées en 3 minutes sur mon portable avec les traces au niveau max, moins de 200ms par requete, aucun échec de génération de RESPONSE
 	}
 	if (!bHTTPRequestOK) { TRACE((TRACE_ERROR,_F_,"HTTPRequest KO après %d essais",iNbTry)); goto end;}
 	// ici on a reçu une réponse au format JSON, on extrait la partie utile dans gszFormattedResponse
