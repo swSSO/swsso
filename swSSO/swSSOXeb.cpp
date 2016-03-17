@@ -47,6 +47,7 @@ typedef struct
 	int iTextFieldIndex;
 	char szClassName[128+1]; // classe de fenêtre recherchée
 	char szExclude[128+1]; // classe de fenêtre à exclure : si trouvée, on arrête l'énum avec retour null
+	int iBrowser; // ISSUE#279
 } T_SUIVI_ACCESSIBLE;
 
 // ----------------------------------------------------------------------------------
@@ -180,38 +181,79 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 			// - Role = ROLE_SYSTEM_TEXT
 			// - State = (STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_FOCUSED)
 
-			if ((vtRole.lVal == ROLE_SYSTEM_TEXT) && 
-				((vtState.lVal & STATE_SYSTEM_FOCUSED) || (vtState.lVal & STATE_SYSTEM_FOCUSABLE)))
+			// ISSUE#279 : cas spécifique IE
+			// TRACE((TRACE_DEBUG,_F_,"%sptSuivi->iBrowser=%d",szTab,ptSuivi->iBrowser));
+			if (ptSuivi->iBrowser!=BROWSER_IE)
 			{
-				// c'est un champ de saisie, s'il est protégé c'est le mdp sinon c'est un id
-				if (vtState.lVal & STATE_SYSTEM_PROTECTED)
+				if ((vtRole.lVal == ROLE_SYSTEM_TEXT) && 
+					((vtState.lVal & STATE_SYSTEM_FOCUSED) || (vtState.lVal & STATE_SYSTEM_FOCUSABLE)))
 				{
-					TRACE((TRACE_INFO,_F_,"Champ mot de passe trouve (ROLE_SYSTEM_TEXT + STATE_SYSTEM_FOCUS* + STATE_SYSTEM_PROTECTED)"));
-					pChild->AddRef();
-					ptSuivi->pTextFields[ptSuivi->iTextFieldIndex]=pChild;
-					ptSuivi->iNbPwdFound++; 
-					TRACE((TRACE_INFO,_F_,"Champ mot de passe trouve : c'est le %dieme, on attendait le %d",ptSuivi->iNbPwdFound,atoi(gptActions[ptSuivi->iAction].szPwdName)));
-					if (ptSuivi->iNbPwdFound==atoi(gptActions[ptSuivi->iAction].szPwdName)) 
+					// c'est un champ de saisie, s'il est protégé c'est le mdp sinon c'est un id
+					if (vtState.lVal & STATE_SYSTEM_PROTECTED)
 					{
-						ptSuivi->iPwdIndex=ptSuivi->iTextFieldIndex;
+						TRACE((TRACE_INFO,_F_,"Champ mot de passe trouve (ROLE_SYSTEM_TEXT + STATE_SYSTEM_FOCUS* + STATE_SYSTEM_PROTECTED)"));
+						pChild->AddRef();
+						ptSuivi->pTextFields[ptSuivi->iTextFieldIndex]=pChild;
+						ptSuivi->iNbPwdFound++; 
+						TRACE((TRACE_INFO,_F_,"Champ mot de passe trouve : c'est le %dieme, on attendait le %d",ptSuivi->iNbPwdFound,atoi(gptActions[ptSuivi->iAction].szPwdName)));
+						if (ptSuivi->iNbPwdFound==atoi(gptActions[ptSuivi->iAction].szPwdName)) 
+						{
+							ptSuivi->iPwdIndex=ptSuivi->iTextFieldIndex;
+						}
+						ptSuivi->iTextFieldIndex++;
 					}
-					ptSuivi->iTextFieldIndex++;
+					else
+					{
+						TRACE((TRACE_INFO,_F_,"Un champ id trouve (ROLE_SYSTEM_TEXT + STATE_SYSTEM_FOCUS*)"));
+						pChild->AddRef();
+						ptSuivi->pTextFields[ptSuivi->iTextFieldIndex]=pChild;
+						ptSuivi->iTextFieldIndex++;
+					}
 				}
 				else
 				{
-					TRACE((TRACE_INFO,_F_,"Un champ id trouve (ROLE_SYSTEM_TEXT + STATE_SYSTEM_FOCUS*)"));
-					pChild->AddRef();
-					ptSuivi->pTextFields[ptSuivi->iTextFieldIndex]=pChild;
-					ptSuivi->iTextFieldIndex++;
+	#ifdef TRACES_ACTIVEES
+					DoWebAccessible(szTab,NULL,pChild,ptSuivi);
+	#else
+					DoWebAccessible(NULL,pChild,ptSuivi);
+	#endif
 				}
 			}
-			else
+			else // ISSUE#279 : IE
 			{
-#ifdef TRACES_ACTIVEES
-				DoWebAccessible(szTab,NULL,pChild,ptSuivi);
-#else
-				DoWebAccessible(NULL,pChild,ptSuivi);
-#endif
+				if ((vtRole.lVal == ROLE_SYSTEM_TEXT) && !(vtState.lVal & STATE_SYSTEM_READONLY))
+				{
+					// c'est un champ de saisie, s'il est protégé c'est le mdp sinon c'est un id
+					if (vtState.lVal & STATE_SYSTEM_PROTECTED)
+					{
+						TRACE((TRACE_INFO,_F_,"Champ mot de passe trouve (ROLE_SYSTEM_TEXT + STATE_SYSTEM_FOCUS* + STATE_SYSTEM_PROTECTED)"));
+						pChild->AddRef();
+						ptSuivi->pTextFields[ptSuivi->iTextFieldIndex]=pChild;
+						ptSuivi->iNbPwdFound++; 
+						TRACE((TRACE_INFO,_F_,"Champ mot de passe trouve : c'est le %dieme, on attendait le %d",ptSuivi->iNbPwdFound,atoi(gptActions[ptSuivi->iAction].szPwdName)));
+						if (ptSuivi->iNbPwdFound==atoi(gptActions[ptSuivi->iAction].szPwdName)) 
+						{
+							ptSuivi->iPwdIndex=ptSuivi->iTextFieldIndex;
+						}
+						ptSuivi->iTextFieldIndex++;
+					}
+					else
+					{
+						TRACE((TRACE_INFO,_F_,"Un champ id trouve (ROLE_SYSTEM_TEXT + STATE_SYSTEM_FOCUS*)"));
+						pChild->AddRef();
+						ptSuivi->pTextFields[ptSuivi->iTextFieldIndex]=pChild;
+						ptSuivi->iTextFieldIndex++;
+					}
+				}
+				else
+				{
+	#ifdef TRACES_ACTIVEES
+					DoWebAccessible(szTab,NULL,pChild,ptSuivi);
+	#else
+					DoWebAccessible(NULL,pChild,ptSuivi);
+	#endif
+				}
+
 			}
 suivant:
 			if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
@@ -457,6 +499,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 	tSuivi.iLevel=0;
 	tSuivi.iPwdIndex=-1;
 	tSuivi.iNbPwdFound=0;
+	tSuivi.iBrowser=iBrowser; // ISSUE#279
 
 #ifdef TRACES_ACTIVEES
 	DoWebAccessible("",w,pAccessible,&tSuivi);
