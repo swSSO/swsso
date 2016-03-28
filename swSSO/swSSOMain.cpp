@@ -648,6 +648,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 	GetWindowText(w,szTitre,sizeof(szTitre));
 	if (*szTitre==0) goto end; // si fenêtre sans titre, on passe ! <optim>
 	if (!IsWindowVisible(w)) goto end; // fenêtre cachée, on passe ! <optim+compteur>
+	if (IsIconic(w)) goto end; // ISSUE#280 : ignore les fenêtres réduites dans la barre des taches pour éviter des pertes de focus inutiles
 	guiNbVisibleWindows++;
 
 	// 0.93 : marque la fenêtre comme toujours présente à l'écran dans liste des derniers SSO réalisés
