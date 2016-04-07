@@ -73,10 +73,13 @@ void swTraceAuthentInfo(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	char bufPassword[PWD_LEN];
 	char szLogonDomainName[DOMAIN_LEN];
 	int lenUserName,lenLogonDomainName;
-	
+
 	if (lpAuthentInfoType==NULL) { TRACE((TRACE_ERROR,_F_,"lpAuthentInfoType=NULL")); goto end; }
 	if (lpAuthentInfo==NULL) { TRACE((TRACE_ERROR,_F_,"lpAuthentInfo=NULL")); goto end; }
-
+	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
+	
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)lpAuthentInfo,sizeof(MSV1_0_INTERACTIVE_LOGON),"lpAuthentInfo"));
+	
 	if (wcscmp(lpAuthentInfoType,L"MSV1_0:Interactive")==0)
 	{
 		usUserName=((MSV1_0_INTERACTIVE_LOGON*)lpAuthentInfo)->UserName;
@@ -117,16 +120,22 @@ void swTraceAuthentInfo(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	lenUserName=(int)strlen(szUserName);
 	// mot de passe
 	TRACE((TRACE_DEBUG,_F_,"usPassword.MaximumLength=%d",usPassword.MaximumLength));
-	ret=WideCharToMultiByte(CP_ACP,0,usPassword.Buffer,usPassword.Length/2,bufPassword,sizeof(bufPassword),NULL,NULL);
-	if (ret==0) { TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usPassword)=%d",GetLastError())); goto end; }
-	TRACE((TRACE_PWD,_F_,"bufPassword=%s",bufPassword));
-	SecureZeroMemory(bufPassword,sizeof(bufPassword));
+	TRACE((TRACE_DEBUG,_F_,"usPassword.Length=%d",usPassword.Length));
+	if (usPassword.Length==0)
+	{
+		TRACE((TRACE_ERROR,_F_,"Password vide"));
+	}
+	else
+	{
+		ret=WideCharToMultiByte(CP_ACP,0,usPassword.Buffer,usPassword.Length/2,bufPassword,sizeof(bufPassword),NULL,NULL);
+		if (ret==0) { TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usPassword)=%d",GetLastError())); goto end; }
+		TRACE((TRACE_PWD,_F_,"bufPassword=%s",bufPassword));
+		SecureZeroMemory(bufPassword,sizeof(bufPassword));
+	}
 end:
 	TRACE((TRACE_LEAVE,_F_,""));
 	return;
 }
-
-
 #endif
 
 DWORD APIENTRY NPLogonNotify(
