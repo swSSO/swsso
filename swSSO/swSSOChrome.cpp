@@ -185,7 +185,7 @@ end:
 //-----------------------------------------------------------------------------
 // GetChromeURL()
 //-----------------------------------------------------------------------------
-// Retourne l'URL courante de la fenêtre Chrome
+// Retourne l'URL courante de la fenêtre Chrome (pour versions inférieures à 51)
 // ----------------------------------------------------------------------------------
 // [in] w = handle de la fenêtre
 // [rc] pszURL (à libérer par l'appelant) ou NULL si erreur 
@@ -351,6 +351,127 @@ end:
 	return pszURL;
 }
 
+//-----------------------------------------------------------------------------
+// GetChromeURL51()
+//-----------------------------------------------------------------------------
+// Retourne l'URL courante de la fenêtre Chrome (pour versions 51+)
+// ----------------------------------------------------------------------------------
+// [in] w = handle de la fenêtre
+// [rc] pszURL (à libérer par l'appelant) ou NULL si erreur 
+// ----------------------------------------------------------------------------------
+// La fenêtre principale a 1 child de niveau 1, il faut prendre le 1er.
+// Le child de niveau 1 a 2 childs, il faut prendre le 2eme.
+// Le child de niveau 2 a 5 childs, il faut prendre le 2eme.
+// Le child de niveau 3 a 3 childs, il faut prendre le 3eme.
+// Le child de niveau 4 a 7 childs, il faut prendre le 5eme.
+// Le child de niveau 5 a 32 childs, il faut prendre le 2eme 
+// 
+// ----------------------------------------------------------------------------------
+char *GetChromeURL51(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	char *pszURL=NULL;
+	BSTR bstrURL=NULL;
+	HRESULT hr;
+	IDispatch *pIDispatch=NULL;
+	IAccessible *pAccessible=NULL;
+	IAccessible *pChildNiveau1=NULL, *pChildNiveau2=NULL, *pChildNiveau3=NULL, *pChildNiveau4=NULL, *pChildNiveau5=NULL, *pChildNiveau6=NULL;
+	VARIANT vtChild;
+	int  bstrLen;
+
+	hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	// La fenêtre principale a 1 child de niveau 1, il faut prendre le 1er.
+	vtChild.vt=VT_I4;
+	vtChild.lVal=1;
+	hr=pAccessible->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau1);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Le child de niveau 1 a 2 childs, il faut prendre le 2eme.
+	vtChild.vt=VT_I4;
+	vtChild.lVal=2;
+	hr=pChildNiveau1->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pChildNiveau1->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau2);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Le child de niveau 2 a 5 childs, il faut prendre le 2eme.
+	vtChild.vt=VT_I4;
+	vtChild.lVal=2;
+	hr=pChildNiveau2->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pChildNiveau2->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau3);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Le child de niveau 3 a 3 childs, il faut prendre le 3eme.
+	vtChild.vt=VT_I4;
+	vtChild.lVal=3;
+	hr=pChildNiveau3->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pChildNiveau3->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau4);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Le child de niveau 4 a 7 childs, il faut prendre le 5eme.
+	vtChild.vt=VT_I4;
+	vtChild.lVal=5;
+	hr=pChildNiveau4->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pChildNiveau4->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau5);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	// Le child de niveau 5 a 32 childs, il faut prendre le 3eme 
+	// ISSUE#272 : à partir de chrome 49 c'est le 2ème. Du coup on commence par regarder le 2ème, 
+	//			   si c'est bien un texte editable c'est que c'est la barre d'URL, sinon on regarde le 3ème
+	vtChild.vt=VT_I4;
+	vtChild.lVal=2;
+	hr=pChildNiveau5->get_accChild(vtChild,&pIDispatch);
+	TRACE((TRACE_DEBUG,_F_,"pChildNiveau5->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**) &pChildNiveau6);
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	pIDispatch->Release(); pIDispatch=NULL;
+	vtChild.vt=VT_I4;
+	vtChild.lVal=0; // cette fois, 0, oui, car c'est le nom de l'objet lui-même que l'on cherche.
+	
+	hr=pChildNiveau6->get_accValue(vtChild,&bstrURL);
+	if (hr!=S_OK) { TRACE((TRACE_ERROR,_F_,"pChildNiveau6->get_accValue(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"pChildNiveau6->get_accValue(%ld)='%S'",vtChild.lVal,bstrURL));
+	
+	bstrLen=SysStringLen(bstrURL);
+	pszURL=(char*)malloc(bstrLen+1);
+	if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",bstrLen+1)); goto end; }
+	sprintf_s(pszURL,bstrLen+1,"%S",bstrURL);
+	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
+	gpAccessibleChromeURL=pChildNiveau6;
+	pChildNiveau6->AddRef();
+
+end:
+	SysFreeString(bstrURL);
+	if (pAccessible!=NULL) pAccessible->Release();
+	if (pIDispatch!=NULL) pIDispatch->Release();
+	if (pChildNiveau1!=NULL) pChildNiveau1->Release();
+	if (pChildNiveau2!=NULL) pChildNiveau2->Release();
+	if (pChildNiveau3!=NULL) pChildNiveau3->Release();
+	if (pChildNiveau4!=NULL) pChildNiveau4->Release();
+	if (pChildNiveau5!=NULL) pChildNiveau5->Release();
+	if (pChildNiveau6!=NULL) pChildNiveau6->Release();
+	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
+	return pszURL;
+}
+
 typedef struct 
 {
 	HWND w;
@@ -388,7 +509,10 @@ static int CALLBACK NewChromeURLEnumChildProc(HWND w, LPARAM lp)
 // ----------------------------------------------------------------------------------
 // NewGetChromeURL()
 // ----------------------------------------------------------------------------------
-// Nouvelle fonction de lecture d'URL Chrome (ISSUE#273) 
+// Nouvelle fonction de lecture d'URL Chrome (ISSUE#273)
+// N'est pas encore utilisée (en 1.10) car rend inopérante la bidouille nécessaire
+// au contournement du bug empechant de mettre le focus sur un champ de la page web
+// lorsque le focus est dans la barre d'URL
 // ----------------------------------------------------------------------------------
 char *NewGetChromeURL(HWND w)
 {

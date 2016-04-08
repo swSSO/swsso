@@ -1734,7 +1734,7 @@ static int CALLBACK EnumBrowserProc(HWND w, LPARAM lp)
 	else if ((strncmp(szClassName,"Chrome_WidgetWin_",17)==0)  && (pEnumBrowser->iPopupType==POPUP_CHROME)) // Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
 	{
 		pszURL=GetChromeURL(w);
-		if (pszURL==NULL) pszURL=NewGetChromeURL(w); // ISSUE#273
+		if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
 		if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto end; }
 	}
