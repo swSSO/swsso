@@ -33,11 +33,6 @@
 
 #include "stdafx.h"
 
-#define REGKEY_TRACE			"SOFTWARE\\swSSO\\TraceRecoverDll"
-#define REGVALUE_TRACE_LEVEL	"Level" 
-#define REGVALUE_TRACE_FILENAME "FileName"
-#define REGVALUE_TRACE_FILESIZE "FileSize"
-
 static char gszTraceFileName[260+1];
 static int giTraceLevel=TRACE_ERROR;
 static DWORD gdwTraceFileSize=20000000; 
