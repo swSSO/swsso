@@ -373,7 +373,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_PASTE_PASSWORD:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_PASTE_PASSWORD gpszClipboardPassword=0x%08lx",gpszClipboardPassword));
-					if (gpszClipboardPassword!=NULL) KBSim(FALSE,0,gpszClipboardPassword,TRUE);
+					if (gpszClipboardPassword!=NULL) KBSim(NULL,FALSE,0,gpszClipboardPassword,TRUE);
 					break;
 			}
 			break;
@@ -947,7 +947,7 @@ int BeginChangeAppPassword(void)
 				SetForegroundWindow(gptActions[giLastApplicationSSO].wLastSSO);
 				// saisie à l'aveugle de l'ancien mot de passe, en espérant que ce soit le champ avec le focus...
 				TRACE((TRACE_INFO,_F_,"Fenetre 0x%08lx tjs presente, saisie de l'ancien mdp",gptActions[giLastApplicationSSO].wLastSSO));
-				KBSim(FALSE,200,gpszClipboardPassword,TRUE);	
+				KBSim(gptActions[giLastApplicationSSO].wLastSSO,FALSE,200,gpszClipboardPassword,TRUE);	
 				bOldPwdFillDone=1;
 			}
 		}

@@ -1021,31 +1021,31 @@ int KBSimEx(HWND w,char *szCmd, char *szId1,char *szId2,char *szId3,char *szId4,
 		else if (_strnicmp(p,"[ID]",strlen("[ID]"))==0) 
 		{ 	
 			TRACE((TRACE_DEBUG,_F_,"[ID]=%s",szId1));
-			KBSim(FALSE,0,GetComputedValue(szId1),FALSE);
+			KBSim(w,FALSE,0,GetComputedValue(szId1),FALSE);
 			p+=strlen("[ID]");
 		}
 		else if (_strnicmp(p,"[ID2]",strlen("[ID2]"))==0) 
 		{ 	
 			TRACE((TRACE_DEBUG,_F_,"[I2]=%s",szId2));
-			KBSim(FALSE,0,GetComputedValue(szId2),FALSE);
+			KBSim(w,FALSE,0,GetComputedValue(szId2),FALSE);
 			p+=strlen("[ID2]");
 		}
 		else if (_strnicmp(p,"[ID3]",strlen("[ID3]"))==0) 
 		{ 	
 			TRACE((TRACE_DEBUG,_F_,"[ID3]=%s",szId3));
-			KBSim(FALSE,0,GetComputedValue(szId3),FALSE);
+			KBSim(w,FALSE,0,GetComputedValue(szId3),FALSE);
 			p+=strlen("[ID3]");
 		}
 		else if (_strnicmp(p,"[ID4]",strlen("[ID4]"))==0) 
 		{ 	
 			TRACE((TRACE_DEBUG,_F_,"[ID4]=%s",szId4));
-			KBSim(FALSE,0,GetComputedValue(szId4),FALSE);
+			KBSim(w,FALSE,0,GetComputedValue(szId4),FALSE);
 			p+=strlen("[ID4]");
 		}
 		else if (_strnicmp(p,"[PWD]",strlen("[PWD]"))==0) 
 		{ 	
 			TRACE((TRACE_PWD,_F_,"[PWD]=%s",szPwd));
-			KBSim(FALSE,0,szPwd,TRUE);
+			KBSim(w,FALSE,0,szPwd,TRUE);
 			p+=strlen("[PWD]");
 		}
 		else if (_strnicmp(p,"[NOFOCUS]",strlen("[NOFOCUS]"))==0) 
@@ -1135,7 +1135,7 @@ int KBSimEx(HWND w,char *szCmd, char *szId1,char *szId2,char *szId3,char *szId4,
 			char sz[2];
 			sz[0]=*p;
 			sz[1]=0;
-			KBSim(FALSE,0,sz,FALSE);
+			KBSim(w,FALSE,0,sz,FALSE);
 			p++;
 		}
 	}

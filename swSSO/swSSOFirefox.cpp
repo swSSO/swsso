@@ -298,7 +298,7 @@ static void DoDOMAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_FIREFOX *ptS
 				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
 				if (pszPassword!=NULL) 
 				{
-					KBSim(FALSE,200,pszPassword,TRUE);				
+					KBSim(ptSuivi->w,TRUE,200,pszPassword,TRUE);				
 					// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
 					SecureZeroMemory(pszPassword,strlen(pszPassword));
 					free(pszPassword);

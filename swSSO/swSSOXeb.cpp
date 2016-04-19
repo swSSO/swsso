@@ -642,7 +642,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 					}
 					if (bstrValue==NULL || FAILED(hr))
 					{
-						KBSim(FALSE,100,pszPassword,TRUE);			
+						KBSim(ptSuivi->w,TRUE,100,pszPassword,TRUE);			
 					}
 					if (bstrValue!=NULL)
 					{

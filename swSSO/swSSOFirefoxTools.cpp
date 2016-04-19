@@ -84,7 +84,7 @@ end:
 // [in] bErase : TRUE s'il faut vider le contenu du champ avant de le remplir
 // [in] sz : chaine à saisir
 // ----------------------------------------------------------------------------------
-void KBSim(BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
+void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 {
 	UNREFERENCED_PARAMETER(bPwd); // pour ne pas avoir de warning en mode release
 	TRACE((TRACE_ENTER,_F_, "bErase=%d iTempo=%d",bErase,iTempo));
@@ -103,31 +103,21 @@ void KBSim(BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
 		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
 	}
-
-
-	/*if (bErase) // pour effacer, je fais tab et shift-tab, ce qui a pour effet
-		        // de sélectionner le champ complet.
+	
+	// ISSUE#264 : changement de la technique d'effacement, on fait CTRL+A puis DEL, ça évite les changements de champs.
+	if (bErase) // ISSUE#286 : refait comme avant, n'efface pas systématiquement sinon la config type "simulation de frappe" ne fonctionne plus !
 	{
 		Sleep(iTempo);
-		keybd_event(VK_TAB,LOBYTE(MapVirtualKey(VK_TAB,0)),0,0);
-		keybd_event(VK_TAB,LOBYTE(MapVirtualKey(VK_TAB,0)),KEYEVENTF_KEYUP,0);
-		Sleep(iTempo);
-		keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
-		keybd_event(VK_TAB,LOBYTE(MapVirtualKey(VK_TAB,0)),0,0);
-		keybd_event(VK_TAB,LOBYTE(MapVirtualKey(VK_TAB,0)),KEYEVENTF_KEYUP,0);
-		keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
-	}*/
-	// ISSUE#264 : changement de la technique d'effacement, on fait CTRL+A puis DEL, ça évite les changements de champs.
-	Sleep(iTempo);
-	keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0);
-	wKeyScan=VkKeyScan('a');
-	loVk=LOBYTE(wKeyScan);
-	keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
-	keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
-	keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0);
-	keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),0,0);
-	keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),KEYEVENTF_KEYUP,0);
-
+		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
+		keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0);
+		wKeyScan=VkKeyScan('a');
+		loVk=LOBYTE(wKeyScan);
+		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
+		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
+		keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0);
+		keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),0,0);
+		keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),KEYEVENTF_KEYUP,0);
+	}
 	for (i=0;i<len;i++)
 	{
 		wKeyScan=VkKeyScan(sz[i]);
@@ -138,6 +128,7 @@ void KBSim(BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0); }
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
 
+		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
 		
@@ -186,7 +177,7 @@ void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szVal
 	}
 	if (bstrValue==NULL || FAILED(hr))
 	{
-		KBSim(TRUE,100,GetComputedValue(szValue),FALSE); // 1.09B1 : bErase à TRUE toujours
+		KBSim(w,TRUE,100,GetComputedValue(szValue),FALSE); // 1.09B1 : bErase à TRUE toujours
 	}
 	if (bstrValue!=NULL) SysFreeString(bstrValue);
 	TRACE((TRACE_LEAVE,_F_, ""));

@@ -31,7 +31,7 @@
 // swSSOFirefoxTools.h
 //-----------------------------------------------------------------------------
 
-void KBSim(BOOL bErase,int iTempo,const char *sz,BOOL bPwd);
+void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd);
 char *GetFirefoxPopupURL(HWND w);
 IAccessible *GetFirefoxPopupIAccessible(HWND w);
 void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szValue);

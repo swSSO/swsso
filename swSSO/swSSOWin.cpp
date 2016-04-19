@@ -155,7 +155,7 @@ static int CALLBACK WinEnumChildProc(HWND w, LPARAM lp)
 				{
 					SetForegroundWindow(((T_SUIVI_ACTION*)lp)->w);
 					SetFocus(w);
-					KBSim(FALSE,100,pszPassword,TRUE);
+					KBSim(((T_SUIVI_ACTION*)lp)->w,TRUE,100,pszPassword,TRUE);
 				}
 				else
 				{
@@ -277,7 +277,7 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 				SetForegroundWindow(w); 
 				TRACE((TRACE_DEBUG,_F_,"Champ %d Saisie id  : '%s'",l,GetComputedValue(gptActions[iAction].szId1Value)));
 				hr=pChild->accSelect(SELFLAG_TAKEFOCUS,vtSelf);
-				KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
+				KBSim(w,TRUE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
 				//((T_SUIVI_ACTION*)lp)->iSuivi++;
 				bIdFound=TRUE;
 			}
@@ -298,7 +298,7 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 					if (pszPassword!=NULL) 
 					{
 						TRACE((TRACE_PWD,_F_,"Champ %d Saisie pwd : '%s'",l,pszPassword));
-						KBSim(FALSE,100,pszPassword,TRUE);
+						KBSim(w,TRUE,100,pszPassword,TRUE);
 						// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
 						SecureZeroMemory(pszPassword,strlen(pszPassword));
 						free(pszPassword);
@@ -536,7 +536,7 @@ trouve:
 	// id
 	rc=W7PopupSetTabOnField(w,(iLevel==2)?pChildL1:pChildL2,iIndexId);
 	TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
-	KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
+	KBSim(w,TRUE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
 	// mdp
 	rc=W7PopupSetTabOnField(w,(iLevel==2)?pChildL1:pChildL2,iIndexPwd);
 	if ((*gptActions[iAction].szPwdEncryptedValue!=0))
@@ -545,7 +545,7 @@ trouve:
 		if (pszPassword!=NULL) 
 		{
 			TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
-			KBSim(FALSE,100,pszPassword,TRUE);
+			KBSim(w,TRUE,100,pszPassword,TRUE);
 			SecureZeroMemory(pszPassword,strlen(pszPassword));
 			free(pszPassword);
 		}
