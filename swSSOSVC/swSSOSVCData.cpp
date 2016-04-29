@@ -401,7 +401,7 @@ int swWaitForMessage()
 					// ISSUE#156 : on déchiffre le mot de passe reçu qui est chiffré avec CRYPTPROTECTMEMORY_CROSS_PROCESS
 					//             pour le rechiffrer avec CRYPTPROTECTMEMORY_SAME_PROCESS
 					if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_CROSS_PROCESS)!=0) goto end;
-					TRACE((TRACE_PWD,_F_,"tmpBufPwd=%s",tmpBufPwd));
+					//TRACE((TRACE_PWD,_F_,"tmpBufPwd=%s",tmpBufPwd));
 					if (swProtectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
 					// Vérifie qu'on n'a pas déjà ce mot de passe
 					// ISSUE#173 : vérifie aussi bufPasswordOld
@@ -470,7 +470,7 @@ int swWaitForMessage()
 							{
 								memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
 								if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
-								TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
+								//TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
 								if (swPBKDF2((BYTE*)PBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
 								if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
 							}
@@ -496,7 +496,7 @@ int swWaitForMessage()
 							{
 								memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPasswordOld,PWD_LEN);
 								if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
-								TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPasswordOld=%s",iUserDataIndex,tmpBufPwd));
+								//TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPasswordOld=%s",iUserDataIndex,tmpBufPwd));
 								if (swPBKDF2((BYTE*)PBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
 								if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
 							}
@@ -587,7 +587,7 @@ int swWaitForMessage()
 								// Déchiffre le mot de passe
 								memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
 								if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
-								TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
+								//TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
 								// Crée la clé de chiffrement des mots de passe secondaires
 								if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
 								if (swCreateAESKeyFromKeyData(AESKeyData,&hKey)) goto end;

@@ -149,7 +149,7 @@ SWSSORECOVERDLL_API int RecoveryGetResponse(
 	}
 	DataOut.pbData[DataOut.cbData]=0;
 	strcpy_s(szClearKeystorePwd,sizeof(szClearKeystorePwd),(char*)DataOut.pbData);
-	TRACE((TRACE_PWD,_F_,"szClearKeystorePwd=%s",szClearKeystorePwd));
+	//TRACE((TRACE_PWD,_F_,"szClearKeystorePwd=%s",szClearKeystorePwd));
 
 	// extraction du coeur du challenge
 	lenFormattedChallenge=(int)strlen(szFormattedChallenge);

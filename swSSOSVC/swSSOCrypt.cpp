@@ -113,7 +113,7 @@ static void swXORBuff(BYTE *result, BYTE *key, int len)
 int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufSalt,int bufSaltLen,int iNbIterations)
 {
     TRACE((TRACE_ENTER,_F_,"bufResultLen=%d iNbIterations=%d",bufResultLen,iNbIterations));
-	TRACE((TRACE_PWD,_F_,"szPwd=%s",szPwd));
+	//TRACE((TRACE_PWD,_F_,"szPwd=%s",szPwd));
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)bufSalt,bufSaltLen,"sel"));
 	
 	int brc;
@@ -162,7 +162,7 @@ int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufS
 	memset(pKey->KeyData,0xaa,pKey->dwKeySize);*/
 	// fin test case 7 RFC 2202 HMAC-SHA1
 
-	TRACE_BUFFER((TRACE_PWD,_F_,(BYTE*)pKey,iKeySize,"pKey (iKeySize=%d)",iKeySize));
+	//TRACE_BUFFER((TRACE_PWD,_F_,(BYTE*)pKey,iKeySize,"pKey (iKeySize=%d)",iKeySize));
     brc= CryptImportKey(ghProv,(LPBYTE)pKey,iKeySize,NULL,CRYPT_IPSEC_HMAC_KEY,&hKey);
     if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptImportKey()=0x%08lx",GetLastError())); goto end; }
 
@@ -570,7 +570,7 @@ char *swCryptEncryptString(const char *pszSource,HCRYPTKEY hKey)
 	lenSource=strlen(pszSource);
 	lenSourceCopy=16+64+16; // iv + taille d'un multiple de 16 (128 bits) pour chiffrement AES
 	lenDest=lenSourceCopy*2+1;
-	TRACE((TRACE_PWD,_F_,"pszSource=%s",pszSource));
+	//TRACE((TRACE_PWD,_F_,"pszSource=%s",pszSource));
 	TRACE((TRACE_DEBUG,_F_,"lenSource=%d lenSourceCopy=%d lenDest=%d",lenSource,lenSourceCopy,lenDest));
 
 	// 0.51 : init avec random sur taille max, puis copie du mot de passe.

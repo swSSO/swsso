@@ -2667,7 +2667,7 @@ void GetApplicationDetails(HWND w,int iAction)
 		{
 			if (strcmp(buf2048,pszDecryptedValue)!=0) 
 			{
-				TRACE((TRACE_PWD,_F_,"Chgt config %s (Password : %s -> %s)",gptActions[iAction].szApplication,pszDecryptedValue,buf2048));
+				//TRACE((TRACE_PWD,_F_,"Chgt config %s (Password : %s -> %s)",gptActions[iAction].szApplication,pszDecryptedValue,buf2048));
 				bChanged=TRUE;
 			}
 			SecureZeroMemory(pszDecryptedValue,strlen(pszDecryptedValue));

@@ -73,7 +73,6 @@ void swTraceOpen(void)
 	if (*gszTraceFileName==0) goto end; // nom de fichier pas trouvé, pas de traces
 	gdwTraceFileSize=GetPrivateProfileInt("Logs","Filesize",20,szConfigFile)*1000000;
 	giTraceLevel=GetPrivateProfileInt("Logs","Level",1,szConfigFile);
-	if (giTraceLevel>=TRACE_PWD) giTraceLevel=TRACE_DEBUG;
 	
 	// ouverture du fichier (fermé uniquement sur appel de swTraceClose)
 	ghfTrace=CreateFile(gszTraceFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
@@ -114,7 +113,6 @@ static char *swGetTraceLevelLabel(int iLevel)
 		case TRACE_LEAVE: strcpy_s(gszTraceLevelLabel,sizeof(gszTraceLevelLabel)," <-  "); break;
 		case TRACE_INFO:  strcpy_s(gszTraceLevelLabel,sizeof(gszTraceLevelLabel),"INFO "); break;
 		case TRACE_DEBUG: strcpy_s(gszTraceLevelLabel,sizeof(gszTraceLevelLabel),"DEBUG"); break;
-		case TRACE_PWD:	  strcpy_s(gszTraceLevelLabel,sizeof(gszTraceLevelLabel),"*PWD*"); break;
 	}
 	return gszTraceLevelLabel;
 }

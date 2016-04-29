@@ -36,7 +36,6 @@
 #define TRACE_LEAVE		3 // sortie de fonction
 #define TRACE_INFO		4 // infos
 #define TRACE_DEBUG     5 // pour debug : très verbeux !
-#define TRACE_PWD		6 // encore pire, trace des mots de passe --> non activable sans modification du code de la fonction swTraceOpen()
 
 // ISSUE#277 : les traces sont toujours actives (fonction de la config dans le .ini)
 //#ifdef TRACES_ACTIVEES

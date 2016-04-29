@@ -1078,7 +1078,7 @@ int GetProxyConfig(const char *szComputerName, BOOL *pbInternetUseProxy, char *s
 			}
 			else
 			{
-				TRACE((TRACE_PWD,_F_,"pszTmpDecryptedPassword=%s",pszTmpDecryptedPassword));
+				//TRACE((TRACE_PWD,_F_,"pszTmpDecryptedPassword=%s",pszTmpDecryptedPassword));
 				strcpy_s(szProxyPwd,LEN_PROXY_PWD+1,pszTmpDecryptedPassword);
 				SecureZeroMemory(pszTmpDecryptedPassword,strlen(pszTmpDecryptedPassword));
 				free(pszTmpDecryptedPassword);
@@ -1086,12 +1086,12 @@ int GetProxyConfig(const char *szComputerName, BOOL *pbInternetUseProxy, char *s
 		}
 		else // mot de passe non chiffré (version 0.80)
 		{	
-			TRACE((TRACE_PWD,_F_,"ProxyPwd-%s => mot de passe non chiffre (v0.80) : %s",szComputerName,szEncryptedProxyPwd));
+			//TRACE((TRACE_PWD,_F_,"ProxyPwd-%s => mot de passe non chiffre (v0.80) : %s",szComputerName,szEncryptedProxyPwd));
 			strcpy_s(szProxyPwd,LEN_PROXY_PWD+1,szEncryptedProxyPwd);
 		}
 		TRACE((TRACE_INFO,_F_,"ProxyURL-%s =%s",szComputerName,szProxyURL));
 		TRACE((TRACE_INFO,_F_,"ProxyUser-%s=%s",szComputerName,szProxyUser));
-		TRACE((TRACE_PWD ,_F_,"ProxyPwd-%s =%s",szComputerName,szProxyPwd));
+		//TRACE((TRACE_PWD ,_F_,"ProxyPwd-%s =%s",szComputerName,szProxyPwd));
 	}
 
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -1825,7 +1825,7 @@ suite:
 			// déchiffrement mot de passe
 			pszDecryptedPwd=swCryptDecryptString(szEncryptedProxyPwd,ghKey1);
 			if (pszDecryptedPwd==NULL) goto end;
-			TRACE((TRACE_PWD,_F_,"pszDecryptedPwd=%s",pszDecryptedPwd));
+			//TRACE((TRACE_PWD,_F_,"pszDecryptedPwd=%s",pszDecryptedPwd));
 			// rechiffrement avec la nouvelle clé
 			pszTranscryptedPwd=swCryptEncryptString(pszDecryptedPwd,ghKey2);
 			SecureZeroMemory(pszDecryptedPwd,strlen(pszDecryptedPwd));
@@ -2023,7 +2023,7 @@ end:
 int CheckMasterPwd(const char *szPwd)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	TRACE((TRACE_PWD,_F_, "pwd=%s",szPwd));
+	//TRACE((TRACE_PWD,_F_, "pwd=%s",szPwd));
 	int rc=-1;
 	char szConfigHashedPwd[SALT_LEN*2+HASH_LEN*2+1];
 	char *pszUserHashedPwd=NULL;
@@ -2672,7 +2672,7 @@ suite:
 		{
 			pszDecryptedPwd=swCryptDecryptString(szEncryptedProxyPwd,ghKey1);
 			if (pszDecryptedPwd==NULL) goto end;
-			TRACE((TRACE_PWD,_F_,"pszDecryptedPwd=%s",pszDecryptedPwd));
+			//TRACE((TRACE_PWD,_F_,"pszDecryptedPwd=%s",pszDecryptedPwd));
 			// déchiffrement OK avec ghKey1, on rechiffre avec ghKey2
 			pszTranscryptedPwd=swCryptEncryptString(pszDecryptedPwd,ghKey2);
 			// 0.85B9 : remplacement de memset(pszDecryptedPwd,0,strlen(pszDecryptedPwd));
@@ -3887,7 +3887,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 			{
 				char tmpPwd[LEN_PWD+1]="";
 				rc=StoreNodeValue(tmpPwd,sizeof(tmpPwd),pChildElement);
-				TRACE((TRACE_PWD,_F_, "pwdValue=%s",tmpPwd));
+				//TRACE((TRACE_PWD,_F_, "pwdValue=%s",tmpPwd));
 				if ((iCurWithIdPwd & CONFIG_WITH_PWD) || rc>0)
 				{
 					char *pszEncryptedPassword=NULL;

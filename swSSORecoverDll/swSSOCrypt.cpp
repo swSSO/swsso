@@ -272,7 +272,7 @@ int swCryptGetPrivateKeyFromSZData(char *szSaltData,char *szPrivateKeyData,char 
 	HCRYPTKEY hSessionKey=NULL;
 	BYTE Salt[PBKDF2_SALT_LEN];
 
-	TRACE((TRACE_PWD,_F_,"swPassword=%s",szPassword));
+	//TRACE((TRACE_PWD,_F_,"swPassword=%s",szPassword));
 	// décodage (pseudo) base 64
 	dwPrivateKeyStringLen=(int)strlen(szPrivateKeyData);
 	TRACE((TRACE_DEBUG,_F_,"dwPrivateKeyStringLen=%d",dwPrivateKeyStringLen));
@@ -308,7 +308,7 @@ int swKeystoreGetPrivateKey(int iKeyId,char *szPassword,HCRYPTKEY *phPrivateKey)
 	BOOL bFound=FALSE;
 	int i;
 
-	TRACE((TRACE_PWD,_F_,"szPassword=%s",szPassword));
+	//TRACE((TRACE_PWD,_F_,"szPassword=%s",szPassword));
 	// cherche l'id de la clé dans le keystore
 	for (i=0;i<giNbPrivateKeys;i++)
 	{
@@ -331,7 +331,7 @@ int swKeystoreGetFirstPrivateKey(char *szPassword,HCRYPTKEY *phPrivateKey)
 {
 	TRACE((TRACE_ENTER,_F_,""));
 	int rc=SWCRYPT_ERROR;
-	TRACE((TRACE_PWD,_F_,"swPassword=%s",szPassword));
+	//TRACE((TRACE_PWD,_F_,"swPassword=%s",szPassword));
 	rc=swCryptGetPrivateKeyFromSZData(gtabPrivateKey[0].szSaltData,gtabPrivateKey[0].szPrivateKeyData,szPassword,phPrivateKey);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
@@ -498,7 +498,7 @@ static void swXORBuff(BYTE *result, BYTE *key, int len)
 int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufSalt,int bufSaltLen,int iNbIterations)
 {
     TRACE((TRACE_ENTER,_F_,"bufResultLen=%d iNbIterations=%d",bufResultLen,iNbIterations));
-	TRACE((TRACE_PWD,_F_,"szPwd=%s",szPwd));
+	//TRACE((TRACE_PWD,_F_,"szPwd=%s",szPwd));
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)bufSalt,bufSaltLen,"sel"));
 	
 	int brc;
@@ -547,7 +547,7 @@ int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufS
 	memset(pKey->KeyData,0xaa,pKey->dwKeySize);*/
 	// fin test case 7 RFC 2202 HMAC-SHA1
 
-	TRACE_BUFFER((TRACE_PWD,_F_,(BYTE*)pKey,iKeySize,"pKey (iKeySize=%d)",iKeySize));
+	//TRACE_BUFFER((TRACE_PWD,_F_,(BYTE*)pKey,iKeySize,"pKey (iKeySize=%d)",iKeySize));
     brc= CryptImportKey(ghProv,(LPBYTE)pKey,iKeySize,NULL,CRYPT_IPSEC_HMAC_KEY,&hKey);
     if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptImportKey()=0x%08lx",GetLastError())); goto end; }
 

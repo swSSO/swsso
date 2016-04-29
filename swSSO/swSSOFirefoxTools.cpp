@@ -88,7 +88,7 @@ void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 {
 	UNREFERENCED_PARAMETER(bPwd); // pour ne pas avoir de warning en mode release
 	TRACE((TRACE_ENTER,_F_, "bErase=%d iTempo=%d",bErase,iTempo));
-	TRACE((bPwd?TRACE_PWD:TRACE_INFO,_F_, "sz='%s'",sz));
+	//TRACE((bPwd?TRACE_PWD:TRACE_INFO,_F_, "sz='%s'",sz));
 
 	int i,len;
 	len=strlen(sz);

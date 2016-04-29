@@ -291,7 +291,7 @@ static void ParseFrame(IHTMLDocument2 *pHTMLDocument2,LPARAM lp)
 					}
 					TRACE((TRACE_INFO,_F_,"Champ PWD trouvé  : '%S'",bstr));
 					pItem->put_value(bstrPwdValue);
-					TRACE((TRACE_PWD,_F_,"Valeur PWD saisie : '%S'",bstrPwdValue));
+					//TRACE((TRACE_PWD,_F_,"Valeur PWD saisie : '%S'",bstrPwdValue));
 					(ptSuivi->iNbActions)--;
 					TRACE((TRACE_INFO,_F_,"Actions restantes : %d",ptSuivi->iNbActions));
 				}

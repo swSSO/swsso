@@ -1783,7 +1783,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 		int i,len;
 		len=min(strlen(gszUserName),16);
 		for (i=0;i<len;i++) szTemp[32+i]=(char)tolower(gszUserName[i]);
-		TRACE((TRACE_PWD,_F_,"sel=%s",szTemp));
+		//TRACE((TRACE_PWD,_F_,"sel=%s",szTemp));
 
 		if (CheckMasterPwd(szTemp)==0)
 		{
@@ -2281,7 +2281,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			int i,len;
 			len=min(strlen(gszUserName),16);
 			for (i=0;i<len;i++) szTemp[32+i]=(char)tolower(gszUserName[i]);
-			TRACE((TRACE_PWD,_F_,"sel=%s",szTemp));
+			//TRACE((TRACE_PWD,_F_,"sel=%s",szTemp));
 
 			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData,FALSE);
 			StoreMasterPwd(szTemp);

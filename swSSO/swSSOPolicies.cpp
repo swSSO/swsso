@@ -1073,7 +1073,7 @@ BOOL IsPasswordPolicyCompliant(const char *szPwd)
 	BOOL rc=FALSE;
 	int iNbNoCompliancy; // superbe nommage... qui veut dire : nombre d'entorses aux règles (permet de gérer le m parmi n).
 
-	TRACE((TRACE_PWD,_F_,"szPwd=%s",szPwd));
+	//TRACE((TRACE_PWD,_F_,"szPwd=%s",szPwd));
 
 	// vérification longueur minimale 
 	if (strlen(szPwd)<(unsigned)giPwdPolicy_MinLength) goto end;

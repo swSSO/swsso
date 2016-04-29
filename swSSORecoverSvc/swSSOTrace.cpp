@@ -116,7 +116,6 @@ static char *swGetTraceLevelLabel(int iLevel)
 		case TRACE_LEAVE: strcpy_s(gszTraceLevelLabel,sizeof(gszTraceLevelLabel)," <-  "); break;
 		case TRACE_INFO:  strcpy_s(gszTraceLevelLabel,sizeof(gszTraceLevelLabel),"INFO "); break;
 		case TRACE_DEBUG: strcpy_s(gszTraceLevelLabel,sizeof(gszTraceLevelLabel),"DEBUG"); break;
-		case TRACE_PWD:	  strcpy_s(gszTraceLevelLabel,sizeof(gszTraceLevelLabel),"*PWD*"); break;
 	}
 	return gszTraceLevelLabel;
 }

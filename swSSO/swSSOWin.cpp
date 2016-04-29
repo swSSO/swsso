@@ -159,7 +159,7 @@ static int CALLBACK WinEnumChildProc(HWND w, LPARAM lp)
 				}
 				else
 				{
-					TRACE((TRACE_PWD,_F_,"SendMessage(WM_SETTEXT) pwd=%s",pszPassword));
+					//TRACE((TRACE_PWD,_F_,"SendMessage(WM_SETTEXT) pwd=%s",pszPassword));
 					SendMessage(w,WM_SETTEXT,0,(LPARAM)pszPassword);
 				}
 				// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
@@ -297,7 +297,7 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 					char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
 					if (pszPassword!=NULL) 
 					{
-						TRACE((TRACE_PWD,_F_,"Champ %d Saisie pwd : '%s'",l,pszPassword));
+						//TRACE((TRACE_PWD,_F_,"Champ %d Saisie pwd : '%s'",l,pszPassword));
 						KBSim(w,TRUE,100,pszPassword,TRUE);
 						// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
 						SecureZeroMemory(pszPassword,strlen(pszPassword));
@@ -544,7 +544,7 @@ trouve:
 		char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
 		if (pszPassword!=NULL) 
 		{
-			TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
+			//TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
 			KBSim(w,TRUE,100,pszPassword,TRUE);
 			SecureZeroMemory(pszPassword,strlen(pszPassword));
 			free(pszPassword);
@@ -860,7 +860,7 @@ int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
 			if (pszPassword!=NULL) 
 			{
-				TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
+				//TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
 				KBSim(FALSE,100,pszPassword,TRUE);
 				// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
 				SecureZeroMemory(pszPassword,strlen(pszPassword));
@@ -906,7 +906,7 @@ int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
 			if (pszPassword!=NULL) 
 			{
-				TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
+				//TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
 				KBSim(FALSE,100,pszPassword,TRUE);
 				// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
 				SecureZeroMemory(pszPassword,strlen(pszPassword));

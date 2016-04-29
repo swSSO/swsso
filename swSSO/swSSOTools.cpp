@@ -975,7 +975,7 @@ int KBSimEx(HWND w,char *szCmd, char *szId1,char *szId2,char *szId3,char *szId4,
 {
 	TRACE((TRACE_ENTER,_F_,"w=0x%08lx szCmd=%s",w,szCmd));
 	TRACE((TRACE_DEBUG,_F_,"szId1=%s szId2=%s szId3=%s szId4=%s",szId1,szId2,szId3,szId4));
-	TRACE((TRACE_PWD,_F_,"szPwd=%s",szPwd));
+	//TRACE((TRACE_PWD,_F_,"szPwd=%s",szPwd));
 
 	int rc=-1;
 	char *p=szCmd;
@@ -1044,7 +1044,7 @@ int KBSimEx(HWND w,char *szCmd, char *szId1,char *szId2,char *szId3,char *szId4,
 		}
 		else if (_strnicmp(p,"[PWD]",strlen("[PWD]"))==0) 
 		{ 	
-			TRACE((TRACE_PWD,_F_,"[PWD]=%s",szPwd));
+			//TRACE((TRACE_PWD,_F_,"[PWD]=%s",szPwd));
 			KBSim(w,FALSE,0,szPwd,TRUE);
 			p+=strlen("[PWD]");
 		}

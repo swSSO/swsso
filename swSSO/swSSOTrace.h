@@ -36,7 +36,6 @@
 #define TRACE_LEAVE		3 // sortie de fonction
 #define TRACE_INFO		4 // infos
 #define TRACE_DEBUG     5 // pour debug : très verbeux !
-#define TRACE_PWD		6 // encore pire, trace des mots de passe
 
 #ifdef TRACES_ACTIVEES
 #define TRACE_OPEN() swTraceOpen();
