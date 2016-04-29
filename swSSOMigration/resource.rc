@@ -1,0 +1,13 @@
+#ifndef APSTUDIO_INVOKED
+#define PRODUCT_NAME "swSSOMigration"
+#define PRODUCT_NAME_TRACE "swSSOMigration (traces)"
+#define EXECUTABLE_NAME "swSSOMigration.exe"
+#define EXECUTABLE_NAME_TRACE "swSSOMigration.exe"
+#include <windows.h>
+#include <commctrl.h>
+#include <richedit.h>
+#include "..\swssocommonfiles\versioninfo.rc"
+#endif
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
