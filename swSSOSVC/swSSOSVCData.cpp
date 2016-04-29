@@ -57,9 +57,11 @@ typedef struct
 
 T_USER_DATA gUserData[100]; // max 100 user sur le poste de travail, après on explose...
 int giMaxUserDataIndex=0;
-#define REGKEY_SVC				"SOFTWARE\\swSSO\\SVC"
-#define REGVALUE_SWSSO_CLIENT	"swSSOClient" 
+#define REGKEY_SVC					"SOFTWARE\\swSSO\\SVC"
+#define REGVALUE_SWSSO_CLIENT		"swSSOClient" 
+#define REGVALUE_SWSSO_MIGRATION	"swSSOMigration" 
 char gszHash_swSSOClient[64+1];
+char gszHash_swSSOMigration[64+1];
 
 //-----------------------------------------------------------------------------
 // swInitData()
@@ -163,14 +165,26 @@ int ReadAllowedHash(void)
 	ret=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_SVC,0,KEY_READ,&hKey);
 	if (ret!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegOpenKeyEx(HKLM\\Software\\swSSO\\SVC)=%ld",ret)); goto end; }
 
-	// hash swSSOClient
+	// hash swSSOClient -- si non trouvé, on arrête tout, swSSO ne doit pas fonctioner sans vérifier ce hash
 	dwValueType=REG_SZ;
 	dwValueSize=sizeof(gszHash_swSSOClient);
 	ret=RegQueryValueEx(hKey,REGVALUE_SWSSO_CLIENT,NULL,&dwValueType,(LPBYTE)gszHash_swSSOClient,&dwValueSize);
 	if (ret!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(HKLM\\Software\\swSSO\\SVC\\swSSOClient)=%ld",ret)); goto end; } 
 	TRACE((TRACE_INFO,_F_,"gszHash_swSSOClient=%s",gszHash_swSSOClient));
 
-	// pour les autres hashs à venir éventuellement, pas forcément de goto end si pas réussi à les lire / à voir si optionnel pour les autres
+	// hash swSSOMigration -- si non trouvé, le service marche quand même mais ne répondra pas à swSSOMigration
+	dwValueType=REG_SZ;
+	dwValueSize=sizeof(gszHash_swSSOMigration);
+	ret=RegQueryValueEx(hKey,REGVALUE_SWSSO_MIGRATION,NULL,&dwValueType,(LPBYTE)gszHash_swSSOMigration,&dwValueSize);
+	if (ret==ERROR_SUCCESS) 
+	{
+		TRACE((TRACE_INFO,_F_,"gszHash_swSSOMigration=%s",gszHash_swSSOMigration));
+	}
+	else
+	{ 
+		TRACE((TRACE_INFO,_F_,"RegQueryValueEx(HKLM\\Software\\swSSO\\SVC\\swSSOMigration)=%ld",ret)); 
+		*gszHash_swSSOMigration=0;
+	} 
 
 	rc=0;
 end:
@@ -255,9 +269,20 @@ BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 	// Lit les hashs autorisés à appeler SVC (en base de registre)
 	if (ReadAllowedHash()!=0) goto end;
 
-	// Compare avec le hash du client swSSO
-	if (_stricmp(szBufHashValue,gszHash_swSSOClient)!=0)
-	{ TRACE((TRACE_ERROR,_F_,"Invalid calling process (hash : %s)",szBufHashValue)); goto end; }
+	// Compare avec le hash du client swSSO et celui du client de migration s'il est connu
+	if (_stricmp(szBufHashValue,gszHash_swSSOClient)==0)
+	{
+		TRACE((TRACE_INFO,_F_,"L'appel vient de swSSOClient"));
+	}
+	else if (*gszHash_swSSOMigration!=0 && _stricmp(szBufHashValue,gszHash_swSSOMigration)==0)
+	{
+		TRACE((TRACE_INFO,_F_,"L'appel vient de swSSOMigration"));
+	}
+	else
+	{
+		TRACE((TRACE_ERROR,_F_,"Invalid calling process (hash : %s)",szBufHashValue)); 
+		goto end; 
+	}
 
 	rc=TRUE;
 end:
