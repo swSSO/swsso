@@ -3591,20 +3591,19 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				// 0.87 : décodage du paramètre URL (BUG#60)
 				// NON, finalement c'est inutile car l'URL remontée est décodée par PHP
 				// donc ce qui arrive dans le xml du getconfig n'est pas encodé !
-				/*
+				// ISSUE#283 : en fait si, il faut faire quelque chose car le & est encodé en %26 et revient tel quel...
 				pszEncodedURL=(char*)malloc(LEN_URL+1);
-				if (pszEncodedURL==NULL) { TRACE((TRACE_DEBUG,_F_,"malloc(%d)"),LEN_URL+1)); goto end; }
+				if (pszEncodedURL==NULL) { TRACE((TRACE_DEBUG,_F_,"malloc(%d)",LEN_URL+1)); goto end; }
 				rc=StoreNodeValue(pszEncodedURL,LEN_URL+1,pChildElement);
 				pszDecodedURL=HTTPDecodeParam(pszEncodedURL);
 				if (pszDecodedURL==NULL) goto end;
-				strcpy_s(gptActions[giNbActions].szURL,LEN_URL+1,pszDecodedURL);
-				free(pszEncodedURL); pszEncodedURL=NULL;
-				free(pszDecodedURL); pszDecodedURL=NULL;
-				*/
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
-					rc=StoreNodeValue(gptActions[ptiActions[i]].szURL,LEN_URL+1,pChildElement);
+					strcpy_s(gptActions[ptiActions[i]].szURL,LEN_URL+1,pszDecodedURL);
+					//rc=StoreNodeValue(gptActions[ptiActions[i]].szURL,LEN_URL+1,pChildElement);
 				}
+				free(pszEncodedURL); pszEncodedURL=NULL;
+				free(pszDecodedURL); pszDecodedURL=NULL;
 				// le champ URL peut éventuellement être non renseigné, 
 				// donc rc=0 ne doit pas être une erreur et il faut considérer que le champ a été trouvé
 				// si on est sur une fenetre windows et que l'URL retournée n'est pas vide,
