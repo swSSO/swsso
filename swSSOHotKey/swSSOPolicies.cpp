@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
