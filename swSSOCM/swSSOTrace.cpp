@@ -81,6 +81,7 @@ void swTraceOpen(void)
 	if (rc==ERROR_SUCCESS) wsprintf(gszTraceFileName,"%s-%08lx",szValue,GetTickCount());
 
 end:
+	if (hKey!=NULL) RegCloseKey(hKey);
 	// ouverture du fichier (fermé uniquement sur appel de swTraceClose)
 	ghfTrace=CreateFile(gszTraceFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	// si fichier existe, se positionne à la fin du fichier pour écritures ultérieures
