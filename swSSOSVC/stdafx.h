@@ -39,6 +39,7 @@
 #include "swSSOTrace.h"
 #include "swSSOCrypt.h"
 #include "swSSOProtectMemory.h"
+#include <Psapi.h>
 
 // swSSOSVCInstall
 bool IsInstalled(void);

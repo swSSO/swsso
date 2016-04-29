@@ -57,7 +57,10 @@ typedef struct
 
 T_USER_DATA gUserData[100]; // max 100 user sur le poste de travail, après on explose...
 int giMaxUserDataIndex=0;
-	
+#define REGKEY_SVC				"SOFTWARE\\swSSO\\SVC"
+#define REGVALUE_SWSSO_CLIENT	"swSSOClient" 
+char gszHash_swSSOClient[64+1];
+
 //-----------------------------------------------------------------------------
 // swInitData()
 //-----------------------------------------------------------------------------
@@ -141,6 +144,129 @@ end:
 	TRACE((TRACE_LEAVE,_F_,"rc=0x%08lx",rc));
 	return rc;
 }
+
+//-----------------------------------------------------------------------------
+// ReadAllowedHash()
+//-----------------------------------------------------------------------------
+// Lit les hashs autorisés à appeler SVC dans la base de registre
+//-----------------------------------------------------------------------------
+int ReadAllowedHash(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	int ret;
+	HKEY hKey=NULL;
+	DWORD dwValueSize,dwValueType;
+
+	SecureZeroMemory(gszHash_swSSOClient,sizeof(gszHash_swSSOClient));
+
+	ret=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_SVC,0,KEY_READ,&hKey);
+	if (ret!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegOpenKeyEx(HKLM\\Software\\swSSO\\SVC)=%ld",ret)); goto end; }
+
+	// hash swSSOClient
+	dwValueType=REG_SZ;
+	dwValueSize=sizeof(gszHash_swSSOClient);
+	ret=RegQueryValueEx(hKey,REGVALUE_SWSSO_CLIENT,NULL,&dwValueType,(LPBYTE)gszHash_swSSOClient,&dwValueSize);
+	if (ret!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(HKLM\\Software\\swSSO\\SVC\\swSSOClient)=%ld",ret)); goto end; } 
+	TRACE((TRACE_INFO,_F_,"gszHash_swSSOClient=%s",gszHash_swSSOClient));
+
+	// pour les autres hashs à venir éventuellement, pas forcément de goto end si pas réussi à les lire / à voir si optionnel pour les autres
+
+	rc=0;
+end:
+	if (hKey!=NULL) RegCloseKey(hKey);	
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// GetFileHash()
+//-----------------------------------------------------------------------------
+// Retourne un hash du fichier 
+//-----------------------------------------------------------------------------
+int GetFileHash(char *szFile,unsigned char *pBufHashValue)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	HANDLE hf=INVALID_HANDLE_VALUE;
+	DWORD dwFileSize;
+	DWORD dwByteRead;
+	char *pBytesToHash=NULL;
+	HCRYPTHASH hHash=NULL;
+	DWORD lenHash;
+	int rc=-1;
+	
+	// ouvre le .ini en lecture
+	hf=CreateFile(szFile,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hf==INVALID_HANDLE_VALUE) {	TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFile,GetLastError())); goto end;	}
+	// regarde la taille et alloue le buffer pour la lecture
+	dwFileSize=GetFileSize(hf,NULL);
+	if (dwFileSize==INVALID_FILE_SIZE) { TRACE((TRACE_ERROR,_F_,"GetFileSize(%s)=INVALID_FILE_SIZE",szFile)); goto end;	}
+	pBytesToHash=(char*)malloc(dwFileSize);
+	if (pBytesToHash==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwFileSize)); goto end;	}
+		// lit le fichier complet
+	if (!ReadFile(hf,pBytesToHash,dwFileSize,&dwByteRead,NULL)) { TRACE((TRACE_ERROR,_F_,"ReadFile(%s)=0x%08lx",szFile,GetLastError())); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"ReadFile(%s) : %ld octets lus",szFile,dwByteRead));
+	// ferme le fichier
+	CloseHandle(hf); hf=INVALID_HANDLE_VALUE;
+	// calcul du hash
+	if (!CryptCreateHash(ghProv,CALG_SHA_256,0,0,&hHash)) { TRACE((TRACE_ERROR,_F_,"CryptCreateHash(CALG_SHA_256)=0x%08lx",GetLastError())); goto end; }
+	if (!CryptHashData(hHash,(unsigned char*)pBytesToHash,dwFileSize,0)) { TRACE((TRACE_ERROR,_F_,"CryptHashData()=0x%08lx",GetLastError())); goto end; }
+	lenHash=32;
+	if (!CryptGetHashParam(hHash,HP_HASHVAL,pBufHashValue,&lenHash,0)) { TRACE((TRACE_ERROR,_F_,"CryptGetHashParam(HP_HASHVAL)=0x%08lx",GetLastError())); goto end; }
+	TRACE_BUFFER((TRACE_DEBUG,_F_,pBufHashValue,lenHash,"hash"));
+	rc=0;
+	
+end:
+	if (hf!=INVALID_HANDLE_VALUE) CloseHandle(hf);
+	if (pBytesToHash!=NULL) free(pBytesToHash);
+	if (hHash!=NULL) CryptDestroyHash(hHash);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+
+//-----------------------------------------------------------------------------
+// IsCallingProcessAllowed()
+//-----------------------------------------------------------------------------
+// Vérifie que le hash du process appelant le pipe est bien connu
+//-----------------------------------------------------------------------------
+BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	BOOL rc=FALSE;
+	HANDLE hCallingProcess=NULL;
+	char szCallingProcess[MAX_PATH];
+	unsigned char bufHashValue[32]; // SHA-256 = 32 octets
+	char szBufHashValue[32*2+1]; // hash en hexadecimal
+	
+	// Récupère le chemin complet du process
+	hCallingProcess=OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ulClientProcessId);
+	if (hCallingProcess==NULL) { TRACE((TRACE_ERROR,_F_,"OpenProcess(%d)=%d",ulClientProcessId,GetLastError())); goto end; }
+	if (GetModuleFileNameEx(hCallingProcess,NULL,szCallingProcess,MAX_PATH)==0) { TRACE((TRACE_ERROR,_F_,"GetModuleFileNameEx(%d)=%d",ulClientProcessId,GetLastError())); goto end; }
+	TRACE((TRACE_INFO,_F_,"GetModuleFileNameEx(%d)-->%s",ulClientProcessId,szCallingProcess));
+
+	// Calcule le hash du fichier
+	if (GetFileHash(szCallingProcess,bufHashValue)!=0) goto end;
+
+	// Convertit le hash en hexa (maintenant que tout le monde sait que ma fonction d'encodage en base 64 n'en sera jamais une, je l'utilise pour faire de l'encodage hexa)
+	swCryptEncodeBase64(bufHashValue,32,szBufHashValue);
+	TRACE((TRACE_INFO,_F_,"szBufHashValue=%s",szBufHashValue));
+
+	// Lit les hashs autorisés à appeler SVC (en base de registre)
+	if (ReadAllowedHash()!=0) goto end;
+
+	// Compare avec le hash du client swSSO
+	if (_stricmp(szBufHashValue,gszHash_swSSOClient)!=0)
+	{ TRACE((TRACE_ERROR,_F_,"Invalid calling process (hash : %s)",szBufHashValue)); goto end; }
+
+	rc=TRUE;
+end:
+	if (hCallingProcess!=NULL) { CloseHandle(hCallingProcess); hCallingProcess=NULL; }
+	if (hCallingProcess!=NULL) CloseHandle(hCallingProcess);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
 //-----------------------------------------------------------------------------
 // swWaitForMessage()
 //-----------------------------------------------------------------------------
@@ -159,6 +285,7 @@ end:
 // V01:GETPHKD:OLD > demande à SVC de fournir le KeyData précédent (si chgt de mdp par exemple)
 // V01:PUTPSKS:PwdSalt(64octets)KeySalt(64octets) > demande à SVC de stocker PwdSalt et KeySalt
 // V01:GETPSKS: >demande à SVC de fournir PwdSalt et KeySalt
+// Remarque : à partir de la v1.11, l'appelant est vérifié dans les méthodes GETPHKD et GETPASS
 //-----------------------------------------------------------------------------
 int swWaitForMessage()
 {
@@ -177,6 +304,7 @@ int swWaitForMessage()
 	BYTE AESKeyData[AES256_KEY_LEN];
 	HCRYPTKEY hKey=NULL;
 	char *pszEncryptedPwd=NULL;
+	unsigned long ulClientProcessId;
 
 	TRACE((TRACE_ENTER,_F_,""));	
 	
@@ -194,6 +322,11 @@ int swWaitForMessage()
 			goto end;
 		}
 	}
+
+	// Récupère le processid du process connecté au pipe
+	brc=GetNamedPipeClientProcessId(ghPipe,&ulClientProcessId);
+	if (!brc) {	TRACE((TRACE_ERROR,_F_,"GetNamedPipeClientProcessId()=%d",GetLastError())); goto end; }
+	TRACE((TRACE_INFO,_F_,"ulClientProcessId=%ld",ulClientProcessId));
 
 	// Lit la requête
     if (!ReadFile(ghPipe,bufRequest,sizeof(bufRequest),&cbRead,NULL))
@@ -287,63 +420,72 @@ int swWaitForMessage()
 			else if (memcmp(bufRequest+4,"GETPHKD:",8)==0) // Format = V01:GETPHKD:CUR:domain(256octets)username(256octets) ou V01:GETPHKD:OLD:domain(256octets)username(256octets)
 			//-------------------------------------------------------------------------------------------------------------
 			{
-				if (memcmp(bufRequest+12,"CUR:",4)==0)
+				// Vérifie que l'appelant est autorisé
+				if (!IsCallingProcessAllowed(ulClientProcessId)) // nouveau en 1.11
 				{
-					iUserDataIndex=swGetUserDataIndex(bufRequest,16);
-					if (iUserDataIndex==-1) // utilisateur non connu, erreur !
-					{
-						TRACE((TRACE_ERROR,_F_,"Unknown user"));
-						strcpy_s(bufResponse,sizeof(bufResponse),"UNKNOWN_USER");
-						lenResponse=strlen(bufResponse);
-					}
-					else // Prépare la réponse, format = PwdHash(32octets)KeyData(32octets)
-					{
-						TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
-						// ISSUE#156 : maintenant le calcul PKHD est fait ici et uniquement ici
-						if (gUserData[iUserDataIndex].bPasswordStored)
-						{
-							memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
-							if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
-							TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
-							if (swPBKDF2((BYTE*)PBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-							if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-						}
-						memcpy(bufResponse,PBKDF2Pwd,PBKDF2_PWD_LEN);
-						memcpy(bufResponse+PBKDF2_PWD_LEN,AESKeyData,AES256_KEY_LEN);
-						lenResponse=PBKDF2_PWD_LEN+AES256_KEY_LEN;
-					}
-				}
-				else if (memcmp(bufRequest+12,"OLD:",4)==0)
-				{
-					iUserDataIndex=swGetUserDataIndex(bufRequest,16);
-					if (iUserDataIndex==-1) // utilisateur non connu, erreur !
-					{
-						TRACE((TRACE_ERROR,_F_,"Unknown user"));
-						strcpy_s(bufResponse,sizeof(bufResponse),"UNKNOWN_USER");
-						lenResponse=strlen(bufResponse);
-					}
-					else // Prépare la réponse, format = PwdHash(32octets)KeyData(32octets)
-					{
-						TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
-						// ISSUE#156 : maintenant le calcul PKHD est fait ici et uniquement ici
-						if (gUserData[iUserDataIndex].bPasswordOldStored)
-						{
-							memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPasswordOld,PWD_LEN);
-							if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
-							TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPasswordOld=%s",iUserDataIndex,tmpBufPwd));
-							if (swPBKDF2((BYTE*)PBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-							if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-						}
-						memcpy(bufResponse,PBKDF2Pwd,PBKDF2_PWD_LEN);
-						memcpy(bufResponse+PBKDF2_PWD_LEN,AESKeyData,AES256_KEY_LEN);
-						lenResponse=PBKDF2_PWD_LEN+AES256_KEY_LEN;
-					}
+					strcpy_s(bufResponse,sizeof(bufResponse),"FORBIDDEN");
+					lenResponse=strlen(bufResponse);
 				}
 				else
 				{
-					TRACE((TRACE_ERROR,_F_,"Mot clé inconnu"));
-					strcpy_s(bufResponse,sizeof(bufResponse),"BADREQUEST");
-					lenResponse=strlen(bufResponse);
+					if (memcmp(bufRequest+12,"CUR:",4)==0)
+					{
+						iUserDataIndex=swGetUserDataIndex(bufRequest,16);
+						if (iUserDataIndex==-1) // utilisateur non connu, erreur !
+						{
+							TRACE((TRACE_ERROR,_F_,"Unknown user"));
+							strcpy_s(bufResponse,sizeof(bufResponse),"UNKNOWN_USER");
+							lenResponse=strlen(bufResponse);
+						}
+						else // Prépare la réponse, format = PwdHash(32octets)KeyData(32octets)
+						{
+							TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
+							// ISSUE#156 : maintenant le calcul PKHD est fait ici et uniquement ici
+							if (gUserData[iUserDataIndex].bPasswordStored)
+							{
+								memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
+								if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
+								TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
+								if (swPBKDF2((BYTE*)PBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+								if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+							}
+							memcpy(bufResponse,PBKDF2Pwd,PBKDF2_PWD_LEN);
+							memcpy(bufResponse+PBKDF2_PWD_LEN,AESKeyData,AES256_KEY_LEN);
+							lenResponse=PBKDF2_PWD_LEN+AES256_KEY_LEN;
+						}
+					}
+					else if (memcmp(bufRequest+12,"OLD:",4)==0)
+					{
+						iUserDataIndex=swGetUserDataIndex(bufRequest,16);
+						if (iUserDataIndex==-1) // utilisateur non connu, erreur !
+						{
+							TRACE((TRACE_ERROR,_F_,"Unknown user"));
+							strcpy_s(bufResponse,sizeof(bufResponse),"UNKNOWN_USER");
+							lenResponse=strlen(bufResponse);
+						}
+						else // Prépare la réponse, format = PwdHash(32octets)KeyData(32octets)
+						{
+							TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
+							// ISSUE#156 : maintenant le calcul PKHD est fait ici et uniquement ici
+							if (gUserData[iUserDataIndex].bPasswordOldStored)
+							{
+								memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPasswordOld,PWD_LEN);
+								if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
+								TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPasswordOld=%s",iUserDataIndex,tmpBufPwd));
+								if (swPBKDF2((BYTE*)PBKDF2Pwd,PBKDF2_PWD_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+								if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+							}
+							memcpy(bufResponse,PBKDF2Pwd,PBKDF2_PWD_LEN);
+							memcpy(bufResponse+PBKDF2_PWD_LEN,AESKeyData,AES256_KEY_LEN);
+							lenResponse=PBKDF2_PWD_LEN+AES256_KEY_LEN;
+						}
+					}
+					else
+					{
+						TRACE((TRACE_ERROR,_F_,"Mot clé inconnu"));
+						strcpy_s(bufResponse,sizeof(bufResponse),"BADREQUEST");
+						lenResponse=strlen(bufResponse);
+					}
 				}
 			}
 			//-------------------------------------------------------------------------------------------------------------
@@ -383,52 +525,61 @@ int swWaitForMessage()
 			else if (memcmp(bufRequest+4,"GETPASS:",8)==0) // Format = V02:GETPASS:domain(256octets)username(256octets)
 			//-------------------------------------------------------------------------------------------------------------
 			{
-				if (cbRead!=12+DOMAIN_LEN+USER_LEN)
+				// Vérifie que l'appelant est autorisé
+				if (!IsCallingProcessAllowed(ulClientProcessId)) // nouveau en 1.11
 				{
-					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+DOMAIN_LEN+USER_LEN));
-					strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
+					strcpy_s(bufResponse,sizeof(bufResponse),"FORBIDDEN");
 					lenResponse=strlen(bufResponse);
 				}
 				else
 				{
-					iUserDataIndex=swGetUserDataIndex(bufRequest,12);
-					if (iUserDataIndex==-1) // utilisateur non connu, erreur !
+					if (cbRead!=12+DOMAIN_LEN+USER_LEN)
 					{
-						TRACE((TRACE_ERROR,_F_,"Unknown user"));
-						strcpy_s(bufResponse,sizeof(bufResponse),"UNKNOWN_USER");
+						TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+DOMAIN_LEN+USER_LEN));
+						strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
 						lenResponse=strlen(bufResponse);
 					}
 					else
 					{
-						TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
-						if (!gUserData[iUserDataIndex].bPasswordStored)
+						iUserDataIndex=swGetUserDataIndex(bufRequest,12);
+						if (iUserDataIndex==-1) // utilisateur non connu, erreur !
 						{
-							TRACE((TRACE_ERROR,_F_,"Pas de mot de passe connu pour cet utilisateur",iUserDataIndex));
-							strcpy_s(bufResponse,sizeof(bufResponse),"NO PASSWORD");
+							TRACE((TRACE_ERROR,_F_,"Unknown user"));
+							strcpy_s(bufResponse,sizeof(bufResponse),"UNKNOWN_USER");
 							lenResponse=strlen(bufResponse);
 						}
-						else // Prépare la réponse, format = ?
+						else
 						{
-							// Déchiffre le mot de passe
-							memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
-							if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
-							TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
-							// Crée la clé de chiffrement des mots de passe secondaires
-							if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-							if (swCreateAESKeyFromKeyData(AESKeyData,&hKey)) goto end;
-							// Chiffre le mot de passe
-							pszEncryptedPwd=swCryptEncryptString(tmpBufPwd,hKey);
-							if (pszEncryptedPwd==NULL)
+							TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
+							if (!gUserData[iUserDataIndex].bPasswordStored)
 							{
-								TRACE((TRACE_ERROR,_F_,"Erreur lors du chiffrement du mot de passe"));
-								strcpy_s(bufResponse,sizeof(bufResponse),"PASSWORD ENCRYPT ERROR");
+								TRACE((TRACE_ERROR,_F_,"Pas de mot de passe connu pour cet utilisateur",iUserDataIndex));
+								strcpy_s(bufResponse,sizeof(bufResponse),"NO PASSWORD");
 								lenResponse=strlen(bufResponse);
 							}
-							else
+							else // Prépare la réponse, format = ?
 							{
-								// Réponse
-								lenResponse=strlen(pszEncryptedPwd);
-								memcpy(bufResponse,pszEncryptedPwd,lenResponse);
+								// Déchiffre le mot de passe
+								memcpy(tmpBufPwd,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
+								if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
+								TRACE((TRACE_PWD,_F_,"gUserData[%d].bufPassword=%s",iUserDataIndex,tmpBufPwd));
+								// Crée la clé de chiffrement des mots de passe secondaires
+								if (swPBKDF2((BYTE*)AESKeyData,AES256_KEY_LEN,tmpBufPwd,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+								if (swCreateAESKeyFromKeyData(AESKeyData,&hKey)) goto end;
+								// Chiffre le mot de passe
+								pszEncryptedPwd=swCryptEncryptString(tmpBufPwd,hKey);
+								if (pszEncryptedPwd==NULL)
+								{
+									TRACE((TRACE_ERROR,_F_,"Erreur lors du chiffrement du mot de passe"));
+									strcpy_s(bufResponse,sizeof(bufResponse),"PASSWORD ENCRYPT ERROR");
+									lenResponse=strlen(bufResponse);
+								}
+								else
+								{
+									// Réponse
+									lenResponse=strlen(pszEncryptedPwd);
+									memcpy(bufResponse,pszEncryptedPwd,lenResponse);
+								}
 							}
 						}
 					}
