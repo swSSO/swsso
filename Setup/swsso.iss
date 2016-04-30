@@ -60,7 +60,7 @@ Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\services\swSSOCM\NetworkProvider
 Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\services\swSSOCM\NetworkProvider"; ValueType: string; ValueName: "ProviderPath"; ValueData: "{app}\swssoCM.dll"; Flags: uninsdeletevalue
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; ValueType: dword; ValueName: "PasswordChoiceLevel"; ValueData: "4"; Flags: uninsdeletevalue
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: none; Flags: uninsdeletekey
-Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "E342B4F309D94BA2CEA3EAFA35123B00867841C3D2651E6FEFD0A250BBC6F480"; Flags: uninsdeletevalue
+Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "5DE79C3C271882428C6701A9F630A1D0D4B9B7FA380FB122FDB04202B6EDBFDB"; Flags: uninsdeletevalue
 
 [UninstallDelete]
 Type: files; Name: "%appdata%\swSSO\swSSO.ini"
