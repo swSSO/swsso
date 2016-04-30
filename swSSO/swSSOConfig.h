@@ -78,6 +78,8 @@ extern BOOL gbDontAskId,gbDontAskPwd;
 extern BOOL gbDontAskId2,gbDontAskId3,gbDontAskId4;
 int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp);
 
+int LogTranscryptError(char *szLogMessage);
+
 extern const char gcszCfgVersion[];
 
 int Migration093(HWND w,const char *szPwd);

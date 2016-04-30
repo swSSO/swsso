@@ -114,6 +114,7 @@ typedef struct
 	BOOL bAddAccount;			// 0.97B1 ISSUE#86 : permet de savoir que la config a été créée par ajout de compte
 	BOOL iWithIdPwd;			// 1.03 modifé 1.05 (BOOL -> int) : permet de savoir que la config a été récupérée du serveur avec ids et/ou mdp (donc interdit de voir le mdp et de modifier les ids et mdp)
 	int  iPwdGroup;				// 1.03 : groupement des configurations pour changement mot de passe
+	BOOL bError;				// 1.11 : config en erreur (par exemple suite à pb de tranchiffrement)
 } T_ACTION;
 
 typedef struct 

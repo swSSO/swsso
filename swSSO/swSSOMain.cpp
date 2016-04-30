@@ -134,6 +134,8 @@ BOOL gbAdmin=FALSE;
 
 HBRUSH ghRedBrush=NULL;
 
+int giNbTranscryptError=0;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -1349,7 +1351,7 @@ static int LoadIcons(void)
 	if (ghCursorHand==NULL) goto end;
 	ghCursorWait=LoadCursor(NULL, IDC_WAIT); 
 	if (ghCursorWait==NULL) goto end;
-	ghImageList=ImageList_LoadBitmap(ghInstance,MAKEINTRESOURCE(IDB_TVIMAGES),16,4,RGB(255,0,255));
+	ghImageList=ImageList_LoadBitmap(ghInstance,MAKEINTRESOURCE(IDB_TVIMAGES),16,5,RGB(255,0,255));
 	if (ghImageList==NULL) goto end;
 	if (gbAdmin) ghRedBrush=CreateSolidBrush(RGB(255,0,0));
 
@@ -2028,6 +2030,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	gSalts.bPBKDF2PwdSaltReady=FALSE;
 	gSalts.bPBKDF2KeySaltReady=FALSE;
 	gLastLoginTime.wYear=0; // ISSUE#171
+	giNbTranscryptError=0;
 
 	ZeroMemory(&gTabLastDetect,sizeof(T_LAST_DETECT)); // pourrait contribuer à la correction de ISSUE#229
 
@@ -2328,6 +2331,7 @@ askpwd:
 				int ret=RecoveryResponse(NULL);
 				if (ret==0) // il y a eu une réinit et ça a bien marché :-)
 				{ 
+					WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile); // était plus bas avant (ISSUE#276)
 					gbRecoveryRunning=TRUE; // transchiffrement plus tard une fois que les configs sont chargées en mémoire
 				}
 				else if (ret==-2)  // pas de réinit
@@ -2382,6 +2386,7 @@ askpwd:
 				int ret=RecoveryResponse(NULL);
 				if (ret==0) // il y a eu une réinit et ça a bien marché :-)
 				{ 
+					WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile); // était plus bas avant (ISSUE#276)
 					gbRecoveryRunning=TRUE; // transchiffrement plus tard une fois que les configs sont chargées en mémoire
 				}
 				else if (ret==-2) // pas de réinit
@@ -2664,7 +2669,7 @@ askpwd:
 		}
 		gbRecoveryRunning=FALSE;
 		// supprime le recovery running
-		WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile);
+		// WritePrivateProfileString("swSSO","recoveryRunning",NULL,gszCfgFile); déplacé plus haut (ISSUE#276)
 		StoreIniEncryptedHash(); // ISSUE#164
 		if (giPwdProtection==PP_ENCRYPTED)
 		{

@@ -1962,6 +1962,7 @@ void TVUpdateItemState(HWND w, HTREEITEM hItem,int iAction)
 	// - en vert tout cout si l'action est marquée comme envoyée au serveur OU
 	//   que l'utilisateur n'a pas autorisé les remontées (ni manuelles ni automatiques)
 	itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2);
+	if (gptActions[iAction].bError) itemex.state=INDEXTOSTATEIMAGEMASK(4);
 	TreeView_SetItem(GetDlgItem(w,TV_APPLICATIONS),&itemex);
 
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -1983,6 +1984,13 @@ int TVActivateAction(HWND w, HTREEITEM hItem,int iActivate)
 
 	TRACE((TRACE_INFO,_F_,"iAction=%d (%s) iActivate=%d",iAction,gptActions[iAction].szApplication,iActivate));
 
+	if (gptActions[iAction].bError)
+	{
+		gptActions[iAction].bError=FALSE;
+		TVUpdateItemState(w,hItem,iAction);
+		goto end;
+	}
+
 	switch(iActivate)
 	{
 		case ACTIVATE_YES:
@@ -2001,7 +2009,7 @@ int TVActivateAction(HWND w, HTREEITEM hItem,int iActivate)
 	gptActions[iAction].wLastSSO=NULL;
 	gptActions[iAction].iWaitFor=giWaitBeforeNewSSO;
 	TVUpdateItemState(w,hItem,iAction);
-
+	
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
@@ -3733,6 +3741,7 @@ int LoadApplications(void)
 	i=0;
 	while (*p!=0)
 	{
+		gptActions[i].bError=FALSE;
 		gptActions[i].szId1Value[0]=0;
 		gptActions[i].szId2Value[0]=0;
 		gptActions[i].szId3Value[0]=0;
@@ -3768,6 +3777,17 @@ int LoadApplications(void)
 				{
 					strcpy_s(gptActions[i].szId1Value,sizeof(gptActions[i].szId1Value),pszDecryptedValue);
 					free(pszDecryptedValue);
+				}
+				else 
+				{
+					if (gbRecoveryRunning) 
+					{
+						char szMessage[1024+1];
+						sprintf_s(szMessage,sizeof(szMessage),"Erreur de tranchiffrement de l'identifiant de la config #%d (%s)\r\n",i,gptActions[i].szApplication);
+						LogTranscryptError(szMessage);
+						giNbTranscryptError++;
+						gptActions[i].bError=TRUE;
+					}
 				}
 			}
 			else
@@ -3841,6 +3861,7 @@ int LoadApplications(void)
 		gptActions[i].iWithIdPwd=atoi(szWithIdPwd);
 		gptActions[i].iPwdGroup=GetPrivateProfileInt(p,"pwdGroup",-1,gszCfgFile); // 1.03
 		gptActions[i].bPwdChangeInfos=GetConfigBoolValue(p,"pwdChange",FALSE,FALSE);
+		if (!gptActions[i].bError) gptActions[i].bError=GetConfigBoolValue(p,"error",FALSE,FALSE); // pour ne pas écraser le statut en erreur éventuellement positionné au dessus
 #if 0
 		// 0.9X : gestion des changements de mot de passe sur les pages web
 		if (gptActions[i].bPwdChangeInfos)
@@ -4058,6 +4079,14 @@ int SaveApplications(void)
 		if (!WriteFile(hf,tmpBuf,strlen(tmpBuf),&dw,NULL)) 
 		{ 
 			TRACE((TRACE_ERROR,_F_,"WriteFile(%s), len=%d",gszCfgFile,strlen(tmpBuf))); goto end;
+		}
+		if (gptActions[i].bError) // je ne l'intègre pas dans le sprintf pour ne pas surcharger le .ini : seules les configs en erreur auront la ligne
+		{
+			strcpy_s(tmpBuf,sizeof(tmpBuf),"error=YES");
+			if (!WriteFile(hf,tmpBuf,strlen(tmpBuf),&dw,NULL)) 
+			{ 
+				TRACE((TRACE_ERROR,_F_,"WriteFile(%s), len=%d",gszCfgFile,strlen(tmpBuf))); // goto end; pas très grave si on n'arrive pas à écrire ça !
+			}
 		}
 		// 080B9 : avaient été oubliés les id*Name, id*Value et id*Type...
 		// 080B9 : + nouveau, on va jusqu'à 4

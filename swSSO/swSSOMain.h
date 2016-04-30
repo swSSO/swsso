@@ -135,3 +135,5 @@ extern BOOL gbWillTerminate;
 extern BOOL gbAdmin;
 
 extern HBRUSH ghRedBrush;
+
+extern int giNbTranscryptError;

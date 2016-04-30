@@ -15,8 +15,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
     {
         BLOCK "040C04B0"
         {
-            VALUE "FileVersion", "1.11"
-            VALUE "ProductVersion", "1.11"
+            VALUE "FileVersion", "1.11 BETA 2"
+            VALUE "ProductVersion", "1.11 BETA 2"
             VALUE "LegalCopyright", "Copyright 2004-2016"
             VALUE "Comments", ""
             VALUE "CompanyName", "Sylvain WERDEFROY"

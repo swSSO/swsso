@@ -2624,6 +2624,42 @@ end:
 	return rc;
 }
 
+//-----------------------------------------------------------------------------
+// LogTranscryptError()
+//-----------------------------------------------------------------------------
+// Loggue les erreurs de transchiffrement dans un fichier portant le même nom
+// et créé dans le même dossier que le fichier .ini, mais avec extension .err
+//-----------------------------------------------------------------------------
+int LogTranscryptError(char *szLogMessage)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	HANDLE hf=INVALID_HANDLE_VALUE; 
+	char szFilename[_MAX_PATH+1];
+	char *p;
+	DWORD dw;
+
+	// nom du fichier : swsso.ini -> swsso.log
+	strcpy_s(szFilename,sizeof(szFilename),gszCfgFile);
+	p=strrchr(szFilename,'.');
+	if (p==NULL) { TRACE((TRACE_ERROR,_F_,"gszCfgFile=%s",gszCfgFile)); goto end; }
+	memcpy(p+1,"err",4);
+
+	// écrit le message dans le fichier log
+	hf=CreateFile(szFilename,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hf==INVALID_HANDLE_VALUE) { TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFilename,GetLastError())); goto end; }
+	// se positionne à la fin
+	SetFilePointer(hf,0,0,FILE_END);
+	// ecrit
+	if (!WriteFile(hf,szLogMessage,strlen(szLogMessage),&dw,NULL)) { TRACE((TRACE_ERROR,_F_,"WriteFile()=%d",GetLastError())); goto end; }
+
+	rc=0;
+end:
+	if (hf!=INVALID_HANDLE_VALUE) CloseHandle(hf); 
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
 // ----------------------------------------------------------------------------------
 // swTranscrypt()
 // ----------------------------------------------------------------------------------
@@ -2640,7 +2676,8 @@ int swTranscrypt(void)
 	char szEncryptedProxyPwd[LEN_ENCRYPTED_AES256+1]; 
 	char *pszComputerName;
 	char szItem[120+1]="";
-
+	char szMessage[1024+1];
+	
 	// parcours de la table des actions et transchiffrement
 	for (i=0;i<giNbActions;i++)
 	{
@@ -2648,11 +2685,35 @@ int swTranscrypt(void)
 		if (*gptActions[i].szPwdEncryptedValue==0) goto suite;
 		// déchiffrement mot de passe
 		pszDecryptedPwd=swCryptDecryptString(gptActions[i].szPwdEncryptedValue,ghKey1);
-		if (pszDecryptedPwd==NULL) goto end;
+		if (pszDecryptedPwd==NULL)
+		{
+			// goto end; // ISSUE#276 : en cas d'erreur, génère un log, marque l'entrée comme invalide et continue
+			*gptActions[i].szPwdEncryptedValue=0;
+			sprintf_s(szMessage,sizeof(szMessage),"Erreur de tranchiffrement du mot de passe de la config #%d (%s)\r\n",i,gptActions[i].szApplication);
+			LogTranscryptError(szMessage);
+			if (!gptActions[i].bError) 
+			{ 
+				giNbTranscryptError++; // incrément seulement si pas déjà marquée en erreur à cause de l'identifiant
+				gptActions[i].bError=TRUE;
+			}
+			goto suite;
+		}
 		// rechiffrement avec la nouvelle clé
 		pszTranscryptedPwd=swCryptEncryptString(pszDecryptedPwd,ghKey2);
 		SecureZeroMemory(pszDecryptedPwd,strlen(pszDecryptedPwd));
-		if (pszTranscryptedPwd==NULL) goto end;
+		if (pszTranscryptedPwd==NULL)
+		{
+			// goto end; // ISSUE#276 : en cas d'erreur, génère un log, marque l'entrée comme invalide et continue
+			*gptActions[i].szPwdEncryptedValue=0;
+			sprintf_s(szMessage,sizeof(szMessage),"Erreur de tranchiffrement du mot de passe de la config #%d (%s)\r\n",i,gptActions[i].szApplication);
+			LogTranscryptError(szMessage);
+			if (!gptActions[i].bError) 
+			{ 
+				giNbTranscryptError++; // incrément seulement si pas déjà marquée en erreur à cause de l'identifiant
+				gptActions[i].bError=TRUE;
+			}
+			goto suite;
+		}
 		strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszTranscryptedPwd);
 suite:
 		if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
@@ -2671,13 +2732,13 @@ suite:
 		if (lenEncryptedProxyPwd==LEN_ENCRYPTED_AES256) // mot de passe chiffré. Dans tous les autres cas (pas de mot de passe ou non chiffré, on ne fait rien !)
 		{
 			pszDecryptedPwd=swCryptDecryptString(szEncryptedProxyPwd,ghKey1);
-			if (pszDecryptedPwd==NULL) goto end;
+			if (pszDecryptedPwd==NULL) goto suitead;
 			//TRACE((TRACE_PWD,_F_,"pszDecryptedPwd=%s",pszDecryptedPwd));
 			// déchiffrement OK avec ghKey1, on rechiffre avec ghKey2
 			pszTranscryptedPwd=swCryptEncryptString(pszDecryptedPwd,ghKey2);
 			// 0.85B9 : remplacement de memset(pszDecryptedPwd,0,strlen(pszDecryptedPwd));
 			SecureZeroMemory(pszDecryptedPwd,strlen(pszDecryptedPwd));
-			if (pszTranscryptedPwd==NULL) goto end;
+			if (pszTranscryptedPwd==NULL) goto suitead;
 			// écriture dans le fichier ini
 			WritePrivateProfileString("swSSO",szItem,pszTranscryptedPwd,gszCfgFile);
 			StoreIniEncryptedHash(); // ISSUE#164
@@ -2685,6 +2746,7 @@ suite:
 		if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
 		if (pszTranscryptedPwd!=NULL) { free(pszTranscryptedPwd); pszTranscryptedPwd=NULL; }
 	}
+suitead:
 	// 1.03 - transchiffre aussi le mot de passe AD, si présent
 	if (gbUseADPasswordForAppLogin)
 	{
@@ -2692,18 +2754,24 @@ suite:
 		{
 			// déchiffrement mot de passe
 			pszDecryptedPwd=swCryptDecryptString(gszEncryptedADPwd,ghKey1);
-			if (pszDecryptedPwd==NULL) goto end;
+			if (pszDecryptedPwd==NULL) goto bientotlafin;
 			// rechiffrement avec la nouvelle clé
 			pszTranscryptedPwd=swCryptEncryptString(pszDecryptedPwd,ghKey2);
 			SecureZeroMemory(pszDecryptedPwd,strlen(pszDecryptedPwd));
-			if (pszTranscryptedPwd==NULL) goto end;
+			if (pszTranscryptedPwd==NULL) goto bientotlafin;
 			strcpy_s(gszEncryptedADPwd,sizeof(gszEncryptedADPwd),pszTranscryptedPwd);
 			if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
 			if (pszTranscryptedPwd!=NULL) { free(pszTranscryptedPwd); pszTranscryptedPwd=NULL; }
 		}
 	}
+bientotlafin:
 	rc=0;
-end:
+//end:
+	if (giNbTranscryptError!=0)
+	{
+		sprintf_s(szMessage,GetString(IDS_TRANSCRYPT_ERROR),giNbTranscryptError);
+		MessageBox(NULL,szMessage,"swSSO",MB_OK | MB_ICONEXCLAMATION);
+	}
 	if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
 	if (pszTranscryptedPwd!=NULL) { free(pszTranscryptedPwd); pszTranscryptedPwd=NULL; }
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));

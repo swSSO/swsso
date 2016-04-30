@@ -187,3 +187,8 @@ $RECYCLE.BIN/
 /swSSORecoverSvc/Release
 /swSSO/_swSSO.ini
 /swSSOMigration/Debug
+/swSSO/swSSO - cassé - Copie.ini
+/swSSO/swSSO - cassé 1mdp et 1ID.ini
+*.ini
+*.err
+/swSSOMigration/Release

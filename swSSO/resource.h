@@ -402,6 +402,7 @@
 #define IDS_AJOUTER                     42024
 #define IDS_STRING42025                 42025
 #define IDS_RECOVER_WEBSERVICE_ERROR    42025
+#define IDS_TRANSCRYPT_ERROR            42026
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

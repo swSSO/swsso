@@ -942,6 +942,7 @@ BEGIN
     IDS_AJOUTER             "&Ajouter"
     IDS_RECOVER_WEBSERVICE_ERROR 
                             "Votre mot de passe swSSO est désynchronisé et le service de resynchronisation est injoignable. Veuillez retenter ultérieurement ou contacter votre support."
+    IDS_TRANSCRYPT_ERROR    "Une erreur est survenue sur %d configurations : vos identifiants ont été perdus et vous seront donc demandés lors de la prochaine connexion à ces applications.\r\nLes configurations concernées sont précédées d'un rond noir dans la fenêtre de gestion des sites et applications."
 END
 
 #endif    // French (France) resources
