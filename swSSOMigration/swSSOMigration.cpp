@@ -36,6 +36,7 @@ SID *gpSid=NULL;
 char *gpszRDN=NULL;
 char gszUserName[UNLEN+1]="";
 char gszCfgFile[_MAX_PATH+1];
+char gszLogFile[_MAX_PATH+1];
 UINT guiContinueMsg=0;
 T_SALT gSalts;
 HCRYPTKEY ghKey1=NULL;
@@ -134,6 +135,44 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// LogMessage()
+//-----------------------------------------------------------------------------
+// Loggue étapes et erreurs éventuelles de migration
+//-----------------------------------------------------------------------------
+int LogMessage(char *szLogMessage, ...)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	HANDLE hf=INVALID_HANDLE_VALUE; 
+	DWORD dw;
+	int len;
+	SYSTEMTIME horodate;
+	char szLog[2048];
+
+	hf=CreateFile(gszLogFile,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hf==INVALID_HANDLE_VALUE) { TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",gszLogFile,GetLastError())); goto end; }
+	// se positionne à la fin
+	SetFilePointer(hf,0,0,FILE_END);
+	// en-tête : horodate + niveau + nom de la fonction
+	GetLocalTime(&horodate);
+	len=wsprintf(szLog,"%02d/%02d-%02d:%02d:%02d:%03d ",
+		(int)horodate.wDay,(int)horodate.wMonth,
+		(int)horodate.wHour,(int)horodate.wMinute,(int)horodate.wSecond,(int)horodate.wMilliseconds);
+	// log
+	len+=wvsprintf(szLog+len,szLogMessage,(char *)(&szLogMessage+1));
+	// retour chariot
+	memcpy(szLog+len,"\r\n\0",3);
+	len+=2;
+	WriteFile(hf,szLog,len,&dw,NULL);
+
+	rc=0;
+end:
+	if (hf!=INVALID_HANDLE_VALUE) CloseHandle(hf); 
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
 // swSSOMigrationPart1() 
 //-----------------------------------------------------------------------------
 // récupération user et domaine
@@ -155,10 +194,12 @@ int swSSOMigrationPart1()
 	char *pszPassword=NULL;
 
 	// récupère user et domaine
-	if (GetUserAndDomain()!=0) goto end;
+	if (GetUserAndDomain()!=0) { LogMessage("ERROR : Utilisateur ou domaine introuvable"); goto end; }
 	// lecture des sels dans le .ini
-	if (swReadPBKDF2Salt()!=0) goto end;
+	if (swReadPBKDF2Salt()!=0) { LogMessage("ERROR : Fichier %s absent ou corrompu",gszCfgFile); goto end; }
+	LogMessage("INFO  : Fichier .ini trouve");
 	// Envoie les sels à swSSOSVC : V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
+	LogMessage("INFO  : Communication avec swSSOSVC 1/3");
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:PUTPSKS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
@@ -167,48 +208,59 @@ int swSSOMigrationPart1()
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
+		LogMessage("ERROR : Le service swSSOSVC ne repond pas"); 
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
 	}
+	LogMessage("INFO  : Communication avec swSSOSVC 1/3 -- OK");
 	// Demande le keydata à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
+	LogMessage("INFO  : Communication avec swSSOSVC 2/3");
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
 	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
+		LogMessage("ERROR : Le service swSSOSVC ne repond pas"); 
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
 	}
 	if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
 	{
+		LogMessage("ERROR : Le service swSSOSVC ne repond pas"); 
 		TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld (attendu=%d)",dwLenResponse,PBKDF2_PWD_LEN+AES256_KEY_LEN)); goto end;
 	}
+	LogMessage("INFO  : Communication avec swSSOSVC 2/3 -- OK");
+
 	// Crée la clé de chiffrement des mots de passe secondaires
 	memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
 	swCreateAESKeyFromKeyData(AESKeyData,&ghKey1);
 	// Demande le mot de passe à swSSOSVC : V02:GETPASS:domain(256octets)username(256octets)
+	LogMessage("INFO  : Communication avec swSSOSVC 3/3");
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:GETPASS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
+		LogMessage("ERROR : Le service swSSOSVC ne repond pas"); 
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
 	}
 	// en retour, on a reçu le mot de passe chiffré par la clé dérivée du mot de passe (si, si)
 	if (dwLenResponse!=LEN_ENCRYPTED_AES256)
 	{
+		LogMessage("ERROR : Le service swSSOSVC ne repond pas"); 
 		TRACE((TRACE_ERROR,_F_,"Longueur reponse attendue=LEN_ENCRYPTED_AES256=%d, recue=%d",LEN_ENCRYPTED_AES256,dwLenResponse)); goto end;
 	}
+	LogMessage("INFO  : Communication avec swSSOSVC 3/3 -- OK");
 	bufResponse[dwLenResponse]=0;
 	// déchiffre le mot de passe
 	pszPassword=swCryptDecryptString(bufResponse,ghKey1);
-	if (pszPassword==NULL) goto end;
+	if (pszPassword==NULL) { LogMessage("ERROR : Impossible de recuperer le mot de passe"); goto end; }
 	SecureZeroMemory(gBufPassword,sizeof(gBufPassword));
 	strcpy_s(gBufPassword,sizeof(gBufPassword),pszPassword);
 	SecureZeroMemory(pszPassword,strlen(pszPassword));
 	//TRACE_BUFFER((TRACE_PWD,_F_,(unsigned char*)gBufPassword,sizeof(gBufPassword),"gBufPassword"));
 	// rechiffre le mot de passe pour le repasser à SVC dans l'étape 2
-	if (swProtectMemory(gBufPassword,sizeof(gBufPassword),CRYPTPROTECTMEMORY_CROSS_PROCESS)!=0) goto end;
+	if (swProtectMemory(gBufPassword,sizeof(gBufPassword),CRYPTPROTECTMEMORY_CROSS_PROCESS)!=0){ LogMessage("ERROR : Impossible de chiffrer le mot de passe"); goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gBufPassword,sizeof(gBufPassword),"gBufPassword"));
 	
 	rc=0;
@@ -232,6 +284,7 @@ int swSSOMigrationPart2()
 	char bufResponse[1024];
 	DWORD dwLenResponse;
 
+	LogMessage("INFO  : Communication avec swSSOSVC 1/1");
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
 	memcpy(bufRequest,"V02:PUTPASS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
@@ -241,9 +294,11 @@ int swSSOMigrationPart2()
 	// Envoie la requête
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+sizeof(gBufPassword),bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
-		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+		LogMessage("ERROR : Le service swSSOSVC ne repond pas"); 
+		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); 
+		goto end;
 	}
-
+	LogMessage("INFO  : Communication avec swSSOSVC 1/1 -- OK");
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -267,17 +322,33 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	HANDLE hMutex=NULL;
 	MSG msg;
 	HWND gwMain=NULL;
+	char *p;
+	BOOL bLogAtTheEnd=TRUE;
 
 	ghInstance=hInstance;
 	gpSid=NULL;
 	gpszRDN=NULL;
 
-	puts("Demarrage de swSSOMigration");
-
 	// ligne de commande
 	lenCmdLine=strlen(lpCmdLine);
-	if (lenCmdLine==0 || lenCmdLine>_MAX_PATH) { TRACE((TRACE_ERROR,_F_,"lenCmdLine=%d",lenCmdLine)); goto end; }
+	if (lenCmdLine==0 || lenCmdLine>_MAX_PATH*2) { TRACE((TRACE_ERROR,_F_,"lenCmdLine=%d",lenCmdLine)); goto end; }
 	TRACE((TRACE_INFO,_F_,"lenCmdLine=%d lpCmdLine=%s",lenCmdLine,lpCmdLine));
+	p=strstr(lpCmdLine,".ini ");
+	if (p==NULL) { TRACE((TRACE_ERROR,_F_,"Pas de .ini en parametre : lpCmdLine=%s",lpCmdLine)); goto end; }
+	p+=4;
+	TRACE((TRACE_DEBUG,_F_,"lenCmdLine=%d (p-lpCmdLine)=%d",lenCmdLine,p-lpCmdLine));
+	if (lenCmdLine<=(p-lpCmdLine)) { TRACE((TRACE_ERROR,_F_,"Pas de fichier log en parametre : lpCmdLine=%s",lpCmdLine)); goto end; }
+	*p=0;
+	p++;
+	TRACE((TRACE_INFO,_F_,".ini=%s",lpCmdLine));
+	TRACE((TRACE_INFO,_F_,"Log =%s",p));
+
+	// récupère le nom du .ini en paramètre
+	ExpandFileName(lpCmdLine,gszCfgFile,_MAX_PATH+1);
+	TRACE((TRACE_INFO,_F_,"gszCfgFile=%s",gszCfgFile));
+	// récupère le nom du log en paramètre
+	ExpandFileName(p,gszLogFile,_MAX_PATH+1);
+	TRACE((TRACE_INFO,_F_,"gszLogFile=%s",gszLogFile));
 
 	// enregistrement des messages pour réception de paramètres en ligne de commande quand déjà
 	guiContinueMsg=RegisterWindowMessage("swssomigration-continue");
@@ -290,13 +361,15 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	{
 		TRACE((TRACE_INFO,_F_,"Demande à l'instance précédente de continuer"));
 		PostMessage(HWND_BROADCAST,guiContinueMsg,0,0);
+		bLogAtTheEnd=FALSE;
 		goto end;
 	}
-	
-	// récupère le nom du .ini en paramètre
-	ExpandFileName(lpCmdLine,gszCfgFile,_MAX_PATH+1);
-	TRACE((TRACE_INFO,_F_,"gszCfgFile=%s",gszCfgFile));
-	
+
+	LogMessage("================================================================================");
+	LogMessage("INFO  : Demarrage de swSSOMigration");
+	LogMessage("INFO  : Fichier .ini : %s",gszCfgFile);
+	LogMessage("INFO  : Fichier log  : %s",gszLogFile);
+		
 	// initalise la crypto
 	if (swCryptInit()!=0) goto end;
 	if (swProtectMemoryInit()!=0) goto end;
@@ -304,14 +377,14 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	// création fenêtre technique pour réception des messages
 	gwMain=CreateMainWindow();
 
-	puts("Debut migration partie 1/2");
+	LogMessage("INFO  : Debut migration partie 1/2 (recup infos du service)");
 
 	// première partie de la migration
 	rc=swSSOMigrationPart1();
-	if (rc!=0) { puts("Fin migration partie 1/2 -- ERREUR"); goto end; }
+	if (rc!=0) { LogMessage("INFO  : Fin migration partie 1/2 (recup infos du service) -- KO"); goto end; }
 	TRACE((TRACE_INFO,_F_,"swSSOMigrationPart1 termine, se met en attente"));
-	puts("Fin migration partie 1/2 -- OK");
-	puts("En attente debut migration partie 2/2");
+	LogMessage("INFO  : Fin migration partie 1/2 (recup infos du service) -- OK");
+	LogMessage("INFO  : En attente debut migration partie 2/2 (envoi des infos au service)");
 
 	// boucle de message pour attendre le signal pour la 2nde partie de la migration
 	while((rc=GetMessage(&msg,NULL,0,0))!=0)
@@ -321,12 +394,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			if (msg.message==guiContinueMsg) 
 			{
 				TRACE((TRACE_INFO,_F_,"Message recu : swssomigration-continue (0x%08lx)",guiContinueMsg));
-				puts("Debut migration partie 2/2");
+				LogMessage("INFO  : Debut migration partie 2/2 (envoi des infos au service)");
 				rc=swSSOMigrationPart2();
 				if (rc==0)
-					puts("Fin migration partie 2/2 -- OK");
+					LogMessage("INFO  : Fin migration partie 2/2 (envoi des infos au service) -- OK");
 				else
-					puts("Fin migration partie 2/2 -- ERREUR"); 
+					LogMessage("INFO  : Fin migration partie 2/2 (envoi des infos au service) -- KO"); 
 				goto end;
 			}
 			else
@@ -339,10 +412,13 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 
 	rc=0;
 end:
-	if (rc==0)
-		puts("Arret de swSSOMigration -- OK");
-	else
-		puts("Arret de swSSOMigration -- ERREUR");
+	if (bLogAtTheEnd)
+	{
+		if (rc==0)
+			LogMessage("INFO  : Arret de swSSOMigration -- Migration OK");
+		else
+			LogMessage("INFO  : Arret de swSSOMigration -- Migration KO");
+	}
 	swCryptDestroyKey(ghKey1);
 	swCryptTerm();
 	swProtectMemoryTerm();
