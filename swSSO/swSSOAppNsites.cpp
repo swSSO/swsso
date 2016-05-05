@@ -1962,7 +1962,17 @@ void TVUpdateItemState(HWND w, HTREEITEM hItem,int iAction)
 	// - en vert tout cout si l'action est marquée comme envoyée au serveur OU
 	//   que l'utilisateur n'a pas autorisé les remontées (ni manuelles ni automatiques)
 	itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2);
-	if (gptActions[iAction].bError) itemex.state=INDEXTOSTATEIMAGEMASK(4);
+	if (gptActions[iAction].bError) // la config est en erreur : si on trouve un id ou un mdp c'est que l'utilisateur l'a réparée donc on supprime ce statut
+	{
+		if (*gptActions[iAction].szId1Value!=0 || *gptActions[iAction].szPwdEncryptedValue!=0) 
+		{
+			gptActions[iAction].bError=FALSE;
+		}
+		else
+		{
+			itemex.state=INDEXTOSTATEIMAGEMASK(4);
+		}
+	}
 	TreeView_SetItem(GetDlgItem(w,TV_APPLICATIONS),&itemex);
 
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -3787,6 +3797,7 @@ int LoadApplications(void)
 						LogTranscryptError(szMessage);
 						giNbTranscryptError++;
 						gptActions[i].bError=TRUE;
+						*szId1EncryptedValue=0;
 					}
 				}
 			}
@@ -3862,6 +3873,10 @@ int LoadApplications(void)
 		gptActions[i].iPwdGroup=GetPrivateProfileInt(p,"pwdGroup",-1,gszCfgFile); // 1.03
 		gptActions[i].bPwdChangeInfos=GetConfigBoolValue(p,"pwdChange",FALSE,FALSE);
 		if (!gptActions[i].bError) gptActions[i].bError=GetConfigBoolValue(p,"error",FALSE,FALSE); // pour ne pas écraser le statut en erreur éventuellement positionné au dessus
+		if (gptActions[i].bError) // la config est en erreur : si on trouve un id ou un mdp c'est que l'utilisateur l'a réparée donc on supprime ce statut
+		{
+			if (*gptActions[i].szId1Value!=0 || *gptActions[i].szPwdEncryptedValue!=0) gptActions[i].bError=FALSE;
+		}
 #if 0
 		// 0.9X : gestion des changements de mot de passe sur les pages web
 		if (gptActions[i].bPwdChangeInfos)
