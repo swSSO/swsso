@@ -207,7 +207,9 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (gbShowLaunchAppWithoutCtrl)
 							ShowAppNsites(giLastApplicationConfig,TRUE);	
 						else
-							ShowLaunchApp();
+						{
+							if (gbShowMenu_LaunchApp) ShowLaunchApp(); // ISSUE#289
+						}
 					}
 					else
 					{
@@ -217,7 +219,9 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						{
 							// ShowAppNsites(-1); ISSUE#108
 							if (gbShowLaunchAppWithoutCtrl)
-								ShowLaunchApp();
+							{
+								if (gbShowMenu_LaunchApp) ShowLaunchApp(); // ISSUE#289
+							}
 							else
 								ShowAppNsites(giLastApplicationConfig,TRUE);
 						}
