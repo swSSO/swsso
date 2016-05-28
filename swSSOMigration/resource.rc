@@ -1,8 +1,7 @@
 #ifndef APSTUDIO_INVOKED
 #define PRODUCT_NAME "swSSOMigration"
-#define PRODUCT_NAME_TRACE "swSSOMigration (traces)"
+#define PRODUCT_NAME_DEBUG "swSSOMigration (debug)"
 #define EXECUTABLE_NAME "swSSOMigration.exe"
-#define EXECUTABLE_NAME_TRACE "swSSOMigration.exe"
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>

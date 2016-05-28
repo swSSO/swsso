@@ -9,9 +9,8 @@
 //
 #ifndef APSTUDIO_INVOKED
 #define PRODUCT_NAME "swSSO"
-#define PRODUCT_NAME_TRACE "swSSO (traces)"
+#define PRODUCT_NAME_DEBUG "swSSO (debug)"
 #define EXECUTABLE_NAME "swSSO.exe"
-#define EXECUTABLE_NAME_TRACE "swSSOTrace.exe"
 #include "windows.h"
 #include "..\swSSOCommonFiles\versioninfo.rc"
 #endif
@@ -492,7 +491,7 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.11 BETA 3 (06/05/2016)",TX_ABOUT,47,12,120,8
+    LTEXT           "Version 1.11 BETA 4 (28/05/2016)",TX_ABOUT,47,12,120,8
     LTEXT           "Portail :",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -613,9 +612,8 @@ END
 BEGIN
     "#ifndef APSTUDIO_INVOKED\r\n"
     "#define PRODUCT_NAME ""swSSO""\r\n"
-    "#define PRODUCT_NAME_TRACE ""swSSO (traces)""\r\n"
+    "#define PRODUCT_NAME_DEBUG ""swSSO (debug)""\r\n"
     "#define EXECUTABLE_NAME ""swSSO.exe""\r\n"
-    "#define EXECUTABLE_NAME_TRACE ""swSSOTrace.exe""\r\n"
     "#include ""windows.h""\r\n"
     "#include ""..\\swSSOCommonFiles\\versioninfo.rc""\r\n"
     "#endif\r\n"

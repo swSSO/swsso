@@ -1,8 +1,7 @@
 #ifndef APSTUDIO_INVOKED
 #define PRODUCT_NAME "swSSOHotKey"
-#define PRODUCT_NAME_TRACE "swSSOHotKey (traces)"
+#define PRODUCT_NAME_DEBUG "swSSOHotKey (debug)"
 #define EXECUTABLE_NAME "swSSOHotKey.dll"
-#define EXECUTABLE_NAME_TRACE "swSSOHotKey.dll"
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>

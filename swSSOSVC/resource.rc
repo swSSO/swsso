@@ -1,8 +1,7 @@
 #ifndef APSTUDIO_INVOKED
 #define PRODUCT_NAME "swSSOSVC"
-#define PRODUCT_NAME_TRACE "swSSOSVC (traces)"
+#define PRODUCT_NAME_DEBUG "swSSOSVC (debug)"
 #define EXECUTABLE_NAME "swSSOSVC.exe"
-#define EXECUTABLE_NAME_TRACE "swSSOSVC.exe"
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>

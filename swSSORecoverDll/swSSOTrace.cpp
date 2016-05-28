@@ -33,10 +33,15 @@
 
 #include "stdafx.h"
 
-static char gszTraceFileName[260+1];
-static int giTraceLevel=TRACE_ERROR;
+static char gszTraceFileName[260+1]="";
+static int giTraceLevel=TRACE_NONE;
+#ifdef _DEBUG 
+static int giDefaultTraceLevel=TRACE_DEBUG;
+#else
+static int giDefaultTraceLevel=TRACE_NONE;
+#endif
 static DWORD gdwTraceFileSize=20000000; 
-static char gszTraceBuf[2048];
+static char gszTraceBuf[4096];
 HANDLE ghfTrace=INVALID_HANDLE_VALUE;
 
 static char gszTraceLevelLabel[5+1];
@@ -53,6 +58,8 @@ void swTraceOpen(void)
 {
 	DWORD lenConfigFile;
 	char szConfigFile[1024];
+	int len;
+	DWORD dw;
 
 	DWORD dwWaitForSingleObject;
 	ghTraceMutex=CreateMutex(NULL,TRUE,"Global\\swSSORecoverDll.traces");
@@ -72,13 +79,18 @@ void swTraceOpen(void)
 	GetPrivateProfileString("Logs","Filename","",gszTraceFileName,sizeof(gszTraceFileName),szConfigFile);
 	if (*gszTraceFileName==0) goto end; // nom de fichier pas trouvé, pas de traces
 	gdwTraceFileSize=GetPrivateProfileInt("Logs","Filesize",20,szConfigFile)*1000000;
-	giTraceLevel=GetPrivateProfileInt("Logs","Level",1,szConfigFile);
+	giTraceLevel=GetPrivateProfileInt("Logs","Level",giDefaultTraceLevel,szConfigFile);
 	
 	// ouverture du fichier (fermé uniquement sur appel de swTraceClose)
 	ghfTrace=CreateFile(gszTraceFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-	// si fichier existe, se positionne à la fin du fichier pour écritures ultérieures
-	if (ghfTrace!=INVALID_HANDLE_VALUE) SetFilePointer(ghfTrace,0,0,FILE_END);
-
+	if (ghfTrace!=INVALID_HANDLE_VALUE)
+	{
+		// se positionne à la fin du fichier
+		SetFilePointer(ghfTrace,0,0,FILE_END);
+		// entete
+		len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : level=%d ===================\r\n",giTraceLevel);
+		WriteFile(ghfTrace,gszTraceBuf,len,&dw,NULL);
+	}
 end:;
 }
 

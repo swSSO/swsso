@@ -1,13 +1,12 @@
 #ifndef APSTUDIO_INVOKED
 #ifdef SW_64BITS
 #define PRODUCT_NAME "swSSOCM x64" 
-#define PRODUCT_NAME_TRACE "swSSOCM x64 (traces)"
+#define PRODUCT_NAME_DEBUG "swSSOCM x64 (debug)"
 #else
 #define PRODUCT_NAME "swSSOCM x86"
-#define PRODUCT_NAME_TRACE "swSSOCM x86 (traces)"
+#define PRODUCT_NAME_DEBUG "swSSOCM x86 (debug)"
 #endif
 #define EXECUTABLE_NAME "swSSOCM.dll"
-#define EXECUTABLE_NAME_TRACE "swSSOCM.dll"
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>

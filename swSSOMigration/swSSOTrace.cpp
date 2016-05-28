@@ -38,8 +38,14 @@
 #define REGVALUE_TRACE_FILENAME "FileName"
 #define REGVALUE_TRACE_FILESIZE "FileSize"
 
-static char gszTraceFileName[_MAX_PATH+1];
+#ifdef _DEBUG 
 static int giTraceLevel=TRACE_DEBUG;
+static char gszTraceFileName[_MAX_PATH+1]="c:\\swsso\\swssotracemigration.txt";
+#else
+static int giTraceLevel=TRACE_NONE;
+static char gszTraceFileName[_MAX_PATH+1]="";
+#endif
+
 static DWORD gdwTraceFileSize=20000000; 
 static char gszTraceBuf[4096];
 HANDLE ghfTrace=INVALID_HANDLE_VALUE;
@@ -60,50 +66,33 @@ void swTraceOpen(void)
 	int len;
 	DWORD dw;
 
-	// valeurs par défaut pour les chaines de caractères
-	// les valeurs par défaut pour les DWORD sont initialisées dans la déclaration des variables globales
-	
-	// ISSUE#100 : déplacement du fichier de trace car pas de droit d'écriture dans c: si non admin
-	// strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\swssotrace.txt");
-	len=GetCurrentDirectory(_MAX_PATH-30,gszTraceFileName);
-	if (len==0)
-	{
-		strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\swsso\\swssotracemigration.txt");
-	}
-	else
-	{
-		if (gszTraceFileName[len-1]!='\\')
-		{
-			gszTraceFileName[len]='\\';
-			len++;
-		}
-		strcpy_s(gszTraceFileName+len,_MAX_PATH+1,"swssotracemigration.txt");
-	}
 	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_TRACE,0,KEY_READ,&hKey);
-	if (rc!=ERROR_SUCCESS) goto end;
+	if (rc==ERROR_SUCCESS)
+	{
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_TRACE_LEVEL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giTraceLevel=dwValue; 
 
-	dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-	rc=RegQueryValueEx(hKey,REGVALUE_TRACE_LEVEL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-	if (rc==ERROR_SUCCESS) giTraceLevel=dwValue; 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILESIZE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gdwTraceFileSize=dwValue*1000000; 
 
-	dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-	rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILESIZE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-	if (rc==ERROR_SUCCESS) gdwTraceFileSize=dwValue*1000000; 
+		dwValueType=REG_SZ; dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILENAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),szValue);
+	}
+	if (*gszTraceFileName==0) goto end; // pas de fichier spécifié, pas de traces
 
-	dwValueType=REG_SZ;
-	dwValueSize=sizeof(szValue);
-	rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILENAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-	if (rc==ERROR_SUCCESS) strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),szValue);
-
-end:
-	if (hKey!=NULL) RegCloseKey(hKey);
 	// ouverture du fichier (fermé uniquement sur appel de swTraceClose)
 	ghfTrace=CreateFile(gszTraceFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-	// si fichier existe, se positionne à la fin du fichier pour écritures ultérieures
-	if (ghfTrace!=INVALID_HANDLE_VALUE) SetFilePointer(ghfTrace,0,0,FILE_END);
-	//
-	len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : taille max fichier=%d octets ===================\r\n",gdwTraceFileSize);
+	if (ghfTrace==INVALID_HANDLE_VALUE) goto end;
+	// se positionne à la fin du fichier
+	SetFilePointer(ghfTrace,0,0,FILE_END);
+	// entete
+	len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : level=%d ===================\r\n",giTraceLevel);
 	WriteFile(ghfTrace,gszTraceBuf,len,&dw,NULL);
+end:
+	if (hKey!=NULL) RegCloseKey(hKey);
 }
 
 //-----------------------------------------------------------------------------

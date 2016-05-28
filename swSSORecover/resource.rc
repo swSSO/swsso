@@ -8,19 +8,11 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #ifndef APSTUDIO_INVOKED
-
 #define PRODUCT_NAME "swSSORecover"
-
-#define PRODUCT_NAME_TRACE "swSSORecover (traces)"
-
+#define PRODUCT_NAME_DEBUG "swSSORecover (debug)"
 #define EXECUTABLE_NAME "swSSORecover.exe"
-
-#define EXECUTABLE_NAME_TRACE "swSSORecover.exe"
-
 #include "windows.h"
-
 #include "..\swssocommonfiles\versioninfo.rc"
-
 #endif
 
 #define APSTUDIO_HIDDEN_SYMBOLS
@@ -152,11 +144,9 @@ BEGIN
     "\r\n"
     "#define PRODUCT_NAME ""swSSORecover""\r\n"
     "\n"
-    "#define PRODUCT_NAME_TRACE ""swSSORecover (traces)""\r\n"
+    "#define PRODUCT_NAME_DEBUG ""swSSORecover (debug)""\r\n"
     "\n"
     "#define EXECUTABLE_NAME ""swSSORecover.exe""\r\n"
-    "\n"
-    "#define EXECUTABLE_NAME_TRACE ""swSSORecover.exe""\r\n"
     "\n"
     "#include ""windows.h""\n"
     "\r\n"

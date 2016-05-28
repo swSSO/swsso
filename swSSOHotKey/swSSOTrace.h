@@ -31,6 +31,7 @@
 // swSSOTrace.h
 //-----------------------------------------------------------------------------
 
+#define TRACE_NONE		0 // pas de traces
 #define TRACE_ERROR		1 // erreurs
 #define TRACE_ENTER		2 // entrée de fonction
 #define TRACE_LEAVE		3 // sortie de fonction
