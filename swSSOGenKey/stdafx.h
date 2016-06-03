@@ -34,6 +34,7 @@
 #include "targetver.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <windows.h>
 #include "swSSOTrace.h"
 #include "swSSOCrypt.h"

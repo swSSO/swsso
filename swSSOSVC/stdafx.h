@@ -35,6 +35,7 @@
 #include <windows.h>
 #include <Sddl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <tchar.h>
 #include "swSSOTrace.h"
 #include "swSSOCrypt.h"

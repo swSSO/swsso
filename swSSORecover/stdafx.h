@@ -35,6 +35,7 @@
 #include <commctrl.h>
 #include <authz.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <Lmcons.h>
 #include <tchar.h>
 

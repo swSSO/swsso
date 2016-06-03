@@ -52,6 +52,43 @@ HANDLE ghfTrace=INVALID_HANDLE_VALUE;
 static char gszTraceLevelLabel[5+1];
 
 //-----------------------------------------------------------------------------
+// ExpandFileName()
+//-----------------------------------------------------------------------------
+// Expande les variables d'environnement dans les noms de fichier
+//-----------------------------------------------------------------------------
+int ExpandFileName(char *szInFileName,char *szOutFileName, int iBufSize)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szTmpFileName[_MAX_PATH+1];
+	int iPos=0;
+	size_t len;
+
+	// si chaine vide, on sort avec chaine vide
+	if (*szInFileName==0) { *szOutFileName=0; rc=0; goto end; }
+
+	// on commence par enlever les éventuels guillemets de début et fin de chaine
+	if (*szInFileName=='"') iPos=1;
+	strcpy_s(szTmpFileName,_MAX_PATH+1,szInFileName+iPos);
+	len=strlen(szTmpFileName);
+	if (len>1 && szTmpFileName[len-1]=='"') szTmpFileName[len-1]=0;
+
+	// on expande les variables d'environnement
+	if (ExpandEnvironmentStrings(szTmpFileName,szOutFileName,iBufSize)==0)
+	{
+		TRACE((TRACE_ERROR,_F_,"ExpandEnvironmentStrings(%s)=%d",szTmpFileName,GetLastError()));
+		goto end;
+	}
+
+	TRACE((TRACE_DEBUG,_F_,"ExpandEnvironmentStrings(%s)=%s",szTmpFileName,szOutFileName));
+	rc=0;
+	
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
 // swTraceOpen()
 //-----------------------------------------------------------------------------
 // Lecture de la configuration en base de registre et ouverture du fichier trace
@@ -78,7 +115,12 @@ void swTraceOpen(void)
 
 		dwValueType=REG_SZ; dwValueSize=sizeof(szValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILENAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) wsprintf(gszTraceFileName,"%s-%08lx",szValue,GetTickCount());
+		if (rc==ERROR_SUCCESS) 
+		{
+			char szTemp[_MAX_PATH+1];
+			ExpandFileName(szValue,szTemp,_MAX_PATH+1); // ISSUE#291
+			if (*szTemp!=0) wsprintf(gszTraceFileName,"%s-%08lx",szTemp,GetTickCount());
+		}
 	}
 	if (*gszTraceFileName==0) goto end; // pas de fichier spécifié, pas de traces
 

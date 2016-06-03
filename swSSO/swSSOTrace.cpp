@@ -40,10 +40,10 @@
 
 #ifdef _DEBUG 
 static int giTraceLevel=TRACE_DEBUG;
-static char gszTraceFileName[260+1]="c:\\swsso\\swssotrace.txt";
+static char gszTraceFileName[_MAX_PATH+1]="c:\\swsso\\swssotrace.txt";
 #else
 static int giTraceLevel=TRACE_NONE;
-static char gszTraceFileName[260+1]="";
+static char gszTraceFileName[_MAX_PATH+1]="";
 #endif
 static DWORD gdwTraceFileSize=20000000; 
 static char gszTraceBuf[4096];
@@ -78,7 +78,7 @@ void swTraceOpen(void)
 
 		dwValueType=REG_SZ; dwValueSize=sizeof(szValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILENAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),szValue);
+		if (rc==ERROR_SUCCESS) ExpandFileName(szValue,gszTraceFileName,_MAX_PATH+1); // ISSUE#291
 	}
 	if (*gszTraceFileName==0) goto end; // pas de fichier spécifié, pas de traces
 	

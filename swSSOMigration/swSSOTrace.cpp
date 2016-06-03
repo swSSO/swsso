@@ -79,7 +79,7 @@ void swTraceOpen(void)
 
 		dwValueType=REG_SZ; dwValueSize=sizeof(szValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_TRACE_FILENAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),szValue);
+		if (rc==ERROR_SUCCESS) ExpandFileName(szValue,gszTraceFileName,_MAX_PATH+1); // ISSUE#291
 	}
 	if (*gszTraceFileName==0) goto end; // pas de fichier spécifié, pas de traces
 

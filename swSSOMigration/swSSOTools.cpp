@@ -44,6 +44,9 @@ int ExpandFileName(char *szInFileName,char *szOutFileName, int iBufSize)
 	int iPos=0;
 	int len;
 
+	// si chaine vide, on sort avec chaine vide
+	if (*szInFileName==0) { *szOutFileName=0; rc=0; goto end; }
+
 	// on commence par enlever les éventuels guillemets de début et fin de chaine
 	if (*szInFileName=='"') iPos=1;
 	strcpy_s(szTmpFileName,_MAX_PATH+1,szInFileName+iPos);
@@ -64,6 +67,7 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
+
 
 //-----------------------------------------------------------------------------
 // strnistr()

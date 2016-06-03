@@ -33,7 +33,7 @@
 
 #include "stdafx.h"
 
-static char gszTraceFileName[260+1]="";
+static char gszTraceFileName[_MAX_PATH+1]="";
 static int giTraceLevel=TRACE_NONE;
 #ifdef _DEBUG 
 static int giDefaultTraceLevel=TRACE_DEBUG;
@@ -48,6 +48,43 @@ static char gszTraceLevelLabel[5+1];
 HANDLE ghTraceMutex=NULL;
 
 //-----------------------------------------------------------------------------
+// ExpandFileName()
+//-----------------------------------------------------------------------------
+// Expande les variables d'environnement dans les noms de fichier
+//-----------------------------------------------------------------------------
+int ExpandFileName(char *szInFileName,char *szOutFileName, int iBufSize)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szTmpFileName[_MAX_PATH+1];
+	int iPos=0;
+	size_t len;
+
+	// si chaine vide, on sort avec chaine vide
+	if (*szInFileName==0) { *szOutFileName=0; rc=0; goto end; }
+
+	// on commence par enlever les éventuels guillemets de début et fin de chaine
+	if (*szInFileName=='"') iPos=1;
+	strcpy_s(szTmpFileName,_MAX_PATH+1,szInFileName+iPos);
+	len=strlen(szTmpFileName);
+	if (len>1 && szTmpFileName[len-1]=='"') szTmpFileName[len-1]=0;
+
+	// on expande les variables d'environnement
+	if (ExpandEnvironmentStrings(szTmpFileName,szOutFileName,iBufSize)==0)
+	{
+		TRACE((TRACE_ERROR,_F_,"ExpandEnvironmentStrings(%s)=%d",szTmpFileName,GetLastError()));
+		goto end;
+	}
+
+	TRACE((TRACE_DEBUG,_F_,"ExpandEnvironmentStrings(%s)=%s",szTmpFileName,szOutFileName));
+	rc=0;
+	
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
 // swTraceOpen()
 //-----------------------------------------------------------------------------
 // Lecture de la configuration des traces et ouverture du fichier trace
@@ -58,6 +95,7 @@ void swTraceOpen(void)
 {
 	DWORD lenConfigFile;
 	char szConfigFile[1024];
+	char szTemp[_MAX_PATH+1];
 	int len;
 	DWORD dw;
 
@@ -76,8 +114,9 @@ void swTraceOpen(void)
 	memcpy(szConfigFile+lenConfigFile-3,"ini",3);
 
 	// lit les infos du keystore dans le fichier de configuration
-	GetPrivateProfileString("Logs","Filename","",gszTraceFileName,sizeof(gszTraceFileName),szConfigFile);
-	if (*gszTraceFileName==0) goto end; // nom de fichier pas trouvé, pas de traces
+	GetPrivateProfileString("Logs","Filename","",szTemp,sizeof(szTemp),szConfigFile);
+	if (*szTemp==0) goto end; // nom de fichier pas trouvé, pas de traces
+	ExpandFileName(szTemp,gszTraceFileName,_MAX_PATH+1); // ISSUE#291
 	gdwTraceFileSize=GetPrivateProfileInt("Logs","Filesize",20,szConfigFile)*1000000;
 	giTraceLevel=GetPrivateProfileInt("Logs","Level",giDefaultTraceLevel,szConfigFile);
 	
