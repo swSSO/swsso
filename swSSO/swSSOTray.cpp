@@ -85,8 +85,14 @@ static void ShowContextMenu(HWND w)
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_APPNSITES,GetString(IDS_MENU_APPNSITES));
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PROPRIETES,GetString(IDS_MENU_PROP));
-
-	if (!gbAdmin)
+	
+	// ISSUE#292
+	if (gbAdmin) // en mode admin, pas de menu "Mot de passe Windows" ni de mot de passe "Portail", qque soit la config
+	{
+		gbUseADPasswordForAppLogin=FALSE;
+		*gszCfgPortal=0;
+	}
+	// if (!gbAdmin) // ISSUE#292 : on n'interdit pas de changer le mot de passe maitre 
 	{
 		if ((giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) || *gszCfgPortal!=0 || gbUseADPasswordForAppLogin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (giPwdProtection==PP_ENCRYPTED && !gbNoMasterPwd) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_MDP,GetString(IDS_MENU_MDP));
