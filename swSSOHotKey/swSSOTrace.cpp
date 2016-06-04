@@ -123,6 +123,7 @@ void swTraceOpen(void)
 		}
 	}
 	if (*gszTraceFileName==0) goto end; // pas de fichier spécifié, pas de traces
+	if (giTraceLevel==0) goto end; // niveau trace 0 : pas de trace
 
 	// ouverture du fichier (fermé uniquement sur appel de swTraceClose)
 	ghfTrace=CreateFile(gszTraceFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
