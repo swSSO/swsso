@@ -192,7 +192,7 @@ int ReadAllowedHash(void)
 	else
 	{ 
 		TRACE((TRACE_INFO,_F_,"RegQueryValueEx(HKLM\\Software\\swSSO\\SVC\\swSSOMigration)=%ld",ret)); 
-		if (ret==ERROR_MORE_DATA) { TRACE((TRACE_ERROR,_F_,"taille passee=%d taille necessaire=%d",sizeof(gszHash_swSSOClient),dwValueSize)); }
+		if (ret==ERROR_MORE_DATA) { TRACE((TRACE_ERROR,_F_,"taille passee=%d taille necessaire=%d",sizeof(gszHash_swSSOMigration),dwValueSize)); }
 		*gszHash_swSSOMigration=0;
 	} 
 
