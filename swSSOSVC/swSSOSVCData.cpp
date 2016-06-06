@@ -60,8 +60,10 @@ int giMaxUserDataIndex=0;
 #define REGKEY_SVC					"SOFTWARE\\swSSO\\SVC"
 #define REGVALUE_SWSSO_CLIENT		"swSSOClient" 
 #define REGVALUE_SWSSO_MIGRATION	"swSSOMigration" 
-char gszHash_swSSOClient[64+1];
-char gszHash_swSSOMigration[64+1];
+// char gszHash_swSSOClient[64+1];    // -- en théorie devrait suffire... mais erreur 234 en v1.11... (ISSUE#293) donc je mets 256 dans la v1.11 patch 1 et on n'en parle plus
+// char gszHash_swSSOMigration[64+1]; // -- en théorie devrait suffire... mais erreur 234 en v1.11... (ISSUE#293) donc je mets 256 dans la v1.11 patch 1 et on n'en parle plus
+char gszHash_swSSOClient[256+1];
+char gszHash_swSSOMigration[256+1];
 
 //-----------------------------------------------------------------------------
 // swInitData()
@@ -161,6 +163,7 @@ int ReadAllowedHash(void)
 	DWORD dwValueSize,dwValueType;
 
 	SecureZeroMemory(gszHash_swSSOClient,sizeof(gszHash_swSSOClient));
+	SecureZeroMemory(gszHash_swSSOMigration,sizeof(gszHash_swSSOMigration)); // ajouté suite à ISSUE#293
 
 	ret=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_SVC,0,KEY_READ,&hKey);
 	if (ret!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegOpenKeyEx(HKLM\\Software\\swSSO\\SVC)=%ld",ret)); goto end; }
@@ -169,8 +172,14 @@ int ReadAllowedHash(void)
 	dwValueType=REG_SZ;
 	dwValueSize=sizeof(gszHash_swSSOClient);
 	ret=RegQueryValueEx(hKey,REGVALUE_SWSSO_CLIENT,NULL,&dwValueType,(LPBYTE)gszHash_swSSOClient,&dwValueSize);
-	if (ret!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(HKLM\\Software\\swSSO\\SVC\\swSSOClient)=%ld",ret)); goto end; } 
-	TRACE((TRACE_INFO,_F_,"gszHash_swSSOClient=%s",gszHash_swSSOClient));
+	if (ret!=ERROR_SUCCESS) 
+	{ 
+		TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(HKLM\\Software\\swSSO\\SVC\\swSSOClient)=%ld",ret));
+		if (ret==ERROR_MORE_DATA) { TRACE((TRACE_ERROR,_F_,"taille passee=%d taille necessaire=%d",sizeof(gszHash_swSSOClient),dwValueSize)); }
+		*gszHash_swSSOClient=0;
+		goto end; 
+	} 
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gszHash_swSSOClient,dwValueSize,"gszHash_swSSOClient"));
 
 	// hash swSSOMigration -- si non trouvé, le service marche quand même mais ne répondra pas à swSSOMigration
 	dwValueType=REG_SZ;
@@ -178,11 +187,12 @@ int ReadAllowedHash(void)
 	ret=RegQueryValueEx(hKey,REGVALUE_SWSSO_MIGRATION,NULL,&dwValueType,(LPBYTE)gszHash_swSSOMigration,&dwValueSize);
 	if (ret==ERROR_SUCCESS) 
 	{
-		TRACE((TRACE_INFO,_F_,"gszHash_swSSOMigration=%s",gszHash_swSSOMigration));
+		TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gszHash_swSSOMigration,dwValueSize,"gszHash_swSSOMigration"));
 	}
 	else
 	{ 
 		TRACE((TRACE_INFO,_F_,"RegQueryValueEx(HKLM\\Software\\swSSO\\SVC\\swSSOMigration)=%ld",ret)); 
+		if (ret==ERROR_MORE_DATA) { TRACE((TRACE_ERROR,_F_,"taille passee=%d taille necessaire=%d",sizeof(gszHash_swSSOClient),dwValueSize)); }
 		*gszHash_swSSOMigration=0;
 	} 
 
