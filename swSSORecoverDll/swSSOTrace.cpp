@@ -117,8 +117,9 @@ void swTraceOpen(void)
 	GetPrivateProfileString("Logs","Filename","",szTemp,sizeof(szTemp),szConfigFile);
 	if (*szTemp==0) goto end; // nom de fichier pas trouvé, pas de traces
 	ExpandFileName(szTemp,gszTraceFileName,_MAX_PATH+1); // ISSUE#291
-	gdwTraceFileSize=GetPrivateProfileInt("Logs","Filesize",20,szConfigFile)*1000000;
 	giTraceLevel=GetPrivateProfileInt("Logs","Level",giDefaultTraceLevel,szConfigFile);
+	if (giTraceLevel==0) goto end; // niveau trace 0 : pas de trace
+	gdwTraceFileSize=GetPrivateProfileInt("Logs","Filesize",20,szConfigFile)*1000000;
 	
 	// ouverture du fichier (fermé uniquement sur appel de swTraceClose)
 	ghfTrace=CreateFile(gszTraceFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);

@@ -173,6 +173,17 @@ public partial class _Default : System.Web.UI.Page
         strTrace += "strEncryptedPassword=" + strEncryptedPassword + "<br/>";
         strTrace += "strRecoverDllPath=" + strRecoverDllPath + "<br/>";
 
+        // debut test d'appel de la DLL -- pour debug
+        // string testChallenge = "testchallenge";
+        // string testUser = "testuser";
+        // SetDllDirectory(strRecoverDllPath);
+        // RecoveryGetResponse(testChallenge, testUser, strResponse, strResponse.Capacity);
+        // Response.StatusCode = 200;
+        // Response.Write("fintest");
+        // Response.End();
+        // return;
+        // fin test d'appel de la DLL -- pour debug
+
         //
         // déchiffrement du mot de passe du compte de service
         //
@@ -209,7 +220,7 @@ public partial class _Default : System.Web.UI.Page
         //
         swSSOChallenge objChallenge = JsonConvert.DeserializeObject<swSSOChallenge>(strData);
         strTrace += "objChallenge.challenge=" + objChallenge.challenge;
-
+        
         //
         // calcul de la réponse
         //
