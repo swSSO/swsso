@@ -33,7 +33,7 @@ include('util.php');
 //-----------------------------------------------------------------------------
 // WEBSERVICE5.PHP : Utilisé à partir de la version swSSO 0.94
 //                   (les versions précédentes utilisent webservice4.php)
-// VERSION INTERNE : 5.5
+// VERSION INTERNE : 5.6
 //------------------------------------------------------------------------------
 // Commandes : isalive, getversion, putconfig, getconfig et getdomains
 //------------------------------------------------------------------------------
@@ -497,6 +497,54 @@ else if ($_GET['action']=="getdomains")
 		}
 		echo "</domains>";
 	}
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// deleteconfig
+// ------------------------------------------------------------
+else if ($_GET['action']=="deleteconfig")
+{
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	if (isset($_GET["configId"])) $var_configId=utf8_decode(myaddslashes($_GET['configId']));
+	
+	$szRequest="delete from "._TABLE_PREFIX_."config where id=".$var_configId;
+	if (isset($_GET["debug"])) echo $szRequest;
+	$result=mysql_query($szRequest,$cnx);
+	header("Content-type: text/xml; charset=UTF-8");
+	if ($result) 
+		echo "OK";
+	else
+		echo "KO";
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// deletecateg
+// ------------------------------------------------------------
+else if ($_GET['action']=="deletecateg")
+{
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	if (isset($_GET["categId"])) $var_categId=utf8_decode(myaddslashes($_GET['categId']));
+
+	$szRequest="delete from "._TABLE_PREFIX_."categ where id=".$var_categId;
+	if (isset($_GET["debug"])) echo $szRequest;
+	$result=mysql_query($szRequest,$cnx);
+	header("Content-type: text/xml; charset=UTF-8");
+	if ($result) 
+		echo "OK";
+	else
+		echo "KO";
 	dbClose($cnx);
 }
 // ------------------------------------------------------------
