@@ -60,6 +60,7 @@ int  giDomainId=1;						// 0.94B1 : gestion des domaines
 char gszDomainLabel[LEN_DOMAIN+1]="";
 BOOL gbDisplayChangeAppPwdDialog ; // ISSUE#107
 char gszLastADPwdChange[14+1]="";					// 1.03 : date de dernier changement de mdp dans l'AD, format AAAAMMJJHHMMSS
+char gszLastADPwdChange2[50+1]="";					// 1.12 : date de dernier changement de mdp dans l'AD, format hilong,lowlong (cf. ISSUE#281)
 char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1]="";	// 1.03 : valeur du mot de passe AD (fourni par l'utilisateur) ou en 1.08 récupéré en mode chainé Windows
 BOOL gbSSOInternetExplorer=TRUE;		// ISSUE#176
 BOOL gbSSOFirefox=TRUE;					// ISSUE#176
@@ -1194,7 +1195,24 @@ int GetConfigHeader()
 	// 1.03 : lecture de la date de dernier changement mot de passe AD
 	if (gbUseADPasswordForAppLogin)
 	{
-		GetPrivateProfileString("swSSO","lastADPwdChange","",gszLastADPwdChange,sizeof(gszLastADPwdChange),gszCfgFile);
+		// 1.12 (ISSUE#281) changement de format de stockage de la date de dernier changement (pb de changement d'heure)
+		GetPrivateProfileString("swSSO","lastADPwdChange2","",gszLastADPwdChange2,sizeof(gszLastADPwdChange2),gszCfgFile);
+		if (*gszLastADPwdChange2==0) // non trouvé : on la redemande à l'AD et on supprime l'ancienne clé si présente (migration vers v1.12)
+		{
+			if (GetLastADPwdChange2(gszLastADPwdChange2,sizeof(gszLastADPwdChange2))==0)
+			{
+				// écrit la nouvelle valeur
+				WritePrivateProfileString("swSSO","lastADPwdChange2",gszLastADPwdChange2,gszCfgFile);
+				// on regarde si l'ancienne valeur est présente et on la supprime uniquement si la nouvelle est bien valorisée,
+				// c'est pour ça que je mets le code dans ce if.
+				GetPrivateProfileString("swSSO","lastADPwdChange","",gszLastADPwdChange,sizeof(gszLastADPwdChange),gszCfgFile);
+				if (*gszLastADPwdChange!=0) // ancienne valeur présente, on la supprime !
+				{
+					*gszLastADPwdChange=0; // nécessaire pour que le SaveConfigHeader ne réécrive pas cette ancienne valeur
+					WritePrivateProfileString("swSSO","lastADPwdChange",NULL,gszCfgFile); // suppression de la clé
+				}
+			}
+		}
 		GetPrivateProfileString("swSSO","ADPwd","",gszEncryptedADPwd,sizeof(gszEncryptedADPwd),gszCfgFile);
 	}
 
@@ -1378,7 +1396,10 @@ int SaveConfigHeader()
 	// 1.03 : date de dernier changement mot de passe AD
 	if (gbUseADPasswordForAppLogin)
 	{
-		WritePrivateProfileString("swSSO","lastADPwdChange",gszLastADPwdChange,gszCfgFile);
+		// ISSUE#281 : n'écrit la valeur que si non vide
+		// WritePrivateProfileString("swSSO","lastADPwdChange",gszLastADPwdChange,gszCfgFile);
+		if (*gszLastADPwdChange!=0) WritePrivateProfileString("swSSO","lastADPwdChange",gszLastADPwdChange,gszCfgFile);
+		if (*gszLastADPwdChange2!=0) WritePrivateProfileString("swSSO","lastADPwdChange2",gszLastADPwdChange2,gszCfgFile);
 		WritePrivateProfileString("swSSO","ADPwd",gszEncryptedADPwd,gszCfgFile);
 	}
 	// ISSUE#176

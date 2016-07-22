@@ -40,7 +40,7 @@
 
 #ifdef _DEBUG 
 static int giTraceLevel=TRACE_DEBUG;
-static char gszTraceFileName[_MAX_PATH+1]="c:\\swsso\\swssotrace.txt";
+static char gszTraceFileName[_MAX_PATH+1]="c:\\temp\\swssotrace.txt";
 #else
 static int giTraceLevel=TRACE_NONE;
 static char gszTraceFileName[_MAX_PATH+1]="";

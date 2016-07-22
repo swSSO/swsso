@@ -169,6 +169,7 @@ extern T_SALT gSalts;
 #define DOMAIN_LEN 256	// limite à moi...
 
 extern char gszLastADPwdChange[14+1];					// 1.03 : date de dernier changement de mdp dans l'AD, format AAAAMMJJHHMMSS
+extern char gszLastADPwdChange2[50+1];					// 1.12 : date de dernier changement de mdp dans l'AD, format HiLong,LoLong
 extern char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1];	// 1.03 : valeur du mot de passe AD (fourni par l'utilisateur)
 
 

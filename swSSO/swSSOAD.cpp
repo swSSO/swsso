@@ -92,6 +92,86 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// GetLastADPwdChange2()
+//-----------------------------------------------------------------------------
+// Récupère la date de dernier changement de mot de passe dans l'AD
+// Nouvelle méthode suite ISSUE#281 : récupère directement la valeur de l'attribut 
+// pwdLastSet pour ne pas subir les pb de timezone et changements d'heure
+//-----------------------------------------------------------------------------
+int GetLastADPwdChange2(char *pszLastADPwdChange2,DWORD dwSizeofszLastADPwdChange2)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	
+	HRESULT hr;
+	IADsUser *pIAdsUser=NULL;
+	IADsADSystemInfo *pIADsADSystemInfo=NULL;
+	char *pszUserDN=NULL;
+	BSTR bstrUserDN=NULL;
+	char *pszUserRequest=NULL;
+	BSTR bstrUserRequest=NULL;
+	int sizeUserRequest;
+	VARIANT vtLastSet;
+	IADsLargeInteger *pli=NULL;
+	BSTR bstrProp=NULL;
+	IDispatch *pIDispatch=NULL;
+	long lHighDateLastSet,lLowDateLastSet;
+
+	// récupération du DN de l'utilisateur
+	hr=CoCreateInstance(CLSID_ADSystemInfo,NULL,CLSCTX_INPROC_SERVER,IID_IADsADSystemInfo,(void**)&pIADsADSystemInfo);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(IID_IADsADSystemInfo) hr=0x%08lx",hr)); goto end; }
+	hr=pIADsADSystemInfo->get_UserName(&bstrUserDN);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pIADsADSystemInfo->get_UserName() hr=0x%08lx",hr)); goto end; }
+	pszUserDN=GetSZFromBSTR(bstrUserDN); if (pszUserDN==NULL) goto end;
+	TRACE((TRACE_INFO,_F_,"pIADsADSystemInfo->get_UserName()=%s",pszUserDN));
+	
+	// récupération de l'objet User dans l'AD
+	sizeUserRequest=10+strlen(pszUserDN);
+	pszUserRequest=(char*)malloc(sizeUserRequest); 
+	if (pszUserRequest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeUserRequest)); }
+	sprintf_s(pszUserRequest,sizeUserRequest,"LDAP://%s",pszUserDN);
+	bstrUserRequest=GetBSTRFromSZ(pszUserRequest); if (bstrUserRequest==NULL) goto end;
+	hr=ADsGetObject(bstrUserRequest,IID_IADsUser,(LPVOID*)&pIAdsUser);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"ADsGetObject(%S,IID_IADsUser) hr=0x%08lx\n",bstrUserRequest,hr)); goto end; }
+	
+	// lecture de l'attribut pwdLastSet
+	bstrProp=SysAllocString(L"pwdLastSet");
+	if (bstrProp==NULL) { TRACE((TRACE_ERROR,_F_,"SysAllocString()")); goto end; }
+	hr=pIAdsUser->Get(bstrProp,&vtLastSet);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pUser->Get(pwdLastSet) hr=0x%08lx\n",hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"vtLastSet.vt=%d",vtLastSet.vt));
+	if (vtLastSet.vt!=VT_DISPATCH) { TRACE((TRACE_ERROR,_F_,"vtLastSet.vt=%d (attendu=%d)",vtLastSet.vt,VT_DISPATCH)); goto end; }
+	pIDispatch=vtLastSet.pdispVal;
+	TRACE((TRACE_DEBUG,_F_,"pIDispatch=0x%08lx",pIDispatch));
+	if (pIDispatch==NULL) { TRACE((TRACE_ERROR,_F_,"pIDispatch=NULL")); goto end; }
+	hr=pIDispatch->QueryInterface(IID_IADsLargeInteger,(void**)&pli);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pIDispatch->QueryInterface(IID_IADsLargeInteger) hr=0x%08lx\n",hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"pli=0x%08lx",pli));
+	hr=pli->get_HighPart(&lHighDateLastSet);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pli->get_HighPart() hr=0x%08lx\n",hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"lHighDateLastSet=%ld",lHighDateLastSet));
+	hr=pli->get_LowPart(&lLowDateLastSet);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pli->get_LowPart() hr=0x%08lx\n",hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"lLowDateLastSet=%ld",lLowDateLastSet));
+	sprintf_s(pszLastADPwdChange2,dwSizeofszLastADPwdChange2,"%ld,%ld",lHighDateLastSet,lLowDateLastSet);
+	TRACE((TRACE_DEBUG,_F_,"pszLastADPwdChange2=%s",pszLastADPwdChange2));
+	rc=0;
+end:
+	if (bstrUserDN!=NULL) SysFreeString(bstrUserDN);
+	if (bstrUserRequest!=NULL) SysFreeString(bstrUserRequest);
+	if (pszUserDN!=NULL) free(pszUserDN);
+	if (pszUserRequest!=NULL) free(pszUserRequest);
+	if (pIADsADSystemInfo!=NULL) pIADsADSystemInfo->Release();
+	if (pIAdsUser!=NULL) pIAdsUser->Release();
+	if (pIDispatch!=NULL) pIDispatch->Release(); 
+	if (pli!=NULL) pli->Release();
+	SysFreeString(bstrProp);
+
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
 // GetLastADPwdChange()
 //-----------------------------------------------------------------------------
 // Récupère la date de dernier changement de mot de passe dans l'AD
@@ -301,15 +381,17 @@ int CheckADPwdChange(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	char szLastADPwdChange[14+1];
+	char szLastADPwdChange2[50+1]; // ISSUE#281 : changement de format
 	BOOL bAskADPwd=FALSE;
+	//long lLoADPwdChange,lHiADPwdChange;
+	//long lLoIniPwdChange,lHiIniPwdChange;
 	
-	*szLastADPwdChange=0;
+	*szLastADPwdChange2=0;
 	
 	// récupère la date de changement dans l'AD
-	if (GetLastADPwdChange(szLastADPwdChange)==0) 
+	if (GetLastADPwdChange2(szLastADPwdChange2,sizeof(szLastADPwdChange2))==0) 
 	{
-		TRACE((TRACE_INFO,_F_,"lastADPwdChange dans l'AD    : %s",szLastADPwdChange));
+		TRACE((TRACE_INFO,_F_,"lastADPwdChange dans l'AD    : %s",szLastADPwdChange2));
 	} 
 	else // si AD non dispo, pas grave, on verra la prochaine fois
 	{
@@ -323,7 +405,7 @@ int CheckADPwdChange(void)
 	}
 	else // mot de passe stocké dans le .ini, il faut regarder la date de changement dans l'AD
 	{
-		if (*gszLastADPwdChange==0) // pas de date de changement de mdp dans le .ini : c'est qu'on a demandé le mot de passe AD 
+		if (*gszLastADPwdChange2==0) // pas de date de changement de mdp dans le .ini : c'est qu'on a demandé le mot de passe AD 
 			                        // mais qu'on n'a pas pu joindre l'AD pour avoir la date. Dans ce cas, essaie de récupérer la date dans l'AD
 									// mais on ne redemande pas le mot de passe.
 		{
@@ -331,8 +413,8 @@ int CheckADPwdChange(void)
 		}
 		else
 		{
-			TRACE((TRACE_INFO,_F_,"lastADPwdChange dans le .ini : %s",gszLastADPwdChange));
-			if (strcmp(gszLastADPwdChange,szLastADPwdChange)<0) // date de changement .ini antérieure à date changement AD, on demande le mdp
+			TRACE((TRACE_INFO,_F_,"lastADPwdChange dans le .ini : %s",gszLastADPwdChange2));
+			if (strcmp(gszLastADPwdChange2,szLastADPwdChange2)!=0) // date de changement .ini différente (je tente ça en 1.12..., avant c'était antérieure) à date changement AD, on demande le mdp
 			{
 				TRACE((TRACE_INFO,_F_,"Mot de passe changé dans l'AD, demande le mdp à l'utilisateur"));
 				bAskADPwd=TRUE;
@@ -343,7 +425,7 @@ int CheckADPwdChange(void)
 	if (bAskADPwd) // demande le mot de passe AD à l'utilisateur et le stocke dans le .ini
 	{
 		if (AskADPwd(TRUE)!=0) goto end;
-		strcpy_s(gszLastADPwdChange,sizeof(gszLastADPwdChange),szLastADPwdChange);
+		strcpy_s(gszLastADPwdChange2,sizeof(gszLastADPwdChange2),szLastADPwdChange2);
 		SaveConfigHeader();
 	}
 
