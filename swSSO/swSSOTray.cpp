@@ -302,7 +302,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					WindowChangeMasterPwd(FALSE);
 					break;
 				case TRAY_MENU_MDP_WINDOWS:
-					char szLastADPwdChange[14+1];
+					char szLastADPwdChange2[50+1];
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_MDP_WINDOWS"));
 					if (!gbSSOActif && !gbReactivateWithoutPwd)
 					{
@@ -311,11 +311,11 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					if (AskADPwd(FALSE)==0)
 					{
-						*szLastADPwdChange=0;
-						if (GetLastADPwdChange(szLastADPwdChange)==0) 
+						*szLastADPwdChange2=0;
+						if (GetLastADPwdChange2(szLastADPwdChange2,sizeof(szLastADPwdChange2))==0) 
 						{
-							TRACE((TRACE_INFO,_F_,"lastADPwdChange dans l'AD    : %s",szLastADPwdChange));
-							strcpy_s(gszLastADPwdChange,sizeof(gszLastADPwdChange),szLastADPwdChange);
+							TRACE((TRACE_INFO,_F_,"lastADPwdChange2 dans l'AD    : %s",szLastADPwdChange2));
+							strcpy_s(gszLastADPwdChange2,sizeof(gszLastADPwdChange2),szLastADPwdChange2);
 						} 
 						else // si AD non dispo, pas grave, on verra la prochaine fois
 						{

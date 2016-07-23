@@ -149,11 +149,11 @@ int GetLastADPwdChange2(char *pszLastADPwdChange2,DWORD dwSizeofszLastADPwdChang
 	TRACE((TRACE_DEBUG,_F_,"pli=0x%08lx",pli));
 	hr=pli->get_HighPart(&lHighDateLastSet);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pli->get_HighPart() hr=0x%08lx\n",hr)); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"lHighDateLastSet=%ld",lHighDateLastSet));
+	TRACE((TRACE_DEBUG,_F_,"lHighDateLastSet=%lu",lHighDateLastSet));
 	hr=pli->get_LowPart(&lLowDateLastSet);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pli->get_LowPart() hr=0x%08lx\n",hr)); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"lLowDateLastSet=%ld",lLowDateLastSet));
-	sprintf_s(pszLastADPwdChange2,dwSizeofszLastADPwdChange2,"%ld,%ld",lHighDateLastSet,lLowDateLastSet);
+	TRACE((TRACE_DEBUG,_F_,"lLowDateLastSet=%lu",lLowDateLastSet));
+	sprintf_s(pszLastADPwdChange2,dwSizeofszLastADPwdChange2,"%lu,%lu",lHighDateLastSet,lLowDateLastSet);
 	TRACE((TRACE_DEBUG,_F_,"pszLastADPwdChange2=%s",pszLastADPwdChange2));
 	rc=0;
 end:
@@ -171,6 +171,7 @@ end:
 	return rc;
 }
 
+#if 0 // n'est plus utilisé depuis ISSUE#281, v1.12
 //-----------------------------------------------------------------------------
 // GetLastADPwdChange()
 //-----------------------------------------------------------------------------
@@ -240,6 +241,7 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // AskADPwdDialogProc()

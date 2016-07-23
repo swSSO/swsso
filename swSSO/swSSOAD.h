@@ -32,7 +32,7 @@
 //-----------------------------------------------------------------------------
 
 int GetUserDomainAndComputer(void);
-int GetLastADPwdChange(char *pszLastADPwdChange);
+// int GetLastADPwdChange(char *pszLastADPwdChange);
 int GetLastADPwdChange2(char *pszLastADPwdChange2,DWORD dwSizeofszLastADPwdChange2);
 int AskADPwd(BOOL bWarningIfNoADPwd);
 int CheckADPwdChange();
