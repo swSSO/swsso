@@ -1339,9 +1339,11 @@ BOOL swURLMatch(char *szToBeCompared,char *szPattern)
 	if (swStringMatch(szToBeCompared,szPattern+7)) { rc=TRUE; goto end; }
 	// dernier essai :avec ou sans / de fin d'URL
 	lenToBeCompared=strlen(szToBeCompared);
+	// ISSUE#295
+	if (lenToBeCompared>2048) { TRACE((TRACE_ERROR,_F_,"lenToBeCompared>2048 (%d)",lenToBeCompared));goto end; }
 	if (lenToBeCompared>1 && szToBeCompared[lenToBeCompared-1]=='/')
 	{
-		char szToBeCompared2[256+1];
+		char szToBeCompared2[2048+1];
 		memcpy(szToBeCompared2,szToBeCompared,lenToBeCompared-1);
 		szToBeCompared2[lenToBeCompared-1]=0;
 		if (swStringMatch(szToBeCompared2,szPattern)) { rc=TRUE; goto end; }
