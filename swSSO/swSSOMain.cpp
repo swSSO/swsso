@@ -46,7 +46,7 @@ HWND gwMain=NULL;
 HINSTANCE ghInstance;
 HRESULT   ghrCoIni=E_FAIL;	 // code retour CoInitialize()
 bool gbSSOActif=TRUE;	 // Etat swSSO : actif / désactivé	
-int giPwdProtection; // Protection des mots de passe : PP_ENCRYPTED | PP_WINDOWS
+int giPwdProtection=PP_UNDEFINED; // Protection des mots de passe : PP_ENCRYPTED | PP_WINDOWS -- ISSUE#296 : ajout d'une valeur par défaut
 
 T_ACTION *gptActions;  // tableau d'actions
 int giNbActions;		// nb d'actions dans le tableau
@@ -2225,7 +2225,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		}
 	}
 */
-	if (*gszCfgVersion==0) // version <0.50 ou premier lancement...
+	if (*gszCfgVersion==0 || giPwdProtection==0) // version <0.50 ou premier lancement... // ISSUE#295
 	{
 		// ISSUE#260 : crée le répertoire qui doit contenir le fichier .ini
 		char *p=NULL;

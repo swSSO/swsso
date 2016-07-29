@@ -67,6 +67,7 @@ extern UINT guiAdminQuitMsg;
 
 // #define PP_NONE 1		--> supprimé en 0.98 : ISSUE#83
 // #define PP_ENCODED 2		--> supprimé en 0.98 : ISSUE#83
+#define PP_UNDEFINED 0
 #define PP_ENCRYPTED 3
 #define PP_WINDOWS 4 // 0.96 : couplage mot de passe Windows
 extern int giPwdProtection;

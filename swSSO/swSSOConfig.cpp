@@ -1143,7 +1143,7 @@ int GetConfigHeader()
 		TRACE((TRACE_ERROR,_F_,"pwdProtection=%d : valeur non supportee",giPwdProtection));
 		goto end;
 	}
-
+	TRACE((TRACE_INFO,_F_,"pwdProtection=%d",giPwdProtection));
 	// ISSUE#185 : les valeurs par défaut sont désormais lues en base de registre dans swSSOPolicies
 	gbSessionLock=GetConfigBoolValue("swSSO","sessionLock",gbSessionLock_DefaultValue,TRUE);
 	bCheckVersion=gbInternetCheckVersion_DefaultValue;
@@ -1339,7 +1339,7 @@ int SaveConfigHeader()
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	char szPwdProtection[9+1];
+	char szPwdProtection[9+1]=""; // ISSUE#295
 	char szItem[120+1]="";
 
 	WritePrivateProfileString("swSSO","version",gcszCfgVersion,gszCfgFile);
