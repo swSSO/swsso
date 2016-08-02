@@ -311,6 +311,11 @@ int OpenResponse(HWND w)
 			}
 		}
 		len=strlen(szLine);
+		if (pos+len>1024) // 1.12B2-AC-TIE01
+		{ 
+				MessageBox(w,GetString(IDS_ERROR_BADRESPONSEFILE),"swSSO",MB_ICONEXCLAMATION|MB_OK);
+				TRACE((TRACE_ERROR,_F_,"Fichier trop grand, ce n'est pas une reponse (>1024)")); goto end;
+		}
 		memcpy(gszFormattedResponse+pos,szLine,len-1);
 		pos+=len-1;
 		gszFormattedResponse[pos]='\r'; pos++;
@@ -725,6 +730,7 @@ int RecoveryResponse(HWND w)
 	{
 		if (*p!=0x0a && *p!=0x0d) { szResponse[i]=*p; i++; }
 		p++;
+		if (i>255) { TRACE((TRACE_ERROR,_F_,"Trop de donnees entre les marques debut et fin de la reponse (>255)")); rc=-3; goto end; } // 1.12B2-TIE1
 	}
 	szResponse[i]=0;
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)szResponse,i,"szResponse"));
@@ -732,6 +738,7 @@ int RecoveryResponse(HWND w)
 	// décodage de la KS
 	dwKsDataLen=dwKsStringLen/2;
 	pKsData=(unsigned char*)malloc(dwKsDataLen);
+	if (pKsData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwKsDataLen)); rc=-3; goto end; }
 	if (swCryptDecodeBase64(szKs,(char*)pKsData,dwKsDataLen)!=0) {  rc=-3; goto end; }
 	
 	// import KS

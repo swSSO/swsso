@@ -126,7 +126,7 @@ int OpenChallenge(HWND w)
 	errno_t err=fopen_s(&hf,szFile,"r");
 	if (err!=0)
 	{
-		TRACE((TRACE_ERROR,_F_,"Cannot open file for : '%s'",szFile));
+		TRACE((TRACE_ERROR,_F_,"Cannot open file '%s'",szFile));
 		goto end;
 	}
 	*szFormattedChallenge=0;
@@ -145,6 +145,11 @@ int OpenChallenge(HWND w)
 			}
 		}
 		len=strlen(szLine);
+		if (pos+len>2048) // 1.12B2-AC-TIE01
+		{ 
+				MessageBox(w,GetString(IDS_ERROR_BADFILE),"swSSO",MB_ICONEXCLAMATION|MB_OK);
+				TRACE((TRACE_ERROR,_F_,"Fichier trop grand, ce n'est pas un challenge (>2048)")); goto end;
+		}
 		memcpy(szFormattedChallenge+pos,szLine,len-1);
 		pos+=len-1;
 		szFormattedChallenge[pos]='\r'; pos++;

@@ -602,6 +602,7 @@ char *swCryptEncryptString(const char *pszSource,HCRYPTKEY hKey)
 	BOOL brc;
 	
 	lenSource=strlen(pszSource);
+	if (lenSource>63) { TRACE((TRACE_ERROR,_F_,"lenSource=%d>63 (taille max chiffrable avec cette fonction=63(utile)+1(0)",lenSource)); goto end; } // 1.12B2-AC-TIE1
 	lenSourceCopy=16+64+16; // iv + taille d'un multiple de 16 (128 bits) pour chiffrement AES
 	lenDest=lenSourceCopy*2+1;
 	//TRACE((TRACE_PWD,_F_,"pszSource=%s",pszSource));
