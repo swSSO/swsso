@@ -128,7 +128,7 @@ int GetLastADPwdChange2(char *pszLastADPwdChange2,DWORD dwSizeofszLastADPwdChang
 	// récupération de l'objet User dans l'AD
 	sizeUserRequest=10+strlen(pszUserDN);
 	pszUserRequest=(char*)malloc(sizeUserRequest); 
-	if (pszUserRequest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeUserRequest)); }
+	if (pszUserRequest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeUserRequest)); goto end; } // 1.12B2-AC-TIE7
 	sprintf_s(pszUserRequest,sizeUserRequest,"LDAP://%s",pszUserDN);
 	bstrUserRequest=GetBSTRFromSZ(pszUserRequest); if (bstrUserRequest==NULL) goto end;
 	hr=ADsGetObject(bstrUserRequest,IID_IADsUser,(LPVOID*)&pIAdsUser);
