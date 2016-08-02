@@ -504,6 +504,7 @@ BOOL CheckUserInOU(void)
 	brc=(strstr(pszUserDN,gszSyncSecondaryPasswordOU)!=NULL);
 
 end:
+	SysFreeString(bstrUserDN); // 1.12B2-AC-TIE5
 	if (pIADsADSystemInfo!=NULL) pIADsADSystemInfo->Release();
 	if (pszUserDN!=NULL) free(pszUserDN);
 	TRACE((TRACE_LEAVE,_F_, "brc=%d",brc));
