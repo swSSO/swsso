@@ -634,7 +634,6 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 	char *pszChromePopupURL=NULL;
 	char *pszURL=NULL;
 	char *pszURL2=NULL;
-	char *pszURLBar=NULL;
 	int iPopupType=POPUP_NONE;
 	char szClassName[128+1]; // pour stockage nom de classe de la fenêtre
 	char szTitre[255+1];	  // pour stockage titre de fenêtre
@@ -1275,12 +1274,11 @@ suite:
 		// j'aurais fait ce "goto suite", alors que continue me tendait les bras ?
 		if (pszURL!=NULL) { free(pszURL); pszURL=NULL; }
 		if (pszURL2!=NULL) { free(pszURL2); pszURL2=NULL; }
-		if (pszURLBar!=NULL) { free(pszURLBar); pszURLBar=NULL; }
 	}
 end:
 	if (pszChromePopupURL!=NULL) { free(pszChromePopupURL); pszChromePopupURL=NULL; }
-	// nouveau en 0.90...
 	if (pszURL!=NULL) { free(pszURL); pszURL=NULL; }
+	if (pszURL2!=NULL) { free(pszURL2); pszURL2=NULL; } // 1.12B2-AC-TIE4
 	return TRUE;
 }
 

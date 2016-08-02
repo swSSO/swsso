@@ -192,6 +192,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 	if (pInProxyParams==NULL)
 	{
 		pProxyParams=(T_PROXYPARAMS *)malloc(sizeof(T_PROXYPARAMS));
+		if (pProxyParams==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeof(T_PROXYPARAMS))); goto end;} // 1.12B2
 		pProxyParams->bInternetUseProxy=gbInternetUseProxy;
 		strcpy_s(pProxyParams->szProxyURL, LEN_PROXY_URL+1 ,gszProxyURL);
 		strcpy_s(pProxyParams->szProxyUser,LEN_PROXY_USER+1,gszProxyUser);
@@ -310,6 +311,7 @@ end:
 	SysFreeString(bstrProxyPwd);
 	SysFreeString(bstrServerAddress);
 	SysFreeString(bstrRequest);
+	if (pProxyParams!=NULL) free(pProxyParams); // 1.12B2-TIE4
 	TRACE((TRACE_LEAVE,_F_, "pszResult=0x%08lx",pszResult));
 	return pszResult;
 }

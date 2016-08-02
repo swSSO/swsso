@@ -1381,6 +1381,7 @@ int SaveConfigHeader()
 		if (pszEncryptedPassword!=NULL)  // si erreur de chiffrement du mot de passe, on ne le sauvegarde pas...
 		{
 			WritePrivateProfileString("swSSO",szItem,pszEncryptedPassword,gszCfgFile);
+			free(pszEncryptedPassword); // 1.12B2-AC-TIE4
 		}
 	}
 
