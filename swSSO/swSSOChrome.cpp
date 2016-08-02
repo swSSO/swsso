@@ -167,7 +167,6 @@ char *GetChromePopupURL(HWND w)
 	TRACE((TRACE_DEBUG,_F_,"get_accName() hr=0x%08lx bstrURL=%S",hr,bstrURL));
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accName() hr=0x%08lx",hr)); goto end; }
 	pszURL=GetSZFromBSTR(bstrURL);
-	SysFreeString(bstrURL);
 
 end:
 	SysFreeString(bstrURL);
