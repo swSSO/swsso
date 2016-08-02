@@ -858,6 +858,7 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					break;
 			}
+			break; // 1.12B2-AC-TIE6
 		case WM_CTLCOLORSTATIC:
 			int ctrlID;
 			ctrlID=GetDlgCtrlID((HWND)lp);
