@@ -76,10 +76,16 @@ extern T_ACTION *gptActions;
 extern int giNbActions;
 extern int giBadPwdCount;
 
-extern HCRYPTKEY ghKey1;
-extern HCRYPTKEY ghKey2;
-extern HCRYPTKEY ghKey3;
 extern HWND gwAskPwd ; 
+
+extern BOOL gAESKeyInitialized[2];
+extern BYTE gAESKeyDataPart1[][AES256_KEY_PART_LEN];
+extern BYTE gAESKeyDataPart2[][AES256_KEY_PART_LEN];
+extern BYTE gAESKeyDataPart3[][AES256_KEY_PART_LEN];
+extern BYTE gAESKeyDataPart4[][AES256_KEY_PART_LEN];
+// astuce pour limiter les modifs de code : ghKey1 et ghKey2 étaient les handle des 2 clés, ils deviennent les index pour le tableau des clés
+extern int ghKey1; 
+extern int ghKey2;
 
 extern char gcszK1[8+1];
 extern char gcszK2[8+1];
@@ -92,8 +98,6 @@ extern char gszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
 extern char gszUserName[UNLEN+1];
 
 extern int giTimer;
-
-extern char szPwdMigration093[]; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
 extern int giLastApplicationSSO;   
 extern int giLastApplicationConfig;

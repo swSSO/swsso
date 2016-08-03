@@ -41,8 +41,6 @@
 
 HCRYPTPROV ghProv=NULL;
 
-
-
 const char gcszAlpha[]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char gcszNum[]="1234567890";
 const char gcszSpecialChars[]="&'(-_)=+}]{[,?;.:/!*$";
@@ -69,6 +67,54 @@ static void swXORBuff(BYTE *result, BYTE *key, int len)
     }
 }
 
+//-----------------------------------------------------------------------------
+// swCreateAESKeyFromKeyDataParts()
+//-----------------------------------------------------------------------------
+// Crée la clé AES à partir des 4 morceaux de clé et l'importe dans le ghProv
+// L'appelant doit détruire la clé juste après utilisation pour quelle reste
+// le moins longtemps possible en mémoire
+//-----------------------------------------------------------------------------
+// [in] iKeyId = ID de la clé
+// [in/out] hKey = handle de clé
+//-----------------------------------------------------------------------------
+// Retour : 0 si OK
+//-----------------------------------------------------------------------------
+static int swCreateAESKeyFromKeyDataParts(int iKeyId,HCRYPTKEY *phKey)
+{
+	TRACE((TRACE_ENTER,_F_,"iKeyId=%d",iKeyId));
+	int iAESKeySize;
+	KEYBLOB *pAESKey=NULL;
+	BOOL brc;
+	int rc=-1;
+
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
+	if (!gAESKeyInitialized[iKeyId]) { TRACE((TRACE_ERROR,_F_,"AESKey(%d) not initialized",iKeyId)); goto end; }
+
+	// Crée la clé AES
+	iAESKeySize=sizeof(KEYBLOB)+AES256_KEY_LEN;
+	pAESKey=(KEYBLOB*)malloc(iAESKeySize);
+	if (pAESKey==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",iAESKeySize)); goto end; }
+	ZeroMemory(pAESKey,iAESKeySize);
+	pAESKey->header.bType=PLAINTEXTKEYBLOB;
+	pAESKey->header.bVersion=CUR_BLOB_VERSION;
+	pAESKey->header.reserved=0;
+	pAESKey->header.aiKeyAlg=CALG_AES_256;
+	pAESKey->dwKeySize=AES256_KEY_LEN;
+	memcpy(pAESKey->KeyData,gAESKeyDataPart1[iKeyId],AES256_KEY_PART_LEN);
+	memcpy(pAESKey->KeyData+AES256_KEY_PART_LEN,gAESKeyDataPart2[iKeyId],AES256_KEY_PART_LEN);
+	memcpy(pAESKey->KeyData+AES256_KEY_PART_LEN*2,gAESKeyDataPart3[iKeyId],AES256_KEY_PART_LEN);
+	memcpy(pAESKey->KeyData+AES256_KEY_PART_LEN*3,gAESKeyDataPart4[iKeyId],AES256_KEY_PART_LEN);
+	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)pAESKey,iAESKeySize,"pAESKey (iAESKeySize=%d)",iAESKeySize));
+	brc= CryptImportKey(ghProv,(LPBYTE)pAESKey,iAESKeySize,NULL,0,phKey);
+	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptImportKey()=0x%08lx",GetLastError())); goto end; }
+	rc=0;
+end:
+	if (pAESKey!=NULL) free(pAESKey);
+	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	return rc;
+}
+
+
 //*****************************************************************************
 //                             FONCTIONS PUBLIQUES
 //*****************************************************************************
@@ -77,7 +123,7 @@ static void swXORBuff(BYTE *result, BYTE *key, int len)
 // swPBKDF2() : implémentation de PBKDF2 RFC 2898 (http://www.ietf.org/rfc/rfc2898.txt)
 // Limitée à 2 blocs de 160 bits en sortie, dont seuls les 256 premiers sont
 // fournis à l'appelant. Ce résultat est utilisé pour :
-// 1) Alimenter la fonction de dérivation de clé AES-256 (CryptDeriveKey)
+// 1) Alimenter la fonction de génération de clé AES-256 (swCreateAESKeyFromKeyData)
 // 2) Stocker le mot de passe maître
 //-----------------------------------------------------------------------------
 // Avec 2 blocs, l'algo proposé par la RFC donne :
@@ -325,18 +371,6 @@ void swCryptTerm()
 }
 
 //-----------------------------------------------------------------------------
-// swCryptDestroyKey()
-//-----------------------------------------------------------------------------
-// Libération d'une clé
-//-----------------------------------------------------------------------------
-void swCryptDestroyKey(HCRYPTKEY hKey)
-{
-	TRACE((TRACE_ENTER,_F_,""));
-	if (hKey!=NULL) CryptDestroyKey(hKey); 
-	TRACE((TRACE_LEAVE,_F_,""));
-}
-
-//-----------------------------------------------------------------------------
 // swIsPBKDF2KeySaltReady()
 //-----------------------------------------------------------------------------
 // Retourne TRUE si le sel a déjà été généré et est prêt à être utilisé
@@ -447,51 +481,28 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// swCreateAESKeyFromKeyData()
+// swStoreAESKey()
 //-----------------------------------------------------------------------------
-// Crée la clé AES à partir de données de la clé (256 bits / 32 octets)
-// et l'importe dans le ghProv
+// Stocke les données permettant de reconstruire la clé
 //-----------------------------------------------------------------------------
-// [in] cszMasterPwd = mot de passe maitre
-// [in/out] hKey = handle de clé
+// [in] AESKeyData : valeur de la clé
+// [in] iKeyId : identifiant de la clé
 //-----------------------------------------------------------------------------
-// Retour : 0 si OK
-//-----------------------------------------------------------------------------
-int swCreateAESKeyFromKeyData(BYTE *pAESKeyData,HCRYPTKEY *phKey)
+int swStoreAESKey(BYTE *AESKeyData,int iKeyId)
 {
-	int iAESKeySize;
-	KEYBLOB *pAESKey=NULL;
-	BOOL brc;
+	TRACE((TRACE_ENTER,_F_, "iKeyId=%d",iKeyId));
 	int rc=-1;
-	TRACE((TRACE_ENTER,_F_,""));
-	BYTE ZeroBuf[AES256_KEY_LEN];
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
 
-	// 
-	ZeroMemory(ZeroBuf,AES256_KEY_LEN);
-	if (memcmp(pAESKeyData,ZeroBuf,AES256_KEY_LEN)==0) 
-	{
-		TRACE((TRACE_ERROR,_F_,"pAESKeyData is zerobuf")); 
-		goto end;
-	}
-
-	// Crée la clé AES
-	iAESKeySize=sizeof(KEYBLOB)+AES256_KEY_LEN;
-	pAESKey=(KEYBLOB*)malloc(iAESKeySize);
-	if (pAESKey==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",iAESKeySize)); goto end; }
-	ZeroMemory(pAESKey,iAESKeySize);
-	pAESKey->header.bType=PLAINTEXTKEYBLOB;
-	pAESKey->header.bVersion=CUR_BLOB_VERSION;
-	pAESKey->header.reserved=0;
-	pAESKey->header.aiKeyAlg=CALG_AES_256;
-	pAESKey->dwKeySize=AES256_KEY_LEN;
-	memcpy(pAESKey->KeyData,pAESKeyData,AES256_KEY_LEN);
-	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)pAESKey,iAESKeySize,"pAESKey (iAESKeySize=%d)",iAESKeySize));
-	brc= CryptImportKey(ghProv,(LPBYTE)pAESKey,iAESKeySize,NULL,0,phKey);
-	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptImportKey()=0x%08lx",GetLastError())); goto end; }
+	// stocke les données permettant de reconstruire la clé 
+	gAESKeyInitialized[iKeyId]=TRUE;
+	memcpy_s(gAESKeyDataPart1[iKeyId],AES256_KEY_PART_LEN,AESKeyData,AES256_KEY_PART_LEN);
+	memcpy_s(gAESKeyDataPart2[iKeyId],AES256_KEY_PART_LEN,AESKeyData+AES256_KEY_PART_LEN,AES256_KEY_PART_LEN);
+	memcpy_s(gAESKeyDataPart3[iKeyId],AES256_KEY_PART_LEN,AESKeyData+AES256_KEY_PART_LEN*2,AES256_KEY_PART_LEN);
+	memcpy_s(gAESKeyDataPart4[iKeyId],AES256_KEY_PART_LEN,AESKeyData+AES256_KEY_PART_LEN*3,AES256_KEY_PART_LEN);
 	rc=0;
 end:
-	if (pAESKey!=NULL) free(pAESKey);
-	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
 
@@ -499,57 +510,28 @@ end:
 // swCryptDeriveKey()
 //-----------------------------------------------------------------------------
 // Calcul de la clé de chiffrement des mots de passe par dérivation du mot de 
-// passe maitre
+// passe maitre et la stocke dans gAESKeyDataPartN[2][AES256_KEY_LEN/4];
 //-----------------------------------------------------------------------------
 // [in] cszMasterPwd = mot de passe maitre
-// [out] hKey = handle de clé
-// [out] pAESKeyData = bloc de données pour ceux qui voudraient reconstruire la clé
 //-----------------------------------------------------------------------------
 // Retour : 0 si OK
 //-----------------------------------------------------------------------------
-int swCryptDeriveKey(const char *pszMasterPwd,HCRYPTKEY *phKey,BYTE *pAESKeyData,BOOL bForceOldDerivationFunction)
+int swCryptDeriveKey(const char *pszMasterPwd,int iKeyId)
 {
-	TRACE((TRACE_ENTER,_F_,""));
+	TRACE((TRACE_ENTER,_F_,"iKeyId=%d",iKeyId));
 
-	BOOL brc;
 	int rc=-1;
-	HCRYPTHASH hHash=NULL;
-	
-	// si la clé a déjà été créée, on la libère
-	if (*phKey!=NULL) { CryptDestroyKey(*phKey); *phKey=NULL; }
+	BYTE AESKeyData[AES256_KEY_LEN];
 
-	// création d'un hash
-	brc=CryptCreateHash(ghProv,CALG_SHA1,0,0,&hHash);           
-	if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptCreateHash()")); goto end; }
-	if (bForceOldDerivationFunction)
-	{
-		// hash du mot de passe
-		brc=CryptHashData(hHash,(unsigned char*)pszMasterPwd,strlen(pszMasterPwd),0); 
-		if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptHashData()")); goto end; }
-		// dérivation
-		brc=CryptDeriveKey(ghProv,CALG_AES_256,hHash,0,phKey); 
-		TRACE((TRACE_INFO,_F_,"CryptDeriveKey(CALG_AES_256)"));
-	}
-	else if (atoi(gszCfgVersion)<93)
-	{
-		// hash du mot de passe
-		brc=CryptHashData(hHash,(unsigned char*)pszMasterPwd,strlen(pszMasterPwd),0); 
-		if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptHashData()")); goto end; }
-		// dérivation
-		brc=CryptDeriveKey(ghProv,CALG_3DES,hHash,0,phKey); 
-		TRACE((TRACE_INFO,_F_,"CryptDeriveKey(CALG_3DES)"));
-	}
-	else // nouveau mécanisme +secure en 0.93 (PBKDF2) ISSUE#56
-	{
-		// Obtient 256 bits (32 octets) auprès de PBKDF2 pour générer une clé AES-256
-		if (!swIsPBKDF2KeySaltReady()) { TRACE((TRACE_ERROR,_F_,"swIsPBKDF2SaltReady()=FALSE")); goto end; }
-		if (swPBKDF2(pAESKeyData,AES256_KEY_LEN,pszMasterPwd,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-		if (swCreateAESKeyFromKeyData(pAESKeyData,phKey)!=0) goto end;
-	}
-	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptDeriveKey()=0x%08lx",GetLastError())); goto end; }
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
+	// Obtient 256 bits (32 octets) auprès de PBKDF2 pour générer une clé AES-256
+	if (!swIsPBKDF2KeySaltReady()) { TRACE((TRACE_ERROR,_F_,"swIsPBKDF2SaltReady()=FALSE")); goto end; }
+	if (swPBKDF2(AESKeyData,AES256_KEY_LEN,pszMasterPwd,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+	// stocke les données permettant de reconstruire la clé 
+	if (swStoreAESKey(AESKeyData,iKeyId)!=0) goto end;
+
 	rc=0;
 end:
-	if (hHash!=NULL) CryptDestroyHash(hHash);
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
 	return rc;
 }
@@ -560,16 +542,20 @@ end:
 // [in] iv = vecteur d'initialisation
 // [in/out] pData = pointeur vers les données à chiffrer / chiffrées
 // [in] lData = taille des données à chiffrer (lData en entrée = lData en sortie)
-// [in] hKey = clé de chiffrement
+// [in] iKeyId = id de la clé de chiffrement
 //-----------------------------------------------------------------------------
 // Retour : 0 si OK
 //-----------------------------------------------------------------------------
-int swCryptEncryptData(unsigned char *iv, unsigned char *pData,DWORD lData,HCRYPTKEY hKey)
+int swCryptEncryptData(unsigned char *iv, unsigned char *pData,DWORD lData,int iKeyId)
 {
-	TRACE((TRACE_ENTER,_F_,""));
+	TRACE((TRACE_ENTER,_F_,"iKeyId=%d",iKeyId));
 	BOOL brc;
 	int rc=-1;
 	DWORD dwMode=CRYPT_MODE_CBC;
+	HCRYPTKEY hKey=NULL;
+
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
+	if (swCreateAESKeyFromKeyDataParts(iKeyId,&hKey)!=0) goto end;
 
 	brc=CryptSetKeyParam(hKey,KP_IV,iv,0);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptSetKeyParam(KP_IV)")); goto end; }
@@ -587,6 +573,7 @@ int swCryptEncryptData(unsigned char *iv, unsigned char *pData,DWORD lData,HCRYP
 	TRACE_BUFFER((TRACE_DEBUG,_F_,pData+64,16,"ov"));
 	rc=0;
 end:
+	if (hKey!=NULL) CryptDestroyKey(hKey);
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
 	return rc;
 }
@@ -597,18 +584,20 @@ end:
 // Chiffrement d'une chaine de caractère. LA SOURCE N'EST PAS MODIFIEE
 //-----------------------------------------------------------------------------
 // [in] pszSource = chaine source (terminée par 0 !)
-// [in] hKey = clé de chiffrement
+// [in] iKeyId = id de la clé de chiffrement
 // [rc] chaine chiffrée encodée base64 terminée par 0. A libérer par l'appelant.
 //      Format du buffer de sortie (avant encodage base64) :
 //      iv 16 octets (alea) + 64 octets (4 blocs de 16 octets) + ov 16 octets
 ///-----------------------------------------------------------------------------
-char *swCryptEncryptString(const char *pszSource,HCRYPTKEY hKey)
+char *swCryptEncryptString(const char *pszSource,int iKeyId)
 {
-	TRACE((TRACE_ENTER,_F_,""));
+	TRACE((TRACE_ENTER,_F_,"iKeyId=%d",iKeyId));
 	char *pszDest=NULL;
 	char unsigned *pSourceCopy=NULL;
 	int lenSource,lenSourceCopy,lenDest;
 	BOOL brc;
+	
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
 	
 	lenSource=strlen(pszSource);
 	if (lenSource>63) { TRACE((TRACE_ERROR,_F_,"lenSource=%d>63 (taille max chiffrable avec cette fonction=63(utile)+1(0)",lenSource)); goto end; } // 1.12B2-AC-TIE1
@@ -627,7 +616,7 @@ char *swCryptEncryptString(const char *pszSource,HCRYPTKEY hKey)
 	// on prend le 0 de fin de chaine qui permettra de distingue le mdp du padding
 	memcpy(pSourceCopy+16,pszSource,lenSource+1); 
 	
-	if (swCryptEncryptData(pSourceCopy,pSourceCopy+16,64,hKey)!=0) goto end;
+	if (swCryptEncryptData(pSourceCopy,pSourceCopy+16,64,iKeyId)!=0) goto end;
 
 	pszDest=(char*)malloc(lenDest); // sera libéré par l'appelant
 	if (pszDest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenDest)); goto end; }
@@ -647,16 +636,20 @@ end:
 // [in] iv = vecteur d'initialisation
 // [in/out] pData = pointeur vers les données à déchiffrer / déchiffrées
 // [in] lData = taille des données à déchiffrer (lData en entrée = lData en sortie)
-// [in] hKey = clé de chiffrement
+// [in] iKeyId = id de la clé de chiffrement
 //-----------------------------------------------------------------------------
 // Retour : 0 si OK
 //-----------------------------------------------------------------------------
-int swCryptDecryptDataAES256(unsigned char *iv, unsigned char *pData,DWORD lData,HCRYPTKEY hKey)
+int swCryptDecryptDataAES256(unsigned char *iv, unsigned char *pData,DWORD lData,int iKeyId)
 {
 	TRACE((TRACE_ENTER,_F_,""));
 	int rc=-1;
 	BOOL brc;
 	DWORD dwMode=CRYPT_MODE_CBC;
+	HCRYPTKEY hKey=NULL;
+
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
+	if (swCreateAESKeyFromKeyDataParts(iKeyId,&hKey)!=0) goto end;
 
 	brc=CryptSetKeyParam(hKey,KP_IV,iv,0);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptSetKeyParam(KP_IV)")); goto end; }
@@ -667,34 +660,7 @@ int swCryptDecryptDataAES256(unsigned char *iv, unsigned char *pData,DWORD lData
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptDecrypt()=0x%08lx",GetLastError())); goto end; }
 	rc=0;
 end:
-	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
-	return rc;
-}
-
-//-----------------------------------------------------------------------------
-// swCryptDecryptData3DES()
-// ANCIENNE FONCTION : n'est plus utilisée que pour la migration 0.92 -> 0.93
-//-----------------------------------------------------------------------------
-// [in] iv = vecteur d'initialisation
-// [in/out] pData = pointeur vers les données à déchiffrer / déchiffrées
-// [in] lData = taille des données à déchiffrer (lData en entrée = lData en sortie)
-// [in] hKey = clé de chiffrement
-//-----------------------------------------------------------------------------
-// Retour : 0 si OK
-//-----------------------------------------------------------------------------
-int swCryptDecryptData3DES(unsigned char *iv, unsigned char *pData,DWORD lData,HCRYPTKEY hKey)
-{
-	TRACE((TRACE_ENTER,_F_,""));
-	int rc=-1;
-
-	BOOL brc;
-	brc=CryptSetKeyParam(hKey,KP_IV,iv,0);
-	if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptSetKeyParam()")); goto end; }
-	
-	brc = CryptDecrypt(hKey,0,true,0,pData,&lData);
-	if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptDecrypt()=0x%08lx",GetLastError())); goto end;	}
-	rc=0;
-end:
+	if (hKey!=NULL) CryptDestroyKey(hKey);
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
 	return rc;
 }
@@ -708,13 +674,15 @@ end:
 // [in] hKey = clé de chiffrement
 // [rc] chaine déchiffrée encodée. A libérer par l'appelant.
 //-----------------------------------------------------------------------------
-char *swCryptDecryptString(const char *pszSource,HCRYPTKEY hKey)
+char *swCryptDecryptString(const char *pszSource,int iKeyId)
 {
-	TRACE((TRACE_ENTER,_F_,""));
+	TRACE((TRACE_ENTER,_F_,"iKeyId=%d",iKeyId));
 	char *pszDest=NULL;
 	char *pszRet=NULL;
 	int lenSource,lenDest;
 	int lenVecteur;
+
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
 
 	lenSource=strlen(pszSource);
 	lenDest=lenSource/2;
@@ -727,18 +695,12 @@ char *swCryptDecryptString(const char *pszSource,HCRYPTKEY hKey)
 	if (lenSource==LEN_ENCRYPTED_AES256)
 	{
 		lenVecteur=16;
-		if (swCryptDecryptDataAES256((unsigned char*)pszDest,(unsigned char*)pszDest+16,64+16,hKey)!=0) goto end; 
-		pszDest[lenDest]=0; // 0 de fin de chaine.
-	}
-	else if (lenSource==LEN_ENCRYPTED_3DES) //3DES
-	{
-		lenVecteur=8;
-		if (swCryptDecryptData3DES((unsigned char*)pszDest,(unsigned char*)pszDest+8,56+8,hKey)!=0) goto end; 
+		if (swCryptDecryptDataAES256((unsigned char*)pszDest,(unsigned char*)pszDest+16,64+16,iKeyId)!=0) goto end; 
 		pszDest[lenDest]=0; // 0 de fin de chaine.
 	}
 	else
 	{
-		TRACE((TRACE_ERROR,_F_,"lenSource=%d (au lieu de %d (3DES) ou %d (AES-256) attendu !)",lenSource,LEN_ENCRYPTED_3DES,LEN_ENCRYPTED_AES256));
+		TRACE((TRACE_ERROR,_F_,"lenSource=%d (au lieu de %d (AES-256) attendu !)",lenSource,LEN_ENCRYPTED_AES256));
 		goto end;
 	}
 
@@ -750,156 +712,6 @@ end:
 	if (pszDest!=NULL && pszDest!=pszRet) free(pszDest);
 	TRACE((TRACE_LEAVE,_F_,"pszRet=0x%08lx",pszRet));
 	return pszRet;
-}
-
-
-//-----------------------------------------------------------------------------
-// swCryptSaltAndHashPassword()
-// N'EST PLUS UTILISEE A PARTIR DE LA VERSION 0.93 ET PBKDF2
-//-----------------------------------------------------------------------------
-// Sale et hashe le mot de passe maitre
-// si le buffer de sel est NULL, génération aléa (création, sinon c'est une vérif) 
-// 0.72 : nouveau paramètre iNbIterations (nb d'itérations de hashage)
-// 0.73 : nouveau paramètre bV72 pour correction itération mal implémentée en 0.72
-//-----------------------------------------------------------------------------
-int swCryptSaltAndHashPassword(char *bufSalt, const char *szPwd,char **pszHashedPwd,int iNbIterations,bool bV72)
-{
-	TRACE((TRACE_ENTER,_F_,"bufSalt=0x%08lx",bufSalt));
-	int rc=-1;
-	
-	BOOL brc;
-	HCRYPTHASH hHash=NULL;
-	DWORD lenPwd;
-	DWORD lenHashedPwd;
-	unsigned char *bufSaltedPwd=NULL;
-	DWORD lenSaltedPwd;
-	unsigned char  bufHash[HASH_LEN];
-	DWORD lenHash;
-	// 0.73
-	unsigned char bufToHash[HASH_LEN];
-
-	lenPwd=strlen(szPwd);
-	lenSaltedPwd=SALT_LEN+lenPwd;
-	lenHashedPwd=SALT_LEN*2+HASH_LEN*2+1;
-	int i;
-
-	// allocation du buffer pour stocker le sel et le mot de passe
-	// c'est ce buffer qu'on hache ensuite
-	bufSaltedPwd=(unsigned char*)malloc(lenSaltedPwd);
-	if (bufSaltedPwd==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenSaltedPwd)); goto end; }
-	if (bufSalt==NULL) // génère le sel
-	{
-		brc = CryptGenRandom(ghProv,SALT_LEN,bufSaltedPwd);
-		if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptGenRandom()")); goto end; }
-	}
-	else // utilise le sel passé en paramètre
-	{
-		memcpy(bufSaltedPwd,bufSalt,SALT_LEN);
-	}
-	TRACE_BUFFER((TRACE_DEBUG,_F_,bufSaltedPwd,SALT_LEN,"sel"));
-
-	// concatène le mot de passe
-	memcpy(bufSaltedPwd+SALT_LEN,szPwd,lenPwd);
-	//TRACE_BUFFER((TRACE_PWD,_F_,bufSaltedPwd,lenSaltedPwd,"à hacher")); // 0.72 (trace déplacée)
-	// hashe le tout
-	brc= CryptCreateHash(ghProv,CALG_SHA1,0,0,&hHash);           
-	if (!brc) 
-	{
-		TRACE((TRACE_ERROR,_F_,"CryptCreateHash()"));
-		goto end;
-	}
-	if 	(bV72)
-	{
-		// 0.72 : boucle hashage anti-cassage de mot de passe
-		// foireux, j'ai oublié de réinjecter le hash... honte à moi
-		// corrigé ci-dessous en 0.73
-		for (i=0;i<iNbIterations;i++)
-		{
-			brc = CryptHashData(hHash,bufSaltedPwd,lenSaltedPwd,0); 
-			if (!brc) 
-			{
-				TRACE((TRACE_ERROR,_F_,"CryptHashData()"));
-				goto end;
-			}
-		}
-		// récupère la valeur du hash
-		lenHash=sizeof(bufHash);
-		brc = CryptGetHashParam(hHash,HP_HASHVAL,bufHash,&lenHash,0);
-		if (!brc) 
-		{
-			TRACE((TRACE_ERROR,_F_,"CryptGetHashParam(HP_HASHVAL)"));
-			goto end;
-		}
-	}
-	else // version 073 corrige la 0.72...
-	{
-		// hashe le mot de passe
-		brc = CryptHashData(hHash,bufSaltedPwd,lenSaltedPwd,0); 
-		if (!brc) 
-		{
-			TRACE((TRACE_ERROR,_F_,"CryptHashData()"));
-			goto end;
-		}
-		// récupère la valeur du hash
-		lenHash=sizeof(bufHash);
-		brc = CryptGetHashParam(hHash,HP_HASHVAL,bufHash,&lenHash,0);
-		if (!brc) 
-		{
-			TRACE((TRACE_ERROR,_F_,"CryptGetHashParam(HP_HASHVAL)"));
-			goto end;
-		}
-		CryptDestroyHash(hHash); hHash=NULL;
-		// itérations = hash le hash iNbIterations fois.
-		for (i=0;i<iNbIterations;i++)
-		{
-			// copie le résultat du hash dans le buffer à hasher pour itérer
-			memcpy(bufToHash,bufHash,lenHash);
-			brc= CryptCreateHash(ghProv,CALG_SHA1,0,0,&hHash);           
-			if (!brc) 
-			{
-				TRACE((TRACE_ERROR,_F_,"CryptCreateHash()"));
-				goto end;
-			}
-			// hashe le hash
-			brc = CryptHashData(hHash,bufToHash,lenHash,0); 
-			if (!brc) 
-			{
-				TRACE((TRACE_ERROR,_F_,"CryptHashData()"));
-				goto end;
-			}
-			// récupère la valeur du hash
-			lenHash=sizeof(bufHash);
-			brc = CryptGetHashParam(hHash,HP_HASHVAL,bufHash,&lenHash,0);
-			if (!brc) 
-			{
-				TRACE((TRACE_ERROR,_F_,"CryptGetHashParam(HP_HASHVAL)"));
-				goto end;
-			}	
-			CryptDestroyHash(hHash); hHash=NULL;
-		}
-	}
-	TRACE_BUFFER((TRACE_DEBUG,_F_,bufHash,lenHash,"hash"));
-	// il reste à convertir chaque morceau (sel et résultat du hash) en base 64
-	// et à concaténer les 2
-
-	// allocation de la destination
-	*pszHashedPwd=(char*)malloc(lenHashedPwd);
-	if (*pszHashedPwd==NULL) 
-	{
-		TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenHashedPwd));
-		goto end;
-	}
-	swCryptEncodeBase64(bufSaltedPwd,SALT_LEN,*pszHashedPwd);
-	swCryptEncodeBase64(bufHash,HASH_LEN,*pszHashedPwd+SALT_LEN*2);
-
-	TRACE((TRACE_DEBUG,_F_,"*pszHashedPwd=%s",*pszHashedPwd));
-	rc=0;
-end:
-	if (bufSaltedPwd!=NULL) free(bufSaltedPwd);
-	// 0.72 : libération du hash
-	if (hHash!=NULL) CryptDestroyHash(hHash);
-	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
-	return rc;
 }
 
 //-----------------------------------------------------------------------------

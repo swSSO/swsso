@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="111";	// 101 = 1.01
-const char gcszCurrentBeta[]="1121";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1122";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -54,9 +54,12 @@ int giNbActions;		// nb d'actions dans le tableau
 int giBadPwdCount;		// nb de saisies erronées de mdp consécutives
 HWND gwAskPwd=NULL ;       // anti ré-entrance fenêtre saisie pwd
 
-HCRYPTKEY ghKey1=NULL;
-HCRYPTKEY ghKey2=NULL;
-HCRYPTKEY ghKey3=NULL; // juste pour chiffrer le sceau du fichier .ini
+// 1.12 : on ne conserve plus l'objet clé AES, mais seulement les données utiles dans 4 buffers différents
+BOOL gAESKeyInitialized[2];
+BYTE gAESKeyDataPart1[2][AES256_KEY_PART_LEN];
+// astuce pour limiter les modifs de code : ghKey1 et ghKey2 étaient les handle des 2 clés, ils deviennent les index pour le tableau des clés
+int ghKey1=0; 
+int ghKey2=1;
 
 // Icones et pointeur souris
 HICON ghIconAltTab=NULL;
@@ -82,6 +85,8 @@ UINT guiNbPOPSSO;
 UINT guiNbWindows;
 UINT guiNbVisibleWindows;
 
+BYTE gAESKeyDataPart2[2][AES256_KEY_PART_LEN];
+
 // 0.76
 BOOL gbRememberOnThisComputer=FALSE;
 BOOL gbRecoveryRunning=FALSE;
@@ -101,12 +106,12 @@ int giRefreshRightsTimer=0;
 int giOSVersion=OS_WINDOWS_OTHER;
 int giOSBits=OS_32;
 
+BYTE gAESKeyDataPart3[2][AES256_KEY_PART_LEN];
+
 SID *gpSid=NULL;
 char *gpszRDN=NULL;
 char gszComputerName[MAX_COMPUTERNAME_LENGTH+1]="";
 char gszUserName[UNLEN+1]="";
-
-char szPwdMigration093[LEN_PWD+1]=""; // stockage temporaire du mot de passe pour migration 0.93, effacé tout de suite après.
 
 char gcszK1[]="11111111";
 
@@ -135,6 +140,8 @@ BOOL gbAdmin=FALSE;
 HBRUSH ghRedBrush=NULL;
 
 int giNbTranscryptError=0;
+
+BYTE gAESKeyDataPart4[2][AES256_KEY_PART_LEN];
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -1440,13 +1447,12 @@ static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 					}
 					else
 					{
-						BYTE AESKeyData[AES256_KEY_LEN];
 						giPwdProtection=PP_ENCRYPTED;
 						// génère le sel qui sera pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
 						swGenPBKDF2Salt();
-						swCryptDeriveKey(szPwd1,&ghKey1,AESKeyData,FALSE);
+						swCryptDeriveKey(szPwd1,ghKey1);
 						StoreMasterPwd(szPwd1);
-						RecoveryChangeAESKeyData(AESKeyData);
+						RecoveryChangeAESKeyData(ghKey1);
 						// inscrit la date de dernier changement de mot de passe dans le .ini
 						// cette valeur est chiffré par le (nouveau) mot de passe et écrite seulement si politique mdp définie
 						SaveMasterPwdLastChange();
@@ -1590,8 +1596,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					{
 						if (ghKey1!=NULL) // Cas de la demande de mot de passe "loupe" (TogglePasswordField) ou du déverrouillage
 						{
-							BYTE AESKeyData[AES256_KEY_LEN];
-							swCryptDeriveKey(szPwd,&ghKey2,AESKeyData,FALSE);
+							swCryptDeriveKey(szPwd,ghKey2);
 							SecureZeroMemory(szPwd,strlen(szPwd));
 							if (ReadVerifyCheckSynchroValue(ghKey2)==0)
 							{
@@ -1606,16 +1611,14 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						}
 						else // cas du découplage (ISSUE#181)
 						{
-							BYTE AESKeyData[AES256_KEY_LEN];
-							swCryptDeriveKey(szPwd,&ghKey2,AESKeyData,FALSE);
+							swCryptDeriveKey(szPwd,ghKey2);
 							if (ReadVerifyCheckSynchroValue(ghKey2)==0)
 							{
-								BYTE AESKeyData[AES256_KEY_LEN];
 								giPwdProtection=PP_ENCRYPTED;
 								StoreMasterPwd(szPwd);
-								swCryptDeriveKey(szPwd,&ghKey1,AESKeyData,FALSE);
+								swCryptDeriveKey(szPwd,ghKey1);
 								// enregistrement des infos de recouvrement dans swSSO.ini (mdp maitre + code RH)Kpub
-								RecoveryChangeAESKeyData(AESKeyData);
+								RecoveryChangeAESKeyData(ghKey1);
 								// inscrit la date de dernier changement de mot de passe dans le .ini
 								// cette valeur est chiffré par le (nouveau) mot de passe et écrite seulement si politique mdp définie
 								SaveMasterPwdLastChange();
@@ -1642,17 +1645,12 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							gbRememberOnThisComputer=TRUE;
 							DPAPIStoreMasterPwd(szPwd);
 						}
-						BYTE AESKeyData[AES256_KEY_LEN];
-						swCryptDeriveKey(szPwd,&ghKey1,AESKeyData,FALSE);
+						swCryptDeriveKey(szPwd,ghKey1);
 						SecureZeroMemory(szPwd,strlen(szPwd));
 						// 0.90 : si une clé de recouvrement existe et les infos de recouvrement n'ont pas encore
 						//        été enregistrées dans le .ini (cas de la première utilisation après déploiement de la clé
-						// ISSUE#139 : si on vient de faire la migration 093, on stocke une mauvaise clé et le recouvrement de mot de passe ne fonctionne pas !
-						if (*szPwdMigration093==0) // on n'est pas dans le cas de la migration, on peut stocker la clé, sinon on fait dans Migration093
-						{
-							SetFocus(GetDlgItem(w,TB_PWD)); // ISSUE#182
-							RecoveryFirstUse(w,AESKeyData);
-						}
+						SetFocus(GetDlgItem(w,TB_PWD)); // ISSUE#182
+						RecoveryFirstUse(w,ghKey1);
 						EndDialog(w,IDOK);
 					}
 					else
@@ -1787,8 +1785,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 
 		if (CheckMasterPwd(szTemp)==0)
 		{
-			BYTE AESKeyData[AES256_KEY_LEN];
-			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData,FALSE);
+			swCryptDeriveKey(szTemp,ghKey1);
 			ret=0;
 		}
 		else
@@ -1812,14 +1809,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 			{
 				// 0.90 : si une clé de recouvrement existe et les infos de recouvrement n'ont pas encore
 				//        été enregistrée dans le .ini (cas de la première utilisation après déploiement de la clé
-				BYTE AESKeyData[AES256_KEY_LEN];
-				swCryptDeriveKey(szPwd,&ghKey1,AESKeyData,FALSE);
-				// ISSUE#139 : si on vient de faire la migration 093, on stocke une mauvaise clé et le recouvrement de mot de passe ne fonctionne pas !
-				if (*szPwdMigration093==0) // on n'est pas dans le cas de la migration, on peut stocker la clé, sinon on fait dans Migration093
-				{
-					RecoveryFirstUse(wParent,AESKeyData);
-				}
-				// 0.85B9 : remplacement de ZeroMemory(szPwd,sizeof(szPwd));
+				swCryptDeriveKey(szPwd,ghKey1);
 				SecureZeroMemory(szPwd,strlen(szPwd));
 				gbRememberOnThisComputer=TRUE;
 				ret=0;
@@ -2018,9 +2008,6 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	giaccChildErrors=0;
 	giBadPwdCount=0;
 	gwAskPwd=NULL; // 0.65 anti ré-entrance fenêtre saisie pwd
-	ghKey1=NULL;
-	ghKey2=NULL;
-	ghKey3=NULL;
 	time_t tNow,tLastPwdChange;
 	gbRecoveryRunning=FALSE;
 	gpSid=NULL;
@@ -2029,6 +2016,8 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	gSalts.bPBKDF2KeySaltReady=FALSE;
 	gLastLoginTime.wYear=0; // ISSUE#171
 	giNbTranscryptError=0;
+	gAESKeyInitialized[0]=FALSE;
+	gAESKeyInitialized[1]=FALSE;
 
 	ZeroMemory(&gTabLastDetect,sizeof(T_LAST_DETECT)); // pourrait contribuer à la correction de ISSUE#229
 
@@ -2254,7 +2243,6 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		}
 		else // mode sans mot de passe
 		{
-			BYTE AESKeyData[AES256_KEY_LEN];
 			char szTemp[LEN_PWD+1]; // 4 morceaux de clé x 8 octets + nom d'utilisateur tronqué à 16 octets = 48
 
 			if (gbAdmin) // si défini, demande le mot de passe admin, sinon demande de le définir
@@ -2284,7 +2272,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 			for (i=0;i<len;i++) szTemp[32+i]=(char)tolower(gszUserName[i]);
 			//TRACE((TRACE_PWD,_F_,"sel=%s",szTemp));
 
-			swCryptDeriveKey(szTemp,&ghKey1,AESKeyData,FALSE);
+			swCryptDeriveKey(szTemp,ghKey1);
 			StoreMasterPwd(szTemp);
 			SecureZeroMemory(szTemp,LEN_PWD+1);
 			SaveConfigHeader();
@@ -2476,14 +2464,7 @@ askpwd:
 			if ((tNow-tLastPwdChange)>(giPwdPolicy_MaxAge*86400))
 			{
 				// impose le changement de mot de passe
-				if (*szPwdMigration093==0) 
-				{
-					if (WindowChangeMasterPwd(TRUE)!=0) goto end;
-				}
-				else
-				{
-					bForcePwdChangeNow=TRUE;
-				}
+				if (WindowChangeMasterPwd(TRUE)!=0) goto end;
 			}
 		}
 	}
@@ -2618,15 +2599,6 @@ askpwd:
 	// 0.93B4 : si gbParseWindowsOnStart=FALSE, ajoute toutes les fenêtres ouvertes et visibles dans la liste des fenêtres
 	if (!gbParseWindowsOnStart) ExcludeOpenWindows();
 
-	if (*szPwdMigration093!=0) 
-	{
-		int iSavePwdProtection=giPwdProtection; // ISSUE#172
-		giPwdProtection=PP_ENCRYPTED; // ISSUE#172
-		rc=Migration093(NULL,szPwdMigration093);
-		giPwdProtection=iSavePwdProtection; // ISSUE#172
-		SecureZeroMemory(szPwdMigration093,sizeof(szPwdMigration093));
-		if (rc!=0) goto end;
-	}
 	// ISSUE#145
 	if (bForcePwdChangeNow)
 	{
@@ -2780,9 +2752,6 @@ end:
 	}
 
 	// on libère tout avant de terminer
-	swCryptDestroyKey(ghKey1);
-	swCryptDestroyKey(ghKey2);
-	swCryptDestroyKey(ghKey3);
 	swCryptTerm();
 	SSOWebTerm();
 	UnloadIcons();

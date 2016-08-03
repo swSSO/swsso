@@ -1589,17 +1589,20 @@ end:
 // ReadVerifyCheckSynchroValue()
 //-----------------------------------------------------------------------------
 // Lit et vérifie la valeur checksynchro
-// Vérifie que la clé ghKey1 permet bien de déchiffrer les mot de passe maitre
+// Vérifie que la clé permet bien de déchiffrer les mot de passe maitre
 // En version SSO WINDOWS, c'est le moyen de contrôler que le mot de passe Windows
 // est bien synchronisé avec la clé de chiffrement des mdp secondaires de swSSO
 //-----------------------------------------------------------------------------
-int ReadVerifyCheckSynchroValue(HCRYPTKEY hKey)
+int ReadVerifyCheckSynchroValue(int iKeyId)
 {
-	TRACE((TRACE_ENTER,_F_, ""));
+	TRACE((TRACE_ENTER,_F_, "iKeyId=%d",iKeyId));
 	int rc=-1;
 	
 	BYTE bufSynchroValue[16+64+16]; // iv + données utiles + padding
 	char szSynchroValue[192+1]; // (16+64+16)*2+1 = 193
+
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
+	if (!gAESKeyInitialized[iKeyId]) { TRACE((TRACE_ERROR,_F_,"AESKey(%d) not initialized",iKeyId)); goto end; }
 
 	// Lit dans le .ini
 	GetPrivateProfileString("swSSO","CheckSynchro","",szSynchroValue,sizeof(szSynchroValue),gszCfgFile);
@@ -1611,7 +1614,7 @@ int ReadVerifyCheckSynchroValue(HCRYPTKEY hKey)
 	// Décode le faux base 64
 	swCryptDecodeBase64(szSynchroValue,(char*)bufSynchroValue,sizeof(bufSynchroValue));
 	// Chiffre  avec la clé ghKey1
-	if (swCryptDecryptDataAES256(bufSynchroValue,bufSynchroValue+16,80,hKey)!=0) 
+	if (swCryptDecryptDataAES256(bufSynchroValue,bufSynchroValue+16,80,iKeyId)!=0) 
 	{
 		TRACE((TRACE_ERROR,_F_,"Erreur de déchiffrement, cas de désynchro !"));
 		giBadPwdCount++;
@@ -1679,10 +1682,10 @@ int InitWindowsSSO(void)
 	}
 	// Crée la clé de chiffrement des mots de passe secondaires
 	memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-	swCreateAESKeyFromKeyData(AESKeyData,&ghKey1);
+	swStoreAESKey(AESKeyData,ghKey1);
 	if (GenWriteCheckSynchroValue()!=0) goto end;
 	StoreIniEncryptedHash(); // ISSUE#164
-	RecoveryFirstUse(NULL,AESKeyData); // ISSUE#194
+	RecoveryFirstUse(NULL,ghKey1); // ISSUE#194
 	rc=0;
 end:
 	if (rc!=0) MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_MIGRATION),"swSSO",MB_OK | MB_ICONSTOP);
@@ -1740,17 +1743,15 @@ int MigrationWindowsSSO(void)
 	}
 	// Crée la clé de chiffrement des mots de passe secondaires
 	memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-	if (swCreateAESKeyFromKeyData(AESKeyData,&ghKey2)) goto end;
+	if (swStoreAESKey(AESKeyData,ghKey2)!=0) goto end;
 
 	// Fait le transchiffrement du fichier .ini de ghKey1 vers ghKey2
 	if (swTranscrypt()!=0) goto end; 
 	
-	// Supprime la ghKey2 dont on n'a plus besoin 
-	swCryptDestroyKey(ghKey2); ghKey2=NULL;
 	// Copie la clé dans ghKey1 qui est utilisée pour chiffrer les mots de passe secondaires
-	swCreateAESKeyFromKeyData(AESKeyData,&ghKey1);
+	swStoreAESKey(AESKeyData,ghKey1);
 	// Enregistrement des infos de recouvrement dans swSSO.ini (AESKeyData+UserId)Kpub
-	if (RecoveryChangeAESKeyData(AESKeyData)!=0) goto end;
+	if (RecoveryChangeAESKeyData(ghKey1)!=0) goto end;
 	// enregistrement des actions, comme ça les identifiants sont rechiffrés automatiquement avec la nouvelle clé
 	if(SaveApplications()!=0) goto end;
 	
@@ -1766,142 +1767,6 @@ int MigrationWindowsSSO(void)
 	rc=0;
 end:
 	if (rc!=0) MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_MIGRATION),"swSSO",MB_OK | MB_ICONSTOP);
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
-}
-
-//-----------------------------------------------------------------------------
-// Migration093()
-//-----------------------------------------------------------------------------
-// Assure la migration des algorithmes de la version 0.92 à 0.93 (ISSUE#56)
-//-----------------------------------------------------------------------------
-int Migration093(HWND w,const char *szPwd)
-{
-	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=-1;
-	BOOL brc;
-	char szCfgFileBackup[_MAX_PATH+5+1]; 
-	int i;
-	char *pszDecryptedPwd=NULL;
-	char *pszTranscryptedPwd=NULL;
-	int lenEncryptedProxyPwd;
-	char szEncryptedProxyPwd[LEN_ENCRYPTED_AES256+1];
-	char *pszComputerName;
-	char szItem[120+1]="";
-	BOOL bBackupOK=FALSE;
-	BYTE AESKeyData[AES256_KEY_LEN];
-
-	// recopie le fichier swsso.ini pour retour arrière en cas de problème !
-	strcpy_s(szCfgFileBackup,sizeof(szCfgFileBackup),gszCfgFile);
-	strcat_s(szCfgFileBackup,sizeof(szCfgFileBackup),"-");
-	strcat_s(szCfgFileBackup,sizeof(szCfgFileBackup),gszCfgVersion);
-	brc=CopyFile(gszCfgFile,szCfgFileBackup,TRUE);
-	if (!brc)
-	{
-		DWORD dwLastError=GetLastError();
-		TRACE((TRACE_ERROR,_F_,"CopyFile(%s->%s)=%d",gszCfgFile,szCfgFileBackup,dwLastError));
-		wsprintf(buf2048,GetString(IDS_ERROR_INI_SAV),dwLastError,szCfgFileBackup);
-		MessageBox(w,buf2048,"swSSO",MB_ICONSTOP | MB_OK);
-		goto end;
-	}
-	bBackupOK=TRUE;
-
-	// passe en version 0.93
-	// indispensable car la fonction swCryptDeriveKey s'appuie sur la version pour savoir
-	// si elle doit dériver une clé 3DES ou AES256
-	strcpy_s(gszCfgVersion,sizeof(gszCfgVersion),gcszCfgVersion);
-	
-	// génère les sels (utilisé par swCryptDeriveKey puis swPBKDF2)
-	if (swGenPBKDF2Salt()!=0) goto end;
-	
-	// dérive nouvelle clé
-	if(swCryptDeriveKey(szPwd,&ghKey2,AESKeyData,FALSE)!=0) goto end;
-
-	// Transchiffrement tous les mots de passe secondaires et proxy de 3DES en AES
-	// parcours de la table des actions et transchiffrement
-	for (i=0;i<giNbActions;i++)
-	{
-		TRACE((TRACE_DEBUG,_F_,"Action[%d](%s)",i,gptActions[i].szApplication));
-		if (*gptActions[i].szPwdEncryptedValue==0) goto suite;
-		// déchiffrement mot de passe
-		pszDecryptedPwd=swCryptDecryptString(gptActions[i].szPwdEncryptedValue,ghKey1);
-		if (pszDecryptedPwd==NULL) goto end;
-		// rechiffrement avec la nouvelle clé
-		pszTranscryptedPwd=swCryptEncryptString(pszDecryptedPwd,ghKey2);
-		SecureZeroMemory(pszDecryptedPwd,strlen(pszDecryptedPwd));
-		if (pszTranscryptedPwd==NULL) goto end;
-		strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszTranscryptedPwd);
-suite:
-		if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
-		if (pszTranscryptedPwd!=NULL) { free(pszTranscryptedPwd); pszTranscryptedPwd=NULL; }
-	}
-	for (i=0;i<HowManyComputerNames();i++)
-	{
-		// récup du prochain computer name
-		pszComputerName=GetNextComputerName();
-		// lecture de la valeur du mdp proxy pour ce computername
-		sprintf_s(szItem,sizeof(szItem),"ProxyPwd-%s",pszComputerName);
-		lenEncryptedProxyPwd=GetPrivateProfileString("swSSO",szItem,"",szEncryptedProxyPwd,sizeof(szEncryptedProxyPwd),gszCfgFile);
-		TRACE((TRACE_INFO,_F_,"ProxyPwd-%s : len=%d",pszComputerName,lenEncryptedProxyPwd));
-		if (lenEncryptedProxyPwd==LEN_ENCRYPTED_3DES) // mot de passe chiffré. Dans tous les autres cas (pas de mot de passe ou non chiffré, on ne fait rien !)
-		{
-			// déchiffrement mot de passe
-			pszDecryptedPwd=swCryptDecryptString(szEncryptedProxyPwd,ghKey1);
-			if (pszDecryptedPwd==NULL) goto end;
-			//TRACE((TRACE_PWD,_F_,"pszDecryptedPwd=%s",pszDecryptedPwd));
-			// rechiffrement avec la nouvelle clé
-			pszTranscryptedPwd=swCryptEncryptString(pszDecryptedPwd,ghKey2);
-			SecureZeroMemory(pszDecryptedPwd,strlen(pszDecryptedPwd));
-			if (pszTranscryptedPwd==NULL) goto end;
-			// écriture dans le fichier ini
-			WritePrivateProfileString("swSSO",szItem,pszTranscryptedPwd,gszCfgFile);
-		}
-		if (pszDecryptedPwd!=NULL) { free(pszDecryptedPwd); pszDecryptedPwd=NULL; }
-		if (pszTranscryptedPwd!=NULL) { free(pszTranscryptedPwd); pszTranscryptedPwd=NULL; }
-	}
-		
-	// dérive le mot de passe dans la clé 1 pour la suite !
-	if(swCryptDeriveKey(szPwd,&ghKey1,AESKeyData,FALSE)!=0) goto end;
-
-	// rechiffre tous les identifiants et sauvegarde tout :-)
-	if(SaveApplications()!=0) goto end;
-
-	// tout s'est bien passé, écriture de l'entête
-	if(StoreMasterPwd(szPwd)!=0) goto end;
-	//if(StoreMasterPwd(szPwd)==0) goto end;
-	
-	WritePrivateProfileString("swSSO","version",gcszCfgVersion,gszCfgFile);
-	// inscrit la date de dernier changement de mot de passe dans le .ini
-	// cette valeur est chiffré par le (nouveau) mot de passe et écrite seulement si politique mdp définie
-	// remarque : le but est simplement de réécrire cette clé avec le nouvel algo de chiffrement
-	// effet de bord (mais sans importance) : redonne un peu de vie au mot de passe de l'utilisateur
-	SaveMasterPwdLastChange();
-
-	// ISSUE#139 : stockage des recovery infos (avant c'était fait trop tôt, avant initialisation de AESKeyData)
-	RecoveryFirstUse(w,AESKeyData);
-	StoreIniEncryptedHash(); // ISSUE#164
-	rc=0;
-end:
-	if (rc!=0 && bBackupOK)
-	{
-		// recopie du fichier swsso.ini d'origine
-		brc=CopyFile(szCfgFileBackup,gszCfgFile,FALSE);
-		if (!brc)
-		{
-			TRACE((TRACE_ERROR,_F_,"CopyFile(%s->%s)=%d",szCfgFileBackup,gszCfgFile,GetLastError()));
-			wsprintf(buf2048,GetString(IDS_ERROR_INI_NOT_RESTORED),szCfgFileBackup);
-			MessageBox(w,buf2048,"swSSO",MB_ICONSTOP | MB_OK);
-			goto end;
-		}
-		brc=DeleteFile(szCfgFileBackup);
-		if (!brc)
-		{
-			TRACE((TRACE_ERROR,_F_,"DeleteFile(%s)=%d",szCfgFileBackup,GetLastError()));
-			goto end;
-		}
-		MessageBox(w,GetString(IDS_ERROR_INI_RESTORED),"swSSO",MB_ICONSTOP | MB_OK);
-		goto end;
-	}
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -1962,14 +1827,13 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	}
 	// Crée la clé de chiffrement des mots de passe secondaires
 	memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-	if (swCreateAESKeyFromKeyData(AESKeyData,&ghKey1)) goto end;
+	if (swStoreAESKey(AESKeyData,ghKey1)) goto end;
 	
 	// Teste que la clé est OK, sinon essaie avec la précédente clé si existante et 
 	// transchiffre le fichier si OK : V02:GETPHKD:OLD:domain(256octets)username(256octets)
 	if (ReadVerifyCheckSynchroValue(ghKey1)!=0)
 	{
 		TRACE((TRACE_INFO,_F_,"ReadVerifyCheckSynchroValue(CUR) failed"));
-		swCryptDestroyKey(ghKey1); ghKey1=NULL;
 		// ISSUE#156 : pour y voir plus clair dans les traces
 		SecureZeroMemory(bufRequest,sizeof(bufRequest));
 		memcpy(bufRequest,"V02:GETPHKD:OLD:",16);
@@ -1987,7 +1851,7 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 		}
 		// Crée la clé de chiffrement des mots de passe secondaires
 		memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-		if (swCreateAESKeyFromKeyData(AESKeyData,&ghKey1)) goto end;
+		if (swStoreAESKey(AESKeyData,ghKey1)) goto end;
 		if (ReadVerifyCheckSynchroValue(ghKey1)==0)
 		{
 			TRACE((TRACE_INFO,_F_,"Un transchiffrement va être effectué"));
@@ -2003,7 +1867,7 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 		}
 	}
 
-	RecoveryFirstUse(NULL,AESKeyData);
+	RecoveryFirstUse(NULL,ghKey1);
 	rc=0;
 end:
 	if (rc!=0) 
@@ -2048,10 +1912,6 @@ int CheckMasterPwd(const char *szPwd)
 	TRACE((TRACE_ENTER,_F_, ""));
 	//TRACE((TRACE_PWD,_F_, "pwd=%s",szPwd));
 	int rc=-1;
-	char szConfigHashedPwd[SALT_LEN*2+HASH_LEN*2+1];
-	char *pszUserHashedPwd=NULL;
-	char szSalt[SALT_LEN*2+1];
-	char bufSalt[SALT_LEN];
 	
 	char szPBKDF2ConfigPwd[PBKDF2_PWD_LEN*2+1];
 	BYTE PBKDF2ConfigPwd[PBKDF2_PWD_LEN];
@@ -2061,76 +1921,29 @@ int CheckMasterPwd(const char *szPwd)
 
 	if (giBadPwdCount>5) goto end;
 	
-	if (*gszCfgVersion==0 || atoi(gszCfgVersion)<93) // ancienne version
+	// Lecture des sels
+	if (swReadPBKDF2Salt()!=0) goto end;
+	// Lecture du mot de passe
+	GetPrivateProfileString("swSSO","pwdValue","",szPBKDF2ConfigPwd,sizeof(szPBKDF2ConfigPwd),gszCfgFile);
+	if (strlen(szPBKDF2ConfigPwd)!=PBKDF2_PWD_LEN*2) goto end;
+	swCryptDecodeBase64(szPBKDF2ConfigPwd,(char*)PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd));
+	TRACE_BUFFER((TRACE_DEBUG,_F_,PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),"PBKDF2ConfigPwd"));
+
+	// calcul du hash
+	if (swPBKDF2((BYTE*)PBKDF2UserPwd,sizeof(PBKDF2UserPwd),szPwd,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+	TRACE_BUFFER((TRACE_DEBUG,_F_,PBKDF2UserPwd,sizeof(PBKDF2UserPwd),"PBKDF2UserPwd"));
+	TRACE_BUFFER((TRACE_DEBUG,_F_,PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),"PBKDF2UserPwd"));
+
+	// comparaison
+	if (memcmp(PBKDF2UserPwd,PBKDF2ConfigPwd,PBKDF2_PWD_LEN)!=0)
 	{
-		GetPrivateProfileString("swSSO","pwdValue","",szConfigHashedPwd,sizeof(szConfigHashedPwd),gszCfgFile);
-		if (strlen(szConfigHashedPwd)!=SALT_LEN*2+HASH_LEN*2) goto end;
-		// extrait le sel
-		memcpy(szSalt,szConfigHashedPwd,SALT_LEN*2);
-		szSalt[SALT_LEN*2]=0;
-		swCryptDecodeBase64(szSalt,bufSalt,sizeof(bufSalt));
-
-		// 0.72 : le mot de passe est désormais hashé 5000 fois.
-		//        la vérification doit donc se faire différemment avec les anciennes versions
-		//		  du fichier de config (<072) et avec la nouvelle
-		//		  => la fonction swCryptSaltAndHashPassword gagne un paramètre = le nb d'itérations de hash
-		// 0.73 : correction de l'itération foireuse de la 0.72 + 10000 itérations
-		if (*gszCfgVersion==0 || atoi(gszCfgVersion)<72) // ancienne version
-		{
-			TRACE((TRACE_INFO,_F_,"gszCfgVersion=%s => re-ecriture masterpwd necessaire",gszCfgVersion));
-			if (swCryptSaltAndHashPassword(bufSalt,szPwd,&pszUserHashedPwd,1,true)!=0) goto end;
-		}
-		else if (atoi(gszCfgVersion)==72) // version 072 mauvaise itération
-		{
-			TRACE((TRACE_INFO,_F_,"gszCfgVersion=%s => re-ecriture masterpwd necessaire",gszCfgVersion));
-			if (swCryptSaltAndHashPassword(bufSalt,szPwd,&pszUserHashedPwd,5000,true)!=0) goto end;
-		}
-		else // version 073/0.73 itération corrigée
-		{
-			if (swCryptSaltAndHashPassword(bufSalt,szPwd,&pszUserHashedPwd,10000,false)!=0) goto end;
-		}
-		TRACE((TRACE_DEBUG,_F_,"szConfigHashedPwd=%s",szConfigHashedPwd));
-		TRACE((TRACE_DEBUG,_F_,"pszUserHashedPwd =%s",pszUserHashedPwd));
-		if (strcmp(szConfigHashedPwd,pszUserHashedPwd)!=0) 
-		{
-			giBadPwdCount++;
-			goto end;
-		}
-		// mot de passe OK, mais ancienne version, on migre les algorithmes !
-		if (*gszCfgVersion==0 || atoi(gszCfgVersion)<93)
-		{
-			// la migration est faite plus tard une fois que les configs sont chargées en mémoire
-			strcpy_s(szPwdMigration093,LEN_PWD+1,szPwd);
-		}
-	}
-	else
-	{
-		// (le sel est désormais stocké à part pour simplifier le code)
-		// Lecture des sels
-		if (swReadPBKDF2Salt()!=0) goto end;
-		// Lecture du mot de passe
-		GetPrivateProfileString("swSSO","pwdValue","",szPBKDF2ConfigPwd,sizeof(szPBKDF2ConfigPwd),gszCfgFile);
-		if (strlen(szPBKDF2ConfigPwd)!=PBKDF2_PWD_LEN*2) goto end;
-		swCryptDecodeBase64(szPBKDF2ConfigPwd,(char*)PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd));
-		TRACE_BUFFER((TRACE_DEBUG,_F_,PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),"PBKDF2ConfigPwd"));
-
-		// calcul du hash
-		if (swPBKDF2((BYTE*)PBKDF2UserPwd,sizeof(PBKDF2UserPwd),szPwd,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
-		TRACE_BUFFER((TRACE_DEBUG,_F_,PBKDF2UserPwd,sizeof(PBKDF2UserPwd),"PBKDF2UserPwd"));
-		TRACE_BUFFER((TRACE_DEBUG,_F_,PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),"PBKDF2UserPwd"));
-
-		// comparaison
-		if (memcmp(PBKDF2UserPwd,PBKDF2ConfigPwd,PBKDF2_PWD_LEN)!=0)
-		{
-			TRACE((TRACE_INFO,_F_,"Mot de passe incorrect"));
-			giBadPwdCount++;
-			goto end;
-		}
+		TRACE((TRACE_INFO,_F_,"Mot de passe incorrect"));
+		giBadPwdCount++;
+		goto end;
 	}
 	rc=0;
 end:
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
-	if (pszUserHashedPwd!=NULL) free(pszUserHashedPwd);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -2544,15 +2357,13 @@ int ChangeWindowsPwd(void)
 		{
 			// Crée la clé de chiffrement des mots de passe secondaires
 			memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-			swCreateAESKeyFromKeyData(AESKeyData,&ghKey2);
+			swStoreAESKey(AESKeyData,ghKey2);
 			// Fait le transchiffrement du fichier .ini de ghKey1 vers ghKey2
 			if (swTranscrypt()!=0) goto end;
-			// Supprime la ghKey2 dont on n'a plus besoin 
-			swCryptDestroyKey(ghKey2); ghKey2=NULL;
 			// Copie la clé dans ghKey1 qui est utilisée pour chiffrer les mots de passe secondaires
-			swCreateAESKeyFromKeyData(AESKeyData,&ghKey1);
+			swStoreAESKey(AESKeyData,ghKey1);
 			// Enregistrement des infos de recouvrement dans swSSO.ini (AESKeyData+UserId)Kpub
-			if (RecoveryChangeAESKeyData(AESKeyData)!=0) goto end;
+			if (RecoveryChangeAESKeyData(ghKey1)!=0) goto end;
 			// enregistrement des actions, comme ça les identifiants sont rechiffrés automatiquement avec la nouvelle clé
 			if(SaveApplications()!=0) goto end;
 			// Récupère le nouveau mot de passe AD chiffré
@@ -2600,26 +2411,25 @@ int ChangeMasterPwd(const char *szNewPwd)
 	int rc=-1;
 	char *pszDecryptedPwd=NULL;
 	char *pszTranscryptedPwd=NULL;	
-	BYTE AESKeyData[AES256_KEY_LEN];
 
 	// génère de nouveaux sels (ben oui, autant le changer en même temps que le mot de passe maitre)
 	// qui seront pris en compte pour la dérivation de la clé AES et le stockage du mot de passe
 	if (swGenPBKDF2Salt()!=0) goto end;
 
 	// dérivation de ghKey2 à partir du nouveau mot de passe
-	if (swCryptDeriveKey(szNewPwd,&ghKey2,AESKeyData,FALSE)!=0) goto end;
+	if (swCryptDeriveKey(szNewPwd,ghKey2)!=0) goto end;
 
 	// Transchiffrement
 	if (swTranscrypt()!=0) goto end; 
 
 	// dérivation de ghKey1 à partir du nouveau mot de passe pour la suite
-	if(swCryptDeriveKey(szNewPwd,&ghKey1,AESKeyData,FALSE)!=0) goto end;
+	if(swCryptDeriveKey(szNewPwd,ghKey1)!=0) goto end;
 	
 	// enregistrement du nouveau mot maitre dans swSSO.ini
 	if(StoreMasterPwd(szNewPwd)!=0) goto end;
 
 	// enregistrement des infos de recouvrement dans swSSO.ini (mdp maitre + code RH)Kpub
-	if (RecoveryChangeAESKeyData(AESKeyData)!=0) goto end;
+	if (RecoveryChangeAESKeyData(ghKey1)!=0) goto end;
 
 	// inscrit la date de dernier changement de mot de passe dans le .ini
 	// cette valeur est chiffré par le (nouveau) mot de passe et écrite seulement si politique mdp définie

@@ -44,7 +44,7 @@ int ChangeWindowsPwd(void);		// 0.96
 int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO);		// 0.96
 int MigrationWindowsSSO(void);	// 0.96
 int GenWriteCheckSynchroValue(void);	// 0.96
-int ReadVerifyCheckSynchroValue(HCRYPTKEY hKey);	// 0.96
+int ReadVerifyCheckSynchroValue(int iKeyId);	// 0.96 // 1.12
 int InitWindowsSSO(void);	// 0.96
 
 int ChangeMasterPwd(const char *szNewPwd);
@@ -81,8 +81,6 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp);
 int LogTranscryptError(char *szLogMessage);
 
 extern const char gcszCfgVersion[];
-
-int Migration093(HWND w,const char *szPwd);
 
 extern char gszCfgFile[];
 extern char gszCfgVersion[];

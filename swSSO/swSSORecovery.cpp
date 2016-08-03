@@ -444,22 +444,27 @@ static int CALLBACK ResponseDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 //-----------------------------------------------------------------------------
 // [in] pAESKeyData : data permettant de construire la clé AES des mdp sec
 //-----------------------------------------------------------------------------
-int RecoveryChangeAESKeyData(BYTE *pAESKeyData)
+int RecoveryChangeAESKeyData(int iKeyId)
 {
-	TRACE((TRACE_ENTER,_F_, ""));
+	TRACE((TRACE_ENTER,_F_, "iKeyId=%d",iKeyId));
 	int rc=-1;
 
 	DWORD lenUserName;
 	char Data[245]; // 245=taille max chiffrable, mais en fait on n'utilisera même pas tout ça...
 	char *pszEncryptedData=NULL;
 
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
+	if (!gAESKeyInitialized[iKeyId]) { TRACE((TRACE_ERROR,_F_,"AESKey(%d) not initialized",iKeyId)); goto end; }
 	if (gpRecoveryKeyValue==NULL) { rc=0; goto end; } // pas de clé de recouvrement, donc pas de stockage.
 
 	// RAPPEL : la taille possible à chiffrer est limitée à 245 octets
 	// C'est OK car nous chiffrons (AESKeyLen + identifiant utilisateur) = 32 + 100 (100=99+1)
 	// (remarque : on tronque donc le username qui est limité par WIndows à UNLEN = 256)
 	ZeroMemory(Data,sizeof(Data));
-	memcpy(Data,pAESKeyData,AES256_KEY_LEN);
+	memcpy(Data,gAESKeyDataPart1[iKeyId],AES256_KEY_PART_LEN);
+	memcpy(Data+AES256_KEY_PART_LEN,gAESKeyDataPart2[iKeyId],AES256_KEY_PART_LEN);
+	memcpy(Data+AES256_KEY_PART_LEN*2,gAESKeyDataPart3[iKeyId],AES256_KEY_PART_LEN);
+	memcpy(Data+AES256_KEY_PART_LEN*3,gAESKeyDataPart4[iKeyId],AES256_KEY_PART_LEN);
 
 	lenUserName=strlen(gszUserName);
 	memcpy(Data+AES256_KEY_LEN,gszUserName,(lenUserName<100)?lenUserName:99); // au pire le 0 est là puisque ZeroMemory
@@ -493,13 +498,16 @@ end:
 //		  - Cas du renouvellement de la clé
 //-----------------------------------------------------------------------------
 // [in] w : handle fenêtre parent pour affichage messages
-// [in] pAESKeyData : clé AES de chiffrement des mdp secondaires
+// [in] iKeyId : identifiant de la clé
 //-----------------------------------------------------------------------------
-void RecoveryFirstUse(HWND w,BYTE *pAESKeyData)
+void RecoveryFirstUse(HWND w,int iKeyId)
 {
-	TRACE((TRACE_ENTER,_F_, ""));
+	TRACE((TRACE_ENTER,_F_, "iKeyId=%d",iKeyId));
 
 	int err=0;
+	
+	if (iKeyId!=0 && iKeyId!=1) { TRACE((TRACE_ERROR,_F_,"bad iKeyId=%d",iKeyId)); goto end; }
+	if (!gAESKeyInitialized[iKeyId]) { TRACE((TRACE_ERROR,_F_,"AESKey(%d) not initialized",iKeyId)); goto end; }
 
 	// pas de politique de recouvrement
 	if (gpRecoveryKeyValue==NULL) goto end;
@@ -507,12 +515,12 @@ void RecoveryFirstUse(HWND w,BYTE *pAESKeyData)
 	if (*gszRecoveryInfos==0) // pas de recovery info, il faut les stocker
 	{
 		TRACE((TRACE_INFO,_F_,"Premier stockage clé id %04d",giRecoveryKeyId));
-		err=RecoveryChangeAESKeyData(pAESKeyData); 
+		err=RecoveryChangeAESKeyData(iKeyId); 
 	}
 	else if (giRecoveryKeyId!=giRecoveryInfosKeyId) // des recovery infos existent mais l'id de la clé a changé
 	{
 		TRACE((TRACE_INFO,_F_,"Changement de clé : %04d -> %04d",giRecoveryInfosKeyId,giRecoveryKeyId));
-		err=RecoveryChangeAESKeyData(pAESKeyData); 
+		err=RecoveryChangeAESKeyData(iKeyId); 
 	}
 end:
 	if (err!=0)
@@ -755,7 +763,8 @@ int RecoveryResponse(HWND w)
 	if (swCryptDecryptDataAES256(Response,Response+16,AES256_KEY_LEN+16,hKs)!=0) goto end;
 	TRACE_BUFFER((TRACE_DEBUG,_F_,Response+16,AES256_KEY_LEN,"AESKeyData ****"));
 
-	if (swCreateAESKeyFromKeyData(Response+16,&ghKey1)) goto end;
+	
+	if (swStoreAESKey(Response+16,ghKey1)) goto end;
 
 	rc=0;
 end:

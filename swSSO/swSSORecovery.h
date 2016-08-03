@@ -38,8 +38,8 @@ extern char gszRecoveryInfos[5+512+1];
 extern int giRecoveryInfosKeyId;
 
 
-int RecoveryChangeAESKeyData(BYTE *pAESKeyData);
-void RecoveryFirstUse(HWND w,BYTE *pAESKeyData);
+int RecoveryChangeAESKeyData(int iKeyId);
+void RecoveryFirstUse(HWND w,int iKeyId);
 
 int RecoveryChallenge(HWND w);
 int RecoveryResponse(HWND w);

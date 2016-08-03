@@ -153,13 +153,6 @@ void SSOActivate(HWND w)
 		
 		nid.hIcon=ghIconSystrayInactive;
 		strcpy_s(nid.szTip,sizeof(nid.szTip),gbAdmin?GetString(IDS_SYSTRAY_ADMIN):GetString(IDS_DESACTIVE)); //max64
-		//0.83 : supprime la clé de la mémoire
-		//0.96 : sauf si SSO Windows (et si on décide de le faire, attention effet de bord dans AskPWd()).
-		//1.01 (ISSUE#140) : sauf si mode réactivation sans saisie de mot de passe
-		if (giPwdProtection!=PP_WINDOWS && !gbReactivateWithoutPwd)
-		{
-			if (ghKey1!=NULL) { CryptDestroyKey(ghKey1); ghKey1=NULL; }
-		}
 		if (gwPropertySheet!=NULL) ShowWindow(gwPropertySheet,SW_HIDE);
 		if (gwAppNsites!=NULL) ShowWindow(gwAppNsites,SW_HIDE);
 		if (gwAskPwd!=NULL) { EndDialog(gwAskPwd,IDCANCEL); gwAskPwd=NULL; }

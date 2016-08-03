@@ -36,6 +36,7 @@
 #define PBKDF2_SALT_LEN	64	// longueur du sel utilisé avec PBKDF2 (512 bits)
 #define PBKDF2_PWD_LEN 32	// 256 bits
 #define AES256_KEY_LEN 32   // 256 bits
+#define AES256_KEY_PART_LEN 8
 
 #define PWDTYPE_ALPHA			1
 #define PWDTYPE_NUM				2
@@ -54,26 +55,23 @@ extern HCRYPTPROV ghProv;
 
 int  swCryptInit();
 void swCryptTerm();
-void swCryptDestroyKey(HCRYPTKEY hKey);
 int  swCryptSaltAndHashPassword(char *bufSalt, const char *szPwd,char **pszHashedPwd, int iNbIterations,bool bV72);
 void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString);
 int swCryptDecodeBase64(const char *szSrcString,char *pDestData,int lenDestData);
+
+int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufSalt,int bufSaltLen,int iNbIterations);
 
 BOOL swIsPBKDF2KeySaltReady(void);
 BOOL swIsPBKDF2PwdSaltReady(void);
 int swGenPBKDF2Salt(void);
 int swReadPBKDF2Salt(void);
 
-int  swCryptEncryptData(unsigned char *iv,unsigned char *pData,DWORD lData,HCRYPTKEY hKey);
-int  swCryptDecryptDataAES256(unsigned char *iv, unsigned char *pData,DWORD lData,HCRYPTKEY hKey);
-int  swCryptDecryptData3DES(unsigned char *iv, unsigned char *pData,DWORD lData,HCRYPTKEY hKey);
+int  swCryptEncryptData(unsigned char *iv,unsigned char *pData,DWORD lData,int iKeyId);
+int  swCryptDecryptDataAES256(unsigned char *iv, unsigned char *pData,DWORD lData,int iKeyId);
 
-int swCreateAESKeyFromKeyData(BYTE *pAESKeyData,HCRYPTKEY *phKey);
-int swCryptDeriveKey(const char *pszMasterPwd,HCRYPTKEY *phKey,BYTE *pAESKeyData,BOOL bForceOldDerivationFunction);
-char *swCryptEncryptString(const char *pszSource,HCRYPTKEY hKey);
-char *swCryptDecryptString(const char *pszSource,HCRYPTKEY hKey);
-
-int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufSalt,int bufSaltLen,int iNbIterations);
+int swStoreAESKey(BYTE *AESKeyData,int iKeyId);
+int swCryptDeriveKey(const char *pszMasterPwd,int iKeyId);
+char *swCryptEncryptString(const char *pszSource,int iKeyId);
+char *swCryptDecryptString(const char *pszSource,int iKeyId);
 
 void swGenerateRandomPwd(char *pszPwd,int iPwdLen,int iPwdType);
-
