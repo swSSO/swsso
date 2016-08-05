@@ -311,7 +311,7 @@ end:
 	SysFreeString(bstrProxyPwd);
 	SysFreeString(bstrServerAddress);
 	SysFreeString(bstrRequest);
-	if (pProxyParams!=NULL) free(pProxyParams); // 1.12B2-TIE4
+	if (pInProxyParams==NULL && pProxyParams!=NULL) free(pProxyParams); // 1.12B2-TIE4 + ne faire le free que si pas reçu en paramètre ! Corrigé en 1.12B3
 	TRACE((TRACE_LEAVE,_F_, "pszResult=0x%08lx",pszResult));
 	return pszResult;
 }
