@@ -815,6 +815,13 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto suite; }
 			}
+			// ISSUE#287 : prise en compte de EDGE avec Windows 10 anniversaire (1607)
+			else if (strcmp(szClassName,"ApplicationFrameWindow")==0) // EDGE -- se comporte ensuite comme IE, pour les configs simplifiées et les configs normales : MERCI MICROSOFT !! :-)
+			{
+				iBrowser=BROWSER_IE;
+				pszURL=GetIEURL(w,TRUE);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto suite; }
+			}
 			else // autre ??
 			{
 				TRACE((TRACE_ERROR,_F_,"Unknown class : %s !",szClassName)); goto suite; 

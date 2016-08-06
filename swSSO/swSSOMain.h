@@ -130,6 +130,7 @@ extern int giOSBits;
 #define POPUP_FIREFOX		2
 #define POPUP_W7			3
 #define POPUP_CHROME		4
+#define POPUP_W10			5 // ISSUE#297
 
 extern T_LAST_DETECT gTabLastDetect[];
 

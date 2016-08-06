@@ -1720,7 +1720,7 @@ static int CALLBACK EnumBrowserProc(HWND w, LPARAM lp)
 	T_ENUM_BROWSER *pEnumBrowser=(T_ENUM_BROWSER*)lp;
 	
 	GetClassName(w,szClassName,sizeof(szClassName));
-	if ((strcmp(szClassName,"IEFrame")==0) && (pEnumBrowser->iPopupType==POPUP_W7 || pEnumBrowser->iPopupType==POPUP_XP)) // IE
+	if ((strcmp(szClassName,"IEFrame")==0 || strcmp(szClassName,"ApplicationFrameWindow")==0) && (pEnumBrowser->iPopupType==POPUP_W7 || pEnumBrowser->iPopupType==POPUP_XP)) // IE
 	{
 		pszURL=GetIEURL(w,FALSE);
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto end; }

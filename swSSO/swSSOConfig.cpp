@@ -4531,6 +4531,23 @@ int AddApplicationFromCurrentWindow(void)
 			iType=POPSSO;
 		}
 	}
+	// ISSUE#287 : prise en compte de EDGE avec Windows 10 anniversaire (1607)
+	else if (strcmp(szClassName,"ApplicationFrameWindow")==0) // EDGE -- se comporte ensuite comme IE, pour les configs simplifiées et les configs normales : MERCI MICROSOFT !! :-)
+	{
+		// ISSUE#287
+		pszURL=GetIEURL(w,TRUE);
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee")); goto end; }
+		iType=UNK; // permet de récupérer les configs WEB ou XEB 
+		iBrowser=BROWSER_IE;
+	}
+	// ISSUE#297 : prise en compte des popups de sécurité de Windows 10 anniversaire (dans IE, EDGE, etc.)
+	else if (strcmp(szClassName,"Credential Dialog Xaml Host")==0 &&  
+		    (strcmp(szTitle,"Sécurité Windows")==0 || strcmp(szTitle,"Windows Security")==0)) // POPUP W10 anniversaire... IE, EDGE, partages réseau, etc.
+	{
+		pszURL=GetW10PopupURL(w);
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL W10 non trouvee")); goto end; }
+		iType=POPSSO;
+	}
 	else iType=WINSSO;
 
 	if (gbInternetGetConfig)

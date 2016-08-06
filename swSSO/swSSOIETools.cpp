@@ -259,6 +259,29 @@ end:
 	return pAccessible;
 }
 
+//-----------------------------------------------------------------------------
+// GetW10PopupIAccessible()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+IAccessible *GetW10PopupIAccessible(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx",w));
+	HRESULT hr;
+	IAccessible *pAccessible=NULL;
+
+	// récupère pointeur IAccessible
+	hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+	if (FAILED(hr))
+	{
+		TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow()=0x%08lx",hr));
+		goto end;
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, "pAccessible=0x%08lx",pAccessible));
+	return pAccessible;
+}
+
 // ----------------------------------------------------------------------------------
 // GetW7PopupURL()
 // ----------------------------------------------------------------------------------
@@ -283,6 +306,92 @@ char *GetW7PopupURL(HWND w)
 	
 	// récup pAccessible
 	pAccessible=GetW7PopupIAccessible(w);
+	if (pAccessible==NULL) { TRACE((TRACE_ERROR,_F_,"Impossible de trouver un pointeur iAccessible sur cette popup")); goto end; }
+
+	// compte les childs
+	hr=pAccessible->get_accChildCount(&lCount);
+	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"get_accChildCount()=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_INFO,_F_,"get_accChildCount()=%ld",lCount));
+
+	// énumère les childs et récupère le libellé du dernier child de type texte
+	// suite à ISSUE#78 et ISSUE#228 cela semble être la meilleure solution
+	vtSelf.vt=VT_I4;
+	vtSelf.lVal=CHILDID_SELF;
+	for (i=1;i<=lCount;i++) // inutile de commencer à 0, c'est CHILDID_SELF
+	{
+		// récup du ième child
+		vtChild.vt=VT_I4;
+		vtChild.lVal=i;
+		
+		hr=pAccessible->get_accChild(vtChild,&pIDispatch);
+		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+		
+		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pChild);
+		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+
+		if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
+
+		// Lecture du rôle du child à la recherche de ROLE_SYSTEM_STATICTEXT
+		hr=pChild->get_accRole(vtSelf,&vtRole);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole(%d)=0x%08lx",vtSelf.lVal,hr)); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"get_accRole(%d) vtRole.lVal=0x%08lx",vtSelf.lVal,vtRole.lVal));
+		
+		if (vtRole.lVal==ROLE_SYSTEM_STATICTEXT) // trouvé, on lit le libellé
+		{
+			SysFreeString(bstrName); bstrName=NULL; // efface le libellé du précédent child
+			// Lecture du texte
+			hr=pChild->get_accName(vtSelf,&bstrName);
+			if (hr!=S_OK) 
+			{
+				TRACE((TRACE_ERROR,_F_,"pChild->get_accName(%ld)=0x%08lx",vtSelf.lVal,hr));
+				goto end;
+			}
+		}
+		if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
+	}
+	if (bstrName!=NULL)
+	{
+		pszURL=GetSZFromBSTR(bstrName);
+		if (pszURL==NULL) goto end;
+		TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
+	}
+end:
+	SysFreeString(bstrName);
+	if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
+	if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
+	if (pAccessible!=NULL) pAccessible->Release();
+	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
+	return pszURL;
+}
+
+// ----------------------------------------------------------------------------------
+// GetW10PopupURL()
+// ----------------------------------------------------------------------------------
+// lecture de l'URL dans les popups IE dans W10 (anniversaire et >)
+// Pour l'instant ne fonctionne pas, la navigation dans les popup semble cassée dans 
+// cette version de Windows (06/08/2016). Je laisse le code pour évolution future
+// ----------------------------------------------------------------------------------
+// [rc] pointeur vers la chaine, à libérer par l'appelant. NULL si erreur
+// ----------------------------------------------------------------------------------
+char *GetW10PopupURL(HWND w) 
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+
+	HRESULT hr;
+	IAccessible *pAccessible=NULL;
+	VARIANT vtSelf,vtChild;
+	VARIANT vtRole;
+	BSTR bstrName=NULL;
+	char *pszURL=NULL;
+	IAccessible *pChild=NULL;
+	IDispatch *pIDispatch=NULL;
+	long lCount;
+	int i;
+	
+	// récup pAccessible
+	pAccessible=GetW10PopupIAccessible(w);
 	if (pAccessible==NULL) { TRACE((TRACE_ERROR,_F_,"Impossible de trouver un pointeur iAccessible sur cette popup")); goto end; }
 
 	// compte les childs
