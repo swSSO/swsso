@@ -84,8 +84,8 @@ extern BYTE gAESKeyDataPart2[][AES256_KEY_PART_LEN];
 extern BYTE gAESKeyDataPart3[][AES256_KEY_PART_LEN];
 extern BYTE gAESKeyDataPart4[][AES256_KEY_PART_LEN];
 // astuce pour limiter les modifs de code : ghKey1 et ghKey2 étaient les handle des 2 clés, ils deviennent les index pour le tableau des clés
-extern int ghKey1; 
-extern int ghKey2;
+extern const int ghKey1; 
+extern const int ghKey2;
 
 extern char gcszK1[8+1];
 extern char gcszK2[8+1];

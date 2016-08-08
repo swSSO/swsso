@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="111";	// 101 = 1.01
-const char gcszCurrentBeta[]="1122";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1123";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -58,8 +58,8 @@ HWND gwAskPwd=NULL ;       // anti ré-entrance fenêtre saisie pwd
 BOOL gAESKeyInitialized[2];
 BYTE gAESKeyDataPart1[2][AES256_KEY_PART_LEN];
 // astuce pour limiter les modifs de code : ghKey1 et ghKey2 étaient les handle des 2 clés, ils deviennent les index pour le tableau des clés
-int ghKey1=0; 
-int ghKey2=1;
+const int ghKey1=0; 
+const int ghKey2=1;
 
 // Icones et pointeur souris
 HICON ghIconAltTab=NULL;
@@ -1571,7 +1571,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				ShowWindow(GetDlgItem(w,PB_MDP_OUBLIE),SW_HIDE);
 			}
 			// ISSUE#181
-			if (giPwdProtection==PP_WINDOWS && ghKey1==NULL) 
+			if (giPwdProtection==PP_WINDOWS && !gAESKeyInitialized[ghKey1]) 
 			{
 				SetWindowPos(GetDlgItem(w,TX_FRAME),NULL,60,10,330,30,SWP_NOZORDER);
 				SetDlgItemText(w,TX_FRAME,GetString(IDS_DECOUPLAGE_WINDOWS));
@@ -1601,7 +1601,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
 					if (giPwdProtection==PP_WINDOWS)
 					{
-						if (ghKey1!=NULL) // Cas de la demande de mot de passe "loupe" (TogglePasswordField) ou du déverrouillage
+						if (gAESKeyInitialized[ghKey1]!=NULL) // Cas de la demande de mot de passe "loupe" (TogglePasswordField) ou du déverrouillage
 						{
 							swCryptDeriveKey(szPwd,ghKey2);
 							SecureZeroMemory(szPwd,strlen(szPwd));
