@@ -2573,7 +2573,8 @@ askpwd:
 	}
 
 	// initialisation SSO Web (IE)
-	if (SSOWebInit()!=0) { iError=-1; goto end; }
+	// if (SSOWebInit()!=0) { iError=-1; goto end; } // 1.12B3-TI-TIE4
+	guiHTMLGetObjectMsg=RegisterWindowMessage("WM_HTML_GETOBJECT"); // 1.12B3-TI-TIE4
 	
 	// 1.03 : si configuré pour utiliser le mot de passe AD comme mot de passe secondaire (%ADPASSWORD%),
 	//        vérifie que la date de dernier changement de mot de passe AD et le cas échéant demande à 
@@ -2760,7 +2761,7 @@ end:
 
 	// on libère tout avant de terminer
 	swCryptTerm();
-	SSOWebTerm();
+	//SSOWebTerm(); // 1.12B3-TI-TIE4
 	UnloadIcons();
 	if (giTimer!=0) KillTimer(NULL,giTimer);
 	if (ghPwdChangeEvent!=NULL) CloseHandle(ghPwdChangeEvent);

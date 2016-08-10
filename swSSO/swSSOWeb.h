@@ -32,11 +32,11 @@
 //-----------------------------------------------------------------------------
 
 extern UINT guiHTMLGetObjectMsg;
-extern LPFNOBJECTFROMLRESULT gpfObjectFromLresult;
+// extern LPFNOBJECTFROMLRESULT gpfObjectFromLresult; // 1.12B3-TI-TIE4
 extern const char gcszFormNoName1[];
 extern const char gcszFormNoName2[];
 
 int SSOWeb(HWND w,int iAction,HWND w2);
 int SSOMaxthon(HWND w,int iAction);
-int SSOWebInit();
-void SSOWebTerm();
+// int SSOWebInit();   // 1.12B3-TI-TIE4
+// void SSOWebTerm();  // 1.12B3-TI-TIE4

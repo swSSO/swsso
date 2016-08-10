@@ -72,13 +72,14 @@ static int CALLBACK IEEnumChildProc(HWND w, LPARAM lp)
 
 	// récupération pointeur sur le document HTML (interface IHTMLDocument2)
 	SendMessageTimeout(w,guiHTMLGetObjectMsg,0L,0L,SMTO_ABORTIFHUNG,1000,&dw);
-	hr=(*gpfObjectFromLresult)(dw,IID_IHTMLDocument2,0,(void**)&pHTMLDocument2);
+	// hr=(*gpfObjectFromLresult)(dw,IID_IHTMLDocument2,0,(void**)&pHTMLDocument2); // 1.12B3-TI-TIE4
+	hr=ObjectFromLresult(dw,IID_IHTMLDocument2,0,(void**)&pHTMLDocument2);
 	if (FAILED(hr)) 
 	{
-		TRACE((TRACE_ERROR,_F_,"gpfObjectFromLresult(%d,IID_IHTMLDocument2)=0x%08lx",dw,hr));
+		TRACE((TRACE_ERROR,_F_,"ObjectFromLresult(%d,IID_IHTMLDocument2)=0x%08lx",dw,hr));
 		goto end;
 	}
-   	TRACE((TRACE_DEBUG,_F_,"gpfObjectFromLresult(IID_IHTMLDocument2)=%08lx pHTMLDocument2=%08lx",hr,pHTMLDocument2));
+   	TRACE((TRACE_DEBUG,_F_,"ObjectFromLresult(IID_IHTMLDocument2)=%08lx pHTMLDocument2=%08lx",hr,pHTMLDocument2));
 
 	// 0.90 : ne commence pas tant que le document n'est pas chargé
 	//        (uniquement dans le cas d'une simulation de frappe clavier ?)

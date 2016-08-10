@@ -37,7 +37,7 @@
 #include "stdafx.h"
 
 UINT guiHTMLGetObjectMsg;
-LPFNOBJECTFROMLRESULT gpfObjectFromLresult=NULL;
+//LPFNOBJECTFROMLRESULT gpfObjectFromLresult=NULL;
 
 // globales locales
 static HINSTANCE ghiOLEACCDLL=NULL;
@@ -551,13 +551,14 @@ static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
 
 	// récupération pointeur sur le document HTML (interface IHTMLDocument2)
 	SendMessageTimeout(w,guiHTMLGetObjectMsg,0L,0L,SMTO_ABORTIFHUNG,1000,&dw);
-	hr=(*gpfObjectFromLresult)(dw,IID_IHTMLDocument2,0,(void**)&pHTMLDocument2);
+	//hr=(*gpfObjectFromLresult)(dw,IID_IHTMLDocument2,0,(void**)&pHTMLDocument2); // 1.12B3-TI-TIE4
+	hr=ObjectFromLresult(dw,IID_IHTMLDocument2,0,(void**)&pHTMLDocument2);
 	if (FAILED(hr)) 
 	{
-		TRACE((TRACE_ERROR,_F_,"gpfObjectFromLresult(%d,IID_IHTMLDocument2)=0x%08lx",dw,hr));
+		TRACE((TRACE_ERROR,_F_,"ObjectFromLresult(%d,IID_IHTMLDocument2)=0x%08lx",dw,hr));
 		goto end;
 	}
-   	TRACE((TRACE_DEBUG,_F_,"gpfObjectFromLresult(IID_IHTMLDocument2)=%08lx pHTMLDocument2=%08lx",hr,pHTMLDocument2));
+   	TRACE((TRACE_DEBUG,_F_,"ObjectFromLresult(IID_IHTMLDocument2)=%08lx pHTMLDocument2=%08lx",hr,pHTMLDocument2));
 
 	ParseHTMLDoc2(pHTMLDocument2,lp);
 	rc=false; // c'est fait, on arrete l'enum
@@ -783,6 +784,7 @@ end:
 	return rc;
 }
 
+#if 0
 //-----------------------------------------------------------------------------
 // SSOWebInit()
 //-----------------------------------------------------------------------------
@@ -827,7 +829,7 @@ void SSOWebTerm()
 	if (ghiOLEACCDLL!=NULL) FreeLibrary(ghiOLEACCDLL);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
-
+#endif 
 
 /////////////////////////////////////////////////////
 #if 0
