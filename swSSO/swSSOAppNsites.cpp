@@ -1021,6 +1021,7 @@ void TogglePasswordField(HWND w)
 	ShowWindow(GetDlgItem(w,TB_PWD_CLEAR),gbShowPwd?SW_SHOW:SW_HIDE);
 	GetDlgItemText(w,gbShowPwd?TB_PWD:TB_PWD_CLEAR,szPwd,sizeof(szPwd));
 	SetDlgItemText(w,gbShowPwd?TB_PWD_CLEAR:TB_PWD,szPwd);
+	SetDlgItemText(w,gbShowPwd?TB_PWD:TB_PWD_CLEAR,"**************************************************"); // TI-TIE2
 	SecureZeroMemory(szPwd,sizeof(szPwd));
 
 	// un ptit coup de refresh sur les contrôles
