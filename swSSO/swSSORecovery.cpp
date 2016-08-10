@@ -684,6 +684,8 @@ int RecoveryResponse(HWND w)
 	char *p;
 	int i;
 	char szResponse[256];
+	DWORD dwMode=CRYPT_MODE_CBC;
+	DWORD lDataToDecrypt;
 
 	// regarde dans le .ini s'il y a un recouvrement en cours
 	dwKsStringLen=GetPrivateProfileString("swSSO","recoveryRunning","",szKs,sizeof(szKs),gszCfgFile);
@@ -760,10 +762,16 @@ int RecoveryResponse(HWND w)
 	TRACE_BUFFER((TRACE_DEBUG,_F_,Response+16,32,"Donnees chiffrees"));
 	TRACE_BUFFER((TRACE_DEBUG,_F_,Response+16+32,16,"padding"));
 
-	if (swCryptDecryptDataAES256(Response,Response+16,AES256_KEY_LEN+16,hKs)!=0) goto end;
+	//if (swCryptDecryptDataAES256(Response,Response+16,AES256_KEY_LEN+16,hKs)!=0) goto end;
+	lDataToDecrypt=AES256_KEY_LEN+16; // clé + padding
+	brc=CryptSetKeyParam(hKs,KP_IV,Response,0);
+	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptSetKeyParam(KP_IV)")); goto end; }
+	brc=CryptSetKeyParam(hKs,KP_MODE,(BYTE*)&dwMode,0);
+	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptSetKeyParam(KP_MODE)")); goto end; }
+	brc = CryptDecrypt(hKs,0,true,0,Response+16,&lDataToDecrypt);
+	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptDecrypt()=0x%08lx",GetLastError())); goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,Response+16,AES256_KEY_LEN,"AESKeyData ****"));
-
-	
+		
 	if (swStoreAESKey(Response+16,ghKey1)) goto end;
 
 	rc=0;
