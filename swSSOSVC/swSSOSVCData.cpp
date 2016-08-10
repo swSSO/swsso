@@ -266,8 +266,9 @@ BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 	// Récupère le chemin complet du process
 	hCallingProcess=OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ulClientProcessId);
 	if (hCallingProcess==NULL) { TRACE((TRACE_ERROR,_F_,"OpenProcess(%d)=%d",ulClientProcessId,GetLastError())); goto end; }
+
 	if (GetModuleFileNameEx(hCallingProcess,NULL,szCallingProcess,MAX_PATH)==0) { TRACE((TRACE_ERROR,_F_,"GetModuleFileNameEx(%d)=%d",ulClientProcessId,GetLastError())); goto end; }
-	TRACE((TRACE_INFO,_F_,"GetModuleFileNameEx(%d)-->%s",ulClientProcessId,szCallingProcess));
+	TRACE((TRACE_DEBUG,_F_,"GetModuleFileNameEx(%d)-->%s",ulClientProcessId,szCallingProcess));
 
 	// Calcule le hash du fichier
 	if (GetFileHash(szCallingProcess,bufHashValue)!=0) goto end;
@@ -296,7 +297,56 @@ BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 
 	rc=TRUE;
 end:
-	if (hCallingProcess!=NULL) { CloseHandle(hCallingProcess); hCallingProcess=NULL; }
+	if (hCallingProcess!=NULL) CloseHandle(hCallingProcess);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// IsCallingProcessMPNotifier()
+//-----------------------------------------------------------------------------
+// Pour PUTPASS, on n'accepte que les appels du mpnotifier.exe dans system32
+//-----------------------------------------------------------------------------
+BOOL IsCallingProcessMPNotifier(unsigned long ulClientProcessId)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	BOOL rc=FALSE;
+	HANDLE hCallingProcess=NULL;
+	char szCallingProcessImageName[MAX_PATH]; // \Device\HarddiskVolume2\Windows\System32\mpnotify.exe
+	char szSystemDirectory[MAX_PATH];		  // c:\windows\system32
+	char szAllowedName[MAX_PATH];			  // \windows\system32\mpnotify.exe
+	DWORD len,lenAllowedName,lenCallingProcessImageName;
+
+	// Récupère le chemin complet du process
+	hCallingProcess=OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ulClientProcessId);
+	if (hCallingProcess==NULL) { TRACE((TRACE_ERROR,_F_,"OpenProcess(%d)=%d",ulClientProcessId,GetLastError())); goto end; }
+	
+	// Comme le service est compilé en 32 bits et que le mpnotifier.exe est 64 bits sur les systèmes 64 bits, la fonction GetModuleFileNameEx
+	// ne fonctionne pas. Il faut utiliser GetProcessImageFileName qui retourne un truc du genre :
+	// \Device\HarddiskVolume2\Windows\System32\mpnotify.exe
+	if (GetProcessImageFileName(hCallingProcess,szCallingProcessImageName,MAX_PATH)==0) { TRACE((TRACE_ERROR,_F_,"GetProcessImageFileName(%d)=%d",ulClientProcessId,GetLastError())); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"GetModuleFileNameEx(%d)-->%s",ulClientProcessId,szCallingProcessImageName));
+
+	// construit le chemin théorique autorisé
+	len=GetSystemDirectory(szSystemDirectory,sizeof(szSystemDirectory));
+	if (len<2) { TRACE((TRACE_ERROR,_F_,"GetSystemDirectory()=%d",GetLastError())); goto end; }
+	strcpy_s(szAllowedName,sizeof(szAllowedName),szSystemDirectory+2); 
+	strcat_s(szAllowedName,sizeof(szAllowedName),"\\mpnotify.exe");
+	TRACE((TRACE_DEBUG,_F_,"szAllowedName=%s",szAllowedName));
+
+	// vérifie que le szCallingProcessImageName se termine bien par le szAllowedName
+	lenAllowedName=strlen(szAllowedName);
+	lenCallingProcessImageName=strlen(szCallingProcessImageName);
+	if (lenAllowedName>lenCallingProcessImageName) { TRACE((TRACE_ERROR,_F_,"szAllowedName(%s) plus court que szCallingProcessImageName(%s) --> probleme !",szAllowedName,szCallingProcessImageName)); goto end; }
+
+	if (_strnicmp(szCallingProcessImageName+lenCallingProcessImageName-lenAllowedName,szAllowedName,lenAllowedName)!=0)
+	{
+		TRACE((TRACE_ERROR,_F_,"%s forbidden",szCallingProcessImageName)); goto end;
+	}
+	TRACE((TRACE_INFO,_F_,"L'appel vient de mpnotify"));
+
+	rc=TRUE;
+end:
 	if (hCallingProcess!=NULL) CloseHandle(hCallingProcess);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
@@ -384,71 +434,80 @@ int swWaitForMessage()
 			if (memcmp(bufRequest+4,"PUTPASS:",8)==0) // Format = V01:PUTPASS:domain(256octets)username(256octets)password(256 octets, chiffré)
 			//-------------------------------------------------------------------------------------------------------------
 			{
-				if (cbRead!=12+DOMAIN_LEN+USER_LEN+PWD_LEN)
+				// nouveau en 1.12B3 : regarde si l'appel vient de mpnotifier ou d'un module swsso autorisé par hash
+				if (!IsCallingProcessMPNotifier(ulClientProcessId) && !IsCallingProcessAllowed(ulClientProcessId)) 
 				{
-					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+DOMAIN_LEN+USER_LEN+PWD_LEN));
-					strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
+					strcpy_s(bufResponse,sizeof(bufResponse),"FORBIDDEN"); 
 					lenResponse=strlen(bufResponse);
 				}
 				else
 				{
-					iUserDataIndex=swGetUserDataIndex(bufRequest,12);
-					if (iUserDataIndex==-1) // utilisateur non connu, on le crée
+					if (cbRead!=12+DOMAIN_LEN+USER_LEN+PWD_LEN)
 					{
-						iUserDataIndex=giMaxUserDataIndex;
-						memcpy(gUserData[iUserDataIndex].szLogonDomainName,bufRequest+12,DOMAIN_LEN);
-						memcpy(gUserData[iUserDataIndex].szUserName,bufRequest+12+DOMAIN_LEN,USER_LEN);
-						// ISSUE#247 : passage du username en majuscule pour éviter les pb de différences de casse (vu avec POA Sophos)
-						CharUpper(gUserData[iUserDataIndex].szUserName);
-						TRACE((TRACE_INFO,_F_,"Utilisateur %s\\%s pas encore connu, on le crée",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName));
-						giMaxUserDataIndex++;
-					}
-					TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
-					// extrait le mdp de la requête dans une variable temporaire effacée de manière sécurisée à la fin de la fonction
-					memcpy(tmpBufPwd,bufRequest+12+DOMAIN_LEN+USER_LEN,PWD_LEN);
-					// ISSUE#156 : on ne calcule plus le PKHD tout de suite, on le fait maintenant systématiquement quand on recoit un GETPKHD
-					//             comme ça on est sûr d'être à jour à la fois du mot de passe et des sels. Et ça simplifie le code.
-					// ISSUE#156 : on déchiffre le mot de passe reçu qui est chiffré avec CRYPTPROTECTMEMORY_CROSS_PROCESS
-					//             pour le rechiffrer avec CRYPTPROTECTMEMORY_SAME_PROCESS
-					if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_CROSS_PROCESS)!=0) goto end;
-					//TRACE((TRACE_PWD,_F_,"tmpBufPwd=%s",tmpBufPwd));
-					if (swProtectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
-					// Vérifie qu'on n'a pas déjà ce mot de passe
-					// ISSUE#173 : vérifie aussi bufPasswordOld
-					if (memcmp(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN)==0 || memcmp(gUserData[iUserDataIndex].bufPasswordOld,tmpBufPwd,PWD_LEN)==0)
-					{
-						TRACE((TRACE_INFO,_F_,"ON A DEJA CE MOT DE PASSE, ON IGNORE"));
+						TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+DOMAIN_LEN+USER_LEN+PWD_LEN));
+						strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
+						lenResponse=strlen(bufResponse);
 					}
 					else
 					{
-						// Si on a déjà stocké un mot de passe, on copie la valeur précédente dans old
-						if (gUserData[iUserDataIndex].bPasswordStored)
+						iUserDataIndex=swGetUserDataIndex(bufRequest,12);
+						if (iUserDataIndex==-1) // utilisateur non connu, on le crée
 						{
-							memcpy(gUserData[iUserDataIndex].bufPasswordOld,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
-							gUserData[iUserDataIndex].bPasswordOldStored=TRUE;
+							iUserDataIndex=giMaxUserDataIndex;
+							memcpy(gUserData[iUserDataIndex].szLogonDomainName,bufRequest+12,DOMAIN_LEN);
+							memcpy(gUserData[iUserDataIndex].szUserName,bufRequest+12+DOMAIN_LEN,USER_LEN);
+							// ISSUE#247 : passage du username en majuscule pour éviter les pb de différences de casse (vu avec POA Sophos)
+							CharUpper(gUserData[iUserDataIndex].szUserName);
+							TRACE((TRACE_INFO,_F_,"Utilisateur %s\\%s pas encore connu, on le crée",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName));
+							giMaxUserDataIndex++;
 						}
-						// Stocke le nouveau mot de passe reçu
-						memcpy(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN);
-						gUserData[iUserDataIndex].bPasswordStored=TRUE;
-						// Si swSSO est lancé, envoie un message pour signaler le nouveau mot de passe pour cet utilisateur
-						sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName);
-						hEvent=OpenEvent(EVENT_MODIFY_STATE,FALSE,szEventName);
-						if (hEvent==NULL)
+						TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
+						// extrait le mdp de la requête dans une variable temporaire effacée de manière sécurisée à la fin de la fonction
+						memcpy(tmpBufPwd,bufRequest+12+DOMAIN_LEN+USER_LEN,PWD_LEN);
+						// ISSUE#156 : on ne calcule plus le PKHD tout de suite, on le fait maintenant systématiquement quand on recoit un GETPKHD
+						//             comme ça on est sûr d'être à jour à la fois du mot de passe et des sels. Et ça simplifie le code.
+						// ISSUE#156 : on déchiffre le mot de passe reçu qui est chiffré avec CRYPTPROTECTMEMORY_CROSS_PROCESS
+						//             pour le rechiffrer avec CRYPTPROTECTMEMORY_SAME_PROCESS
+						if (swUnprotectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_CROSS_PROCESS)!=0) goto end;
+						//TRACE((TRACE_PWD,_F_,"tmpBufPwd=%s",tmpBufPwd));
+						if (swProtectMemory(tmpBufPwd,PWD_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
+						// Vérifie qu'on n'a pas déjà ce mot de passe
+						// ISSUE#173 : vérifie aussi bufPasswordOld
+						if (memcmp(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN)==0 || memcmp(gUserData[iUserDataIndex].bufPasswordOld,tmpBufPwd,PWD_LEN)==0)
 						{
-							TRACE((TRACE_ERROR,_F_,"swSSO pas lancé (OpenEvent()=%ld)",GetLastError()));
+							TRACE((TRACE_INFO,_F_,"ON A DEJA CE MOT DE PASSE, ON IGNORE"));
 						}
 						else
 						{
-							TRACE((TRACE_DEBUG,_F_,"hEvent=0x%08lx",hEvent));
-							brc=SetEvent(hEvent);
-							TRACE((TRACE_DEBUG,_F_,"SetEvent=%d",brc));
-							CloseHandle(hEvent);
-							hEvent=NULL;
+							// Si on a déjà stocké un mot de passe, on copie la valeur précédente dans old
+							if (gUserData[iUserDataIndex].bPasswordStored)
+							{
+								memcpy(gUserData[iUserDataIndex].bufPasswordOld,gUserData[iUserDataIndex].bufPassword,PWD_LEN);
+								gUserData[iUserDataIndex].bPasswordOldStored=TRUE;
+							}
+							// Stocke le nouveau mot de passe reçu
+							memcpy(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN);
+							gUserData[iUserDataIndex].bPasswordStored=TRUE;
+							// Si swSSO est lancé, envoie un message pour signaler le nouveau mot de passe pour cet utilisateur
+							sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName);
+							hEvent=OpenEvent(EVENT_MODIFY_STATE,FALSE,szEventName);
+							if (hEvent==NULL)
+							{
+								TRACE((TRACE_ERROR,_F_,"swSSO pas lancé (OpenEvent()=%ld)",GetLastError()));
+							}
+							else
+							{
+								TRACE((TRACE_DEBUG,_F_,"hEvent=0x%08lx",hEvent));
+								brc=SetEvent(hEvent);
+								TRACE((TRACE_DEBUG,_F_,"SetEvent=%d",brc));
+								CloseHandle(hEvent);
+								hEvent=NULL;
+							}
 						}
+						// Réponse
+						strcpy_s(bufResponse,sizeof(bufResponse),"OK");
+						lenResponse=strlen(bufResponse);
 					}
-					// Réponse
-					strcpy_s(bufResponse,sizeof(bufResponse),"OK");
-					lenResponse=strlen(bufResponse);
 				}
 			}
 			//-------------------------------------------------------------------------------------------------------------
