@@ -86,17 +86,17 @@ int giShowPasswordGroup=2;
 BOOL gbShowMenu_Quit=TRUE;
 
 // REGKEY_PASSWORD_POLICY
-int giPwdPolicy_MinLength=0;
-int giPwdPolicy_MinLetters=0;
-int giPwdPolicy_MinUpperCase=0;
-int giPwdPolicy_MinLowerCase=0;
-int giPwdPolicy_MinNumbers=0;
-int giPwdPolicy_MinSpecialsChars=0;
+int giPwdPolicy_MinLength=8;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
+int giPwdPolicy_MinLetters=1;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
+int giPwdPolicy_MinUpperCase=1;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
+int giPwdPolicy_MinLowerCase=1;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
+int giPwdPolicy_MinNumbers=1;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
+int giPwdPolicy_MinSpecialsChars=0; 
 int giPwdPolicy_MaxAge=0;
 int giPwdPolicy_MinAge=0;
 int giPwdPolicy_IdMaxCommonChars=0;
 char gszPwdPolicy_Message[1024+1];
-int giPwdPolicy_MinRules=0;
+int giPwdPolicy_MinRules=0;			
 
 // REGKEY_ENTERPRISE_OPTIONS
 char gszServerAddress[128+1];
