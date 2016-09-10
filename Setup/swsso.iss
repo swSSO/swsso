@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "swSSO"
-#define MyAppVersion "1.12 beta 3"
+#define MyAppVersion "1.12"
 #define MyAppURL "www.swsso.fr"
 #define MyAppExeName "swSSO.exe"
 
@@ -61,7 +61,7 @@ Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\services\swSSOCM\NetworkProvider
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; Flags: uninsdeletekey
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; ValueType: dword; ValueName: "PasswordChoiceLevel"; ValueData: "4"; Flags: uninsdeletevalue
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: none; Flags: uninsdeletekey
-Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "4D82700512B44ABB96713E24E8CB24D5DF6696BEB2F72CBFAAEDA941B7E36109"; Flags: uninsdeletevalue
+Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "E6B724F845B0D291AF0153A7EC5D0DC9298B824356516C51EAC574D1561E8090"; Flags: uninsdeletevalue
 
 [UninstallDelete]
 Type: files; Name: "%appdata%\swSSO\swSSO.ini"
