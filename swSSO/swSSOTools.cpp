@@ -332,6 +332,10 @@ char *HTTPEncodeParam(char *pszToEncode)
 	
 	// compte le nb de caractères & pour connaitre la taille à allouer
 	lenToEncode=strlen(pszToEncode);
+	if (lenToEncode>1024) // c'est quand même beaucoup, cf. ISSUE#298, dans ce cas, on tronque 
+	{
+		lenToEncode=1024;
+	}
 	nbCarsToEncode=0;
 	for (i=0;i<lenToEncode;i++)
 	{

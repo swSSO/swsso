@@ -2963,7 +2963,7 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	pszEncodedIds=HTTPEncodeParam((char*)szIds); if (pszEncodedIds==NULL) goto end;
 
 	// ISSUE#149 : calcul dynamique taille de la requête
-	sizeofRequest=strlen(pszEncodedIds)+2048; // 2 Ko + taille des ids
+	sizeofRequest=strlen(pszEncodedIds)+4096; // 2 Ko + taille des ids
 	pszRequest=(char*)malloc(sizeofRequest);
 	if (pszRequest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeofRequest)); goto end;};
 	switch (iType)
