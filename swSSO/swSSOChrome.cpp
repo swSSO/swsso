@@ -164,9 +164,9 @@ char *GetChromePopupURL(HWND w)
 	vtChild.vt=VT_I4;
 	vtChild.lVal=CHILDID_SELF;
 	hr=pChildNiveau5->get_accName(vtChild,&bstrURL);
-	TRACE((TRACE_DEBUG,_F_,"get_accName() hr=0x%08lx bstrURL=%S",hr,bstrURL));
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accName() hr=0x%08lx",hr)); goto end; }
 	pszURL=GetSZFromBSTR(bstrURL);
+	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
 
 end:
 	SysFreeString(bstrURL);
@@ -209,7 +209,6 @@ char *GetChromeURL(HWND w)
 	IAccessible *pAccessible=NULL;
 	IAccessible *pChildNiveau1=NULL, *pChildNiveau2=NULL, *pChildNiveau3=NULL, *pChildNiveau4=NULL, *pChildNiveau5=NULL, *pChildNiveau6=NULL;
 	VARIANT vtChild;
-	int  bstrLen;
 	VARIANT vtRole;
 	//long lCount;
 
@@ -312,11 +311,15 @@ char *GetChromeURL(HWND w)
 			}
 			hr=pChildNiveau6->get_accValue(vtChild,&bstrURL);
 			if (hr!=S_OK) { TRACE((TRACE_ERROR,_F_,"pChildNiveau6->get_accValue(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
+			// ISSUE#298 : ne plus utiliser le %S, j'ai fait une fonction pour ça !! 
+			// (remarque : je corrige mais ça marchait quand même pour Chrome, le sprintf_s semble meilleur que le wsprintf)
+			/*
 			TRACE((TRACE_DEBUG,_F_,"pChildNiveau6->get_accValue(%ld)='%S'",vtChild.lVal,bstrURL));
 			bstrLen=SysStringLen(bstrURL);
 			pszURL=(char*)malloc(bstrLen+1);
 			if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",bstrLen+1)); goto end; }
-			sprintf_s(pszURL,bstrLen+1,"%S",bstrURL);
+			sprintf_s(pszURL,bstrLen+1,"%S",bstrURL);*/
+			pszURL=GetSZFromBSTR(bstrURL);
 			TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
 			gpAccessibleChromeURL=pChildNiveau6;
 			pChildNiveau6->AddRef();
@@ -376,7 +379,6 @@ char *GetChromeURL51(HWND w)
 	IAccessible *pAccessible=NULL;
 	IAccessible *pChildNiveau1=NULL, *pChildNiveau2=NULL, *pChildNiveau3=NULL, *pChildNiveau4=NULL, *pChildNiveau5=NULL, *pChildNiveau6=NULL;
 	VARIANT vtChild;
-	int  bstrLen;
 
 	hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
@@ -447,13 +449,17 @@ char *GetChromeURL51(HWND w)
 	
 	hr=pChildNiveau6->get_accValue(vtChild,&bstrURL);
 	if (hr!=S_OK) { TRACE((TRACE_ERROR,_F_,"pChildNiveau6->get_accValue(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"pChildNiveau6->get_accValue(%ld)='%S'",vtChild.lVal,bstrURL));
 	
+	// ISSUE#298 : ne plus utiliser le %S, j'ai fait une fonction pour ça !! 
+	// (remarque : je corrige mais ça marchait quand même pour Chrome, le sprintf_s semble meilleur que le wsprintf)
+	/* TRACE((TRACE_DEBUG,_F_,"pChildNiveau6->get_accValue(%ld)='%S'",vtChild.lVal,bstrURL));
 	bstrLen=SysStringLen(bstrURL);
 	pszURL=(char*)malloc(bstrLen+1);
 	if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",bstrLen+1)); goto end; }
-	sprintf_s(pszURL,bstrLen+1,"%S",bstrURL);
+	sprintf_s(pszURL,bstrLen+1,"%S",bstrURL); */
+	pszURL=GetSZFromBSTR(bstrURL);
 	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
+	
 	gpAccessibleChromeURL=pChildNiveau6;
 	pChildNiveau6->AddRef();
 
@@ -541,8 +547,8 @@ char *NewGetChromeURL(HWND w)
 	// si OK, récupère la value qui contient l'URL
 	hr=pAccessible->get_accValue(vtMe,&bstrURL);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accValue() hr=0x%08lx",hr)); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"get_accValue() hr=0x%08lx bstrURL=%S",hr,bstrURL));
 	pszURL=GetSZFromBSTR(bstrURL);
+	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
 
 end:
 	SysFreeString(bstrURL);

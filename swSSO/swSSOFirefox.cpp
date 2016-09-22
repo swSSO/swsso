@@ -512,13 +512,17 @@ char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iB
 	}
 	hr=pContent->get_accValue(vtStart,&bstrURL);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accValue()=0x%08lx",hr)); goto end; }
-	TRACE((TRACE_INFO,_F_,"URL=%S",bstrURL));
 	
 	// Alloue pszURL et le retourne
+	// ISSUE#298 : ne plus utiliser le %S, j'ai fait une fonction pour ça !!
+	/* TRACE((TRACE_INFO,_F_,"URL=%S",bstrURL));
 	pszURL=(char*)malloc(SysStringLen(bstrURL)+1);
 	if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",SysStringLen(bstrURL)+1)); goto end; }
-	wsprintf(pszURL,"%S",bstrURL);
-
+	wsprintf(pszURL,"%S",bstrURL);*/
+	
+	pszURL=GetSZFromBSTR(bstrURL);
+	TRACE((TRACE_DEBUG,_F_,"get_URL()=%s",pszURL));
+	
 	// Si demandé, fourni le ppAccessible du document afin de réduire le parsing de la page Web (0.80)
 	if (bGetAccessible)
 	{

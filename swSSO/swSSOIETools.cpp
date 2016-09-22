@@ -100,12 +100,17 @@ static int CALLBACK IEEnumChildProc(HWND w, LPARAM lp)
 	}
 	hr=pHTMLDocument2->get_URL(&bstrURL);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_URL()=0x%08lx",hr)); goto end; }
+	
+	// ISSUE#298 : ne plus utiliser le %S, j'ai fait une fonction pour ça !!
+	/*
 	TRACE((TRACE_DEBUG,_F_,"get_URL()=%S",bstrURL));
-
 	ptGetURL->pszURL=(char*)malloc(SysStringLen(bstrURL)+1);
 	if (ptGetURL->pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)=NULL",SysStringLen(bstrURL)+1)); goto end; }
-
 	wsprintf(ptGetURL->pszURL,"%S",bstrURL);
+	*/
+	ptGetURL->pszURL=GetSZFromBSTR(bstrURL);
+	TRACE((TRACE_DEBUG,_F_,"get_URL()=%s",ptGetURL->pszURL));
+	
 	rc=false; // trouvé l'URL, on arrete l'enum
 
 end:
