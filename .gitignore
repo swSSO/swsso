@@ -193,3 +193,4 @@ $RECYCLE.BIN/
 *.err
 /swSSOMigration/Release
 /cov-int
+/cov-int.zip
