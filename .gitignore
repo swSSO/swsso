@@ -192,3 +192,4 @@ $RECYCLE.BIN/
 *.ini
 *.err
 /swSSOMigration/Release
+/cov-int
