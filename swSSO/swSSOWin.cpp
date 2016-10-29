@@ -325,6 +325,29 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 		if (pChildL2!=NULL) { pChildL2->Release(); pChildL2=NULL; }
    	}
 end:
+	// ISSUE#303 : si on n'arrive pas à énumérer les fils, tant pis on fait simulation de frappe clavier
+	if (FAILED(hr))
+	{
+		SetForegroundWindow(w); 
+		TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
+		KBSim(w,TRUE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
+		Sleep(20);
+		SetForegroundWindow(w);
+		KBSimEx(w,"[TAB]","","","","","");
+		Sleep(20);
+		SetForegroundWindow(w);
+		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
+		{
+			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+			if (pszPassword!=NULL) 
+			{
+				KBSim(w,TRUE,100,pszPassword,TRUE);
+				SecureZeroMemory(pszPassword,strlen(pszPassword));
+				free(pszPassword);
+			}
+		}
+		KBSimEx(w,"[ENTER]","","","","","");
+	}
 	if (pIDispatch!=NULL) pIDispatch->Release(); 
 	if (pChild!=NULL) pChild->Release();
 	if (pChildL2!=NULL) { pChildL2->Release(); pChildL2=NULL; }

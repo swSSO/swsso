@@ -216,6 +216,48 @@ end:
 }
 
 // ----------------------------------------------------------------------------------
+// GetFirefox51PopupURL() 
+// ----------------------------------------------------------------------------------
+// ISSUE#303 : avec FF51, l'ancienne méthode GetFirefoxPopupURL() ne marche plus
+// par contre on peut trouver la même chaine dans la description de la fenêtre ! 
+// Beaucoup plus simple et marche déjà avec la version actuelle FF49. 
+// Pour assurer la compatibilité avec de plus vieilles versions de FF, il vaut mieux
+// appeler cet méthode APRES avoir tenté avec GetFirefoxPopupURL()
+// ----------------------------------------------------------------------------------
+// [rc] pointeur vers la chaine, à libérer par l'appelant. NULL si erreur
+// ----------------------------------------------------------------------------------
+char *GetFirefox51PopupURL(HWND w) 
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	HRESULT hr;
+	VARIANT vtSelf;
+	IAccessible *pAccessible=NULL;
+	BSTR bstrName=NULL;
+	char *pszURL=NULL;
+
+	pAccessible=GetFirefoxPopupIAccessible(w);
+	if (pAccessible==NULL) 
+	{
+		TRACE((TRACE_ERROR,_F_,"Impossible de trouver un pointeur iAccessible sur cette popup"));
+		goto end;
+	}
+
+	vtSelf.vt=VT_I4;
+	vtSelf.lVal=CHILDID_SELF;
+	hr=pAccessible->get_accDescription(vtSelf,&bstrName);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accDescription()=0x%08lx",hr)); goto end; }
+	pszURL=GetSZFromBSTR(bstrName);
+	if (pszURL==NULL) goto end;
+	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
+
+end:
+	SysFreeString(bstrName);
+	if (pAccessible!=NULL) pAccessible->Release();
+	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
+	return pszURL;
+}
+
+// ----------------------------------------------------------------------------------
 // GetFirefoxPopupURL() 
 // ----------------------------------------------------------------------------------
 // Lecture de l'URL dans les popups Firefox
@@ -233,6 +275,10 @@ end:
 // sous-fenêtre répondant aux critères suivants :
 // Role=ROLE_SYSTEM_TEXT & State est STATE_SYSTEM_FOCUSED | STATE_SYSTEM_FOCUSABLE mais
 // pas STATE_SYSTEM_INVISIBLE
+//
+// ISSUE#303 : Avec FF51, tout ça ne marche plus, impossible d'énumérer les fils... 
+// par contre on peut trouver la même chaine dans la description de la fenêtre ! 
+// Voir nouvelle méthode GetFirefox51PopupURL()
 // ----------------------------------------------------------------------------------
 // [rc] pointeur vers la chaine, à libérer par l'appelant. NULL si erreur
 // ----------------------------------------------------------------------------------
@@ -365,6 +411,9 @@ suite:
 	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
 		
 end:
+	// ISSUE#303 : si ça n'a pas marché, on appelle la nouvelle fonction GetFirefox51PopupURL()
+	if (pszURL==NULL) pszURL=GetFirefox51PopupURL(w);
+
 	if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
 	if (pChild2!=NULL) { pChild2->Release(); pChild2=NULL; }
 	if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
