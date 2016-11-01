@@ -2969,6 +2969,7 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	switch (iType)
 	{
 		case WINSSO : strcpy_s(szType,sizeof(szType),"WIN"); break;
+		case XINSSO : strcpy_s(szType,sizeof(szType),"XIN"); break;
 		case WEBSSO : strcpy_s(szType,sizeof(szType),"WEB"); break;
 		case XEBSSO : strcpy_s(szType,sizeof(szType),"XEB"); break;
 		case POPSSO : strcpy_s(szType,sizeof(szType),"POP"); break;
@@ -3044,6 +3045,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 	}
 	//TODO: il ne faudrait pas non plus remonter les configs de popup firefox sans URL... mais comment les reconnaitre ???
 	if (gptActions[iAction].iType==WINSSO)		strcpy_s(szType,sizeof(szType),"WIN");
+	else if (gptActions[iAction].iType==XINSSO)	strcpy_s(szType,sizeof(szType),"XIN");
 	else if (gptActions[iAction].iType==WEBSSO)	strcpy_s(szType,sizeof(szType),"WEB");
 	else if (gptActions[iAction].iType==XEBSSO)	strcpy_s(szType,sizeof(szType),"XEB");
 	else if (gptActions[iAction].iType==POPSSO)	strcpy_s(szType,sizeof(szType),"POP");
@@ -3468,6 +3470,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
 					if (strcmp(tmp,"WIN")==0) gptActions[ptiActions[i]].iType=WINSSO;
+					else if (strcmp(tmp,"XIN")==0) gptActions[ptiActions[i]].iType=XINSSO;
 					else if (strcmp(tmp,"WEB")==0) gptActions[ptiActions[i]].iType=WEBSSO;
 					else if (strcmp(tmp,"XEB")==0) gptActions[ptiActions[i]].iType=XEBSSO;
 					else if (strcmp(tmp,"POP")==0) 

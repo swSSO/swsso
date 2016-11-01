@@ -768,6 +768,9 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				goto suite;// URL popup authentification inconnue
 			}
 		}
+		else if (gptActions[i].iType==XINSSO)
+		{
+		}
 		else if (gptActions[i].iType==WEBSSO || gptActions[i].iType==WEBPWD || gptActions[i].iType==XEBSSO) // action WEB, il faut vérifier que l'URL matche
 		{
 			if (strcmp(szClassName,"IEFrame")==0 || // IE
@@ -1136,6 +1139,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				{
 					case POPSSO: guiNbPOPSSO++; break;
 					case WINSSO: guiNbWINSSO++; break;
+					case XINSSO: guiNbWINSSO++; break;
 					case WEBSSO: guiNbWEBSSO++; break;
 					case XEBSSO: guiNbWEBSSO++; break;
 				}
@@ -1149,9 +1153,14 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				case POPSSO: 
 					if (SSOWindows(w,i,iPopupType)==0) // ISSUE#188
 					{
-						// repositionne tLastDetect et wLastDetect
-						//time(&gptActions[i].tLastDetect);
-						//gptActions[i].wLastDetect=w;
+						time(&gptActions[i].tLastSSO);
+						gptActions[i].wLastSSO=w;
+						LastDetect_AddOrUpdateWindow(w,iPopupType);
+					}
+					break;
+				case XINSSO: 
+					if (SSOWebAccessible(w,i,BROWSER_XIN)==0)
+					{
 						time(&gptActions[i].tLastSSO);
 						gptActions[i].wLastSSO=w;
 						LastDetect_AddOrUpdateWindow(w,iPopupType);

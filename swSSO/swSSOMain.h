@@ -124,6 +124,7 @@ extern int giOSBits;
 #define BROWSER_IE			3
 #define BROWSER_MAXTHON		4
 #define BROWSER_CHROME		5
+#define BROWSER_XIN			6
 
 #define POPUP_NONE			0
 #define POPUP_XP			1
