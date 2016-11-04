@@ -443,6 +443,16 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pAccessible);
 		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }	
 	}
+	else if (iBrowser==BROWSER_XIN) // test XIN
+	{
+		// Obtient un IAccessible
+		hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	}
+	else
+	{
+		TRACE((TRACE_ERROR,_F_,"Unknown browser : %d",iBrowser)); goto end;
+	}
 	// à ce stade, on a un pAccessible pour travailler, quel que soit le navigateur
 	vtChild.vt=VT_I4;
 	vtChild.lVal=CHILDID_SELF;

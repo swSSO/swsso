@@ -52,7 +52,8 @@
 #define POPSSO 2
 #define WINSSO 3
 #define XEBSSO 4
-#define WEBPWD 5
+#define XINSSO 5
+#define WEBPWD 6
 
 #define EDIT   1
 #define COMBO  2
@@ -89,7 +90,7 @@ typedef struct
 	char szValidateName[90+1];   // id du bouton valider ou nom du formulaire Web
 	int  iCategoryId;
 	// int  iDomainId; // supprimé en 1.05 : on ne conserve plus localement l'appartenance de la config à un domaine
-	int  iType;		// WINSSO | WEBSSO | POPSSO | WEBPWD | XEBSSO
+	int  iType;		// WINSSO | WEBSSO | POPSSO | WEBPWD | XEBSSO | XINSSO
 	int  id2Type;	// EDIT | COMBO
 	int  id3Type;	// EDIT | COMBO
 	int  id4Type;	// EDIT | COMBO

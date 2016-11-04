@@ -721,7 +721,7 @@ void DisableConfigControls(HWND w)
 //-----------------------------------------------------------------------------
 // EnableControls()
 //-----------------------------------------------------------------------------
-// [in] iType=UNK | WINSSO | POPSSO | WEBSSO | XEBSSO
+// [in] iType=UNK | WINSSO | POPSSO | WEBSSO | XEBSSO | XINSSO
 //-----------------------------------------------------------------------------
 void EnableControls(HWND w,int iType,BOOL bEnable)
 {
@@ -819,6 +819,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 				EnableWindow(GetDlgItem(w,CK_AUTO_LOCK),TRUE);
 				break;
 			case WINSSO:
+			case XINSSO:
 				EnableWindow(GetDlgItem(w,TB_ID2),TRUE);
 				EnableWindow(GetDlgItem(w,TB_ID3),TRUE);
 				EnableWindow(GetDlgItem(w,TB_ID4),TRUE);	
@@ -3020,6 +3021,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	SendMessage(GetDlgItem(w,CB_TYPE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_COMBOTYPE2));
 	SendMessage(GetDlgItem(w,CB_TYPE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_COMBOTYPE3));
 	SendMessage(GetDlgItem(w,CB_TYPE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_COMBOTYPE4));
+	SendMessage(GetDlgItem(w,CB_TYPE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_COMBOTYPE5));
 	SendMessage(GetDlgItem(w,CB_ID2_TYPE),CB_ADDSTRING,0,(LPARAM)"");
 	SendMessage(GetDlgItem(w,CB_ID2_TYPE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_COMBOIDTYPE1));
 	SendMessage(GetDlgItem(w,CB_ID2_TYPE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_COMBOIDTYPE2));
@@ -3845,6 +3847,7 @@ int LoadApplications(void)
 		// lecture du type (WIN | WEB | POP | XEB)
 		GetPrivateProfileString(p,"type","",szType,sizeof(szType),gszCfgFile);
 		if (strcmp(szType,"WIN")==0)		gptActions[i].iType=WINSSO;
+		else if (strcmp(szType,"XIN")==0)	gptActions[i].iType=XINSSO;
 		else if (strcmp(szType,"WEB")==0)	gptActions[i].iType=WEBSSO;
 		else if (strcmp(szType,"XEB")==0)	gptActions[i].iType=XEBSSO;
 		else if (strcmp(szType,"POP")==0)	gptActions[i].iType=POPSSO;
@@ -4025,6 +4028,8 @@ int SaveApplications(void)
 		}
 		if (gptActions[i].iType==WINSSO)
 			strcpy_s(szType,sizeof(szType),"WIN");
+		else if (gptActions[i].iType==XINSSO)
+			strcpy_s(szType,sizeof(szType),"XIN");
 		else if (gptActions[i].iType==WEBSSO)
 			strcpy_s(szType,sizeof(szType),"WEB");
 		else if (gptActions[i].iType==XEBSSO)
