@@ -4483,7 +4483,7 @@ int AddApplicationFromCurrentWindow(void)
 			(strcmp(szTitle,"Sécurité de Windows")==0 || strcmp(szTitle,"Windows Security")==0)) // POPUP IE8 SUR W7 [ISSUE#5] (FR et US uniquement... pas beau)
 	{
 		pszURL=GetW7PopupURL(w);
-		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL W7 non trouvee")); goto end; }
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL W7 popup non trouvee")); goto end; }
 		iType=POPSSO;
 	}
 	else if (strcmp(szClassName,"#32770")==0 && 
@@ -4539,7 +4539,7 @@ int AddApplicationFromCurrentWindow(void)
 	{
 		// ISSUE#287
 		pszURL=GetIEURL(w,TRUE);
-		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee")); goto end; }
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL EDGE non trouvee")); goto end; }
 		iType=UNK; // permet de récupérer les configs WEB ou XEB 
 		iBrowser=BROWSER_IE;
 	}
@@ -4548,7 +4548,7 @@ int AddApplicationFromCurrentWindow(void)
 		    (strcmp(szTitle,"Sécurité Windows")==0 || strcmp(szTitle,"Windows Security")==0)) // POPUP W10 anniversaire... IE, EDGE, partages réseau, etc.
 	{
 		pszURL=GetW10PopupURL(w);
-		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL W10 non trouvee")); goto end; }
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup W10 non trouvee")); goto end; }
 		iType=POPSSO;
 	}
 	else iType=WINSSO;

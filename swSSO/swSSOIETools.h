@@ -44,3 +44,4 @@ char *GetIEWindowTitle(void);
 char *GetW7PopupURL(HWND w);
 char *GetW10PopupURL(HWND w);
 IAccessible *GetW7PopupIAccessible(HWND w);
+IAccessible *GetW10PopupIAccessible(HWND w);

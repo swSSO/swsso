@@ -392,44 +392,65 @@ char *GetW10PopupURL(HWND w)
 	BSTR bstrName=NULL;
 	char *pszURL=NULL;
 	IAccessible *pChild=NULL;
+	IAccessible *pChildLevelOne=NULL;
 	IDispatch *pIDispatch=NULL;
 	long lCount;
 	int i;
-	
+	long returnCount;
+	VARIANT* pArray = NULL;
+
+	vtSelf.vt=VT_I4;
+	vtSelf.lVal=CHILDID_SELF;
+
 	// récup pAccessible
 	pAccessible=GetW10PopupIAccessible(w);
 	if (pAccessible==NULL) { TRACE((TRACE_ERROR,_F_,"Impossible de trouver un pointeur iAccessible sur cette popup")); goto end; }
 
-	// compte les childs
+	// récup childs de 1er niveau, c'est le 1er qui nous intéresse, mais on est obligé de faire comme ça
 	hr=pAccessible->get_accChildCount(&lCount);
-	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"get_accChildCount()=0x%08lx",hr)); goto end; }
+	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"pAccessible->get_accChildCount()=0x%08lx",hr)); goto end; }
 	TRACE((TRACE_INFO,_F_,"get_accChildCount()=%ld",lCount));
+	pArray = new VARIANT[lCount];
+	hr = AccessibleChildren(pAccessible, 0L, lCount, pArray, &returnCount);
+	if (FAILED(hr)) { TRACE((TRACE_DEBUG,_F_,"AccessibleChildren()=0x%08lx",hr)); goto end; }
+	
+	// on prend le 2ème child
+	VARIANT *pVarChildLevelOne = &pArray[2];
+	pChildLevelOne=NULL;
+	if (pVarChildLevelOne->vt!=VT_DISPATCH) { TRACE((TRACE_DEBUG,_F_,"pVarChildLevelOne->vt=%d (!=VT_DISPATCH)",pVarChildLevelOne->vt)); goto end; }
+	if (pVarChildLevelOne->lVal==NULL) {TRACE((TRACE_DEBUG,_F_,"pVarChildLevelOne->lVal=NULL")); goto end; }
+	((IDispatch*)(pVarChildLevelOne->lVal))->QueryInterface(IID_IAccessible, (void**) &pChildLevelOne);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx -> pChild=0x%08lx",hr,pChildLevelOne));
 
-	// énumère les childs et récupère le libellé du dernier child de type texte
-	// suite à ISSUE#78 et ISSUE#228 cela semble être la meilleure solution
-	vtSelf.vt=VT_I4;
-	vtSelf.lVal=CHILDID_SELF;
-	for (i=1;i<=lCount;i++) // inutile de commencer à 0, c'est CHILDID_SELF
+	// compte les childs
+	hr=pChildLevelOne->get_accChildCount(&lCount);
+	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"pChildLevelOne->get_accChildCount()=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_INFO,_F_,"get_accChildCount()=%ld",lCount));
+	pArray = new VARIANT[lCount];
+	hr = AccessibleChildren(pChildLevelOne, 0L, lCount, pArray, &returnCount);
+	if (FAILED(hr)) { TRACE((TRACE_DEBUG,_F_,"AccessibleChildren()=0x%08lx",hr)); goto end; }
+	
+	TRACE((TRACE_DEBUG,_F_,"AccessibleChildren() returnCount=%d",returnCount));
+	for (i=0;i<lCount;i++)
 	{
-		// récup du ième child
+		VARIANT *pVarCurrent = &pArray[i];
+		VariantInit(&vtRole);
+		pChild=NULL;
+
+		if (pVarCurrent->vt!=VT_DISPATCH) goto suivant;
+		if (pVarCurrent->lVal==NULL) goto suivant;  
+		((IDispatch*)(pVarCurrent->lVal))->QueryInterface(IID_IAccessible, (void**) &pChild);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto suivant; }
+		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx -> pChild=0x%08lx",hr,pChild));
+			
 		vtChild.vt=VT_I4;
-		vtChild.lVal=i;
-		
-		hr=pAccessible->get_accChild(vtChild,&pIDispatch);
-		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",vtChild.lVal,hr));
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChild(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
-		
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pChild);
-		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
-
-		if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
-
+		vtChild.lVal=CHILDID_SELF;
+			
 		// Lecture du rôle du child à la recherche de ROLE_SYSTEM_STATICTEXT
-		hr=pChild->get_accRole(vtSelf,&vtRole);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole(%d)=0x%08lx",vtSelf.lVal,hr)); goto end; }
-		TRACE((TRACE_DEBUG,_F_,"get_accRole(%d) vtRole.lVal=0x%08lx",vtSelf.lVal,vtRole.lVal));
-		
+		hr=pChild->get_accRole(vtChild,&vtRole);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
+		TRACE((TRACE_DEBUG,_F_,"get_accRole() vtRole.lVal=0x%08lx",vtRole.lVal));
 		if (vtRole.lVal==ROLE_SYSTEM_STATICTEXT) // trouvé, on lit le libellé
 		{
 			SysFreeString(bstrName); bstrName=NULL; // efface le libellé du précédent child
@@ -441,8 +462,10 @@ char *GetW10PopupURL(HWND w)
 				goto end;
 			}
 		}
+suivant:
 		if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
 	}
+
 	if (bstrName!=NULL)
 	{
 		pszURL=GetSZFromBSTR(bstrName);
@@ -453,6 +476,7 @@ end:
 	SysFreeString(bstrName);
 	if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
 	if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
+	if (pChildLevelOne!=NULL) { pChildLevelOne->Release(); pChildLevelOne=NULL; }
 	if (pAccessible!=NULL) pAccessible->Release();
 	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
 	return pszURL;

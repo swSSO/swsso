@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="112";	// 101 = 1.01
-const char gcszCurrentBeta[]="1132";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1133";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -712,12 +712,19 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup firefox non trouvee")); goto suite; }
 				iPopupType=POPUP_FIREFOX;
 			}
-			else if (strcmp(szTitre,"Sécurité de Windows")==0 ||
-					 strcmp(szTitre,"Windows Security")==0) // POPUP IE8 SUR W7 [ISSUE#5] (FR et US uniquement... pas beau)
+			else if (strcmp(szClassName,"#32770")==0 && (strcmp(szTitre,"Sécurité de Windows")==0 ||
+					 strcmp(szTitre,"Windows Security")==0)) // POPUP IE8 SUR W7 [ISSUE#5] (FR et US uniquement... pas beau)
 			{
 				pszURL=GetW7PopupURL(w);
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup W7 non trouvee")); goto suite; }
 				iPopupType=POPUP_W7;
+			}
+			else if (strcmp(szClassName,"Credential Dialog Xaml Host")==0 &&  
+					(strcmp(szTitre,"Sécurité Windows")==0 || strcmp(szTitre,"Windows Security")==0)) // POPUP W10 anniversaire... IE, EDGE, partages réseau, etc.
+			{
+				pszURL=GetW10PopupURL(w);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup W10 non trouvee")); goto end; }
+				iPopupType=POPUP_W10;
 			}
 			else if (iPopupType==POPUP_CHROME)
 			{
@@ -730,7 +737,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			}
 			// il faut vérifier que l'URL matche pour FIREFOX, W7 et CHROME car elles ont toutes le meme titre !
 			// Popup IE sous XP, pas la peine, titre distinctif
-			if (iPopupType==POPUP_FIREFOX || iPopupType==POPUP_W7 || iPopupType==POPUP_CHROME)
+			if (iPopupType==POPUP_FIREFOX || iPopupType==POPUP_W7 || iPopupType==POPUP_CHROME || iPopupType==POPUP_W10)
 			{
 				TRACE((TRACE_INFO,_F_,"URL trouvee  = %s",pszURL));
 				TRACE((TRACE_INFO,_F_,"URL attendue = %s",gptActions[i].szURL));
@@ -1001,6 +1008,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				{
 					case POPUP_XP:
 					case POPUP_W7:
+					case POPUP_W10:
 						bDoSSO=gbSSOInternetExplorer;
 						break;
 					case POPUP_FIREFOX:

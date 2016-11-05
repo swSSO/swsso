@@ -409,7 +409,7 @@ end:
 
 //-----------------------------------------------------------------------------
 // FillW7PopupFields() - revu complètement en 1.07 pour être générique pour les
-//                       différents types de popup sur Win7, 8, 10,
+//                       différents types de popup sur Win7, 8, 10 (avant anniversaire),
 //                       avec/sans lecteur de carte, ...
 //-----------------------------------------------------------------------------
 int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
@@ -587,6 +587,123 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// FillW10PopupFields() - popup W10 anniversaire
+//-----------------------------------------------------------------------------
+int FillW10PopupFields(HWND w,int iAction,IAccessible *pAccessible)
+{
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d",w,iAction));
+	int rc=-1;
+	
+	HRESULT hr;
+	VARIANT vtSelf,vtChild;
+	VARIANT vtRole;
+	VARIANT vtState;
+	IAccessible *pChild=NULL;
+	IAccessible *pChildLevelOne=NULL;
+	IDispatch *pIDispatch=NULL;
+	long lCount;
+	int i;
+	long returnCount;
+	VARIANT* pArray = NULL;
+
+	vtSelf.vt=VT_I4;
+	vtSelf.lVal=CHILDID_SELF;
+
+	// récup childs de 1er niveau, c'est le 1er qui nous intéresse, mais on est obligé de faire comme ça
+	hr=pAccessible->get_accChildCount(&lCount);
+	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"pAccessible->get_accChildCount()=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_INFO,_F_,"get_accChildCount()=%ld",lCount));
+	pArray = new VARIANT[lCount];
+	hr = AccessibleChildren(pAccessible, 0L, lCount, pArray, &returnCount);
+	if (FAILED(hr)) { TRACE((TRACE_DEBUG,_F_,"AccessibleChildren()=0x%08lx",hr)); goto end; }
+	
+	// on prend le 2ème child
+	VARIANT *pVarChildLevelOne = &pArray[2];
+	pChildLevelOne=NULL;
+	if (pVarChildLevelOne->vt!=VT_DISPATCH) { TRACE((TRACE_DEBUG,_F_,"pVarChildLevelOne->vt=%d (!=VT_DISPATCH)",pVarChildLevelOne->vt)); goto end; }
+	if (pVarChildLevelOne->lVal==NULL) {TRACE((TRACE_DEBUG,_F_,"pVarChildLevelOne->lVal=NULL")); goto end; }
+	((IDispatch*)(pVarChildLevelOne->lVal))->QueryInterface(IID_IAccessible, (void**) &pChildLevelOne);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx -> pChild=0x%08lx",hr,pChildLevelOne));
+
+	// compte les childs
+	hr=pChildLevelOne->get_accChildCount(&lCount);
+	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"pChildLevelOne->get_accChildCount()=0x%08lx",hr)); goto end; }
+	TRACE((TRACE_INFO,_F_,"get_accChildCount()=%ld",lCount));
+	pArray = new VARIANT[lCount];
+	hr = AccessibleChildren(pChildLevelOne, 0L, lCount, pArray, &returnCount);
+	if (FAILED(hr)) { TRACE((TRACE_DEBUG,_F_,"AccessibleChildren()=0x%08lx",hr)); goto end; }
+	
+	TRACE((TRACE_DEBUG,_F_,"AccessibleChildren() returnCount=%d",returnCount));
+	for (i=0;i<lCount;i++)
+	{
+		VARIANT *pVarCurrent = &pArray[i];
+		VariantInit(&vtRole);
+		VariantInit(&vtState);
+		pChild=NULL;
+
+		if (pVarCurrent->vt!=VT_DISPATCH) goto suivant;
+		if (pVarCurrent->lVal==NULL) goto suivant; 
+		((IDispatch*)(pVarCurrent->lVal))->QueryInterface(IID_IAccessible, (void**) &pChild);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto suivant; }
+		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx -> pChild=0x%08lx",hr,pChild));
+			
+		vtChild.vt=VT_I4;
+		vtChild.lVal=CHILDID_SELF;
+			
+		// Lecture du rôle du child
+		hr=pChild->get_accRole(vtChild,&vtRole);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
+		TRACE((TRACE_DEBUG,_F_,"get_accRole() vtRole.lVal=0x%08lx",vtRole.lVal));
+		// Lecture du state du child
+		hr=pChild->get_accState(vtChild,&vtState);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState()=0x%08lx",hr)); goto suivant; }
+		TRACE((TRACE_DEBUG,_F_,"get_accRole() vtState.lVal=0x%08lx",vtState.lVal));
+		
+		if ((vtRole.lVal == ROLE_SYSTEM_TEXT) && !(vtState.lVal & STATE_SYSTEM_READONLY)) // c'est un champ éditable
+		{
+			if (vtState.lVal & STATE_SYSTEM_PROTECTED) // c'est le mot de passe
+			{
+				if ((*gptActions[iAction].szPwdEncryptedValue!=0))
+				{
+					char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+					if (pszPassword!=NULL) 
+					{
+						BSTR bstrValue=GetBSTRFromSZ(pszPassword);
+						if (bstrValue!=NULL)
+						{
+							hr=pChild->put_accValue(vtSelf,bstrValue);
+							TRACE((TRACE_INFO,_F_,"pChild->put_accValue() : hr=0x%08lx",hr));
+							SecureZeroMemory(bstrValue,SysStringByteLen(bstrValue));
+							SysFreeString(bstrValue); bstrValue=NULL;
+						}
+						SecureZeroMemory(pszPassword,strlen(pszPassword));
+						free(pszPassword);
+					}
+				}			
+			}
+			else // c'est l'identifiant
+			{
+				PutAccValue(w,pChild,vtSelf,gptActions[iAction].szId1Value);
+			}
+		}
+suivant:
+		if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
+	}
+	// validation
+	SetForegroundWindow(w); 
+	KBSimEx(w,"[ENTER]","","","","","");
+	rc=0;
+
+end:
+	if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
+	if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
+	if (pChildLevelOne!=NULL) { pChildLevelOne->Release(); pChildLevelOne=NULL; }
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc; 
+}
+
+//-----------------------------------------------------------------------------
 // CheckURLProc()
 //-----------------------------------------------------------------------------
 // ISSUE#XX : nouvelle fonction d'énumération des childs en remplacement
@@ -758,6 +875,13 @@ int SSOWindows(HWND w,int iAction,int iPopupType)
 		pAccessible=GetW7PopupIAccessible(w);
 		if (pAccessible==NULL) { TRACE((TRACE_ERROR,_F_,"Impossible de trouver un pointeur iAccessible sur cette popup")); goto end; }
 		rc=FillW7PopupFields(w,iAction,pAccessible);
+		if (rc!=0) goto end;
+	}
+	else if (iPopupType==POPUP_W10) // ISSUE#297
+	{
+		pAccessible=GetW10PopupIAccessible(w);
+		if (pAccessible==NULL) { TRACE((TRACE_ERROR,_F_,"Impossible de trouver un pointeur iAccessible sur cette popup")); goto end; }
+		rc=FillW10PopupFields(w,iAction,pAccessible);
 		if (rc!=0) goto end;
 	}
 	else // traitement des autres fenêtres (inchangé en 0.60)
