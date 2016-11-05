@@ -501,7 +501,8 @@ BOOL CheckUserInOU(void)
 	TRACE((TRACE_INFO,_F_,"pIADsADSystemInfo->get_UserName()=%s",pszUserDN));
 
 	// vérif, retour TRUE si utilisateur dans l'OU
-	brc=(strstr(pszUserDN,gszSyncSecondaryPasswordOU)!=NULL);
+	// brc=(strstr(pszUserDN,gszSyncSecondaryPasswordOU)!=NULL); 
+	brc=(strnistr(pszUserDN,gszSyncSecondaryPasswordOU,-1)!=NULL); // ISSUE#302, fait une comparaison non case sensitive
 
 end:
 	SysFreeString(bstrUserDN); // 1.12B2-AC-TIE5
