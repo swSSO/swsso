@@ -4372,7 +4372,7 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 	}
 	gptActions[giNbActions].iType=iType;
 
-	if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4)
+	if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4 || iType==XINSSO)
 	{
 		strcpy_s(gptActions[giNbActions].szId1Name,sizeof(gptActions[giNbActions].szId1Name),"-1");
 		strcpy_s(gptActions[giNbActions].szPwdName,sizeof(gptActions[giNbActions].szPwdName),"1");
@@ -4555,6 +4555,7 @@ int AddApplicationFromCurrentWindow(void)
 
 	if (gbInternetGetConfig)
 	{
+jeretentemachanceenXIN:
 		// recherche de la configuration sur le serveur
 		bstrXML=LookForConfig(szTitle,pszURL==NULL?"":pszURL,"","",FALSE,FALSE,FALSE,iType);
 		if (bstrXML==NULL) // la requete n'a pas abouti
@@ -4570,7 +4571,16 @@ int AddApplicationFromCurrentWindow(void)
 			bServerAvailable=TRUE;
 			// Parsing du XML et remplissage de la config de l'appli
 			rc=AddApplicationFromXML(w,bstrXML,FALSE);
-			if (rc==0) bConfigFound=TRUE;
+			if (rc==0) 
+				bConfigFound=TRUE;
+			else // nouveau en 1.13 : si pas trouvé en WIN, il faut chercher en XIN
+			{
+				if (iType==WINSSO) 
+				{
+					iType=XINSSO;
+					goto jeretentemachanceenXIN; // je sais c'est moche mais j'ai pas le temps
+				}
+			}
 		}
 	}
 	// le ShowAppNsites fait beaucoup plus tard va recharger la treeview, il faut faire un GetApplicationDeltails 
