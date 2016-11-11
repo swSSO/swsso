@@ -398,6 +398,7 @@ char *GetW10PopupURL(HWND w)
 	int i;
 	long returnCount;
 	VARIANT* pArray = NULL;
+	BOOL bChampsLoginMotDePasseTrouves=FALSE;
 
 	vtSelf.vt=VT_I4;
 	vtSelf.lVal=CHILDID_SELF;
@@ -448,10 +449,13 @@ char *GetW10PopupURL(HWND w)
 		vtChild.lVal=CHILDID_SELF;
 			
 		// Lecture du rôle du child à la recherche de ROLE_SYSTEM_STATICTEXT
+		// il peut y en avoir plusieurs : dans ce cas on garde le dernier trouvé
+		// avant le champ mot de passe, ce qu'il y a en dessous ne nous intéresse pas.
+		// (cas de la fenêtre mstsc qui a un champ domaine sous le login/pwd)
 		hr=pChild->get_accRole(vtChild,&vtRole);
 		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
 		TRACE((TRACE_DEBUG,_F_,"get_accRole() vtRole.lVal=0x%08lx",vtRole.lVal));
-		if (vtRole.lVal==ROLE_SYSTEM_STATICTEXT) // trouvé, on lit le libellé
+		if (vtRole.lVal==ROLE_SYSTEM_STATICTEXT && !bChampsLoginMotDePasseTrouves) // on lit le libellé
 		{
 			SysFreeString(bstrName); bstrName=NULL; // efface le libellé du précédent child
 			// Lecture du texte
@@ -461,6 +465,10 @@ char *GetW10PopupURL(HWND w)
 				TRACE((TRACE_ERROR,_F_,"pChild->get_accName(%ld)=0x%08lx",vtSelf.lVal,hr));
 				goto end;
 			}
+		}
+		else if (vtRole.lVal==ROLE_SYSTEM_TEXT)
+		{
+			bChampsLoginMotDePasseTrouves=TRUE;
 		}
 suivant:
 		if (pChild!=NULL) { pChild->Release(); pChild=NULL; }

@@ -2971,16 +2971,26 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	gbShowGeneratedPwd=FALSE;
 	gwAppNsites=w;
 
+	cx = GetSystemMetrics( SM_CXSCREEN );
+	cy = GetSystemMetrics( SM_CYSCREEN );
+
 	// Positionnement et dimensionnement de la fenêtre
 	// ISSUE#1 : si Alt enfoncée à l'ouverture, retaillage et repositionnement par défaut
 	if ((gx!=-1 && gy!=-1 && gcx!=-1 && gcy!=-1 && gcx>=560 && (gcy>=560+(gbAdmin?50:0))) && HIBYTE(GetAsyncKeyState(VK_MENU))==0) 
 	{
-		SetWindowPos(w,NULL,gx,gy,gcx,gcy,SWP_NOZORDER);
+		if ((gx < 0) || (gy < 0) || ((gx +200) > cx) || ((gy + 200) > cy)) // ISSUE#299 : si fenêtre un peu trop en dehors de l'écran, on la remet à sa position par défaut
+		{
+			SetWindowPos(w,NULL,0,0,560,560+(gbAdmin?50:0),SWP_NOMOVE | SWP_NOZORDER);
+			GetWindowRect(w,&rect);
+			SetWindowPos(w,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
+		}
+		else
+		{
+			SetWindowPos(w,NULL,gx,gy,gcx,gcy,SWP_NOZORDER);
+		}
 	}
 	else // position par défaut
 	{
-		cx = GetSystemMetrics( SM_CXSCREEN );
-		cy = GetSystemMetrics( SM_CYSCREEN );
 		SetWindowPos(w,NULL,0,0,560,560+(gbAdmin?50:0),SWP_NOMOVE | SWP_NOZORDER);
 		GetWindowRect(w,&rect);
 		SetWindowPos(w,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
@@ -5002,17 +5012,18 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 
 	tAppNsites.iSelected=iSelected;
 	tAppNsites.bFromSystray=bFromSystray;
+	cx = GetSystemMetrics( SM_CXSCREEN );
+	cy = GetSystemMetrics( SM_CYSCREEN );
 
 	// si fenêtre déjà affichée, la replace au premier plan
 	if (gwAppNsites!=NULL)
 	{
 		ShowWindow(gwAppNsites,SW_SHOW);
 		// ISSUE#1 : si Alt enfoncée à l'ouverture, repositionnement par défaut
-		if (HIBYTE(GetAsyncKeyState(VK_MENU))!=0) 
+		// ISSUE#299 : si fenêtre un peu trop en dehors de l'écran, on la remet à sa position par défaut
+		GetWindowRect(gwAppNsites,&rect);
+		if ((HIBYTE(GetAsyncKeyState(VK_MENU))!=0) || (rect.left < 0) || (rect.top < 0) || ((rect.left + 200) > cx) || ((rect.top + 200) > cy))
 		{
-			cx = GetSystemMetrics( SM_CXSCREEN );
-			cy = GetSystemMetrics( SM_CYSCREEN );
-			GetWindowRect(gwAppNsites,&rect);
 			SetWindowPos(gwAppNsites,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
 		}
 		SetForegroundWindow(gwAppNsites);
