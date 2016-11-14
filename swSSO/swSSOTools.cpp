@@ -1326,6 +1326,7 @@ end:
 //-----------------------------------------------------------------------------
 // Match URL
 // 0.93B6 | ISSUE#43 : pour compatibilité Chrom tente le matching avec/sans http:// 
+// 1.13B5 | ISSUE#304 : tolérance sur présence / absence du / à la fin
 //-----------------------------------------------------------------------------
 BOOL swURLMatch(char *szToBeCompared,char *szPattern)
 {
@@ -1333,7 +1334,18 @@ BOOL swURLMatch(char *szToBeCompared,char *szPattern)
 	BOOL rc=FALSE;
 	int lenPattern,lenToBeCompared;
 
+	// 1er test : si ça matche, on termine direct
 	if (swStringMatch(szToBeCompared,szPattern)) { rc=TRUE; goto end; }
+	// ISSUE#304 : 2nd test avec tolérance sur présence / absence du / à la fin. Si ça matche, on termine direct
+	lenToBeCompared=strlen(szToBeCompared);
+	if (lenToBeCompared>4096) { TRACE((TRACE_ERROR,_F_,"lenToBeCompared>4096 (%d)",lenToBeCompared));goto end; }
+	if (lenToBeCompared>1 && szToBeCompared[lenToBeCompared-1]=='/')
+	{
+		char szToBeCompared2[4096+1];
+		memcpy(szToBeCompared2,szToBeCompared,lenToBeCompared-1);
+		szToBeCompared2[lenToBeCompared-1]=0;
+		if (swStringMatch(szToBeCompared2,szPattern)) { rc=TRUE; goto end; }
+	}
 	// n'a pas matché direct : peut-être que l'utilisateur a défini http://www.... alors qu'il est 
 	// sous chrome et donc on va essayer en virant le http:// (sauf si commence par * auquel cas ça 
 	// aurait dû matcher dans swStringMatch)
@@ -1344,15 +1356,12 @@ BOOL swURLMatch(char *szToBeCompared,char *szPattern)
 	TRACE((TRACE_DEBUG,_F_,"szPattern commence par http://, on tente le matching entre %s et %s",szToBeCompared,szPattern+7));
 	if (swStringMatch(szToBeCompared,szPattern+7)) { rc=TRUE; goto end; }
 	// dernier essai :avec ou sans / de fin d'URL
-	lenToBeCompared=strlen(szToBeCompared);
-	// ISSUE#295
-	if (lenToBeCompared>2048) { TRACE((TRACE_ERROR,_F_,"lenToBeCompared>2048 (%d)",lenToBeCompared));goto end; }
 	if (lenToBeCompared>1 && szToBeCompared[lenToBeCompared-1]=='/')
 	{
-		char szToBeCompared2[2048+1];
+		char szToBeCompared2[4096+1];
 		memcpy(szToBeCompared2,szToBeCompared,lenToBeCompared-1);
 		szToBeCompared2[lenToBeCompared-1]=0;
-		if (swStringMatch(szToBeCompared2,szPattern)) { rc=TRUE; goto end; }
+		if (swStringMatch(szToBeCompared2,szPattern+7)) { rc=TRUE; goto end; }
 	}
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
