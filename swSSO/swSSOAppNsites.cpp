@@ -2960,6 +2960,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
     TCITEM tcItem; 
 	int cx;
 	int cy;
+	int cmonitors;
 	RECT rect;
 
 	gbIsChanging=TRUE;
@@ -2971,14 +2972,16 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	gbShowGeneratedPwd=FALSE;
 	gwAppNsites=w;
 
-	cx = GetSystemMetrics( SM_CXSCREEN );
-	cy = GetSystemMetrics( SM_CYSCREEN );
+	cx=GetSystemMetrics(SM_CXSCREEN);
+	cy=GetSystemMetrics(SM_CYSCREEN);
+	cmonitors=GetSystemMetrics(SM_CMONITORS);
+	TRACE((TRACE_DEBUG,_F_,"cmonitors=%d cx=%d cy=%d gx=%d gy=%d",cmonitors,cx,cy,gx,gy));
 
 	// Positionnement et dimensionnement de la fenêtre
-	// ISSUE#1 : si Alt enfoncée à l'ouverture, retaillage et repositionnement par défaut
 	if ((gx!=-1 && gy!=-1 && gcx!=-1 && gcy!=-1 && gcx>=560 && (gcy>=560+(gbAdmin?50:0))) && HIBYTE(GetAsyncKeyState(VK_MENU))==0) 
 	{
-		if ((gx < 0) || (gy < 0) || ((gx +200) > cx) || ((gy + 200) > cy)) // ISSUE#299 : si fenêtre un peu trop en dehors de l'écran, on la remet à sa position par défaut
+		// ISSUE#299 : si fenêtre un peu trop en dehors de l'écran, on la remet à sa position par défaut, sauf s'il y a un autre écran
+		if (((gx < 0) || (gy < 0) || ((gx + 200) > cx) || ((gy + 200) > cy)) && cmonitors==1)
 		{
 			SetWindowPos(w,NULL,0,0,560,560+(gbAdmin?50:0),SWP_NOMOVE | SWP_NOZORDER);
 			GetWindowRect(w,&rect);
@@ -2989,7 +2992,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 			SetWindowPos(w,NULL,gx,gy,gcx,gcy,SWP_NOZORDER);
 		}
 	}
-	else // position par défaut
+	else // ISSUE#1 : si Alt enfoncée à l'ouverture, retaillage et repositionnement par défaut
 	{
 		SetWindowPos(w,NULL,0,0,560,560+(gbAdmin?50:0),SWP_NOMOVE | SWP_NOZORDER);
 		GetWindowRect(w,&rect);
@@ -5008,21 +5011,28 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 	T_APPNSITES tAppNsites;
 	int cx;
 	int cy;
+	int cmonitors;
 	RECT rect;
 
 	tAppNsites.iSelected=iSelected;
 	tAppNsites.bFromSystray=bFromSystray;
-	cx = GetSystemMetrics( SM_CXSCREEN );
-	cy = GetSystemMetrics( SM_CYSCREEN );
+	cx=GetSystemMetrics(SM_CXSCREEN);
+	cy=GetSystemMetrics(SM_CYSCREEN);
+	cmonitors=GetSystemMetrics(SM_CMONITORS);
+	TRACE((TRACE_DEBUG,_F_,"cmonitors=%d cx=%d cy=%d gx=%d gy=%d",cmonitors,cx,cy,gx,gy));
 
 	// si fenêtre déjà affichée, la replace au premier plan
 	if (gwAppNsites!=NULL)
 	{
 		ShowWindow(gwAppNsites,SW_SHOW);
 		// ISSUE#1 : si Alt enfoncée à l'ouverture, repositionnement par défaut
-		// ISSUE#299 : si fenêtre un peu trop en dehors de l'écran, on la remet à sa position par défaut
+		// ISSUE#299 : si fenêtre un peu trop en dehors de l'écran, on la remet à sa position par défaut sauf s'il y a un 2ème écran
 		GetWindowRect(gwAppNsites,&rect);
-		if ((HIBYTE(GetAsyncKeyState(VK_MENU))!=0) || (rect.left < 0) || (rect.top < 0) || ((rect.left + 200) > cx) || ((rect.top + 200) > cy))
+		if (HIBYTE(GetAsyncKeyState(VK_MENU))!=0)
+		{
+			SetWindowPos(gwAppNsites,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
+		}
+		else if (((rect.left < 0) || (rect.top < 0) || ((rect.left + 200) > cx) || ((rect.top + 200) > cy)) && cmonitors==1)
 		{
 			SetWindowPos(gwAppNsites,NULL,cx-(rect.right-rect.left)-50,cy-(rect.bottom-rect.top)-70,0,0,SWP_NOSIZE | SWP_NOZORDER);
 		}

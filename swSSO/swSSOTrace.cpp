@@ -58,12 +58,14 @@ static char gszTraceLevelLabel[5+1];
 //-----------------------------------------------------------------------------
 void swTraceOpen(void)
 {
+	DWORD dw;
+	int len;
+
+#ifndef _DEBUG 
 	HKEY hKey=NULL;
 	int rc;
 	char szValue[1024+1];
 	DWORD dwValue,dwValueSize,dwValueType;
-	int len;
-	DWORD dw;
 
 	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_TRACE,0,KEY_READ,&hKey);
 	if (rc==ERROR_SUCCESS)
@@ -82,7 +84,8 @@ void swTraceOpen(void)
 	}
 	if (*gszTraceFileName==0) goto end; // pas de fichier spécifié, pas de traces
 	if (giTraceLevel==0) goto end; // niveau trace 0 : pas de trace
-	
+#endif
+
 	// ouverture du fichier (fermé uniquement sur appel de swTraceClose)
 	ghfTrace=CreateFile(gszTraceFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (ghfTrace==INVALID_HANDLE_VALUE) goto end;
@@ -92,7 +95,10 @@ void swTraceOpen(void)
 	len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : level=%d version=%s beta=%s ===================\r\n",giTraceLevel,gcszCurrentVersion,gcszCurrentBeta);
 	WriteFile(ghfTrace,gszTraceBuf,len,&dw,NULL);
 end:
+#ifndef _DEBUG 
 	if (hKey!=NULL) RegCloseKey(hKey);
+#endif
+	;
 }
 
 //-----------------------------------------------------------------------------
