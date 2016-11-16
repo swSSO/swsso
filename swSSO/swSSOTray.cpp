@@ -85,6 +85,7 @@ static void ShowContextMenu(HWND w)
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_APPNSITES,GetString(IDS_MENU_APPNSITES));
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PROPRIETES,GetString(IDS_MENU_PROP));
+	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_AIDE,GetString(IDS_MENU_AIDE)); // ISSUE#306
 	
 	// ISSUE#292
 	if (gbAdmin) // en mode admin, pas de menu "Mot de passe Windows" ni de mot de passe "Portail", qque soit la config
@@ -265,6 +266,10 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						SSOActivate(w);
 					}
 					ShowConfig();
+					break;
+				case TRAY_MENU_AIDE: // ISSUE#306
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_AIDE"));
+					Help();
 					break;
 				case TRAY_MENU_REFRESH_RIGHTS:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_REFRESH_RIGHTS"));

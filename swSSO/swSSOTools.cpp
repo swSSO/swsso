@@ -557,7 +557,7 @@ end:
 	if (!bFound)
 	{
 		// 4ème essai : pointe vers le site web
-		rc=(int)ShellExecute(NULL,"open","http://www.swsso.fr/index.php?option=com_content&view=category&layout=blog&id=7&Itemid=7",NULL,"",SW_SHOW );
+		rc=(int)ShellExecute(NULL,"open","http://www.swsso.fr/?page_id=108",NULL,"",SW_SHOW );
 		TRACE((TRACE_INFO,_F_,"ShellExecute(www.swsso.fr)=%d",rc)); 
 	}
 	TRACE((TRACE_LEAVE,_F_, ""));

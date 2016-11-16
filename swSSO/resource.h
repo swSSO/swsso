@@ -405,6 +405,7 @@
 #define IDS_TRANSCRYPT_ERROR            42026
 #define IDS_COMBOTYPE5                  42027
 #define IDS_STRING42028                 42028
+#define IDS_MENU_AIDE                   42028
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

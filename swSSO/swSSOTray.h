@@ -51,4 +51,5 @@ extern unsigned int gMsgTaskbarRestart;
 #define TRAY_MENU_CHANGEAPPPWD 10
 #define TRAY_MENU_MDP_WINDOWS 11
 #define TRAY_MENU_REFRESH_RIGHTS 12
+#define TRAY_MENU_AIDE	13
 #define TRAY_PASTE_PASSWORD 99
