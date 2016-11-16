@@ -4414,7 +4414,18 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 	GenerateApplicationName(giNbActions,gptActions[giNbActions].szApplication);
 	// construction URL
 	if (pszURL!=NULL)
-		strncpy_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),pszURL,LEN_URL-1);
+	{
+		// ISSUE#305 : avec Chrome, si l'URL ne commence pas par http://, on l'ajoute
+		if (iBrowser==BROWSER_CHROME && _strnicmp(pszURL,"http://",7)!=0 && _strnicmp(pszURL,"https://",8)!=0 && _strnicmp(pszURL,"file://",7)!=0)
+		{
+			strcpy_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),"http://");
+			strncat_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),pszURL,LEN_URL-1);
+		}
+		else
+		{
+			strncpy_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),pszURL,LEN_URL-1);
+		}
+	}
 
 	TRACE((TRACE_DEBUG,_F_,"giNbActions=%d iType=%d szURL=%s",giNbActions,gptActions[giNbActions].iType,gptActions[giNbActions].szURL));
 	// et hop, c'est fait (la sauvegarde sera faite ou pas par l'utilisateur dans la fenêtre appNsites)
