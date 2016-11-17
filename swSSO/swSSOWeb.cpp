@@ -561,6 +561,19 @@ static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
    	TRACE((TRACE_DEBUG,_F_,"ObjectFromLresult(IID_IHTMLDocument2)=%08lx pHTMLDocument2=%08lx",hr,pHTMLDocument2));
 
 	ParseHTMLDoc2(pHTMLDocument2,lp);
+
+	// ISSUE#312 : si la console debug F12 est ouverte, elle apparait en premier dans l'énumération des fenêtres.
+	//             Il faut l'ignorer et continuer l'énumération
+	hr=pHTMLDocument2->get_URL(&bstrURL);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_URL()=0x%08lx",hr)); goto end; }
+	pszURL=GetSZFromBSTR(bstrURL);
+	TRACE((TRACE_DEBUG,_F_,"get_URL()=%s",pszURL));
+	if (_strnicmp(pszURL,"res://",6)==0)
+	{
+		TRACE((TRACE_DEBUG,_F_,"C'est la fenetre F12, on continue !"));
+		goto end;
+	}
+
 	rc=false; // c'est fait, on arrete l'enum
 end:
 	if (pszURL!=NULL) free(pszURL);
@@ -783,203 +796,3 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
-
-#if 0
-//-----------------------------------------------------------------------------
-// SSOWebInit()
-//-----------------------------------------------------------------------------
-// Initialisations nécessaires au fonctionnement du SSO internet explorer
-//-----------------------------------------------------------------------------
-int SSOWebInit()
-{
-	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=-1;
-
-	ghiOLEACCDLL=LoadLibrary("OLEACC.DLL");
-	if (ghiOLEACCDLL==NULL) 
-	{
-		TRACE((TRACE_ERROR,_F_,"LoadLibrary ghiOLEACCDLL=%08lx",ghiOLEACCDLL));
-		goto end;
-	}
-	
-	guiHTMLGetObjectMsg=RegisterWindowMessage("WM_HTML_GETOBJECT");
-   	
-   	//(LPFNOBJECTFROMLRESULT)::
-   	gpfObjectFromLresult = (LPFNOBJECTFROMLRESULT)GetProcAddress(ghiOLEACCDLL,"ObjectFromLresult");
-   	if (gpfObjectFromLresult==NULL) 
-   	{
-   		TRACE((TRACE_ERROR,_F_,"GetProcAddress gpfObjectFromLresult=0x%08lx",(ULONG)gpfObjectFromLresult));
-   		goto end;	
-   	}
-   	
-   	rc=0;
-end:
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
-}
-
-//-----------------------------------------------------------------------------
-// SSOWebTerm()
-//-----------------------------------------------------------------------------
-// Libérations des ressources chargées par SSOWebInit()
-//-----------------------------------------------------------------------------
-void SSOWebTerm()
-{
-	TRACE((TRACE_ENTER,_F_, ""));
-	if (ghiOLEACCDLL!=NULL) FreeLibrary(ghiOLEACCDLL);
-	TRACE((TRACE_LEAVE,_F_, ""));
-}
-#endif 
-
-/////////////////////////////////////////////////////
-#if 0
-//-----------------------------------------------------------------------------
-// WebEnumChildProc()
-//-----------------------------------------------------------------------------
-// Enumération des fils de la fenêtre navigateur à la recherche :
-// 1) de la barre d'adresse pour vérifier l'URL
-// 2) du controle Explorer qui contient la page HTML
-//-----------------------------------------------------------------------------
-static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
-{
-	char s[512+1];
-	char szClassName[50+1];
-	int rc=true; // true=continuer l'énumération
-	int lenURL;
-	int strcmpResult;
-	GetClassName(w,szClassName,sizeof(szClassName));
-
-	// 0.42 : trouve la barre d'adresse pour vérifier l'URL
-	// 0.71 pour CMH : ne fait pas la recherche de la barre
-	// d'adresse si la vérification d'URL n'est pas demandée
-	// ou vérification déjà faite !
-	//if (GetDlgCtrlID(w)==41477 && strcmp(szClassName,"Edit")==0)
-	if (!bURLVerifiee && GetDlgCtrlID(w)==41477 && strcmp(szClassName,"Edit")==0)
-	{
-		TRACE((TRACE_DEBUG,_F_,"41477 (URL) trouvé"));
-		SendMessage(w,WM_GETTEXT,sizeof(s),(LPARAM)s);
-		TRACE((TRACE_DEBUG,_F_,"s=%s",s));
-
-		lenURL=strlen(szURL);
-		if (lenURL>2 && szURL[lenURL-1]=='*') // si URL se termine par *, compare juste le début
-		{
-			strcmpResult=_strnicmp(s,szURL,lenURL-1);
-		}
-		else // sinon, fait une comparaison exacte
-		{
-			strcmpResult=_stricmp(s,szURL);
-		}
-		if (strcmpResult==0)
-		{
-			TRACE((TRACE_DEBUG,_F_,"URL attendue=URL actuelle"));
-			bURLVerifiee=TRUE;
-		}
-		else
-		{
-			TRACE((TRACE_INFO,_F_,"Titre de fenêtre et URL non cohérents..."));
-			TRACE((TRACE_INFO,_F_,"URL attendue : %s",szURL));
-			TRACE((TRACE_INFO,_F_,"URL actuelle : %s",s));
-			rc=false; // on arrete l'énum
-			goto end;
-		}
-	}
-	else
-	{
-		if (strcmp(szClassName,"Internet Explorer_Server")==0)
-		{
-			TRACE((TRACE_DEBUG,_F_,"(0x%08lx):(%szClassName)",w,szClassName));
-			wZoneNavigation=w;
-		}
-	}
-end:
-	if (bURLVerifiee && wZoneNavigation!=NULL) 
-	{
-		ParseHTMLDoc(w,lp);
-		rc=false; // c'est fait, on arrete l'enum
-	}
-	return rc;
-}
-
-#endif
-
-#if 0
-//-----------------------------------------------------------------------------
-// ParseHTMLDoc()
-//-----------------------------------------------------------------------------
-// Récupération du document HTML contenu dans la fenêtre puis énumération
-// de ses frames.
-// ANCIENNE VERSION NE SUPPORTANT PAS LES IFRAMES, remplacé par ParseHTMLDoc2()
-//-----------------------------------------------------------------------------
-static void ParseHTMLDoc(IHTMLDocument2 *pHTMLDocument2,LPARAM lp)
-{
-	TRACE((TRACE_ENTER,_F_, "lp=0x%08lx",lp));
-
-	HRESULT hr;
-	IHTMLFramesCollection2 *pFrameCollection=NULL;
-	IHTMLWindow2 *pFrameWindow=NULL;
-	long lNbFrames;
-	IHTMLDocument2 *pDoc=NULL;
-	long l;
-	T_SUIVI_IE *ptSuivi=(T_SUIVI_IE*)lp;
-	
- 	// on commence par explorer directement le doc
-	ParseFrame(pHTMLDocument2,lp);
-	if (ptSuivi->iNbActions==0) // c'est bon, on a fini, on sort.
-		goto end;
-
-   	// cherche ensuite s'il y a des frames
-	hr=pHTMLDocument2->get_frames(&pFrameCollection);
-	if (FAILED(hr)) 
-	{
-		TRACE((TRACE_ERROR,_F_,"g_lpHTMLDocument2->get_frames()=0x%08lx",hr));
-		goto end;
-	}
-	hr=pFrameCollection->get_length(&lNbFrames);
-	if (FAILED(hr)) 
-	{
-		TRACE((TRACE_ERROR,_F_,"pFrameCollection->get_length()=0x%08lx",hr));
-		goto end;
-	}
-  	TRACE((TRACE_DEBUG,_F_,"%d frames",lNbFrames));
-
-	// énumération des frames et pour chacune exploration du doc
- 	for(l=0;l<lNbFrames;l++)
-	{
-		TRACE((TRACE_DEBUG,_F_,"Frame n°%d of %d",l,lNbFrames-1));
-        VARIANT index; 
-        VARIANT frame;
-        index.vt=VT_I4;
-        index.lVal=l;
-		hr=pFrameCollection->item(&index,&frame);
-		if (FAILED(hr)) 
-		{
-			TRACE((TRACE_ERROR,_F_,"pFrameCollection->item(%d)=0x%08lx",l,hr));
-			goto end;
-		}
-		hr = frame.pdispVal->QueryInterface(IID_IHTMLWindow2, (void**)&pFrameWindow);
-		if (FAILED(hr)) 
-		{
-			TRACE((TRACE_ERROR,_F_,"frame.pdispVal->QueryInterface()=0x%08lx",hr));
-			goto end;
-		}
-		hr = pFrameWindow->get_document(&pDoc);
-		if (FAILED(hr))
-		{
-			// frame non explorable... va savoir pourquoi, pas grave, on passe
-			TRACE((TRACE_INFO,_F_,"pFrameWindow->get_document()=0x%08lx. On continue quand meme",hr));
-			goto suite;
-		}
-		ParseFrame(pDoc,lp);
-suite:
-		if (pDoc!=NULL) { pDoc->Release();pDoc=NULL; }
-		if (pFrameWindow!=NULL) { pFrameWindow->Release();pFrameWindow=NULL;}
-		if (ptSuivi->iNbActions==0) // c'est bon, on a fini, on sort.
-			goto end;
-	}
-end:
-	if (pDoc!=NULL) pDoc->Release();
-	if (pFrameCollection!=NULL) pFrameCollection->Release();
-	if (pFrameWindow!=NULL) pFrameWindow->Release();
-	TRACE((TRACE_LEAVE,_F_, ""));
-}
-#endif

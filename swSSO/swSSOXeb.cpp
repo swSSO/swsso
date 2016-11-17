@@ -59,6 +59,11 @@ static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
 {
 	int rc=TRUE;
 	char szClassName[50+1];
+	IHTMLDocument2 *pHTMLDocument2=NULL;
+	BSTR bstrURL=NULL;
+	char *pszURL=NULL;
+	HRESULT hr;
+	DWORD dw;
 
 	GetClassName(w,szClassName,sizeof(szClassName));
 	TRACE((TRACE_DEBUG,_F_,"Fenetre classe=%s w=0x%08lx",szClassName,w));
@@ -72,8 +77,31 @@ static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
 	{
 		((T_SUIVI_ACCESSIBLE*)lp)->w=w;
 		TRACE((TRACE_INFO,_F_,"Fenetre classe=%s w=0x%08lx",szClassName,w));
+		if (strcmp(szClassName,"Internet Explorer_Server")==0)
+		{
+			// ISSUE#312 : si la console debug F12 est ouverte, elle apparait en premier dans l'énumération des fenêtres.
+			//             Il faut l'ignorer et continuer l'énumération
+			// récupération pointeur sur le document HTML (interface IHTMLDocument2)
+			SendMessageTimeout(w,guiHTMLGetObjectMsg,0L,0L,SMTO_ABORTIFHUNG,1000,&dw);
+			hr=ObjectFromLresult(dw,IID_IHTMLDocument2,0,(void**)&pHTMLDocument2);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"ObjectFromLresult(%d,IID_IHTMLDocument2)=0x%08lx",dw,hr)); goto end; }
+   			TRACE((TRACE_DEBUG,_F_,"ObjectFromLresult(IID_IHTMLDocument2)=%08lx pHTMLDocument2=%08lx",hr,pHTMLDocument2));
+			hr=pHTMLDocument2->get_URL(&bstrURL);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_URL()=0x%08lx",hr)); goto end; }
+			pszURL=GetSZFromBSTR(bstrURL);
+			TRACE((TRACE_DEBUG,_F_,"get_URL()=%s",pszURL));
+			if (_strnicmp(pszURL,"res://",6)==0)
+			{
+				TRACE((TRACE_DEBUG,_F_,"C'est la fenetre F12, on continue !"));
+				goto end;
+			}
+		}
 		rc=FALSE;
 	}
+end:
+	if (pHTMLDocument2!=NULL) pHTMLDocument2->Release();
+	if (bstrURL!=NULL) SysFreeString(bstrURL);
+	if (pszURL!=NULL) free(pszURL);
 	return rc;
 }
 
