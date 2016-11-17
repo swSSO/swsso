@@ -82,6 +82,8 @@
 #define REGVALUE_SHOW_PASSWORD_GROUP				"ShowPasswordGroup"
 // ISSUE#257
 #define REGVALUE_SHOWMENU_QUIT						"ShowQuitMenu"
+// ISSUE#306
+#define REGVALUE_SHOWMENU_HELP						"ShowHelpMenu"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -130,6 +132,8 @@ extern BOOL gbShowMenu_RefreshRights;
 extern int giShowPasswordGroup;
 // ISSUE#257
 extern BOOL gbShowMenu_Quit;
+// ISSUE#306
+extern BOOL gbShowMenu_Help;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"

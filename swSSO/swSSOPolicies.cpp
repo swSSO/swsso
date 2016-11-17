@@ -84,6 +84,8 @@ BOOL gbShowMenu_RefreshRights=FALSE;
 int giShowPasswordGroup=2;
 // ISSUE#257
 BOOL gbShowMenu_Quit=TRUE;
+// ISSUE#306
+BOOL gbShowMenu_Help=FALSE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=8;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
@@ -369,6 +371,11 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_QUIT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowMenu_Quit=(BOOL)dwValue; 
+
+		// ISSUE#306
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_HELP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Help=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -895,6 +902,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_RefreshRights=%d"		,gbShowMenu_RefreshRights));
 	TRACE((TRACE_INFO,_F_,"giShowPasswordGroup=%d"			,giShowPasswordGroup));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_Quit=%d"				,gbShowMenu_Quit));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Help=%d"				,gbShowMenu_Help));
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
