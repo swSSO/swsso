@@ -34,7 +34,7 @@
 char *GetChromeURL(HWND w);
 char *GetChromeURL51(HWND w);
 char *GetChromePopupURL(HWND w);
-char *NewGetChromeURL(HWND w);
+char *NewGetChromeURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAccessible **ppOutAccessible);
 extern IAccessible *gpAccessibleChromeURL;
 // int SSOChromePopup(HWND w,int iAction,HWND wChromePopup);
 

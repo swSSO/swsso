@@ -155,7 +155,7 @@ void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 // ISSUE#313 : pour Chrome et Firefox, permet de vérifier qu'on est toujours
 // sur le bon onglet avant de saisir les identifiants
 //-----------------------------------------------------------------------------
-BOOL CheckIfURLStillOK(HWND w,int iAction,int iBrowser)
+BOOL CheckIfURLStillOK(HWND w,int iAction,int iBrowser,IAccessible *pInAccessible,BOOL bGetAccessible,IAccessible **ppOutAccessible)
 {
 	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d iBrowser",w,iAction,iBrowser));
 	BOOL rc=TRUE;
@@ -163,17 +163,18 @@ BOOL CheckIfURLStillOK(HWND w,int iAction,int iBrowser)
 	
 	if (iBrowser==BROWSER_CHROME)
 	{
-		pszURL=NewGetChromeURL(w);
+		pszURL=NewGetChromeURL(w,pInAccessible,bGetAccessible,ppOutAccessible);
 	}
 	else if ((iBrowser==BROWSER_FIREFOX3) || (iBrowser==BROWSER_FIREFOX4))
 	{
-		pszURL=GetFirefoxURL(w,FALSE,NULL,iBrowser,TRUE);
+		pszURL=GetFirefoxURL(w,pInAccessible,bGetAccessible,ppOutAccessible,iBrowser,FALSE);
 	}
 	if (pszURL!=NULL)
 	{
 		if (!swURLMatch(pszURL,gptActions[iAction].szURL))
 		{
 			TRACE((TRACE_INFO,_F_,"URL ne matche plus... changement d'onglet ?"));
+			//MessageBox(w,"Changement d'onglet !","",MB_OK);
 			rc=FALSE;
 		}
 		free(pszURL);
@@ -196,6 +197,7 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 	WORD wKeyScan;
 	BOOL bCapsLock=FALSE;
 	int rc=-1;
+	IAccessible *pAccessible=NULL;
 
 	// en 1.09, déplacement du control du caps lock tout au début
 	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
@@ -209,7 +211,7 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 	if (bErase) // ISSUE#286 : refait comme avant, n'efface pas systématiquement sinon la config type "simulation de frappe" ne fonctionne plus !
 	{
 		Sleep(iTempo);
-		if (!CheckIfURLStillOK(w,iAction,iBrowser)) goto end;
+		if (!CheckIfURLStillOK(w,iAction,iBrowser,pAccessible,(pAccessible==NULL),&pAccessible)) goto end;
 		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
 		keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0);
 		wKeyScan=VkKeyScan('a');
@@ -230,7 +232,7 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0); }
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
 
-		if (i%4==0) { if (!CheckIfURLStillOK(w,iAction,iBrowser)) goto end; }
+		if (i%4==0) { if (!CheckIfURLStillOK(w,iAction,iBrowser,pAccessible,(pAccessible==NULL),&pAccessible)) goto end; }
 		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
@@ -250,6 +252,7 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 	Sleep(iTempo);
 	rc=0;
 end:
+	if (pAccessible!=NULL) pAccessible->Release();
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

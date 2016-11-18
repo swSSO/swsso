@@ -713,7 +713,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			{
 				*szDecryptedPassword=0;
 			}
-
+			if (!CheckIfURLStillOK(w,iAction,iBrowser,NULL,FALSE,NULL)) goto end;
 			KBSimEx(NULL,gptActions[ptSuivi->iAction].szValidateName,
 						 gptActions[iAction].szId1Value,
 						 gptActions[iAction].szId2Value,

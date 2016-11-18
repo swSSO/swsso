@@ -515,116 +515,64 @@ static int CALLBACK NewChromeURLEnumChildProc(HWND w, LPARAM lp)
 // NewGetChromeURL()
 // ----------------------------------------------------------------------------------
 // Nouvelle fonction de lecture d'URL Chrome (ISSUE#273)
-// N'est pas encore utilisée (en 1.10) car rend inopérante la bidouille nécessaire
+// N'est pas encore utilisée pour le SSO car rend inopérante la bidouille nécessaire
 // au contournement du bug empechant de mettre le focus sur un champ de la page web
-// lorsque le focus est dans la barre d'URL
+// lorsque le focus est dans la barre d'URL, mais utilisée pour le controle de changement
+// d'onglet (ISSUE#313)
 // ----------------------------------------------------------------------------------
-char *NewGetChromeURL(HWND w)
+// pInAccessible   : peut être NULL si l'appelant n'a pas de pAccessible à fournir
+// ppOutAccessible : renseigné en sortie seulement si OK et bGetAccessible=TRUE
+// ----------------------------------------------------------------------------------
+char *NewGetChromeURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAccessible **ppOutAccessible)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	T_SUIVI_NEW_CHROME_URL tSuivi;
 	char *pszURL=NULL;
 	HRESULT hr;
-	IAccessible *pAccessible=NULL;
 	BSTR bstrURL=NULL;
+	IAccessible *pAccessible=NULL;
 	
-	// recherche le document 
-	strcpy_s(tSuivi.szExclude,sizeof(tSuivi.szExclude),"Static");
-	strcpy_s(tSuivi.szClassName,sizeof(tSuivi.szClassName),"Chrome_RenderWidgetHostHWND");
-	EnumChildWindows(w,NewChromeURLEnumChildProc,(LPARAM)&tSuivi);
-	if (tSuivi.w==NULL) { TRACE((TRACE_ERROR,_F_,"Fenetre Chrome_RenderWidgetHostHWND non trouvee")); goto end; }
-	// Obtient un IAccessible
-	hr=AccessibleObjectFromWindow(tSuivi.w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
-	// vérifie que c'est bien le ROLE_SYSTEM_DOCUMENT
-	VARIANT vtMe,vtRole;
+	if (pInAccessible!=NULL) // cool, l'appelant a fourni le pAccessible en entrée, on va gagner du temps
+	{
+		pAccessible=pInAccessible;
+		pAccessible->AddRef(); // astuce : nécessaire sinon on va libérer dans le end le pointeur passé par l'appelant
+	}
+	else // l'appelant n'a pas fourni le pAccessible sur le contenu de la page
+	{
+		// recherche le document 
+		strcpy_s(tSuivi.szExclude,sizeof(tSuivi.szExclude),"Static");
+		strcpy_s(tSuivi.szClassName,sizeof(tSuivi.szClassName),"Chrome_RenderWidgetHostHWND");
+		EnumChildWindows(w,NewChromeURLEnumChildProc,(LPARAM)&tSuivi);
+		if (tSuivi.w==NULL) { TRACE((TRACE_ERROR,_F_,"Fenetre Chrome_RenderWidgetHostHWND non trouvee")); goto end; }
+		// Obtient un IAccessible
+		hr=AccessibleObjectFromWindow(tSuivi.w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+		// vérifie que c'est bien le ROLE_SYSTEM_DOCUMENT -- pour optimiser je supprime cette vérif qui semble sans intérêt
+		/*VARIANT vtMe,vtRole;
+		vtMe.vt=VT_I4;
+		vtMe.lVal=CHILDID_SELF;
+		hr=pAccessible->get_accRole(vtMe,&vtRole);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"get_accRole() vtRole.lVal=0x%08lx",vtRole.lVal));
+		if (vtRole.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole()!=ROLE_SYSTEM_DOCUMENT")); goto end; }*/
+		// si OK, récupère la value qui contient l'URL
+	}
+	VARIANT vtMe;
 	vtMe.vt=VT_I4;
 	vtMe.lVal=CHILDID_SELF;
-	hr=pAccessible->get_accRole(vtMe,&vtRole);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"get_accRole() vtRole.lVal=0x%08lx",vtRole.lVal));
-	if (vtRole.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole()!=ROLE_SYSTEM_DOCUMENT")); goto end; }
-	// si OK, récupère la value qui contient l'URL
 	hr=pAccessible->get_accValue(vtMe,&bstrURL);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accValue() hr=0x%08lx",hr)); goto end; }
 	pszURL=GetSZFromBSTR(bstrURL);
 	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
 
+	if (bGetAccessible) // l'appelant veut récupérer le pAccessible en sortie pour usage futur, charge à lui de le libérer ensuite
+	{
+		*ppOutAccessible=pAccessible;
+		pAccessible->AddRef(); // astuce : nécessaire pour que le ppAccessible retourné reste valide malgré le pContent->Release() du end
+	}
 end:
 	SysFreeString(bstrURL);
 	if (pAccessible!=NULL) pAccessible->Release();
 	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
 	return pszURL;
 }
-
-// conservé au cas où, mais plus utilisé depuis 1.07 B4 (cf. ISSUE#215)
-#if 0
-typedef struct 
-{
-	int iAction;
-	HWND w;
-} T_CHROMEFINDPOPUP;
-
-//-----------------------------------------------------------------------------
-// ChromeFindPopupProc()
-//-----------------------------------------------------------------------------
-// Enumération des fils de la fenêtre principale de chrome à la recherche
-// d'une popup d'authentification
-//-----------------------------------------------------------------------------
-static int CALLBACK ChromeFindPopupProc(HWND w, LPARAM lp)
-{
-	int rc=TRUE;
-	char szClassName[128+1]; 
-	char szTitle[512+1];
-	T_CHROMEFINDPOPUP *ptChromeFindPopup;
-
-	ptChromeFindPopup=(T_CHROMEFINDPOPUP *)lp;
-
-	GetClassName(w,szClassName,sizeof(szClassName));
-	// ISSUE#77 : Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
-	if (strncmp(szClassName,"Chrome_WidgetWin_",17)==0)
-	{
-		GetWindowText(w,szTitle,sizeof(szTitle));
-		TRACE((TRACE_DEBUG,_F_,"szTitle=%s iAction=%d",szTitle,ptChromeFindPopup->iAction));
-		if (ptChromeFindPopup->iAction==-1) 
-		{
-			if (strcmp(szTitle,"Authentification requise")==0) rc=FALSE; // trouvé, on arrête l'énum
-		}
-		else
-		{
-			if (swStringMatch(szTitle,gptActions[ptChromeFindPopup->iAction].szTitle)) rc=FALSE; // trouvé, on arrête l'énum
-		}
-		if (!rc) 
-		{ 
-			TRACE((TRACE_DEBUG,_F_,"Popup trouvee w=0x%08lx",w));
-			ptChromeFindPopup->w=w;
-		}
-	}
-	return rc;
-}
-
-//-----------------------------------------------------------------------------
-// GetChromePopupHandle()
-//-----------------------------------------------------------------------------
-// [in] w = handle de la fenêtre
-// [in] iAction = config SSO concernée, si -1, utilise les titres de popup en dur
-// [rc] TRUE si la fenêtre héberge une popup d'authentification Chrome 
-//-----------------------------------------------------------------------------
-HWND GetChromePopupHandle(HWND w,int iAction)
-{
-	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d",w,iAction));
-	HWND rc=NULL;
-
-	T_CHROMEFINDPOPUP tChromeFindPopup;
-	tChromeFindPopup.iAction=iAction;
-	tChromeFindPopup.w=NULL;
-	
-	EnumChildWindows(w,ChromeFindPopupProc,(LPARAM)&tChromeFindPopup);
-
-	rc=tChromeFindPopup.w;
-
-	TRACE((TRACE_LEAVE,_F_, "rc=0x%08lx",rc));
-	return rc;
-}	
-
-#endif

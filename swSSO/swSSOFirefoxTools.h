@@ -37,6 +37,7 @@ char *GetFirefoxPopupURL(HWND w);
 IAccessible *GetFirefoxPopupIAccessible(HWND w);
 void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szValue);
 int PutAccValueWeb(HWND w,IAccessible *pAccessible,VARIANT index,const char *szValue,int iAction,int iBrowser);
+BOOL CheckIfURLStillOK(HWND w,int iAction,int iBrowser,IAccessible *pInAccessible,BOOL bGetAccessible,IAccessible **ppOutAccessible);
 
 
 

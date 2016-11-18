@@ -446,12 +446,12 @@ static int CALLBACK FirefoxEnumChildProc(HWND w, LPARAM lp)
 // Retourne l'URL courante de la fenêtre Firefox
 // ----------------------------------------------------------------------------------
 // [in] w = handle de la fenêtre
+// [in] pInAccessible = si l'appelant a un pAccessible, il le passe ici
 // [in] bGetAccessible = indique si on veut le pointeur pAccessible en retour
-// [out] ppAccessible = pointeur pAccessible si demandé.
+// [out] ppOutAccessible = pointeur pAccessible si demandé.
 // [rc] pszURL (à libérer par l'appelant) ou NULL si erreur 
 // ----------------------------------------------------------------------------------
-
-char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iBrowser,BOOL bWaitReady)
+char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAccessible **ppOutAccessible,int iBrowser,BOOL bWaitReady)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -463,69 +463,70 @@ char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iB
 	BSTR bstrURL=NULL;
 	char *pszURL=NULL;
 	IAccessible *pContent=NULL;
+	VARIANT vtMe;
+	vtMe.vt=VT_I4;
+	vtMe.lVal=CHILDID_SELF;
 
 	UNREFERENCED_PARAMETER(iBrowser);
-	
-	hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
-		
-	VARIANT vtStart,vtResult;
-	vtStart.vt=VT_I4;
-	vtStart.lVal=CHILDID_SELF;
-	hr=pAccessible->accNavigate(0x1009,vtStart,&vtResult); // NAVRELATION_EMBEDS = 0x1009
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr)); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS) vtEnd=0x%08lx",vtResult.lVal));
 
-	if (vtResult.vt!=VT_DISPATCH) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) is not VT_DISPATCH")); goto end; }
-	pIDispatch=(IDispatch*)vtResult.lVal;
-	if (pIDispatch==NULL) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) pIDispatch=NULL")); goto end; }
-
-	// ISSUE#60 : pServiceProvider->QueryService(refguid,IID_ISimpleDOMDocument) provoque un plantage avec FF4 sous WIN7
-	//            J'utilise donc un nouveau moyen pour récupérer l'URL du document, décrit ici : http://www.mozilla.org/access/windows/at-apis
-	// hr=pIDispatch->QueryInterface(IID_IServiceProvider, (void**)&pServiceProvider);
-	// if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IServiceProvider)=0x%08lx",hr));	goto end; }	
-	// TRACE((TRACE_DEBUG,_F_,"pIDispatch->QueryInterface() -> OK"));
-	// hr=pServiceProvider->QueryService(refguid,IID_ISimpleDOMDocument, (void**) &pSimpleDOMDocument);
-	// if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryService(IID_ISimpleDOMDocument)=0x%08lx",hr));	goto end; }	
-	// TRACE((TRACE_DEBUG,_F_,"pServiceProvider->QueryService(IID_ISimpleDOMDocument) -> OK"));
-	// Lit l'URL
-	// hr = pSimpleDOMDocument->get_URL(&bstrURL); 
-	// if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pSimpleDOMDocument->get_URL()=0x%08lx",hr));	goto end; }
-
-	hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pContent);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
-	
-	hr=pContent->get_accRole(vtStart,&vtResult);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accRole()=0x%08lx",hr)); goto end; }
-	if (vtResult.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole() : vtResult.lVal=%ld",vtResult.lVal)); goto end; }
-
-	// ISSUE#72 (0.95) : maintenant que Firefox indique bien que le chargement de la page n'est pas terminé,
-	//                   on attend patiemment avant de lancer le SSO.
-	// 0.97 : on ne le fait que si bWaitReady (et notamment on ne le fait pas dans le cas des popups cf. ISSUE#87)
-	if (bWaitReady)
+	if (pInAccessible!=NULL) // cool, l'appelant a fourni le pAccessible en entrée, on va gagner du temps
 	{
-		hr=pContent->get_accState(vtStart,&vtResult);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accState()=0x%08lx",hr)); goto end; }
-		if (vtResult.lVal & STATE_SYSTEM_BUSY) { TRACE((TRACE_ERROR,_F_,"get_accState() : STATE_SYSTEM_BUSY, on verra plus tard !")); goto end; }
+		pContent=pInAccessible;
+		pContent->AddRef(); // astuce : nécessaire sinon on va libérer dans le end le pointeur passé par l'appelant
 	}
-	hr=pContent->get_accValue(vtStart,&bstrURL);
+	else // l'appelant n'a pas fourni le pAccessible sur le contenu de la page
+	{
+		hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+		
+		VARIANT vtResult;
+		hr=pAccessible->accNavigate(0x1009,vtMe,&vtResult); // NAVRELATION_EMBEDS = 0x1009
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr)); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS) vtEnd=0x%08lx",vtResult.lVal));
+
+		if (vtResult.vt!=VT_DISPATCH) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) is not VT_DISPATCH")); goto end; }
+		pIDispatch=(IDispatch*)vtResult.lVal;
+		if (pIDispatch==NULL) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) pIDispatch=NULL")); goto end; }
+
+		// ISSUE#60 : pServiceProvider->QueryService(refguid,IID_ISimpleDOMDocument) provoque un plantage avec FF4 sous WIN7
+		//            J'utilise donc un nouveau moyen pour récupérer l'URL du document, décrit ici : http://www.mozilla.org/access/windows/at-apis
+		// hr=pIDispatch->QueryInterface(IID_IServiceProvider, (void**)&pServiceProvider);
+		// if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IServiceProvider)=0x%08lx",hr));	goto end; }	
+		// TRACE((TRACE_DEBUG,_F_,"pIDispatch->QueryInterface() -> OK"));
+		// hr=pServiceProvider->QueryService(refguid,IID_ISimpleDOMDocument, (void**) &pSimpleDOMDocument);
+		// if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryService(IID_ISimpleDOMDocument)=0x%08lx",hr));	goto end; }	
+		// TRACE((TRACE_DEBUG,_F_,"pServiceProvider->QueryService(IID_ISimpleDOMDocument) -> OK"));
+		// Lit l'URL
+		// hr = pSimpleDOMDocument->get_URL(&bstrURL); 
+		// if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pSimpleDOMDocument->get_URL()=0x%08lx",hr));	goto end; }
+
+		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pContent);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	
+		hr=pContent->get_accRole(vtMe,&vtResult);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accRole()=0x%08lx",hr)); goto end; }
+		if (vtResult.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole() : vtResult.lVal=%ld",vtResult.lVal)); goto end; }
+
+		// ISSUE#72 (0.95) : maintenant que Firefox indique bien que le chargement de la page n'est pas terminé,
+		//                   on attend patiemment avant de lancer le SSO.
+		// 0.97 : on ne le fait que si bWaitReady (et notamment on ne le fait pas dans le cas des popups cf. ISSUE#87)
+		if (bWaitReady)
+		{
+			hr=pContent->get_accState(vtMe,&vtResult);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accState()=0x%08lx",hr)); goto end; }
+			if (vtResult.lVal & STATE_SYSTEM_BUSY) { TRACE((TRACE_ERROR,_F_,"get_accState() : STATE_SYSTEM_BUSY, on verra plus tard !")); goto end; }
+		}
+	}
+	hr=pContent->get_accValue(vtMe,&bstrURL);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accValue()=0x%08lx",hr)); goto end; }
-	
-	// Alloue pszURL et le retourne
-	// ISSUE#298 : ne plus utiliser le %S, j'ai fait une fonction pour ça !!
-	/* TRACE((TRACE_INFO,_F_,"URL=%S",bstrURL));
-	pszURL=(char*)malloc(SysStringLen(bstrURL)+1);
-	if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",SysStringLen(bstrURL)+1)); goto end; }
-	wsprintf(pszURL,"%S",bstrURL);*/
-	
+
 	pszURL=GetSZFromBSTR(bstrURL);
 	TRACE((TRACE_DEBUG,_F_,"get_URL()=%s",pszURL));
 	
-	// Si demandé, fourni le ppAccessible du document afin de réduire le parsing de la page Web (0.80)
-	if (bGetAccessible)
+	if (bGetAccessible) // l'appelant veut récupérer le pAccessible en sortie pour usage futur, charge à lui de le libérer ensuite
 	{
-		*ppAccessible=pContent;
-		pContent->AddRef(); // astuce : nécessaire pour que le ppAccessible retourné reste valide malgré le pContent->Release()
+		*ppOutAccessible=pContent;
+		pContent->AddRef(); // astuce : nécessaire pour que le ppAccessible retourné reste valide malgré le pContent->Release() du end
 	}
 end:
 	if (bstrURL!=NULL) SysFreeString(bstrURL);
@@ -590,7 +591,7 @@ int SSOFirefox(HWND w,int iAction,int iBrowser)
 	// On commence par rechercher l'URL, en demandant le pointeur IAccessible vers le DOM au passage
 	if (iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4)
 	{
-		pszURL=GetFirefoxURL(w,TRUE,&pAccessible,iBrowser,TRUE);
+		pszURL=GetFirefoxURL(w,NULL,TRUE,&pAccessible,iBrowser,TRUE);
 		if (pszURL==NULL) { TRACE((TRACE_INFO,_F_,"URL non trouvee")); rc=-2; goto end; }
 		if (pAccessible==NULL) { TRACE((TRACE_ERROR,_F_,"pAccessible=NULL")); goto end; }
 	}

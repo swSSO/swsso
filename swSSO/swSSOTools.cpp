@@ -1740,19 +1740,19 @@ static int CALLBACK EnumBrowserProc(HWND w, LPARAM lp)
 	}
 	else if ((strcmp(szClassName,gcszMozillaUIClassName)==0) && (pEnumBrowser->iPopupType==POPUP_FIREFOX)) // FF3
 	{
-		pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX3,FALSE);
+		pszURL=GetFirefoxURL(w,NULL,FALSE,NULL,BROWSER_FIREFOX3,FALSE);
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 3- non trouvee : on passe !")); goto end; }
 	}
 	else if ((strcmp(szClassName,gcszMozillaClassName)==0) && (pEnumBrowser->iPopupType==POPUP_FIREFOX)) // FF4
 	{
-		pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX4,FALSE);
+		pszURL=GetFirefoxURL(w,NULL,FALSE,NULL,BROWSER_FIREFOX4,FALSE);
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 4+ non trouvee : on passe !")); goto end; }
 	}
 	else if ((strncmp(szClassName,"Chrome_WidgetWin_",17)==0)  && (pEnumBrowser->iPopupType==POPUP_CHROME)) // Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
 	{
 		pszURL=GetChromeURL(w);
 		if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
-		if (pszURL==NULL) pszURL=NewGetChromeURL(w); // ISSUE#314
+		if (pszURL==NULL) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
 		if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto end; }
 	}

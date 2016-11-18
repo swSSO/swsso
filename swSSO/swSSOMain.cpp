@@ -793,13 +793,13 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			else if (strcmp(szClassName,gcszMozillaUIClassName)==0) // FF3
 			{
 				iBrowser=BROWSER_FIREFOX3;
-				pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX3,TRUE);
+				pszURL=GetFirefoxURL(w,NULL,FALSE,NULL,BROWSER_FIREFOX3,TRUE);
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 3- non trouvee : on passe !")); goto suite; }
 			}
 			else if (strcmp(szClassName,gcszMozillaClassName)==0) // FF4
 			{
 				iBrowser=BROWSER_FIREFOX4;
-				pszURL=GetFirefoxURL(w,FALSE,NULL,BROWSER_FIREFOX4,TRUE);
+				pszURL=GetFirefoxURL(w,NULL,FALSE,NULL,BROWSER_FIREFOX4,TRUE);
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox 4+ non trouvee : on passe !")); goto suite; }
 			}
 			else if (strcmp(szClassName,"Maxthon2_Frame")==0) // Maxthon
@@ -823,7 +823,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				}*/
 				pszURL=GetChromeURL(w);
 				if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
-				if (pszURL==NULL) pszURL=NewGetChromeURL(w); // ISSUE#314
+				if (pszURL==NULL) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto suite; }
 			}
 			// ISSUE#287 : prise en compte de EDGE avec Windows 10 anniversaire (1607)
