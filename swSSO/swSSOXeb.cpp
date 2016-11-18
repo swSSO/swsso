@@ -337,6 +337,7 @@ end:
 	return rc;
 }
 
+
 // ----------------------------------------------------------------------------------
 // SSOWebAccessible()
 // ----------------------------------------------------------------------------------
@@ -621,10 +622,10 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			}
 		}
 		// fin bidouille chrome
-		if (iId1Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId1Index],vtChild,gptActions[ptSuivi->iAction].szId1Value);
-		if (iId2Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,gptActions[ptSuivi->iAction].szId2Value);
-		if (iId3Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,gptActions[ptSuivi->iAction].szId3Value);
-		if (iId4Index>=0) PutAccValue(ptSuivi->w,ptSuivi->pTextFields[iId4Index],vtChild,gptActions[ptSuivi->iAction].szId4Value);
+		if (iId1Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId1Index],vtChild,gptActions[ptSuivi->iAction].szId1Value,iAction,iBrowser);
+		if (iId2Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,gptActions[ptSuivi->iAction].szId2Value,iAction,iBrowser);
+		if (iId3Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,gptActions[ptSuivi->iAction].szId3Value,iAction,iBrowser);
+		if (iId4Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId4Index],vtChild,gptActions[ptSuivi->iAction].szId4Value,iAction,iBrowser);
 		
 		// Mdp
 		if (ptSuivi->iPwdIndex!=-1)
@@ -680,7 +681,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 					}
 					if (bstrValue==NULL || FAILED(hr))
 					{
-						KBSim(ptSuivi->w,TRUE,100,pszPassword,TRUE);			
+						KBSimWeb(ptSuivi->w,TRUE,100,pszPassword,TRUE,iAction,iBrowser);
 					}
 					if (bstrValue!=NULL)
 					{

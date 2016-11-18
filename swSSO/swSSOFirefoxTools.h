@@ -32,9 +32,11 @@
 //-----------------------------------------------------------------------------
 
 void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd);
+int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,int iBrowser);
 char *GetFirefoxPopupURL(HWND w);
 IAccessible *GetFirefoxPopupIAccessible(HWND w);
 void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szValue);
+int PutAccValueWeb(HWND w,IAccessible *pAccessible,VARIANT index,const char *szValue,int iAction,int iBrowser);
 
 
 

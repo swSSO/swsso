@@ -455,7 +455,6 @@ char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iB
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
-	T_SUIVI_FIREFOX tSuivi;
 	HRESULT hr;
 	IDispatch *pIDispatch=NULL;
 	IAccessible *pAccessible=NULL;
@@ -466,7 +465,6 @@ char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iB
 	IAccessible *pContent=NULL;
 
 	UNREFERENCED_PARAMETER(iBrowser);
-	UNREFERENCED_PARAMETER(tSuivi);
 	
 	hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }

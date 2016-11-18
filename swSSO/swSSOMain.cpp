@@ -823,6 +823,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				}*/
 				pszURL=GetChromeURL(w);
 				if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
+				if (pszURL==NULL) pszURL=NewGetChromeURL(w); // ISSUE#314
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto suite; }
 			}
 			// ISSUE#287 : prise en compte de EDGE avec Windows 10 anniversaire (1607)

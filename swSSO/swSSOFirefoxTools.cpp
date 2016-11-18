@@ -150,6 +150,111 @@ void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 }
 
 //-----------------------------------------------------------------------------
+// CheckIfURLStillOK() 
+//-----------------------------------------------------------------------------
+// ISSUE#313 : pour Chrome et Firefox, permet de vérifier qu'on est toujours
+// sur le bon onglet avant de saisir les identifiants
+//-----------------------------------------------------------------------------
+BOOL CheckIfURLStillOK(HWND w,int iAction,int iBrowser)
+{
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d iBrowser",w,iAction,iBrowser));
+	BOOL rc=TRUE;
+	char *pszURL=NULL;
+	
+	if (iBrowser==BROWSER_CHROME)
+	{
+		pszURL=NewGetChromeURL(w);
+	}
+	else if ((iBrowser==BROWSER_FIREFOX3) || (iBrowser==BROWSER_FIREFOX4))
+	{
+		pszURL=GetFirefoxURL(w,FALSE,NULL,iBrowser,TRUE);
+	}
+	if (pszURL!=NULL)
+	{
+		if (!swURLMatch(pszURL,gptActions[iAction].szURL))
+		{
+			TRACE((TRACE_INFO,_F_,"URL ne matche plus... changement d'onglet ?"));
+			rc=FALSE;
+		}
+		free(pszURL);
+	}
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// KBSimWeb
+// ----------------------------------------------------------------------------------
+int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,int iBrowser)
+{
+	UNREFERENCED_PARAMETER(bPwd); 
+	TRACE((TRACE_ENTER,_F_, "bErase=%d iTempo=%d",bErase,iTempo));
+
+	int i,len;
+	len=strlen(sz);
+	BYTE hiVk,loVk;
+	WORD wKeyScan;
+	BOOL bCapsLock=FALSE;
+	int rc=-1;
+
+	// en 1.09, déplacement du control du caps lock tout au début
+	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
+	{
+		bCapsLock=TRUE;
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+	}
+	
+	// ISSUE#264 : changement de la technique d'effacement, on fait CTRL+A puis DEL, ça évite les changements de champs.
+	if (bErase) // ISSUE#286 : refait comme avant, n'efface pas systématiquement sinon la config type "simulation de frappe" ne fonctionne plus !
+	{
+		Sleep(iTempo);
+		if (!CheckIfURLStillOK(w,iAction,iBrowser)) goto end;
+		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
+		keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0);
+		wKeyScan=VkKeyScan('a');
+		loVk=LOBYTE(wKeyScan);
+		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
+		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
+		keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0);
+		keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),0,0);
+		keybd_event(VK_DELETE,LOBYTE(MapVirtualKey(VK_DELETE,0)),KEYEVENTF_KEYUP,0);
+	}
+	for (i=0;i<len;i++)
+	{
+		wKeyScan=VkKeyScan(sz[i]);
+		hiVk=HIBYTE(wKeyScan);
+		loVk=LOBYTE(wKeyScan);
+		
+		if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0); }
+		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
+
+		if (i%4==0) { if (!CheckIfURLStillOK(w,iAction,iBrowser)) goto end; }
+		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
+		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
+		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
+		
+		// ISSUE#163 : inversion des lignes pour CONTROL et MENU il relacher les touches dans le même sens sinon la touche ALT
+		//             reste enfoncée (uniquement constaté dans IE9, reproduit nulle par ailleurs)
+		if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
+		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); } 
+		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); } 
+	}
+
+	if (bCapsLock) // 0.75 : on remet caps lock
+	{
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+	}
+	Sleep(iTempo);
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
 // PutAccValue()
 //-----------------------------------------------------------------------------
 // Remplissage d'un champ par simulation de frappe clavier puisque personne
@@ -181,6 +286,44 @@ void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szVal
 	}
 	if (bstrValue!=NULL) SysFreeString(bstrValue);
 	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// PutAccValueWeb()
+//-----------------------------------------------------------------------------
+// Remplissage d'un champ par simulation de frappe clavier puisque personne
+// ne veut implémenter put_AccValue !!!
+// utilisé pour tous les champs sauf mot de passe
+//-----------------------------------------------------------------------------
+int PutAccValueWeb(HWND w,IAccessible *pAccessible,VARIANT index,const char *szValue,int iAction,int iBrowser)
+{
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx pAccessible=0x%08lx szValue=%s",w,pAccessible,szValue));
+	
+	HRESULT hr;
+	BSTR bstrValue=NULL;
+	int rc=-1;
+
+	SetForegroundWindow(w);
+	hr=pAccessible->accSelect(SELFLAG_TAKEFOCUS,index);
+	TRACE((TRACE_DEBUG,_F_,"pAccessible->accSelect(%d) : hr=0x%08lx",index.lVal,hr));
+
+	// 1.09B2 : tente de faire put_accValue : si non implémenté, retour à la simulation de frappe clavier
+	bstrValue=GetBSTRFromSZ(GetComputedValue(szValue));
+	hr=S_OK;
+	if (bstrValue!=NULL)
+	{
+		hr=pAccessible->put_accValue(index,bstrValue);
+		TRACE((TRACE_INFO,_F_,"pAccessible->put_accValue() : hr=0x%08lx",hr));
+	}
+	if (bstrValue==NULL || FAILED(hr))
+	{
+		if (KBSimWeb(w,TRUE,100,GetComputedValue(szValue),FALSE,iAction,iBrowser)!=0) goto end; // 1.09B1 : bErase à TRUE toujours
+	}
+	rc=0;
+end:
+	if (bstrValue!=NULL) SysFreeString(bstrValue);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
 }
 
 //-----------------------------------------------------------------------------

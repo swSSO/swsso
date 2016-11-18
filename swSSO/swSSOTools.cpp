@@ -1752,6 +1752,7 @@ static int CALLBACK EnumBrowserProc(HWND w, LPARAM lp)
 	{
 		pszURL=GetChromeURL(w);
 		if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
+		if (pszURL==NULL) pszURL=NewGetChromeURL(w); // ISSUE#314
 		if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto end; }
 	}
