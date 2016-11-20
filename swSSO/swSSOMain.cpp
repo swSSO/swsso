@@ -1994,7 +1994,6 @@ end:
 void CheckIfUpgraded(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=-1;
 	char bufRequest[1024];
 	char bufResponse[64];
 	DWORD dwLenResponse;
