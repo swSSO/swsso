@@ -65,6 +65,8 @@ int giMaxUserDataIndex=0;
 char gszHash_swSSOClient[256+1];
 char gszHash_swSSOMigration[256+1];
 
+BOOL gbNewVersion=FALSE; // ISSUE#307 : le flag passe à TRUE lorsque swSSOMigration appelle PUTPASS. Ensuite, il est retourné à swSSO.exe sur appel de
+
 //-----------------------------------------------------------------------------
 // swInitData()
 //-----------------------------------------------------------------------------
@@ -288,6 +290,7 @@ BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 	else if (*gszHash_swSSOMigration!=0 && _stricmp(szBufHashValue,gszHash_swSSOMigration)==0)
 	{
 		TRACE((TRACE_INFO,_F_,"L'appel vient de swSSOMigration"));
+		gbNewVersion=TRUE; // ISSUE#307
 	}
 	else
 	{
@@ -356,6 +359,8 @@ end:
 // swWaitForMessage()
 //-----------------------------------------------------------------------------
 // Attend un message et le traite. Commandes supportées :
+// 1.13+ :
+// V02:NEWVERS > demande si nouvelle version > retourne YES ou NO
 // 1.08+ :
 // V02:GETPASS:domain(256octets)username(256octets) > demande à SVC de fournir le mot de passe Windows (chiffré par PHKD)
 // 1.08- :
@@ -420,9 +425,9 @@ int swWaitForMessage()
 		goto end;
 	}          
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)bufRequest,cbRead,"Request"));
-	if (cbRead<12)
+	if (cbRead<11)
 	{
-		TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu >12",cbRead));
+		TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu >=11",cbRead));
 		strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
 		lenResponse=strlen(bufResponse);
 	}
@@ -678,6 +683,14 @@ int swWaitForMessage()
 						}
 					}
 				}
+			}
+			//-------------------------------------------------------------------------------------------------------------
+			else if (memcmp(bufRequest+4,"NEWVERS",7)==0) // Format = V02:NEWVERS
+			//-------------------------------------------------------------------------------------------------------------
+			{
+				strcpy_s(bufResponse,sizeof(bufResponse),gbNewVersion?"YES":"NO");
+				gbNewVersion=FALSE;
+				lenResponse=strlen(bufResponse);
 			}
 			//-------------------------------------------------------------------------------------------------------------
 			else

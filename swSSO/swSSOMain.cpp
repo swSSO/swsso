@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="112";	// 101 = 1.01
-const char gcszCurrentBeta[]="1136";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1137";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -1989,6 +1989,51 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// CheckIfUpgraded()
+//-----------------------------------------------------------------------------
+void CheckIfUpgraded(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char bufRequest[1024];
+	char bufResponse[64];
+	DWORD dwLenResponse;
+
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
+	memcpy(bufRequest,"V02:NEWVERS",11);
+	if (swPipeWrite(bufRequest,11,bufResponse,sizeof(bufResponse),&dwLenResponse)==0) 
+	{
+		if (memcmp(bufResponse,"YES",3)==0)
+		{
+			NOTIFYICONDATA nid;
+			ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+			nid.cbSize=sizeof(NOTIFYICONDATA);
+			nid.hWnd=gwMain;
+			nid.uID=0; 
+			nid.uFlags=NIF_INFO; // szInfo, szInfoTitle, dwInfoFlags, and uTimeout
+			nid.uTimeout=2000;
+			strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),GetString(IDS_NOTIFY_TITLE_UPGRADED));
+			if (strcmp(gcszCurrentBeta,"0000")==0)
+			{
+				wsprintf(bufRequest,GetString(IDS_NOTIFY_TEXT_UPGRADED),gcszCurrentVersion[0],gcszCurrentVersion[1],gcszCurrentVersion[2]);
+			}
+			else
+			{
+				wsprintf(bufRequest,GetString(IDS_NOTIFY_TEXT_UPGRADED_BETA),gcszCurrentBeta[0],gcszCurrentBeta[1],gcszCurrentBeta[2],gcszCurrentBeta[3]);
+			}
+			strcpy_s(nid.szInfo,sizeof(nid.szInfo),bufRequest);
+			Shell_NotifyIcon(NIM_MODIFY, &nid); 
+		}
+	}
+	else
+	{ 
+		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()"));
+	}
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+
+//-----------------------------------------------------------------------------
 // WinMain()
 //-----------------------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
@@ -2308,6 +2353,8 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		// force la migration en SSO Windows si configuré en base de registre
 		if (gbPasswordChoiceLevel==PP_WINDOWS)
 		{
+			// ISSUE#307 : vérifie si passage à nouvelle version (détecté via les actions de swSSOMigration à swSSOSVC, applicable au mode mot de passe Windows uniquement)
+			CheckIfUpgraded();
 			giPwdProtection=PP_WINDOWS;
 		}
 		else if (gbPasswordChoiceLevel==PP_ENCRYPTED) // ISSUE#181 (découplage)

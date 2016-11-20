@@ -406,6 +406,9 @@
 #define IDS_COMBOTYPE5                  42027
 #define IDS_STRING42028                 42028
 #define IDS_MENU_AIDE                   42028
+#define IDS_NOTIFY_TITLE_UPGRADED       42029
+#define IDS_NOTIFY_TEXT_UPGRADED        42030
+#define IDS_NOTIFY_TEXT_UPGRADED_BETA   42031
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

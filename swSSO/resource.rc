@@ -491,7 +491,7 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.13 BETA 6 (16/11/2016)",TX_ABOUT,47,12,120,8
+    LTEXT           "Version 1.13 BETA 7 (20/11/2016)",TX_ABOUT,47,12,120,8
     LTEXT           "Portail :",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -943,6 +943,11 @@ BEGIN
     IDS_TRANSCRYPT_ERROR    "Une erreur est survenue sur %d configurations : vos identifiants ont été perdus et vous seront donc demandés lors de la prochaine connexion à ces applications.\r\nLes configurations concernées sont précédées d'un rond noir dans la fenêtre de gestion des sites et applications."
     IDS_COMBOTYPE5          "Fenêtre Windows (configuration simplifiée)"
     IDS_MENU_AIDE           "A&ide..."
+    IDS_NOTIFY_TITLE_UPGRADED "swSSO a été mis à jour"
+    IDS_NOTIFY_TEXT_UPGRADED 
+                            "La version %c.%c%c a été installée sur votre poste de travail"
+    IDS_NOTIFY_TEXT_UPGRADED_BETA 
+                            "La version %c.%c%c BETA %c a été installée sur votre poste de travail"
 END
 
 #endif    // French (France) resources
