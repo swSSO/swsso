@@ -4563,11 +4563,10 @@ int AddApplicationFromCurrentWindow(void)
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL popup W10 non trouvee")); goto end; }
 		iType=POPSSO;
 	}
-	else iType=WINSSO;
+	else iType=XINSSO;
 
 	if (gbInternetGetConfig)
 	{
-jeretentemachanceenXIN:
 		// recherche de la configuration sur le serveur
 		bstrXML=LookForConfig(szTitle,pszURL==NULL?"":pszURL,"","",FALSE,FALSE,FALSE,iType);
 		if (bstrXML==NULL) // la requete n'a pas abouti
@@ -4585,14 +4584,6 @@ jeretentemachanceenXIN:
 			rc=AddApplicationFromXML(w,bstrXML,FALSE);
 			if (rc==0) 
 				bConfigFound=TRUE;
-			else // nouveau en 1.13 : si pas trouvé en WIN, il faut chercher en XIN
-			{
-				if (iType==WINSSO) 
-				{
-					iType=XINSSO;
-					goto jeretentemachanceenXIN; // je sais c'est moche mais j'ai pas le temps
-				}
-			}
 		}
 	}
 	// le ShowAppNsites fait beaucoup plus tard va recharger la treeview, il faut faire un GetApplicationDeltails 
