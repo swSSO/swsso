@@ -2692,7 +2692,7 @@ askpwd:
 		//nid.hIcon=;
 		nid.uFlags=NIF_INFO; // szInfo, szInfoTitle, dwInfoFlags, and uTimeout
 		nid.uTimeout=2000;
-		strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),"Changement de mot de passe réussi");
+		strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),"Synchronisation de mot de passe réussie");
 		strcpy_s(nid.szInfo,sizeof(nid.szInfo),GetString(IDS_SYNCHRO_PWD_OK));
 		Shell_NotifyIcon(NIM_MODIFY, &nid); 
 	}
