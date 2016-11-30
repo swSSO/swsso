@@ -74,6 +74,84 @@ IDI_SYSTRAY_INACTIVE    ICON                    "SystrayInactive.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////
+// English resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PWD DIALOGEX 0, 0, 267, 106
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Password Manager"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,242,1
+    LTEXT           "Please enter your master password below:",TX_FRAME,44,11,214,10
+    EDITTEXT        TB_PWD,60,45,200,13,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Re&member me on this computer",CK_SAVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,60,63,199,11
+    DEFPUSHBUTTON   "OK",IDOK,156,85,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,210,85,50,14
+    PUSHBUTTON      "&Reset password...",PB_MDP_OUBLIE,7,85,81,14
+    LTEXT           "&Password :",IDC_STATIC,9,47,48,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PWD, DIALOG
+    BEGIN
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// French resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PWD DIALOG 0, 0, 267, 106
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Gestionnaire de mots de passe"
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,242,1
+    LTEXT           "Veuillez saisir ci-dessous votre mot de passe swSSO :",TX_FRAME,44,11,214,10
+    EDITTEXT        TB_PWD,60,45,200,13,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "&Ne plus me demander mon mot de passe sur cet ordinateur",CK_SAVE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,60,63,199,11
+    DEFPUSHBUTTON   "OK",IDOK,156,85,50,14,WS_DISABLED
+    PUSHBUTTON      "Annuler",IDCANCEL,210,85,50,14
+    PUSHBUTTON      "Mot de passe &oublié ?",PB_MDP_OUBLIE,7,85,81,14
+    LTEXT           "&Mot de passe :",IDC_STATIC,9,47,48,10
+END
+
+#endif    // French resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // French (France) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
@@ -351,22 +429,6 @@ BEGIN
     LTEXT           "PXXX000",TX_ID,87,15,180,8
     LTEXT           "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison CTRL+V.",TX_FRAME2,45,25,215,25
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,5,60,242,1
-END
-
-IDD_PWD DIALOG 0, 0, 267, 106
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "swSSO - Gestionnaire de mots de passe"
-FONT 8, "Tahoma"
-BEGIN
-    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,242,1
-    LTEXT           "Veuillez saisir ci-dessous votre mot de passe swSSO :",TX_FRAME,44,11,214,10
-    EDITTEXT        TB_PWD,60,45,200,13,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "&Ne plus me demander mon mot de passe sur cet ordinateur",CK_SAVE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,60,63,199,11
-    DEFPUSHBUTTON   "OK",IDOK,156,85,50,14,WS_DISABLED
-    PUSHBUTTON      "Annuler",IDCANCEL,210,85,50,14
-    PUSHBUTTON      "Mot de passe &oublié ?",PB_MDP_OUBLIE,7,85,81,14
-    LTEXT           "&Mot de passe :",IDC_STATIC,9,47,48,10
 END
 
 IDD_PWD_ADMIN_ASK DIALOG 0, 0, 267, 90
