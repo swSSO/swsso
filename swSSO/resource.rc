@@ -659,7 +659,7 @@ BEGIN
     IDS_COMBOTYPE2          "Browser authentication popup"
     IDS_COMBOTYPE3          "Windows app"
     IDS_OLDVERSION          "0.42 or less"
-    IDS_PP_ENCRYPTED        "AES-256 + PBKDF2 (master password)"
+    IDS_PP_ENCRYPTED        "AES-256 & PBKDF2 (master password)"
     IDS_DELETE              "Do you really want to delete %s?\r\nThis configuration will also be deleted from the server."
     IDS_MENU_ACTIVER        "&Enable"
     IDS_MENU_AJOUTER_APPLI  "A&dd an application"
@@ -720,94 +720,92 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESACTIVATE_MESSAGE "Si vous pensez qu'il s'agit d'une erreur de l'application, swSSO peut réessayer.\r\nSi vous avez changé votre mot de passe dans l'application, vous devez le changer maintenant dans swSSO.\r\nSinon, vous pouvez suspendre le SSO pour une minute et réessayer plus tard."
+    IDS_DESACTIVATE_MESSAGE "In case you have changed your password in the application, you must change it in swSSO too.\r\nIf not, you can retry now or pause swSSO for one minute and retry later."
     IDS_MESSAGEBOX_TITLE    "swSSO - Password Manager"
     IDS_DESACTIVATE_SUBTITLE 
-                            "swSSO n'a pas réussi à vous connecter à l'application\r\n%s"
+                            "swSSO failed to connect to\r\n%s"
     IDS_DESACTIVATE_B1      "&Retry"
     IDS_DESACTIVATE_B2      "&Password..."
-    IDS_DESACTIVATE_B3      "&Suspendre"
+    IDS_DESACTIVATE_B3      "P&ause"
     IDS_ERROR_MESSAGE_INI_FILE 
-                            "Une erreur est survenue lors de la lecture du fichier de configuration.\r\nMerci de contacter le support."
+                            "Cannot read configuration file. Please contact your technical support."
     IDS_GENERIC_STARTING_ERROR 
-                            "Une erreur est survenue au démarrage de swSSO.\r\nMerci de contacter le support."
-    IDS_MENU_UPLOADER       "Publier"
-    IDS_UPLOAD_OK           "La configuration du SSO pour cette application a bien été publiée sur le serveur."
-    IDS_UPLOAD_NOK          "Erreur : aucune information n'a pu être publiée sur le serveur."
-    IDS_PROXY_OK            "Test réussi, vos paramètres proxy sont corrects !"
-    IDS_PROXY_NOK           "Impossible de joindre le serveur swSSO. Veuillez vérifier vos paramètres proxy."
-    IDS_MENU_SSO_NOW        "Se connecter à l'application"
-    IDS_ID2                 "2nd identifiant"
-    IDS_ID3                 "3ème identifiant"
+                            "Cannot start swSSO. Please contact your technical support."
+    IDS_MENU_UPLOADER       "Upload"
+    IDS_UPLOAD_OK           "Upload successful."
+    IDS_UPLOAD_NOK          "Upload on server failed."
+    IDS_PROXY_OK            "Connection succeeded."
+    IDS_PROXY_NOK           "Connection failed. Please check proxy parameters."
+    IDS_MENU_SSO_NOW        "Connect to this application"
+    IDS_ID2                 "2nd username"
+    IDS_ID3                 "3rd username"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ID4                 "4ème identifiant"
-    IDS_MENU_DUPLIQUER      "&Dupliquer"
+    IDS_ID4                 "4th username"
+    IDS_MENU_DUPLIQUER      "&Duplicate"
     IDS_RECOVERYSTOREPWDFAILED 
-                            "Une erreur est survenue. En cas d'oubli de votre mot de passe,\r\nil ne sera pas possible de le récupérer.\r\n\r\nVeuillez contacter votre support."
-    IDS_BADPWD2             "Mot de passe incorrect"
-    IDS_TITRE_APPNSITES     "swSSO - Gestion des sites et applications"
-    IDS_MENU_CHANGER_IDS    "Identifiants et mot de passe..."
-    IDS_CHANGER_IDS         "Confirmez-vous la modification des identifiants et/ou du mot de passe des\r\n%d applications de cette catégorie ?"
-    IDS_MULTI_UPLOAD_OK     "Les configurations de cette catégorie ont été publiées sur le serveur.\r\nRésultat détaillé :\r\n- Configurations publiées : %d\r\n- Configurations ignorées : %d"
+                            "An unexpected error occured. If you forget your password, your helpdesk will not be able to reset it.\r\nPlease contact immediately your technical support."
+    IDS_BADPWD2             "Bad password"
+    IDS_TITRE_APPNSITES     "swSSO - Web sites and applications management"
+    IDS_MENU_CHANGER_IDS    "Usernames and password..."
+    IDS_CHANGER_IDS         "Do you really want to modify usernames and password for \r\n%d applications?"
+    IDS_MULTI_UPLOAD_OK     "Upload successful:\r\n- Uploaded: %d\r\n- Skipped: %d"
     IDS_GET_ALL_CONFIGS_ERROR 
-                            "Une erreur est survenue lors de la lecture des configurations sur le serveur.\r\nAucune configuration n'a été ajoutée ou modifiée localement."
-    IDS_GET_ALL_CONFIGS     "Souhaitez-vous récupérer toutes les configurations disponibles sur le serveur ?"
-    IDS_LAUNCH_APP          "Lancer cette application"
-    IDS_LAUNCH_ONE_APP      "Lancer une application..."
-    IDS_NO_LAUNCH_PATH      "Vous n'avez pas défini de commande de lancement pour cette application."
-    IDS_GETCONFIGS_RESULT   "- Configurations ajoutées : %d\r\n- Configurations modifiées : %d\r\n- Configurations désactivées : %d\r\n- Configurations supprimées : %d"
-    IDS_DELETION_FORBIDDEN  "Ceci est une configuration entreprise. Elle ne peut pas être supprimée."
-    IDS_IDANDPWDTEXT_NEW    "Veuillez saisir vos informations de connexion à :\r\n%s"
+                            "Cannot download configurations. No local change has been made."
+    IDS_GET_ALL_CONFIGS     "Do you want to download all configurations available?"
+    IDS_LAUNCH_APP          "Start this application"
+    IDS_LAUNCH_ONE_APP      "Start an application..."
+    IDS_NO_LAUNCH_PATH      "Command line not defined. Cannot start this application."
+    IDS_GETCONFIGS_RESULT   "- Added: %d\r\n- Updated: %d\r\n- Diabled: %d\r\n- Deleted: %d"
+    IDS_DELETION_FORBIDDEN  "This is an enterprise configuration. Deletion is forbidden."
+    IDS_IDANDPWDTEXT_NEW    "Please enter username and password for:\r\n%s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_IDANDPWDTITLE_NEW   "swSSO - Ajout d'une application"
-    IDS_IDANDPWDTEXT_MISSING 
-                            "Vous n'avez pas défini vos informations de connexion à :\r\n%s"
-    IDS_IDANDPWDTITLE_MISSING "swSSO - Informations manquantes"
-    IDS_LAUNCH_APP_ERROR    "L'application n'a pas pu être lancée (erreur %d) :\r\n- Application : %s\r\n- Paramètres : %s"
-    IDS_COMBOTYPE4          "Site Web (configuration simplifiée)"
-    IDS_MENU_AJOUTER_COMPTE "Ajouter un co&mpte"
-    IDS_ERROR_INI_SAV       "swSSO n'a pas pu sauvegarder votre fichier de configuration (erreur %d).\r\nSi le fichier suivant existe déjà, supprimez-le et relancez swSSO :\r\n%s\r\nEn cas de doute contactez le support."
-    IDS_ERROR_INI_RESTORED  "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été restauré, vous pouvez continuer à utiliser la version 0.92 de swSSO.\r\nMerci de signaler ce problème au support."
-    IDS_ERROR_INI_NOT_RESTORED 
-                            "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été sauvegardé ici :\r\n%s\r\n. Renommez-le en swsso.ini pour continuer à utiliser la version 0.92 de swSSO.\r\nMerci néanmoins de ce problème au support."
-    IDS_MENU_UPLOADER_VERS  "Publier vers..."
-    IDS_TAB_APPLICATIONS    "Sites et applications"
-    IDS_TAB_IDPWD1          "Identifiant et mot de passe"
-    IDS_TAB_IDPWD2          "Identifiants complémentaires"
+    IDS_IDANDPWDTITLE_NEW   "swSSO - New application"
+    IDS_IDANDPWDTEXT_MISSING "Username and password are not defined for:\r\n%s"
+    IDS_IDANDPWDTITLE_MISSING "swSSO - Missing informations"
+    IDS_LAUNCH_APP_ERROR    "Cannot start application (error %d) :\r\n- Application: %s\r\n- Parameters: %s"
+    IDS_COMBOTYPE4          "Web site (easy)"
+    IDS_MENU_AJOUTER_COMPTE "Add accou&nt"
+    IDS_ERROR_INI_SAV       "Cannot save you configuration file (erreur %d).\r\nIf this file already exists, please delete it and restart swSSO:\r\n%s."
+    IDS_ERROR_INI_RESTORED  "Not used"
+    IDS_ERROR_INI_NOT_RESTORED "Not used"
+    IDS_MENU_UPLOADER_VERS  "Upload to..."
+    IDS_TAB_APPLICATIONS    "Web site and applications"
+    IDS_TAB_IDPWD1          "Username and password"
+    IDS_TAB_IDPWD2          "More..."
     IDS_TAB_CONFIG1         "Configuration"
-    IDS_TAB_CONFIG2         "Champs complémentaires"
+    IDS_TAB_CONFIG2         "More..."
     IDS_INFO_WINDOWS_SSO_MIGRATION 
-                            "swSSO va vous demander une dernière fois votre mot de passe.\r\nLes fois suivantes, vous serez directement connecté avec votre compte Windows."
+                            "swSSO will ask for your master password for the last time."
 END
 
 STRINGTABLE
 BEGIN
     IDS_ERROR_WINDOWS_SSO_MIGRATION 
-                            "swSSO ne peut pas utiliser votre compte Windows.\r\nVeuillez redémarrer votre poste de travail avant de réessayer."
+                            "swSSO cannot use your Windows account. Please restart your computer."
     IDS_ERROR_WINDOWS_SSO_LOGON 
-                            "Erreur au démarrage de swSSO.\r\nVeuillez redémarrer votre poste de travail avant de réessayer.\r\nSi le problème persiste, contactez votre support."
+                            "Cannot start swSSO. Please restart your computer."
     IDS_ERROR_WINDOWS_SSO_VER 
-                            "Veuillez vous connecter une première fois avec votre mot de passe swSSO avant de demander l'intégration à votre compte Windows."
-    IDS_SYNCHRO_PWD_OK      "La synchronisation avec votre mot de passe Windows a bien été réalisée."
+                            "Please connect once with your master password before trying to switch to Windows password mode."
+    IDS_SYNCHRO_PWD_OK      "Switch to Windows password mode succeeded."
     IDS_ERROR_WINDOWS_SSO_LOGON2 
-                            "Erreur au démarrage de swSSO.\r\nCliquez sur OK pour démarrer la procédure de secours ou sur Annuler pour quitter swSSO."
+                            "Cannot start swSSO.\r\nSelect OK to start recovery procedure or Cancel to quit swSSO."
     IDS_RECOVERY_ENCRYPTED_OK 
-                            "La procédure de réinitialisation de mot de passe est terminée, vous pouvez continuer à utiliser swSSO avec le nouveau mot de passe que vous avez défini."
-    IDS_RECOVERY_WINDOWS_OK "La procédure de secours est terminée !"
-    IDS_RECOVERY_ERROR      "Une erreur est survenue, la procédure de secours a échoué."
-    IDS_RECOVERY_ERROR_FORMAT "Le format de la réponse est incorrect."
-    IDS_RECOVERY_NEW_PWD    "Veuillez définir votre nouveau mot de passe."
-    IDS_ERROR_BADRESPONSEFILE "Ce fichier ne contient pas de réponse valide."
-    IDS_PP_WINDOWS          "AES-256 et PBKDF2 (mot de passe Windows)"
+                            "Recovery successful!"
+    IDS_RECOVERY_WINDOWS_OK "Recovery successful!"
+    IDS_RECOVERY_ERROR      "Recovery failed!"
+    IDS_RECOVERY_ERROR_FORMAT "Bad response format."
+    IDS_RECOVERY_NEW_PWD    "Please enter your new password below:"
+    IDS_ERROR_BADRESPONSEFILE "Bad response file."
+    IDS_PP_WINDOWS          "AES-256 & PBKDF2 (Windows password)"
     IDS_PLEASE_ENTER_WINDOWS_PASSWORD 
-                            "Veuillez saisir ci-dessous votre mot de passe Windows :"
-    IDS_MENU_CHANGEAPPPWD   "Changer le mot de passe de cette application"
+                            "Please enter your Windows password below:"
+    IDS_MENU_CHANGEAPPPWD   "Change password for this application"
     IDS_MSG_CHANGE_APP_PWD_1 
                             "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison %s"
     IDS_MSG_CHANGE_APP_PWD_2 
@@ -816,13 +814,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TIP_TB_ID           "Votre identifiant pour cette application"
-    IDS_TIP_TB_PWD          "Votre mot de passe pour cette application. Cliquez sur la loupe pour le révéler."
-    IDS_TIP_CB_TYPE         "Type de la fenêtre : choisir 'Site Web (configuration simplifiée)' pour configurer un site Internet ou une application Intranet"
-    IDS_TIP_TB_TITRE        "Titre complet ou partiel de la fenêtre. Le caractère joker '*' est accepté en début et/ou milieu et/ou fin de chaîne. Exemples : *titre, titre*, *titre*, ti*re"
-    IDS_TIP_TB_URL          "URL complète ou partielle de l'application. Le caractère joker '*' est accepté en début et/ou milieu et/ou fin. Exemples : *google.fr, *g*gle.f*, http://www.google.*"
-    IDS_TIP_TB_ID_ID        "En configuration simplifiée : position relative du champ identifiant par rapport au champ mot de passe. Exemple : -1 si le champ identifiant se trouve juste avant le champ mot de passe."
-    IDS_TIP_TB_PWD_ID       "En configuration simplifiée : position absolue du champ mot de passe. En général, il n'y a qu'un seul champ de mot de passe et la valeur 1 convient."
+    IDS_TIP_TB_ID           "Your username for this application"
+    IDS_TIP_TB_PWD          "Your password for this application. Clic the magnifying glass to reveal."
+    IDS_TIP_CB_TYPE         "Window type: select 'Web site (easy mode)' to configure a Internet or Intranet site."
+    IDS_TIP_TB_TITRE        "Full or partial title of the window. Joker '*' is allowed at beginning and/or middle and/or end of string. Examples: *title, title*, *title*, t*e"
+    IDS_TIP_TB_URL          "Full or partial URL. Joker '*' is allowed at beginning and/or middle and/or end of string. Examples: *google.com, *g*gle.c*, http://www.google.*"
+    IDS_TIP_TB_ID_ID        "Easy mode: relative position of username entry field compared to password entry field. Example: -1 if username field is situated just before password field."
+    IDS_TIP_TB_PWD_ID       "Easy mode: absolute position of password entry field. Usually, a login form has only one password field. In this cas, value 1 is OK."
     IDS_TIP_TB_VALIDATION   "En configuration simplifiée : séquence de simulation de frappe clavier à exécuter pour valider la saisie. Exemple : [ENTER]"
     IDS_TIP_TB_LANCEMENT    "(Optionnel) Définit la ligne de commande à exécuter pour lancer l'application si vous utilisez le lanceur d'application swSSO."
     IDS_TIP_TB_ID2          "(Optionnel) Votre identifiant n°2 pour cette application. Exemple : date de naissance, code postal..."
@@ -857,7 +855,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PP_NOMASTERPWD      "AES-256 et PBKDF2 (sans mot de passe maître)"
+    IDS_PP_NOMASTERPWD      "AES-256 & PBKDF2 (no master password)"
     IDS_MENU_MDP_WINDOWS    "&Mot de passe Windows..."
     IDS_ERROR_WINDOWS_SSO_LOGON3 
                             "Erreur au démarrage de swSSO.\r\nVeuillez fermer et rouvrir votre session Windows.\r\nSi le problème persiste, contactez votre support."
@@ -889,12 +887,12 @@ BEGIN
                             "Cette catégorie n'avait pas encore été publiée sur le serveur. Elle a simplement été supprimée localement."
     IDS_SYSTRAY_ADMIN       "swSSO Administrateur"
     IDS_TAB_DOMAINS         "Domaines"
-    IDS_MENU_ADD_DOMAIN     "Ajouter un domaine"
+    IDS_MENU_ADD_DOMAIN     "Add a new domain"
     IDS_DELETE_DOMAIN_CONFIRM 
                             "Confirmez-vous la suppression du domaine %s ?\r\nAttention, le domaine sera également supprimé du serveur."
     IDS_DELETE_DOMAIN_OK    "Le domaine a bien été supprimé du serveur."
     IDS_DELETE_DOMAIN_KO    "Le domaine n'a pas pu être supprimé du serveur. Vérifiez qu'il n'y a plus d'applications publiées sur ce domaine."
-    IDS_NEW_DOMAIN          "Nouveau domaine"
+    IDS_NEW_DOMAIN          "New domain"
     IDS_MSG_MAX_DOMAINS     "Erreur : le nombre maximum de domaines est dépassé. Il n'est plus possible d'ajouter de nouveaux domaines."
     IDS_UPLOAD_DOMAIN_OK    "Le domaine a bien été publié sur le serveur."
 END
@@ -907,11 +905,11 @@ BEGIN
     IDS_RENAME_DOMAIN_OK    "Le domaine a bien été renommé sur le serveur."
     IDS_RENAME_DOMAIN_KO    "Une erreur est survenue. Le domaine n'a pas été renommé."
     IDS_TX_INFO_PWD_GROUP   "Cette application appartient à un groupement de mot de passe. Le changement de mot de passe de l'identifiant %s sera également réalisé dans tous vos enregistrements de ce groupe (surlignés de la même couleur)."
-    IDS_IDANDPWDTITLE_NEWACCOUNT "Ajout d'un compte"
+    IDS_IDANDPWDTITLE_NEWACCOUNT "Add a new account"
     IDS_IDANDPWDTEXT_NEWACCOUNT 
-                            "Informations de connexion pour le nouveau compte de :\r\n%s"
-    IDS_FERMER              "&Fermer"
-    IDS_AJOUTER             "&Ajouter"
+                            "Username and password for new account:\r\n%s"
+    IDS_FERMER              "&Close"
+    IDS_AJOUTER             "&Add"
     IDS_RECOVER_WEBSERVICE_ERROR 
                             "Votre mot de passe swSSO est désynchronisé et le service de resynchronisation est injoignable. Veuillez retenter ultérieurement ou contacter votre support."
     IDS_TRANSCRYPT_ERROR    "Une erreur est survenue sur %d configurations : vos identifiants ont été perdus et vous seront donc demandés lors de la prochaine connexion à ces applications.\r\nLes configurations concernées sont précédées d'un rond noir dans la fenêtre de gestion des sites et applications."
