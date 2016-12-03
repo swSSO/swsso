@@ -2039,7 +2039,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 {
 	UNREFERENCED_PARAMETER(nCmdShow);
 	UNREFERENCED_PARAMETER(hPrevInstance);
-
+	
+	// A SUPPRIMER
+	ULONG pul;
+	SetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,L"en-US",&pul);
+	// A SUPPRIMER
+	
 	int rc;
 	int iError=0; // v0.88 : message d'erreur au démarrage
 	MSG msg;
