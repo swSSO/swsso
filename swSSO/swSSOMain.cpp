@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="112";	// 101 = 1.01
-const char gcszCurrentBeta[]="1137";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1138";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -2040,11 +2040,6 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	UNREFERENCED_PARAMETER(nCmdShow);
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	
-	// A SUPPRIMER
-	ULONG pul;
-	SetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,L"en-US",&pul);
-	// A SUPPRIMER
-	
 	int rc;
 	int iError=0; // v0.88 : message d'erreur au démarrage
 	MSG msg;
@@ -2242,6 +2237,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	{
 		ExpandFileName(lpCmdLine,gszCfgFile,_MAX_PATH+1); // ISSUE#104 et ISSUE#109
 	}
+	// Pas simple de le faire plus tôt... ce veut dire que si des messages sont affichés avant 
+	// ils seront dans la langue de l'OS et pas dans la langue choisie par l'utilisateur
+	GetOSLanguage(); // récupère la langue de l'OS
+	giLanguage=GetPrivateProfileInt("swSSO","Language",0,gszCfgFile);
+	if (giLanguage!=0) SetLanguage(); // applique ce que l'utilisateur a défini
+
 	// inits Window et COM
 	InitCommonControls();
 	ghrCoIni=CoInitialize(NULL);

@@ -66,6 +66,8 @@ BOOL gbSSOInternetExplorer=TRUE;		// ISSUE#176
 BOOL gbSSOFirefox=TRUE;					// ISSUE#176
 BOOL gbSSOChrome=TRUE;					// ISSUE#176
 BOOL gbShowLaunchAppWithoutCtrl=FALSE;	// ISSUE#254
+int giLanguage=0; // 0=langue de l'OS, 1=FR, 2=EN
+wchar_t gwszDefaultLanguage[256];
 
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
@@ -348,6 +350,51 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	return rc;
 }
 
+//-----------------------------------------------------------------------------
+// SetLanguage()
+//-----------------------------------------------------------------------------
+// Change la langue de l'IHM
+//-----------------------------------------------------------------------------
+void SetLanguage(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	ULONG pul;
+	if (giOSVersion!=OS_WINDOWS_VISTA && OS_WINDOWS_VISTA!=OS_WINDOWS_XP) // SetProcessPreferredUILanguages n'existe pas avant W7
+	{
+		switch (giLanguage)
+		{
+			case 1:
+				SetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,L"fr-FR",&pul);
+				break;
+			case 2:
+				SetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,L"en-US",&pul);
+				break;
+			default:
+				SetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,gwszDefaultLanguage,&pul);
+				break;
+		}
+	}
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// GetLanguage()
+//-----------------------------------------------------------------------------
+// Récupère la langue courante
+//-----------------------------------------------------------------------------
+void GetOSLanguage(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	ULONG ulNbLanguages,ulSize;
+	ulSize=256;
+	if (!GetUserPreferredUILanguages(MUI_LANGUAGE_NAME,&ulNbLanguages,gwszDefaultLanguage,&ulSize))
+	{
+		TRACE((TRACE_ERROR,_F_,"GetProcessPreferredUILanguages()=%ld",GetLastError()));
+
+	}
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
 // ----------------------------------------------------------------------------------
 // PSPConfigurationProc()
 // ----------------------------------------------------------------------------------
@@ -440,6 +487,10 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				GetWindowRect(GetDlgItem(w,IDC_SEP_PROXY),&rectSeparator);
 				SetWindowPos(GetDlgItem(w,IDC_SEP_PROXY),NULL,0,0,rectProxyUrl.right-rectSeparator.left,2,SWP_NOMOVE);
 			}
+			SendMessage(GetDlgItem(w,CB_LANGUE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_DEFAULT));
+			SendMessage(GetDlgItem(w,CB_LANGUE),CB_ADDSTRING,0,(LPARAM)"Français");
+			SendMessage(GetDlgItem(w,CB_LANGUE),CB_ADDSTRING,0,(LPARAM)"English");
+			SendMessage(GetDlgItem(w,CB_LANGUE),CB_SETCURSEL,giLanguage,0);
 			rc=FALSE;
 			break;
 
@@ -480,6 +531,9 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					GetDlgItemText(w,TB_PROXY_URL,gszProxyURL,sizeof(gszProxyURL));
 					GetDlgItemText(w,TB_PROXY_USER,gszProxyUser,sizeof(gszProxyUser));
 					GetDlgItemText(w,TB_PROXY_PWD,gszProxyPwd,sizeof(gszProxyPwd));
+					giLanguage=SendMessage(GetDlgItem(w,CB_LANGUE),CB_GETCURSEL,0,0);
+					if (giLanguage==CB_ERR) giLanguage=0;
+					SetLanguage();
 					SaveConfigHeader();
 					PropSheet_UnChanged(gwPropertySheet,w);
 					break;
@@ -487,6 +541,7 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			break;
 		case WM_COMMAND:
 			if (HIWORD(wp)==EN_CHANGE) PropSheet_Changed(gwPropertySheet,w);
+			if (HIWORD(wp)==CBN_SELCHANGE) PropSheet_Changed(gwPropertySheet,w);
 			switch (LOWORD(wp))
 			{
 				case CK_CHECK_BETA:
@@ -1221,7 +1276,6 @@ int GetConfigHeader()
 	gy4=GetPrivateProfileInt("swSSO","y4",-1,gszCfgFile);
 	gcx4=GetPrivateProfileInt("swSSO","cx4",-1,gszCfgFile);
 	gcy4=GetPrivateProfileInt("swSSO","cy4",-1,gszCfgFile);
-
 	// REMARQUE : la config proxy est lue plus loin dans le démarrage du main, sinon la clé n'est pas disponible
 	//            pour déchiffrer le mot de passe proxy !
 	rc=0;
@@ -1410,6 +1464,8 @@ int SaveConfigHeader()
 	WritePrivateProfileString("swSSO","Chrome",gbSSOChrome?"YES":"NO",gszCfgFile);
 	// ISSUE#254
 	WritePrivateProfileString("swSSO","ShowLaunchAppWithoutCtrl",gbShowLaunchAppWithoutCtrl?"YES":"NO",gszCfgFile);
+	sprintf_s(szItem,sizeof(szItem),"%d",giLanguage);
+	WritePrivateProfileString("swSSO","Language",szItem,gszCfgFile);
 	// ISSUE#164
 	StoreIniEncryptedHash(); 
 	rc=0;

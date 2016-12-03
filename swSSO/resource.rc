@@ -190,7 +190,7 @@ BEGIN
     LTEXT           "Password group",TX_PWD_GROUP,213,271,74,8,NOT WS_VISIBLE
     EDITTEXT        TB_ID4_ID,283,247,128,13,ES_AUTOHSCROLL
     EDITTEXT        TB_PWD_GROUP,285,270,128,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
-    CONTROL         "&Detect error connexions",CK_AUTO_LOCK,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,17,272,180,8
+    CONTROL         "&Detect connection errors",CK_AUTO_LOCK,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,17,272,180,8
     DEFPUSHBUTTON   "OK",IDOK,7,253,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,62,253,50,14
     PUSHBUTTON      "&Apply",IDAPPLY,121,253,50,14
@@ -504,7 +504,7 @@ BEGIN
     LTEXT           "Configuration file:",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,55,262,18
     LTEXT           "License",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.13 BETA 7 (20/11/2016)",TX_ABOUT,47,12,120,8
+    LTEXT           "Version 1.13 BETA 8 (03/12/2016)",TX_ABOUT,47,12,120,8
     LTEXT           "Portal:",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -538,16 +538,16 @@ BEGIN
     CONTROL         "&Disable swSSO when my Windows session is locked",CK_LOCK,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,22,224,13
     CONTROL         "Display the information &message while changing application password",CK_DISPLAY_MSG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,40,301,8
-    CONTROL         "&Check for updates at start",CK_CHECK_VERSION,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,71,137,13
-    CONTROL         "&including beta versions",CK_CHECK_BETA,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,156,71,137,13
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,38,301,8
+    CONTROL         "&Check for updates at start",CK_CHECK_VERSION,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,84,137,13
+    CONTROL         "&including beta versions",CK_CHECK_BETA,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,156,84,137,13
     CONTROL         "&Get configurations from the server",CK_GET_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,88,309,17
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,96,309,17
     CONTROL         "&Allow configuration uploads on the server",CK_MANUAL_PUT_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,111,310,10
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,114,310,10
     CONTROL         "&Use a proxy to connect to swSSO server",CK_USE_PROXY,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,142,187,10
-    LTEXT           "swSSO server authorizations",TX_INTERNET,7,56,95,8
+    LTEXT           "swSSO server authorizations",TX_INTERNET,7,72,95,8
     LTEXT           "Proxy settings",TX_PROXY,7,128,49,10
     LTEXT           "Pro&xy address:",TX_PROXY_URL,17,160,67,8
     EDITTEXT        TB_PROXY_URL,81,158,248,13,ES_AUTOHSCROLL
@@ -557,10 +557,12 @@ BEGIN
     EDITTEXT        TB_PROXY_PWD,81,194,154,13,ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT           "Miscellaneous",TX_SECURITE,7,10,44,8
     CONTROL         "",IDC_SEP_SECURITE,"Static",SS_ETCHEDHORZ,57,14,257,1
-    CONTROL         "",IDC_SEP_AUTORISATIONS,"Static",SS_ETCHEDHORZ,104,61,210,1
+    CONTROL         "",IDC_SEP_AUTORISATIONS,"Static",SS_ETCHEDHORZ,104,77,210,1
     CONTROL         "",IDC_SEP_PROXY,"Static",SS_ETCHEDHORZ,59,132,254,1
     PUSHBUTTON      "&Test proxy settings",PB_TEST,243,175,86,14
     DEFPUSHBUTTON   "&I feel lucky ;-)",PB_CHANCE,243,193,86,14
+    LTEXT           "&Language:",TX_PROXY_USER2,17,54,38,8
+    COMBOBOX        CB_LANGUE,57,52,68,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 
@@ -750,7 +752,7 @@ BEGIN
     IDS_VALUE               "%s :"
     IDS_MENU_RENOMMER       "&Rename"
     IDS_COMBOIDTYPE1        "Entry field (html : input)"
-    IDS_COMBOIDTYPE2        "List box (html : select)"
+    IDS_COMBOIDTYPE2        "Combo box (html : select)"
     IDS_NON_CLASSE          "Unclassified"
 END
 
@@ -830,7 +832,7 @@ BEGIN
                             "Username and password are not defined for:\r\n%s"
     IDS_IDANDPWDTITLE_MISSING "swSSO - Missing informations"
     IDS_LAUNCH_APP_ERROR    "Cannot start application (error %d) :\r\n- Application: %s\r\n- Parameters: %s"
-    IDS_COMBOTYPE4          "Web site (easy)"
+    IDS_COMBOTYPE4          "Web site (easy mode)"
     IDS_MENU_AJOUTER_COMPTE "Add accou&nt"
     IDS_ERROR_INI_SAV       "Cannot save configuration file (erreur %d).\r\nIf this file already exists, please delete it and restart swSSO:\r\n%s."
     IDS_ERROR_INI_RESTORED  "Not used"
@@ -886,15 +888,15 @@ BEGIN
     IDS_TIP_TB_ID2          "(Optional) 2nd id. Examples: birthday, postal code..."
     IDS_TIP_TB_ID3          "(Optional) 3rd id. Examples: birthday, postal code..."
     IDS_TIP_TB_ID4          "(Optional) 4th id. Examples: birthday, postal code..."
-    IDS_TIP_CB_ID2_TYPE     "(Optional) 2nd id type: 'input field' ou 'list box'. If you use easy mode, always choose 'Input field'"
+    IDS_TIP_CB_ID2_TYPE     "(Optional) 2nd id type: 'input field' ou 'combo box'. If you use easy mode, always choose 'Input field'"
     IDS_TIP_TB_ID2_ID       "(Optional) Easy mode: relative position of 2nd id entry field compared to password entry field. Example: -1 if 2nd id field is situated just before password field."
-    IDS_TIP_CB_ID3_TYPE     "(Optional) 3rd id type: 'input field' ou 'list box'. If you use easy mode, always choose 'Input field'"
+    IDS_TIP_CB_ID3_TYPE     "(Optional) 3rd id type: 'input field' ou 'combo box'. If you use easy mode, always choose 'Input field'"
     IDS_TIP_TB_ID3_ID       "(Optional) Easy mode: relative position of 3rd id entry field compared to password entry field. Example: -1 if 3rd id field is situated just before password field."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TIP_CB_ID4_TYPE     "(Optional) 4th id type: 'input field' ou 'list box'. If you use easy mode, always choose 'Input field'"
+    IDS_TIP_CB_ID4_TYPE     "(Optional) 4th id type: 'input field' ou 'combo box'. If you use easy mode, always choose 'Input field'"
     IDS_TIP_TB_ID4_ID       "(Optional) Easy mode: relative position of 4th id entry field compared to password entry field. Example: -1 if 4th id field is situated just before password field."
     IDS_TIP_TB_KBSIM        "(Optional) Simulated keyboard input. Use [ID] for username, [PWD] for password, [TAB] to simulate TAB key press, [ENTER]to simulate ENTER key press"
     IDS_BTN_RETRY           "Unused"
@@ -972,6 +974,11 @@ BEGIN
     IDS_NOTIFY_TITLE_UPGRADED "swSSO udpated!"
     IDS_NOTIFY_TEXT_UPGRADED "New version: %c.%c%c"
     IDS_NOTIFY_TEXT_UPGRADED_BETA "New version: %c.%c%c BETA %c"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DEFAULT             "OS language"
 END
 
 #endif    // English resources
@@ -1381,7 +1388,7 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.13 BETA 7 (20/11/2016)",TX_ABOUT,47,12,120,8
+    LTEXT           "Version 1.13 BETA 8 (03/12/2016)",TX_ABOUT,47,12,120,8
     LTEXT           "Portail :",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -1407,25 +1414,25 @@ BEGIN
     CONTROL         "&Internet Explorer",CK_IE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,25,76,8
 END
 
-PSP_INTERNET DIALOG 0, 0, 338, 214
+PSP_INTERNET DIALOGEX 0, 0, 338, 214
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Options"
-FONT 8, "Tahoma"
+FONT 8, "Tahoma", 0, 0, 0x0
 BEGIN
     CONTROL         "&Désactiver swSSO lorsque je verrouille ma session Windows",CK_LOCK,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,22,224,13
     CONTROL         "Afficher le &message d'information lors du changement de mot de passe d'une application",CK_DISPLAY_MSG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,40,301,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,38,301,8
     CONTROL         "&Vérifier les mises à jour au démarrage",CK_CHECK_VERSION,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,71,137,13
-    CONTROL         "&y compris les versions beta",CK_CHECK_BETA,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,156,71,137,13
-    CONTROL         "&Récupérer les informations de configuration (en activant cette option, vous permettez à swSSO de configurer à votre place le SSO pour vos applications)",CK_GET_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,88,309,17
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,84,137,13
+    CONTROL         "&y compris les versions beta",CK_CHECK_BETA,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,156,84,137,13
+    CONTROL         "&Récupérer les informations de configuration sur le serveur",CK_GET_CONFIG,
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,96,309,17
     CONTROL         "Sur d&emande, mettre mes informations de configuration à disposition des autres utilisateurs",CK_MANUAL_PUT_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,111,310,10
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,114,310,10
     CONTROL         "&Se connecter au serveur swSSO au travers d'un proxy",CK_USE_PROXY,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,142,187,10
-    LTEXT           "Autorisations d'accès au serveur swSSO",TX_INTERNET,7,57,128,8
+    LTEXT           "Autorisations d'accès au serveur swSSO",TX_INTERNET,7,72,128,8
     LTEXT           "Configuration proxy",TX_PROXY,7,128,64,10
     LTEXT           "Adresse du pro&xy :",TX_PROXY_URL,17,160,67,8
     EDITTEXT        TB_PROXY_URL,81,158,248,13,ES_AUTOHSCROLL
@@ -1435,10 +1442,12 @@ BEGIN
     EDITTEXT        TB_PROXY_PWD,81,194,154,13,ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT           "Divers",TX_SECURITE,7,10,21,8
     CONTROL         "",IDC_SEP_SECURITE,"Static",SS_ETCHEDHORZ,31,14,283,1
-    CONTROL         "",IDC_SEP_AUTORISATIONS,"Static",SS_ETCHEDHORZ,139,61,175,1
+    CONTROL         "",IDC_SEP_AUTORISATIONS,"Static",SS_ETCHEDHORZ,139,76,175,1
     CONTROL         "",IDC_SEP_PROXY,"Static",SS_ETCHEDHORZ,75,132,238,1
     PUSHBUTTON      "&Tester la connexion",PB_TEST,243,175,86,14
     DEFPUSHBUTTON   "&J'ai de la chance ;-)",PB_CHANCE,243,193,86,14
+    LTEXT           "&Langue:",TX_PROXY_USER2,17,54,28,8
+    COMBOBOX        CB_LANGUE,50,52,80,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_MESSAGEBOX3BLINK DIALOGEX 0, 0, 301, 95
@@ -1513,6 +1522,10 @@ BEGIN
     END
 
     PSP_ABOUT, DIALOG
+    BEGIN
+    END
+
+    PSP_INTERNET, DIALOG
     BEGIN
     END
 
@@ -1835,6 +1848,11 @@ BEGIN
                             "La version %c.%c%c a été installée sur votre poste de travail"
     IDS_NOTIFY_TEXT_UPGRADED_BETA 
                             "La version %c.%c%c BETA %c a été installée sur votre poste de travail"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DEFAULT             "Langue du système"
 END
 
 #endif    // French resources

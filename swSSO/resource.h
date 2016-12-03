@@ -120,6 +120,7 @@
 #define CB_ID4_TYPE                     1088
 #define TB_PROXY_URL                    1089
 #define TX_PROXY_USER                   1090
+#define TX_PROXY_USER2                  1091
 #define TX_PROXY_PWD                    1093
 #define TB_PROXY_USER                   1094
 #define TB_PROXY_PWD                    1096
@@ -409,15 +410,17 @@
 #define IDS_NOTIFY_TITLE_UPGRADED       42029
 #define IDS_NOTIFY_TEXT_UPGRADED        42030
 #define IDS_NOTIFY_TEXT_UPGRADED_BETA   42031
+#define IDS_DEFAULT                     42032
+#define CB_LANGUE                       -19534
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        42008
+#define _APS_NEXT_RESOURCE_VALUE        42010
 #define _APS_NEXT_COMMAND_VALUE         44000
-#define _APS_NEXT_CONTROL_VALUE         46000
+#define _APS_NEXT_CONTROL_VALUE         46003
 #define _APS_NEXT_SYMED_VALUE           48000
 #endif
 #endif

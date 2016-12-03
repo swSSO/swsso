@@ -112,6 +112,8 @@ extern int giActionIdPwdAsked;
 extern char *gpszURLBeingAdded;
 extern char *gpszTitleBeingAdded;
 
+extern int giLanguage;
+
 #define LEN_DOMAIN 50
 typedef struct 
 {
@@ -182,3 +184,5 @@ typedef struct
 extern T_CONFIG_SYNC gtConfigSync;
 void ReportConfigSync(int iErrorMessage,BOOL bShowMessage,BOOL bShowIfZero);
 int SyncSecondaryPasswordGroup(void);
+void SetLanguage(void);
+void GetOSLanguage(void);
