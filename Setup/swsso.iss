@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "swSSO"
-#define MyAppVersion "1.12"
+#define MyAppVersion "1.13"
 #define MyAppURL "www.swsso.fr"
 #define MyAppExeName "swSSO.exe"
 
@@ -26,6 +26,7 @@ SolidCompression=yes
 
 [Languages]
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -61,13 +62,11 @@ Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\services\swSSOCM\NetworkProvider
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; Flags: uninsdeletekey
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; ValueType: dword; ValueName: "PasswordChoiceLevel"; ValueData: "4"; Flags: uninsdeletevalue
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: none; Flags: uninsdeletekey
-Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "E6B724F845B0D291AF0153A7EC5D0DC9298B824356516C51EAC574D1561E8090"; Flags: uninsdeletevalue
-
-[UninstallDelete]
-Type: files; Name: "%appdata%\swSSO\swSSO.ini"
+Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "4B8E8AAD9E936E18F830244BE808F53D8FC8B5CD2ED28DE21FF27E1C1F238FD1"; Flags: uninsdeletevalue
 
 [CustomMessages]
 french.CreateStartupIcon=Lancer swSSO au démarrage de Windows
+english.CreateStartupIcon=Run swSSO at startup
 
 [Code]
 procedure RegisterCM(FileName: String);
@@ -83,21 +82,6 @@ begin
     begin
       RegWriteStringValue(HKEY_LOCAL_MACHINE, 'SYSTEM\CurrentControlSet\Control\NetworkProvider\Order',
        'ProviderOrder', strProviderOrder+',swSSOCM');
-    end;
-  end;
-end;
-
-procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
-var
-  FindRec: TFindRec;
-begin
-  if CurUninstallStep=usUninstall then begin
-    // Si fichier .ini dans le dossier App, demande à l'utilisateur de confirmer avant de supprimer
-    if FindFirst(ExpandConstant('{app}\*.ini'), FindRec) then begin
-      if MsgBox('Si vous souhaitez conserver votre fichier de mots de passe, cliquer sur Oui. Sinon, cliquer sur Non et tout sera supprimé.', mbConfirmation, MB_YESNO) = IDNO then begin
-        //DelTree(ExpandConstant('{app}'), True, True, True);
-        DelTree(ExpandConstant('{app}\*.ini'), False, True, False);
-      end;
     end;
   end;
 end;
