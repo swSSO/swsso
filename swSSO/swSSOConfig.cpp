@@ -271,15 +271,19 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			GetWindowRect(GetDlgItem(w,TX_URL),&rect);
 			if ((pt.x >= rect.left)&&(pt.x <= rect.right)&& (pt.y >= rect.top) &&(pt.y <= rect.bottom))
 			{
-				ShellExecute(NULL,"open","http://www.swsso.fr",NULL,"",SW_SHOW );
+				char szURL[50];
+				*szURL=0;
+				GetWindowText(GetDlgItem(w,TX_URL),szURL,sizeof(szURL));
+				if (strcmp(szURL,"http://www.swsso.fr")==0)
+				{
+					strcpy_s(szURL,"http://www.swsso.fr/?page_id=201");
+				}
+				else
+				{
+					strcpy_s(szURL,"http://www.swsso.fr/?page_id=31929");
+				}
+				ShellExecute(NULL,"open",szURL,NULL,"",SW_SHOW );
 			}
-			/* 0.86 : suppression de l'@mail
-			GetWindowRect(GetDlgItem(w,TX_MAILTO),&rect);
-			if ((pt.x >= rect.left)&&(pt.x <= rect.right)&& (pt.y >= rect.top) &&(pt.y <= rect.bottom))
-			{
-				ShellExecute(NULL,"open","mailto:contact@swsso.fr",NULL,"",SW_SHOW );
-			}
-			*/
 			break;
 		}
 		case WM_NOTIFY:

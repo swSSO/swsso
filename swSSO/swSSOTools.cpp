@@ -1352,16 +1352,32 @@ BOOL swURLMatch(char *szToBeCompared,char *szPattern)
 	lenPattern=strlen(szPattern);
 	if (lenPattern>1 && szPattern[0]=='*') goto end;
 	if (lenPattern<7) goto end;
-	if (_strnicmp(szPattern,"http://",7)!=0) { TRACE((TRACE_DEBUG,_F_,"szPattern ne commence pas par http://"));goto end; }
-	TRACE((TRACE_DEBUG,_F_,"szPattern commence par http://, on tente le matching entre %s et %s",szToBeCompared,szPattern+7));
-	if (swStringMatch(szToBeCompared,szPattern+7)) { rc=TRUE; goto end; }
-	// dernier essai :avec ou sans / de fin d'URL
-	if (lenToBeCompared>1 && szToBeCompared[lenToBeCompared-1]=='/')
+	if (_strnicmp(szPattern,"http://",7)==0) 
 	{
-		char szToBeCompared2[4096+1];
-		memcpy(szToBeCompared2,szToBeCompared,lenToBeCompared-1);
-		szToBeCompared2[lenToBeCompared-1]=0;
-		if (swStringMatch(szToBeCompared2,szPattern+7)) { rc=TRUE; goto end; }
+		TRACE((TRACE_DEBUG,_F_,"szPattern commence par http://, on tente le matching entre %s et %s",szToBeCompared,szPattern+7));
+		if (swStringMatch(szToBeCompared,szPattern+7)) { rc=TRUE; goto end; }
+		// dernier essai :avec ou sans / de fin d'URL
+		if (lenToBeCompared>1 && szToBeCompared[lenToBeCompared-1]=='/')
+		{
+			char szToBeCompared2[4096+1];
+			memcpy(szToBeCompared2,szToBeCompared,lenToBeCompared-1);
+			szToBeCompared2[lenToBeCompared-1]=0;
+			if (swStringMatch(szToBeCompared2,szPattern+7)) { rc=TRUE; goto end; }
+		}
+	}
+	else if (_strnicmp(szToBeCompared,"http://",7)==0) // l'url commence par http://, mais pas la pattern
+	{
+		if (lenToBeCompared<7) goto end;
+		TRACE((TRACE_DEBUG,_F_,"szToBeCompared commence par http://, on tente le matching entre %s et %s",szToBeCompared+7,szPattern));
+		if (swStringMatch(szToBeCompared+7,szPattern)) { rc=TRUE; goto end; }
+		// dernier essai :avec ou sans / de fin d'URL
+		if (szToBeCompared[lenToBeCompared-1]=='/')
+		{
+			char szToBeCompared2[4096+1];
+			memcpy(szToBeCompared2,szToBeCompared+7,lenToBeCompared-7-1);
+			szToBeCompared2[lenToBeCompared-7-1]=0;
+			if (swStringMatch(szToBeCompared2,szPattern)) { rc=TRUE; goto end; }
+		}
 	}
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
