@@ -67,7 +67,7 @@ BOOL gbSSOFirefox=TRUE;					// ISSUE#176
 BOOL gbSSOChrome=TRUE;					// ISSUE#176
 BOOL gbShowLaunchAppWithoutCtrl=FALSE;	// ISSUE#254
 int giLanguage=0; // 0=langue de l'OS, 1=FR, 2=EN
-wchar_t gwszDefaultLanguage[256];
+wchar_t gwszDefaultLanguage[256]=L"";
 
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
@@ -101,6 +101,9 @@ int giActionIdPwdAsked=-1;
 const char gcszCfgVersion[]="093";
 
 T_CONFIG_SYNC gtConfigSync;
+
+typedef BOOL (WINAPI *SETPROCESSPREFERREDUILANGUAGES)(DWORD dwFlags,PCZZWSTR pwszLanguagesBuffer,PULONG pulNumLanguages);
+typedef BOOL (WINAPI *GETUSERPREFERREDUILANGUAGES)(DWORD dwFlags,PULONG pulNumLanguages,PZZWSTR pwszLanguagesBuffer, PULONG pcchLanguagesBuffer);
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -362,22 +365,31 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 void SetLanguage(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
+	
 	ULONG pul;
-	if (giOSVersion!=OS_WINDOWS_VISTA && OS_WINDOWS_VISTA!=OS_WINDOWS_XP) // SetProcessPreferredUILanguages n'existe pas avant W7
+	HMODULE ghKernelDll=NULL;
+	SETPROCESSPREFERREDUILANGUAGES lpfnSetProcessPreferredUILanguages=NULL;
+	
+	ghKernelDll=LoadLibrary("Kernel32.dll"); 
+	if (ghKernelDll==NULL)  { TRACE((TRACE_ERROR, _F_, "LoadLibrary(Kernel32.dll)", GetLastError())); goto end; }
+
+	lpfnSetProcessPreferredUILanguages=(SETPROCESSPREFERREDUILANGUAGES)GetProcAddress(ghKernelDll,"SetProcessPreferredUILanguages");
+	if (lpfnSetProcessPreferredUILanguages==NULL) { TRACE((TRACE_ERROR, _F_, "GetProcAddress(SetProcessPreferredUILanguages)", GetLastError())); goto end; }
+
+	switch (giLanguage)
 	{
-		switch (giLanguage)
-		{
-			case 1:
-				SetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,L"fr-FR",&pul);
-				break;
-			case 2:
-				SetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,L"en-US",&pul);
-				break;
-			default:
-				SetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,gwszDefaultLanguage,&pul);
-				break;
-		}
+		case 1:
+			lpfnSetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,L"fr-FR",&pul);
+			break;
+		case 2:
+			lpfnSetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,L"en-US",&pul);
+			break;
+		default:
+			lpfnSetProcessPreferredUILanguages(MUI_LANGUAGE_NAME,gwszDefaultLanguage,&pul);
+			break;
 	}
+end:
+	if (ghKernelDll!=NULL) FreeLibrary(ghKernelDll);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -389,13 +401,25 @@ void SetLanguage(void)
 void GetOSLanguage(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	ULONG ulNbLanguages,ulSize;
-	ulSize=256;
-	if (!GetUserPreferredUILanguages(MUI_LANGUAGE_NAME,&ulNbLanguages,gwszDefaultLanguage,&ulSize))
-	{
-		TRACE((TRACE_ERROR,_F_,"GetProcessPreferredUILanguages()=%ld",GetLastError()));
 
+	HMODULE ghKernelDll=NULL;
+	GETUSERPREFERREDUILANGUAGES lpfnGetUserPreferredUILanguages=NULL;
+	ULONG ulNbLanguages,ulSize;
+	ulSize=256;	
+	
+	ghKernelDll=LoadLibrary("Kernel32.dll"); 
+	if (ghKernelDll==NULL)  { TRACE((TRACE_ERROR, _F_, "LoadLibrary(Kernel32.dll)", GetLastError())); goto end; }
+
+	lpfnGetUserPreferredUILanguages=(GETUSERPREFERREDUILANGUAGES)GetProcAddress(ghKernelDll,"GetUserPreferredUILanguages");
+	if (lpfnGetUserPreferredUILanguages==NULL) { TRACE((TRACE_ERROR, _F_, "GetProcAddress(GetUserPreferredUILanguages)", GetLastError())); goto end; }
+
+	if (!lpfnGetUserPreferredUILanguages(MUI_LANGUAGE_NAME,&ulNbLanguages,gwszDefaultLanguage,&ulSize))
+	{
+		TRACE((TRACE_ERROR,_F_,"lpfnGetUserPreferredUILanguages()=%ld",GetLastError()));
 	}
+
+end:
+	if (ghKernelDll!=NULL) FreeLibrary(ghKernelDll);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
