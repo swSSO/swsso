@@ -84,6 +84,8 @@
 #define REGVALUE_SHOWMENU_QUIT						"ShowQuitMenu"
 // ISSUE#306
 #define REGVALUE_SHOWMENU_HELP						"ShowHelpMenu"
+// ISSUE#309
+#define REGVALUE_MASTER_PASSWORD_EXPIRATION			"MasterPwdExpiration"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -134,6 +136,8 @@ extern int giShowPasswordGroup;
 extern BOOL gbShowMenu_Quit;
 // ISSUE#306
 extern BOOL gbShowMenu_Help;
+// ISSUE#309
+extern int giMasterPwdMaxExpiration;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"

@@ -86,6 +86,8 @@ int giShowPasswordGroup=2;
 BOOL gbShowMenu_Quit=TRUE;
 // ISSUE#306
 BOOL gbShowMenu_Help=FALSE;
+// ISSUE#309
+int giMasterPwdMaxExpiration=-1;	// 1.14 : valeur max pour l'expiration du master password
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=8;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
@@ -203,6 +205,7 @@ void LoadPolicies(void)
 	*gszSyncSecondaryPasswordOU=0;
 	gpszConfigNotFoundMailSubject=NULL;
 	gpszConfigNotFoundMailBody=NULL;
+	giMasterPwdMaxExpiration=-1;
 
 	//--------------------------------------------------------------
 	// GLOBAL POLICY
@@ -376,6 +379,11 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_HELP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowMenu_Help=(BOOL)dwValue; 
+
+		// ISSUE#309
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_MASTER_PASSWORD_EXPIRATION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giMasterPwdMaxExpiration=(int)dwValue; 
 
 		RegCloseKey(hKey);
 	}
@@ -903,6 +911,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"giShowPasswordGroup=%d"			,giShowPasswordGroup));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_Quit=%d"				,gbShowMenu_Quit));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_Help=%d"				,gbShowMenu_Help));
+	TRACE((TRACE_INFO,_F_,"giMasterPwdMaxExpiration=%d"		,giMasterPwdMaxExpiration));
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));

@@ -113,6 +113,7 @@ extern char *gpszURLBeingAdded;
 extern char *gpszTitleBeingAdded;
 
 extern int giLanguage;
+extern int giMasterPwdExpiration;
 
 #define LEN_DOMAIN 50
 typedef struct 

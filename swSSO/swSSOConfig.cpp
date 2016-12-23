@@ -105,6 +105,8 @@ T_CONFIG_SYNC gtConfigSync;
 typedef BOOL (WINAPI *SETPROCESSPREFERREDUILANGUAGES)(DWORD dwFlags,PCZZWSTR pwszLanguagesBuffer,PULONG pulNumLanguages);
 typedef BOOL (WINAPI *GETUSERPREFERREDUILANGUAGES)(DWORD dwFlags,PULONG pulNumLanguages,PZZWSTR pwszLanguagesBuffer, PULONG pcchLanguagesBuffer);
 
+int giMasterPwdExpiration;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -519,6 +521,11 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			SendMessage(GetDlgItem(w,CB_LANGUE),CB_ADDSTRING,0,(LPARAM)"Français");
 			SendMessage(GetDlgItem(w,CB_LANGUE),CB_ADDSTRING,0,(LPARAM)"English");
 			SendMessage(GetDlgItem(w,CB_LANGUE),CB_SETCURSEL,giLanguage,0);
+
+			// ISSUE#309
+			SendMessage(GetDlgItem(w,SPIN_MASTER_PWD_EXPIRATION),UDM_SETRANGE,0,MAKELPARAM(giMasterPwdMaxExpiration==-1?60:giMasterPwdMaxExpiration,0));
+			SetDlgItemInt(w,TB_MASTER_PWD_EXPIRATION,giMasterPwdExpiration,FALSE);
+
 			rc=FALSE;
 			break;
 
@@ -548,22 +555,27 @@ static int CALLBACK PSPConfigurationProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case PSN_SETACTIVE  :
 					break;
 				case PSN_APPLY:
-					gbInternetCheckVersion=IsDlgButtonChecked(w,CK_CHECK_VERSION)==BST_CHECKED?TRUE:FALSE;
-					gbDisplayChangeAppPwdDialog=IsDlgButtonChecked(w,CK_DISPLAY_MSG)==BST_CHECKED?TRUE:FALSE;
-					gbInternetCheckBeta=IsDlgButtonChecked(w,CK_CHECK_BETA)==BST_CHECKED?TRUE:FALSE;
-					gbInternetGetConfig=IsDlgButtonChecked(w,CK_GET_CONFIG)==BST_CHECKED?TRUE:FALSE;
-					//gbInternetPutConfig=IsDlgButtonChecked(w,CK_PUT_CONFIG)==BST_CHECKED?TRUE:FALSE;
-					gbInternetManualPutConfig=IsDlgButtonChecked(w,CK_MANUAL_PUT_CONFIG)==BST_CHECKED?TRUE:FALSE;
-					gbInternetUseProxy=IsDlgButtonChecked(w,CK_USE_PROXY)==BST_CHECKED?TRUE:FALSE;
-					gbSessionLock=IsDlgButtonChecked(w,CK_LOCK)==BST_CHECKED?TRUE:FALSE;
-					GetDlgItemText(w,TB_PROXY_URL,gszProxyURL,sizeof(gszProxyURL));
-					GetDlgItemText(w,TB_PROXY_USER,gszProxyUser,sizeof(gszProxyUser));
-					GetDlgItemText(w,TB_PROXY_PWD,gszProxyPwd,sizeof(gszProxyPwd));
-					giLanguage=SendMessage(GetDlgItem(w,CB_LANGUE),CB_GETCURSEL,0,0);
-					if (giLanguage==CB_ERR) giLanguage=0;
-					SetLanguage();
-					SaveConfigHeader();
-					PropSheet_UnChanged(gwPropertySheet,w);
+					{
+						BOOL bTranslated;
+						gbInternetCheckVersion=IsDlgButtonChecked(w,CK_CHECK_VERSION)==BST_CHECKED?TRUE:FALSE;
+						gbDisplayChangeAppPwdDialog=IsDlgButtonChecked(w,CK_DISPLAY_MSG)==BST_CHECKED?TRUE:FALSE;
+						gbInternetCheckBeta=IsDlgButtonChecked(w,CK_CHECK_BETA)==BST_CHECKED?TRUE:FALSE;
+						gbInternetGetConfig=IsDlgButtonChecked(w,CK_GET_CONFIG)==BST_CHECKED?TRUE:FALSE;
+						//gbInternetPutConfig=IsDlgButtonChecked(w,CK_PUT_CONFIG)==BST_CHECKED?TRUE:FALSE;
+						gbInternetManualPutConfig=IsDlgButtonChecked(w,CK_MANUAL_PUT_CONFIG)==BST_CHECKED?TRUE:FALSE;
+						gbInternetUseProxy=IsDlgButtonChecked(w,CK_USE_PROXY)==BST_CHECKED?TRUE:FALSE;
+						gbSessionLock=IsDlgButtonChecked(w,CK_LOCK)==BST_CHECKED?TRUE:FALSE;
+						GetDlgItemText(w,TB_PROXY_URL,gszProxyURL,sizeof(gszProxyURL));
+						GetDlgItemText(w,TB_PROXY_USER,gszProxyUser,sizeof(gszProxyUser));
+						GetDlgItemText(w,TB_PROXY_PWD,gszProxyPwd,sizeof(gszProxyPwd));
+						giLanguage=SendMessage(GetDlgItem(w,CB_LANGUE),CB_GETCURSEL,0,0);
+						if (giLanguage==CB_ERR) giLanguage=0;
+						SetLanguage();
+						// ISSUE#309
+						giMasterPwdExpiration=GetDlgItemInt(w,TB_MASTER_PWD_EXPIRATION,&bTranslated,FALSE);
+						SaveConfigHeader();
+						PropSheet_UnChanged(gwPropertySheet,w);
+					}
 					break;
 			}
 			break;
@@ -1304,6 +1316,20 @@ int GetConfigHeader()
 	gy4=GetPrivateProfileInt("swSSO","y4",-1,gszCfgFile);
 	gcx4=GetPrivateProfileInt("swSSO","cx4",-1,gszCfgFile);
 	gcy4=GetPrivateProfileInt("swSSO","cy4",-1,gszCfgFile);
+
+	giMasterPwdExpiration=GetPrivateProfileInt("swSSO","MasterPwdExpiration",-1,gszCfgFile);
+	if (giMasterPwdExpiration==-1) // non défini
+	{
+		if (giMasterPwdMaxExpiration==-1) // pas de policy définie
+			giMasterPwdExpiration=5;
+		else // on applique la policy définie
+			giMasterPwdExpiration=giMasterPwdMaxExpiration;
+	}
+	else // défini par l'utilisateur, on borne à la valeur max de la policy, si définie
+	{
+		if (giMasterPwdMaxExpiration!=-1 && giMasterPwdExpiration>giMasterPwdMaxExpiration) giMasterPwdExpiration=giMasterPwdMaxExpiration;
+	}
+	
 	// REMARQUE : la config proxy est lue plus loin dans le démarrage du main, sinon la clé n'est pas disponible
 	//            pour déchiffrer le mot de passe proxy !
 	rc=0;
@@ -1494,6 +1520,9 @@ int SaveConfigHeader()
 	WritePrivateProfileString("swSSO","ShowLaunchAppWithoutCtrl",gbShowLaunchAppWithoutCtrl?"YES":"NO",gszCfgFile);
 	sprintf_s(szItem,sizeof(szItem),"%d",giLanguage);
 	WritePrivateProfileString("swSSO","Language",szItem,gszCfgFile);
+	// ISSUE#309
+	sprintf_s(szItem,sizeof(szItem),"%d",giMasterPwdExpiration);
+	WritePrivateProfileString("swSSO","MasterPwdExpiration",szItem,gszCfgFile);
 	// ISSUE#164
 	StoreIniEncryptedHash(); 
 	rc=0;

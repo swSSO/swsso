@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="113";	// 101 = 1.01
-const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1141";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 
@@ -142,6 +142,8 @@ HBRUSH ghRedBrush=NULL;
 int giNbTranscryptError=0;
 
 BYTE gAESKeyDataPart4[2][AES256_KEY_PART_LEN];
+
+time_t gtLastAskPwd=0;
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -1766,6 +1768,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 	int ret=-1;
 	int rc;
 	char szPwd[LEN_PWD+1];
+	time_t tNow;
 
 	if (giBadPwdCount>5) 
 	{
@@ -1842,11 +1845,24 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 			}
 		}
 	}
+
+	// ISSUE#309 : ne redemande pas le mot de passe s'il a été demandé récemment (selon config)
+	if (gtLastAskPwd!=0)
+	{
+		time(&tNow);
+		if (tNow-gtLastAskPwd < giMasterPwdExpiration)
+		{ 
+			TRACE((TRACE_INFO,_F_,"Ne redemande pas le mot de passe")); 
+			ret=0; 
+			goto end; 
+		}
+	}
+
 	rc=DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_PWD),wParent,PwdDialogProc,(LPARAM)bUseDPAPI);
 	gwAskPwd=NULL;
 	if (rc==-2) { ret=-2; goto end; } // ISSUE#147
 	if (rc!=IDOK) goto end;
-	
+	time(&gtLastAskPwd); // ISSUE#309 : mot de passe OK, on mémorise l'heure
 	giBadPwdCount=0;
 	ret=0;
 end:

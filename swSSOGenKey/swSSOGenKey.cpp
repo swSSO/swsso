@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -44,11 +44,11 @@ void main(int argc,char **argv)
 	int iKeyId;
 	HANDLE hf=INVALID_HANDLE_VALUE;
 
-	puts("\nswSSOGenKey (C) 2009 Sylvain Werdefroy");
-	puts("Generation de cle RSA pour l'outil de reinitialisation de mot de passe\n");
+	puts("\nswSSOGenKey (C) 2009-2017 Sylvain Werdefroy");
+	puts("swSSO password recovery -- RSA key generation tool\n");
 	if (argc!=2 || atoi(argv[1])<1 || atoi(argv[1])>9999)
 	{
-		puts("Usage : swssogenkey.exe <keyid (1-9999)>");
+		puts("Usage: swssogenkey.exe <keyid (1-9999)>");
 		goto end;
 	}
 	iKeyId=atoi(argv[1]);
@@ -57,42 +57,42 @@ void main(int argc,char **argv)
 	wsprintf(szPrivateKeyFile,szPrivateKeyFormat,iKeyId);
 	
 	hf=CreateFile(szPrivateKeyFile,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-	if (hf!=INVALID_HANDLE_VALUE) { printf("Erreur : le fichier %s existe deja\n",szPrivateKeyFile); goto end; }
+	if (hf!=INVALID_HANDLE_VALUE) { printf("Error: file %s already exists\n",szPrivateKeyFile); goto end; }
 	CloseHandle(hf);
 
 	hf=CreateFile(szPublicKeyFilex64,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-	if (hf!=INVALID_HANDLE_VALUE) { printf("Erreur : le fichier %s existe deja\n",szPublicKeyFilex86); goto end; }
+	if (hf!=INVALID_HANDLE_VALUE) { printf("Error: file %s already exists\n",szPublicKeyFilex86); goto end; }
 	CloseHandle(hf);
 
 	hf=CreateFile(szPublicKeyFilex86,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-	if (hf!=INVALID_HANDLE_VALUE) { printf("Erreur : le fichier %s existe deja\n",szPublicKeyFilex64); goto end; }
+	if (hf!=INVALID_HANDLE_VALUE) { printf("Error: file %s already exists\n",szPublicKeyFilex64); goto end; }
 	CloseHandle(hf);
 
 	if (swCryptInit()!=0) goto end;
-	printf("Veuillez patienter pendant la generation de la cle RSA 2048 (id:%04d)\n",iKeyId);
+	printf("RSA 2048 bits key generation (id:%04d). Please wait...\n",iKeyId);
 	
 	if (!CryptGenKey(ghProv,CALG_RSA_KEYX,0x08000000 | CRYPT_EXPORTABLE,&hRSAKey))
 	{
-		printf("Erreur lors de la generation de la cle (CryptGenKey()=0x%08lx)\n",GetLastError());
+		printf("Error: CryptGenKey()=0x%08lx\n",GetLastError());
 		goto end;
 	}
-	puts("Generation de la cle terminee.");
+	puts("Key generation done.");
 	*szPassword=0;
 	while (strlen(szPassword)<10)
 	{
-		puts("Veuillez saisir le mot de passe qui protegera la cle (10 caractes min.) : ");
+		puts("Please enter a strong password to protect the key (minimum length:10) : ");
 		if (gets_s(szPassword,sizeof(szPassword))==NULL) goto end;
 	}
 
 	if (swCryptExportKey(hRSAKey,iKeyId,szPassword,szPublicKeyFilex86,szPublicKeyFilex64,szPrivateKeyFile)!=0) 
 	{
-		printf("Une erreur est survenue, la cle n'a pas pu être exportee.\n");
+		printf("Error: swCryptExportKey()=0x%08lx\n",GetLastError());
 		goto end;
 	}	
-	puts("Export de la cle termine.");
-	printf("-> Fichier cle publique x86 : %s\n",szPublicKeyFilex86);
-	printf("-> Fichier cle publique x64 : %s\n",szPublicKeyFilex64);
-	printf("-> Fichier cle privee       : %s\n",szPrivateKeyFile);
+	puts("Key export done.");
+	printf("-> Public key file x86: %s\n",szPublicKeyFilex86);
+	printf("-> Public key file x64: %s\n",szPublicKeyFilex64);
+	printf("-> Private key file:    %s\n",szPrivateKeyFile);
 	
 end:
 	if (hf!=INVALID_HANDLE_VALUE) CloseHandle(hf);

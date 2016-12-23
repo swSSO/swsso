@@ -121,8 +121,10 @@
 #define TB_PROXY_URL                    1089
 #define TX_PROXY_USER                   1090
 #define TX_PROXY_USER2                  1091
+#define TX_PROXY_USER3                  1092
 #define TX_PROXY_PWD                    1093
 #define TB_PROXY_USER                   1094
+#define TX_PROXY_USER4                  1095
 #define TB_PROXY_PWD                    1096
 #define TX_INTERNET                     1101
 #define CK_CHECK_VERSION                1102
@@ -412,6 +414,9 @@
 #define IDS_NOTIFY_TEXT_UPGRADED_BETA   42031
 #define IDS_DEFAULT                     42032
 #define CB_LANGUE                       -19534
+#define IDC_SPIN1                       46004
+#define SPIN_MASTER_PWD_EXPIRATION      46004
+#define TB_MASTER_PWD_EXPIRATION        46005
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -420,7 +425,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        42010
 #define _APS_NEXT_COMMAND_VALUE         44000
-#define _APS_NEXT_CONTROL_VALUE         46003
+#define _APS_NEXT_CONTROL_VALUE         46006
 #define _APS_NEXT_SYMED_VALUE           48000
 #endif
 #endif

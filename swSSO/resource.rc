@@ -493,7 +493,7 @@ BEGIN
     PUSHBUTTON      "&Open",PB_OUVRIR,280,149,50,14
     EDITTEXT        TX_PORTAL,99,122,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT        TX_CONFIGFILE,99,153,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Copyright © 2004-2016 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Copyright © 2004-2017 - Sylvain Werdefroy",-1,47,24,155,10
     LTEXT           "Statistics",TX_STATISTIQUES,7,168,31,10
     LTEXT           "Number of connections:",-1,17,182,77,8
     LTEXT           "0",TX_NBSSO,101,182,230,8
@@ -504,7 +504,7 @@ BEGIN
     LTEXT           "Configuration file:",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,55,262,18
     LTEXT           "License",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.13 (12/11/2016)",TX_ABOUT,47,12,120,8
+    LTEXT           "Version 1.14 BETA 1 (1/1/2017)",TX_ABOUT,47,12,120,8
     LTEXT           "Portal:",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -530,7 +530,7 @@ BEGIN
     CONTROL         "&Internet Explorer",CK_IE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,25,76,8
 END
 
-PSP_INTERNET DIALOGEX 0, 0, 338, 214
+PSP_INTERNET DIALOGEX 0, 0, 339, 229
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Options"
 FONT 8, "Tahoma", 0, 0, 0x0
@@ -539,30 +539,34 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,22,224,13
     CONTROL         "Display the information &message while changing application password",CK_DISPLAY_MSG,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,38,301,8
-    CONTROL         "&Check for updates at start",CK_CHECK_VERSION,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,84,137,13
-    CONTROL         "&including beta versions",CK_CHECK_BETA,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,156,84,137,13
+    LTEXT           "&Language:",TX_PROXY_USER2,17,70,38,8
+    COMBOBOX        CB_LANGUE,57,68,68,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Require ma&ster password after",TX_PROXY_USER3,17,54,100,8
+    EDITTEXT        TB_MASTER_PWD_EXPIRATION,120,52,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",SPIN_MASTER_PWD_EXPIRATION,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,140,51,9,14
+    CONTROL         "&Check for updates at start",CK_CHECK_VERSION,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,99,137,13
+    CONTROL         "&including beta versions",CK_CHECK_BETA,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,156,99,137,13
     CONTROL         "&Get configurations from the server",CK_GET_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,96,309,17
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,111,309,17
     CONTROL         "&Allow configuration uploads on the server",CK_MANUAL_PUT_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,114,310,10
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,129,310,10
     CONTROL         "&Use a proxy to connect to swSSO server",CK_USE_PROXY,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,142,187,10
-    LTEXT           "swSSO server authorizations",TX_INTERNET,7,72,95,8
-    LTEXT           "Proxy settings",TX_PROXY,7,128,49,10
-    LTEXT           "Pro&xy address:",TX_PROXY_URL,17,160,67,8
-    EDITTEXT        TB_PROXY_URL,81,158,248,13,ES_AUTOHSCROLL
-    LTEXT           "&Username:",TX_PROXY_USER,17,178,42,8
-    EDITTEXT        TB_PROXY_USER,81,176,154,13,ES_AUTOHSCROLL
-    LTEXT           "Passw&ord:",TX_PROXY_PWD,17,196,34,8
-    EDITTEXT        TB_PROXY_PWD,81,194,154,13,ES_PASSWORD | ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,157,187,10
+    LTEXT           "swSSO server authorizations",TX_INTERNET,7,87,95,8
+    LTEXT           "Proxy settings",TX_PROXY,7,143,49,10
+    LTEXT           "Pro&xy address:",TX_PROXY_URL,17,175,67,8
+    EDITTEXT        TB_PROXY_URL,81,173,248,13,ES_AUTOHSCROLL
+    LTEXT           "&Username:",TX_PROXY_USER,17,193,42,8
+    EDITTEXT        TB_PROXY_USER,81,191,154,13,ES_AUTOHSCROLL
+    LTEXT           "Passw&ord:",TX_PROXY_PWD,17,211,34,8
+    EDITTEXT        TB_PROXY_PWD,81,209,154,13,ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT           "Miscellaneous",TX_SECURITE,7,10,44,8
     CONTROL         "",IDC_SEP_SECURITE,"Static",SS_ETCHEDHORZ,57,14,257,1
-    CONTROL         "",IDC_SEP_AUTORISATIONS,"Static",SS_ETCHEDHORZ,104,77,210,1
-    CONTROL         "",IDC_SEP_PROXY,"Static",SS_ETCHEDHORZ,59,132,254,1
-    PUSHBUTTON      "&Test proxy settings",PB_TEST,243,175,86,14
-    DEFPUSHBUTTON   "&I feel lucky ;-)",PB_CHANCE,243,193,86,14
-    LTEXT           "&Language:",TX_PROXY_USER2,17,54,38,8
-    COMBOBOX        CB_LANGUE,57,52,68,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_SEP_AUTORISATIONS,"Static",SS_ETCHEDHORZ,104,92,210,1
+    CONTROL         "",IDC_SEP_PROXY,"Static",SS_ETCHEDHORZ,59,147,254,1
+    PUSHBUTTON      "&Test proxy settings",PB_TEST,243,190,86,14
+    DEFPUSHBUTTON   "&I feel lucky ;-)",PB_CHANCE,243,208,86,14
+    LTEXT           "minutes.",TX_PROXY_USER4,153,54,28,8
 END
 
 
@@ -675,6 +679,8 @@ BEGIN
 
     PSP_INTERNET, DIALOG
     BEGIN
+        RIGHTMARGIN, 338
+        BOTTOMMARGIN, 214
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1377,7 +1383,7 @@ BEGIN
     PUSHBUTTON      "&Ouvrir",PB_OUVRIR,280,149,50,14
     EDITTEXT        TX_PORTAL,99,122,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT        TX_CONFIGFILE,99,153,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Copyright © 2004-2016 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Copyright © 2004-2017 - Sylvain Werdefroy",-1,47,24,155,10
     LTEXT           "Statistiques",TX_STATISTIQUES,7,168,41,10
     LTEXT           "Nombre de SSO réalisés :",-1,17,182,82,8
     LTEXT           "0",TX_NBSSO,101,182,230,8
@@ -1388,7 +1394,7 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.13 (11/12/2016)",TX_ABOUT,47,12,120,8
+    LTEXT           "Version 1.14 BETA 1 (01/01/2016)",TX_ABOUT,47,12,120,8
     LTEXT           "Portail :",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -1414,7 +1420,7 @@ BEGIN
     CONTROL         "&Internet Explorer",CK_IE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,25,76,8
 END
 
-PSP_INTERNET DIALOGEX 0, 0, 338, 214
+PSP_INTERNET DIALOGEX 0, 0, 339, 229
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Options"
 FONT 8, "Tahoma", 0, 0, 0x0
@@ -1423,31 +1429,35 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,22,224,13
     CONTROL         "Afficher le &message d'information lors du changement de mot de passe d'une application",CK_DISPLAY_MSG,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,38,301,8
+    LTEXT           "&Ne pas me redemander mon mot de passe pendant",TX_PROXY_USER3,17,53,164,8
+    EDITTEXT        TB_MASTER_PWD_EXPIRATION,184,51,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",SPIN_MASTER_PWD_EXPIRATION,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,204,50,9,14
+    LTEXT           "&Langue :",TX_PROXY_USER2,17,68,28,8
+    COMBOBOX        CB_LANGUE,50,66,80,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "&Vérifier les mises à jour au démarrage",CK_CHECK_VERSION,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,84,137,13
-    CONTROL         "&y compris les versions beta",CK_CHECK_BETA,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,156,84,137,13
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,95,137,13
+    CONTROL         "&y compris les versions beta",CK_CHECK_BETA,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,156,95,137,13
     CONTROL         "&Récupérer les informations de configuration sur le serveur",CK_GET_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,96,309,17
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,107,309,17
     CONTROL         "Sur d&emande, mettre mes informations de configuration à disposition des autres utilisateurs",CK_MANUAL_PUT_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,114,310,10
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,125,310,10
     CONTROL         "&Se connecter au serveur swSSO au travers d'un proxy",CK_USE_PROXY,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,142,187,10
-    LTEXT           "Autorisations d'accès au serveur swSSO",TX_INTERNET,7,72,128,8
-    LTEXT           "Configuration proxy",TX_PROXY,7,128,64,10
-    LTEXT           "Adresse du pro&xy :",TX_PROXY_URL,17,160,67,8
-    EDITTEXT        TB_PROXY_URL,81,158,248,13,ES_AUTOHSCROLL
-    LTEXT           "&Utilisateur :",TX_PROXY_USER,17,178,42,8
-    EDITTEXT        TB_PROXY_USER,81,176,154,13,ES_AUTOHSCROLL
-    LTEXT           "M&ot de passe :",TX_PROXY_PWD,17,196,48,8
-    EDITTEXT        TB_PROXY_PWD,81,194,154,13,ES_PASSWORD | ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,156,187,10
+    LTEXT           "Autorisations d'accès au serveur swSSO",TX_INTERNET,7,83,128,8
+    LTEXT           "Configuration proxy",TX_PROXY,7,142,64,10
+    LTEXT           "Adresse du pro&xy :",TX_PROXY_URL,17,174,67,8
+    EDITTEXT        TB_PROXY_URL,81,172,248,13,ES_AUTOHSCROLL
+    LTEXT           "&Utilisateur :",TX_PROXY_USER,17,192,42,8
+    EDITTEXT        TB_PROXY_USER,81,190,154,13,ES_AUTOHSCROLL
+    LTEXT           "M&ot de passe :",TX_PROXY_PWD,17,210,48,8
+    EDITTEXT        TB_PROXY_PWD,81,208,154,13,ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT           "Divers",TX_SECURITE,7,10,21,8
     CONTROL         "",IDC_SEP_SECURITE,"Static",SS_ETCHEDHORZ,31,14,283,1
-    CONTROL         "",IDC_SEP_AUTORISATIONS,"Static",SS_ETCHEDHORZ,139,76,175,1
-    CONTROL         "",IDC_SEP_PROXY,"Static",SS_ETCHEDHORZ,75,132,238,1
-    PUSHBUTTON      "&Tester la connexion",PB_TEST,243,175,86,14
-    DEFPUSHBUTTON   "&J'ai de la chance ;-)",PB_CHANCE,243,193,86,14
-    LTEXT           "&Langue:",TX_PROXY_USER2,17,54,28,8
-    COMBOBOX        CB_LANGUE,50,52,80,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_SEP_AUTORISATIONS,"Static",SS_ETCHEDHORZ,139,87,175,1
+    CONTROL         "",IDC_SEP_PROXY,"Static",SS_ETCHEDHORZ,75,146,238,1
+    PUSHBUTTON      "&Tester la connexion",PB_TEST,243,189,86,14
+    DEFPUSHBUTTON   "&J'ai de la chance ;-)",PB_CHANCE,243,207,86,14
+    LTEXT           "minutes.",TX_PROXY_USER4,217,53,28,8
 END
 
 IDD_MESSAGEBOX3BLINK DIALOGEX 0, 0, 301, 95
@@ -1527,6 +1537,8 @@ BEGIN
 
     PSP_INTERNET, DIALOG
     BEGIN
+        RIGHTMARGIN, 338
+        BOTTOMMARGIN, 214
     END
 
     IDD_MESSAGEBOX3BLINK, DIALOG
