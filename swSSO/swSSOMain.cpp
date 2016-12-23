@@ -1850,7 +1850,7 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 	if (gtLastAskPwd!=0)
 	{
 		time(&tNow);
-		if (tNow-gtLastAskPwd < giMasterPwdExpiration)
+		if (tNow-gtLastAskPwd < (giMasterPwdExpiration*60))
 		{ 
 			TRACE((TRACE_INFO,_F_,"Ne redemande pas le mot de passe")); 
 			ret=0; 
