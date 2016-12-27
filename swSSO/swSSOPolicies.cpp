@@ -152,6 +152,8 @@ char gszServerAddress2[128+1];					// 1.14 - ISSUE#309 : adresse de failover pou
 char gszWebServiceAddress2[256+1];				// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
 BOOL gbServerHTTPS2=FALSE;						// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
 int  giServerPort2=INTERNET_DEFAULT_HTTP_PORT;	// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
+char gszDomainRegKey[256+1];					// 1.14 - ISSUE#317
+char gszDomainRegValue[128+1];					// 1.14 - ISSUE#317
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -736,6 +738,15 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_WEBSERVICE_WAIT_BEFORE_RETRY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) giRecoveryWebserviceWaitBeforeRetry=(int)dwValue; 
 
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DOMAIN_REG_KEY,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) strcpy_s(gszDomainRegKey,sizeof(gszDomainRegKey),szValue);
+
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DOMAIN_REG_VALUE,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) strcpy_s(gszDomainRegValue,sizeof(gszDomainRegValue),szValue);
 
 		RegCloseKey(hKey);
 	}
@@ -990,6 +1001,8 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailSubject=%s"	,gpszConfigNotFoundMailSubject));
 	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailBody=%s"		,gpszConfigNotFoundMailBody));
 	TRACE((TRACE_INFO,_F_,"giWaitBeforeNewSSO=%d"				,giWaitBeforeNewSSO));
+	TRACE((TRACE_INFO,_F_,"gszDomainRegKey=%s"					,gszDomainRegKey));
+	TRACE((TRACE_INFO,_F_,"gszDomainRegValue=%s"				,gszDomainRegValue));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));

@@ -1207,6 +1207,8 @@ int GetConfigHeader()
 	char szPwdProtection[9+1];
 	int rc=-1;
 	BOOL bCheckVersion;
+	char szRegDomainLabel[LEN_DOMAIN+1];
+	int iRegDomainId;
 	
 	// ISSUE#164 vérifie l'intégrité du fichier .ini. Il faut le faire avant de toucher au .ini
 	// Si le fichier .ini n'existe pas (cas de la première utilisation), on ne fait pas évidemment pas la vérification...
@@ -1256,6 +1258,27 @@ int GetConfigHeader()
 	gbParseWindowsOnStart=GetConfigBoolValue("swSSO","parseWindowsOnStart",gbParseWindowsOnStart_DefaultValue,TRUE);// 0.93B4 ISSUE#50 (?)
 	giDomainId=GetPrivateProfileInt("swSSO","domainId",giDomainId_DefaultValue,gszCfgFile); // 0.94B1 : gestion des domaines
 	GetPrivateProfileString("swSSO","domainLabel",gszDomainLabel_DefaultValue,gszDomainLabel,sizeof(gszDomainLabel),gszCfgFile);
+	// ISSUE#317 : si domaine configuré en base de registre et qu'il est différent de celui du .ini, le remplace
+	if (ReadDomainLabel(szRegDomainLabel)==0)
+	{
+		if (_stricmp(szRegDomainLabel,gszDomainLabel)!=0) // libellé de domaine différent, on remplace
+		{
+			TRACE((TRACE_INFO,"Reg domain=%s != ini domain=%s",szRegDomainLabel,gszDomainLabel));
+			// commence déjà par récupérer l'id du domaine sur le serveur -- si échec, on ne changera rien à ce qu'il y a dans le .ini
+			if (GetDomainIdFromLabel(szRegDomainLabel,&iRegDomainId)==0)
+			{
+				char szItem[16+1];
+				TRACE((TRACE_INFO,_F_,"Old domain ini values: %s [%d]",gszDomainLabel,giDomainId));
+				giDomainId=iRegDomainId;
+				strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),szRegDomainLabel);
+				sprintf_s(szItem,sizeof(szItem),"%d",giDomainId);
+				WritePrivateProfileString("swSSO","domainId",szItem,gszCfgFile); 
+				WritePrivateProfileString("swSSO","domainLabel",gszDomainLabel,gszCfgFile);
+				TRACE((TRACE_INFO,_F_,"New domain ini values: %s [%d]",gszDomainLabel,giDomainId));
+			}
+		}
+	}
+
 	gbDisplayChangeAppPwdDialog=GetConfigBoolValue("swSSO","displayChangeAppPwdDialog",gbDisplayChangeAppPwdDialog_DefaultValue,TRUE); // ISSUE#107
 	gbSSOInternetExplorer=GetConfigBoolValue("swSSO","InternetExplorer",gbSSOInternetExplorer_DefaultValue,TRUE); // ISSUE#176
 	gbSSOFirefox=GetConfigBoolValue("swSSO","Firefox",gbSSOFirefox_DefaultValue,TRUE); // ISSUE#176
@@ -5027,149 +5050,6 @@ void InternetCheckVersion()
 end:
 	if (pszResult!=NULL) free(pszResult);
 	TRACE((TRACE_LEAVE,_F_, ""));
-}
-
-//-----------------------------------------------------------------------------
-// GetDomainLabel()
-//-----------------------------------------------------------------------------
-// Renseigne le libellé d'un domaine en fonction de son id (id si non trouvé)
-//-----------------------------------------------------------------------------
-void GetDomainLabel(int iDomainId)
-{
-	TRACE((TRACE_ENTER,_F_, "iDomainId=%d",iDomainId));
-	int i;
-
-	if (iDomainId==-1)
-	{
-		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),"Tous");
-	}
-	else if (iDomainId==1)
-	{
-		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),"Commun");
-	}
-	else
-	{
-		for (i=0;i<giNbDomains;i++)
-		{
-			if (gtabDomains[i].iDomainId==iDomainId) 
-			{
-				strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),gtabDomains[i].szDomainLabel);
-				goto end;
-			}
-		}
-		// non trouvé, on met l'id en libellé
-		sprintf_s(gszDomainLabel,sizeof(gszDomainLabel),"Domaine #%d",iDomainId);
-	}
-end:
-	TRACE((TRACE_LEAVE,_F_, ""));
-}
-
-//-----------------------------------------------------------------------------
-// GetDomains()
-//-----------------------------------------------------------------------------
-// Récupère la liste des domaines disponibles sur le serveur
-// Si bAllDomains = true : retourne tous les domaines
-// Sinon retourne les domaines auxquels la config iConfigId est attachée
-//-----------------------------------------------------------------------------
-// Retour : nb de domaines lus, 0 si aucun (y/c si erreur de lecture)
-//-----------------------------------------------------------------------------
-int GetDomains(BOOL bAllDomains,int iConfigId,T_DOMAIN *pgtabDomain)
-{
-	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=0;
-	char szParams[512+1];
-	char *pszResult=NULL;
-	BSTR bstrXML=NULL;
-	HRESULT hr;
-	IXMLDOMDocument *pDoc=NULL;
-	IXMLDOMNode		*pRoot=NULL;
-	IXMLDOMNode		*pNode=NULL;
-	IXMLDOMNode		*pChildApp=NULL;
-	IXMLDOMNode		*pChildElement=NULL;
-	IXMLDOMNode		*pNextChildApp=NULL;
-	IXMLDOMNode		*pNextChildElement=NULL;
-	VARIANT_BOOL	vbXMLLoaded=VARIANT_FALSE;
-	DWORD dwStatusCode;
-	BSTR bstrNodeName=NULL;
-	char tmp[10];
-
-	// requete le serveur pour obtenir la liste des domaines
-	if (bAllDomains)
-	{
-		strcpy_s(szParams,sizeof(szParams),"?action=getdomains");
-	}
-	else
-	{
-		sprintf_s(szParams,sizeof(szParams),"?action=getconfigdomains&configId=%d",iConfigId);
-	}
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
-						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
-						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode);
-	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
-	bstrXML=GetBSTRFromSZ(pszResult);
-	if (bstrXML==NULL) goto end;
-
-	// analyse le contenu XML retourné
-	hr = CoCreateInstance(CLSID_DOMDocument30, NULL, CLSCTX_INPROC_SERVER, IID_IXMLDOMDocument,(void**)&pDoc);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(IID_IXMLDOMDocument)=0x%08lx",hr)); goto end; }
-	hr = pDoc->loadXML(bstrXML,&vbXMLLoaded);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML()=0x%08lx",hr)); goto end; }
-	if (vbXMLLoaded==VARIANT_FALSE) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML() returned FALSE")); goto end; }
-	hr = pDoc->QueryInterface(IID_IXMLDOMNode, (void **)&pRoot);
-	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"pXMLDoc->QueryInterface(IID_IXMLDOMNode)=0x%08lx",hr)); goto end;	}
-	hr=pRoot->get_firstChild(&pNode);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pRoot->get_firstChild(&pNode)")); goto end; }
-	hr=pNode->get_firstChild(&pChildApp);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildApp)")); goto end; }
-	while (pChildApp!=NULL) 
-	{
-		TRACE((TRACE_DEBUG,_F_,"<domain>"));
-		hr=pChildApp->get_firstChild(&pChildElement);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildElement)")); goto end; }
-		while (pChildElement!=NULL) 
-		{
-			hr=pChildElement->get_nodeName(&bstrNodeName);
-			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeName()")); goto end; }
-			TRACE((TRACE_DEBUG,_F_,"<%S>",bstrNodeName));
-			
-			if (CompareBSTRtoSZ(bstrNodeName,"id")) 
-			{
-				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
-				pgtabDomain[rc].iDomainId=atoi(tmp);
-			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"label")) 
-			{
-				StoreNodeValue(pgtabDomain[rc].szDomainLabel,sizeof(pgtabDomain[rc].szDomainLabel),pChildElement);
-			}
-			// rechercher ses frères et soeurs
-			pChildElement->get_nextSibling(&pNextChildElement);
-			pChildElement->Release();
-			pChildElement=pNextChildElement;
-		} // while(pChild!=NULL)
-		// rechercher ses frères et soeurs
-		pChildApp->get_nextSibling(&pNextChildApp);
-		pChildApp->Release();
-		pChildApp=pNextChildApp;
-		TRACE((TRACE_DEBUG,_F_,"</domain>"));
-		rc++;
-	} // while(pNode!=NULL)
-	pgtabDomain[rc].iDomainId=-1;
-
-#ifdef TRACES_ACTIVEES
-	int trace_i;
-	for (trace_i=0;trace_i<rc-1;trace_i++)
-	{
-		TRACE((TRACE_INFO,_F_,"Domaine %d : id=%d label=%s",trace_i,pgtabDomain[trace_i].iDomainId,pgtabDomain[trace_i].szDomainLabel));
-	}
-#endif
-end:
-	if (pszResult!=NULL) free(pszResult);
-	if (bstrXML!=NULL) SysFreeString(bstrXML);
-	if (bstrNodeName!=NULL) SysFreeString(bstrNodeName);
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
 }
 
 //-----------------------------------------------------------------------------

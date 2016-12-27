@@ -238,6 +238,7 @@
     <ClCompile Include="swSSOChrome.cpp" />
     <ClCompile Include="swSSOConfig.cpp" />
     <ClCompile Include="swSSOCrypt.cpp" />
+    <ClCompile Include="swSSODomains.cpp" />
     <ClCompile Include="swSSOFirefox.cpp" />
     <ClCompile Include="swSSOFirefoxTools.cpp" />
     <ClCompile Include="swSSOIETools.cpp" />
@@ -269,6 +270,7 @@
     <ClInclude Include="swSSOChrome.h" />
     <ClInclude Include="swSSOConfig.h" />
     <ClInclude Include="swSSOCrypt.h" />
+    <ClInclude Include="swSSODomains.h" />
     <ClInclude Include="swSSOFirefox.h" />
     <ClInclude Include="swSSOFirefoxTools.h" />
     <ClInclude Include="swSSOIETools.h" />

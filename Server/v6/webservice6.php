@@ -35,7 +35,7 @@ include('util.php');
 //                   Le client 1.05 et les suivants resteront compatibles avec webservice5.php tant
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
 //------------------------------------------------------------------------------
-// VERSION INTERNE : 6.4.2
+// VERSION INTERNE : 6.4.3
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
@@ -903,6 +903,37 @@ else if ($_GET['action']=="renamedomain")
 	if (isset($_GET["debug"])) echo $szRequest;
 	$result=mysql_query($szRequest,$cnx);
 	echo "OK";
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// getdomainid
+// ------------------------------------------------------------
+else if ($_GET['action']=="getdomainid")
+{
+	/*if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	{
+		header("HTTP/1.0 404 Not Found"); return;
+	}*/
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	if (isset($_GET["domainLabel"])) $var_domainLabel=utf8_decode(myaddslashes($_GET['domainLabel']));
+
+	$szRequest="select id from "._TABLE_PREFIX_."domains where label='".$var_domainLabel."'";
+	if (isset($_GET["debug"])) echo $szRequest;
+	$req=mysql_query($szRequest,$cnx);
+	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+
+	header("Content-type: text/xml; charset=UTF-8");
+	if(mysql_num_rows($req)==0) 
+	{
+		echo "NOT FOUND";
+	}
+	else
+	{
+		$ligne=mysql_fetch_row($req);
+		echo $ligne[0];
+	}
 	dbClose($cnx);
 }
 // ------------------------------------------------------------

@@ -222,6 +222,8 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_WEBSERVICE_ADDRESS2				"WebServiceAddress2"
 #define REGVALUE_SERVER_PORT2						"ServerPort2"
 #define REGVALUE_SERVER_HTTPS2						"ServerHTTPS2"
+#define REGVALUE_DOMAIN_REG_KEY						"DomainRegKey"
+#define REGVALUE_DOMAIN_REG_VALUE					"DomainRegValue"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -279,6 +281,8 @@ extern char gszServerAddress2[];			// 1.14 - ISSUE#309 : adresse de failover pou
 extern char gszWebServiceAddress2[];		// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
 extern BOOL gbServerHTTPS2;					// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
 extern int  giServerPort2;					// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
+extern char gszDomainRegKey[];				// 1.14 - ISSUE#317
+extern char gszDomainRegValue[];			// 1.14 - ISSUE#317
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"
