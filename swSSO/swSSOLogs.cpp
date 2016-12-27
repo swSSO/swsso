@@ -182,6 +182,7 @@ int swStat(void)
 	char szHashValue[HASH_LEN*2+1];
 	char *pszResult=NULL;
 	char szTruncatedComputerName[7+1];
+	DWORD dwStatusCode;
 			
 	if (gLastLoginTime.wYear==0) // ISSUE#171
 	{ 
@@ -232,13 +233,14 @@ int swStat(void)
 	}
 	if (giStat & 2) // stat upload
 	{
-		sprintf_s(buf2048,sizeof(buf2048),"%s?action=uploadstats&shausername=%s&logindate=%04d%02d%02d&nconfigs=%d&nsso=%d&nenrolled=%d&computername=%s",
-			gszWebServiceAddress,
+		sprintf_s(buf2048,sizeof(buf2048),"?action=uploadstats&shausername=%s&logindate=%04d%02d%02d&nconfigs=%d&nsso=%d&nenrolled=%d&computername=%s",
 			szHashValue,
 			(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
 			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer,szTruncatedComputerName); 
 		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",buf2048));
-		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,buf2048,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL); // remarque : RAF du résultat
+		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+							  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+							  buf2048,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode); // remarque : RAF du résultat
 	}
 	rc=0;
 end:

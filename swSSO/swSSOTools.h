@@ -37,10 +37,15 @@ char *GetString(UINT uiString);
 BSTR GetBSTRFromSZ(const char *sz);
 char *GetSZFromBSTR(BSTR bstr);
 BOOL CompareBSTRtoSZ(BSTR bstr,const char *sz);
-char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
+char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr)
 				  int iPort,						// [in] port
 				  BOOL bHTTPS,						// [in] TRUE=https, FALSE=http
-				  const char *pszRequest,			// [in] Requete : /contextRoot/webservice.php?param1=...&param2=...
+				  const char *pszAddress,			// [in] adresse du service (/webservice5.php)
+				  const char *pszServer2,			// [in] FQDN du serveur (www.swsso.fr) -- failover
+				  int iPort2,						// [in] port -- failover
+				  BOOL bHTTPS2,						// [in] TRUE=https, FALSE=http -- failover
+				  const char *pszAddress2,			// [in] adresse du service (/webservice5.php) -- failover
+				  const char *pszParams,			// [in] ?param1=...&param2=...
 				  LPCWSTR pwszMethod,				// [in] Méthode : GET | POST | PUT | ...
 				  void *pRequestData,				// [in] Données à envoyer avec la requête (NULL si aucune)
 				  DWORD dwLenRequestData,			// [in] Taille des données à envoyer avec la requête (0 si aucune)

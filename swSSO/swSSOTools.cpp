@@ -147,16 +147,18 @@ end:
 	return rc;
 }
 
+
 // ----------------------------------------------------------------------------------
-// HTTPRequest
+// HTTPRequestOneServer
 // ----------------------------------------------------------------------------------
 // Exécute la requête HTTP passée en paramètre
 // L'appelant doit libérer le resultat !
 // ----------------------------------------------------------------------------------
-char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
+char *HTTPRequestOneServer(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr)
 				  int iPort,						// [in] port
 				  BOOL bHTTPS,						// [in] TRUE=https, FALSE=http
-				  const char *pszRequest,			// [in] Requete : /contextRoot/webservice.php?param1=...&param2=...
+				  const char *pszAddress,			// [in] adresse du service (/webservice5.php)
+				  const char *pszParams,			// [in] ?param1=...&param2=...
 				  LPCWSTR pwszMethod,				// [in] Méthode : GET | POST | PUT | ...
 				  void *pRequestData,				// [in] Données à envoyer avec la requête (NULL si aucune)
 				  DWORD dwLenRequestData,			// [in] Taille des données à envoyer avec la requête (0 si aucune)
@@ -164,10 +166,9 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 				  DWORD dwAutologonSecurityLevel,	// [in] WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW | MEDIUM | HIGH
 				  int timeout,						// [in] timeout
 				  T_PROXYPARAMS *pInProxyParams,	// [in] paramètre proxy ou NULL si pas de proxy
-				  DWORD *pdwStatusCode)				// [out] status http renseigné (l'appelant peut passer NULL s'il veut pas le statut http)
+				  DWORD *pdwStatusCode)				// [out] status http renseigné
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-
 	DWORD dwSize = 0;
     DWORD dwDownloaded = 0;
 	DWORD dwLenResult=0;
@@ -187,6 +188,10 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 	BSTR bstrProxyPwd=NULL;
 	BSTR bstrServerAddress=NULL;
 	BSTR bstrRequest=NULL;
+	char *pszURLWithParams=NULL;
+	DWORD sizeofURLWithParams;
+
+	*pdwStatusCode=418; // valeur par défaut si jamais on sort avant la fin
 
 	// 0.89 : si pas de paramètres proxy reçus, utilise les valeurs globales
 	if (pInProxyParams==NULL)
@@ -216,21 +221,28 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 	if (hSession==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpen(proxy:%s)",pProxyParams->szProxyURL)); goto end; }
     
 	WinHttpSetTimeouts(hSession, timeout*1000, timeout*1000, timeout*1000, timeout*1000); 
-
+	
 	// WinHttpConnect
 	bstrServerAddress=GetBSTRFromSZ(pszServer);
 	if (bstrServerAddress==NULL) goto end;
-	hConnect = WinHttpConnect(hSession,bstrServerAddress,(INTERNET_PORT)iPort, 0); // ISSUE€162 (port configurable)
+	hConnect = WinHttpConnect(hSession,bstrServerAddress,(INTERNET_PORT)iPort, 0); // ISSUE#162 (port configurable)
 	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s) - port : %d",pszServer,iPort)); goto end; }
     
 	// WinHttpOpenRequest
-	bstrRequest=GetBSTRFromSZ(pszRequest);
+	// construit la requête avec les paramètres
+	sizeofURLWithParams=strlen(pszAddress)+strlen(pszParams)+1;
+	pszURLWithParams=(char*)malloc(sizeofURLWithParams);
+	if (pszURLWithParams==NULL)  { TRACE((TRACE_ERROR,_F_,"malloc(%d+%d)",pszAddress,pszParams)); goto end; }
+	strcpy_s(pszURLWithParams,sizeofURLWithParams,pszAddress);
+	strcat_s(pszURLWithParams,sizeofURLWithParams,pszParams);
+
+	bstrRequest=GetBSTRFromSZ(pszURLWithParams);
 	if (bstrRequest==NULL) goto end;
 	dwFlags=WINHTTP_FLAG_ESCAPE_PERCENT;
 	if (bHTTPS) dwFlags|=WINHTTP_FLAG_SECURE;
     hRequest = WinHttpOpenRequest(hConnect,pwszMethod,bstrRequest,NULL, WINHTTP_NO_REFERER,WINHTTP_DEFAULT_ACCEPT_TYPES,dwFlags); // ISSUE#162 (HTTPS possible)
-	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",bHTTPS?"https":"http",pszServer,iPort,pszRequest)); 
-	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(%s %s)",pwszMethod,pszRequest)); goto end; }
+	TRACE((TRACE_INFO,_F_,"WinHttpOpenRequest(%s://%s:%d%s)",bHTTPS?"https":"http",pszServer,iPort,pszURLWithParams)); 
+	if (hRequest==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpOpenRequest(%s %s)",pwszMethod,pszURLWithParams)); goto end; }
 
 	if (bHTTPS && !gbCheckCertificates) // ISSUE#252
 	{
@@ -260,7 +272,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 	if (!brc) 
 	{ 
 		TRACE((TRACE_ERROR,_F_,"WinHttpSendRequest()=%ld",GetLastError())); // ISSUE#275, déplacement de la trace avant le logevent
-		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,(char*)pszServer,(char*)pszRequest,NULL,NULL,0); 
+		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVER_NOT_RESPONDING,(char*)pszServer,(char*)pszURLWithParams,NULL,NULL,0); 
 		goto end; 
 	}
  
@@ -287,11 +299,9 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur
 		dwLenResult+=dwDownloaded;
     } while (dwSize>0);
 
-	if (pdwStatusCode!=NULL)
-	{
-		WinHttpQueryHeaders(hRequest,WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,NULL,pdwStatusCode,&dwStatusCodeSize,NULL);
-		TRACE((TRACE_INFO,_F_,"dwStatusCode=%d",*pdwStatusCode));
-	}
+	WinHttpQueryHeaders(hRequest,WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,NULL,pdwStatusCode,&dwStatusCodeSize,NULL);
+	TRACE((TRACE_INFO,_F_,"dwStatusCode=%d",*pdwStatusCode));
+
 #ifdef TRACES_ACTIVEES	
 	if (dwLenResult>2048)
 	{
@@ -306,12 +316,57 @@ end:
     if (hRequest!=NULL) WinHttpCloseHandle(hRequest);
     if (hConnect!=NULL) WinHttpCloseHandle(hConnect);
     if (hSession!=NULL) WinHttpCloseHandle(hSession);
+	if (pszURLWithParams!=NULL) free(pszURLWithParams);
 	SysFreeString(bstrProxyURL);
 	SysFreeString(bstrProxyUser);
 	SysFreeString(bstrProxyPwd);
 	SysFreeString(bstrServerAddress);
 	SysFreeString(bstrRequest);
 	if (pInProxyParams==NULL && pProxyParams!=NULL) free(pProxyParams); // 1.12B2-TIE4 + ne faire le free que si pas reçu en paramètre ! Corrigé en 1.12B3
+	TRACE((TRACE_LEAVE,_F_, "pszResult=0x%08lx",pszResult));
+	return pszResult;
+}
+
+// ----------------------------------------------------------------------------------
+// HTTPRequest (avec failover si un 2ème serveur est défini)
+// ----------------------------------------------------------------------------------
+// Exécute la requête HTTP passée en paramètre
+// L'appelant doit libérer le resultat !
+// ----------------------------------------------------------------------------------
+char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr)
+				  int iPort,						// [in] port
+				  BOOL bHTTPS,						// [in] TRUE=https, FALSE=http
+				  const char *pszAddress,			// [in] adresse du service (/webservice5.php)
+				  const char *pszServer2,			// [in] FQDN du serveur (www.swsso.fr) -- failover
+				  int iPort2,						// [in] port -- failover
+				  BOOL bHTTPS2,						// [in] TRUE=https, FALSE=http -- failover
+				  const char *pszAddress2,			// [in] adresse du service (/webservice5.php) -- failover
+				  const char *pszParams,			// [in] ?param1=...&param2=...
+				  LPCWSTR pwszMethod,				// [in] Méthode : GET | POST | PUT | ...
+				  void *pRequestData,				// [in] Données à envoyer avec la requête (NULL si aucune)
+				  DWORD dwLenRequestData,			// [in] Taille des données à envoyer avec la requête (0 si aucune)
+				  LPCWSTR pwszHeaders,				// [in] Entêtes à envoyer (NULL si aucune)
+				  DWORD dwAutologonSecurityLevel,	// [in] WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW | MEDIUM | HIGH
+				  int timeout,						// [in] timeout
+				  T_PROXYPARAMS *pInProxyParams,	// [in] paramètre proxy ou NULL si pas de proxy
+				  DWORD *pdwStatusCode)				// [out] status http renseigné
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	char *pszResult=NULL;
+	pszResult=HTTPRequestOneServer(pszServer,iPort,bHTTPS,pszAddress,
+						pszParams,pwszMethod,pRequestData,dwLenRequestData,pwszHeaders,
+						dwAutologonSecurityLevel, timeout,	pInProxyParams,pdwStatusCode);
+	if (*pdwStatusCode!=200 || pszResult==NULL)
+	{
+		if (*pszServer2!=0 && *pszAddress2!=0)
+		{
+			TRACE((TRACE_INFO,_F_, "Trying failover server now"));
+			if (pszResult!=NULL) free(pszResult);
+			pszResult=HTTPRequestOneServer(pszServer2,iPort2,bHTTPS2,pszAddress2,
+						pszParams,pwszMethod,pRequestData,dwLenRequestData,pwszHeaders,
+						dwAutologonSecurityLevel, timeout,	pInProxyParams,pdwStatusCode);
+		}
+	}
 	TRACE((TRACE_LEAVE,_F_, "pszResult=0x%08lx",pszResult));
 	return pszResult;
 }

@@ -148,6 +148,10 @@ char *gpszConfigNotFoundMailBody=NULL;			// 1.08
 int	 giWaitBeforeNewSSO=WAIT_IF_SSO_OK;			// 1.08 - ISSUE#253
 int  giRecoveryWebserviceNbTry=1;				// 1.10 - ISSUE#275
 int  giRecoveryWebserviceWaitBeforeRetry=1000;	// 1.10 - ISSUE#275
+char gszServerAddress2[128+1];					// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
+char gszWebServiceAddress2[256+1];				// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
+BOOL gbServerHTTPS2=FALSE;						// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
+int  giServerPort2=INTERNET_DEFAULT_HTTP_PORT;	// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -193,7 +197,9 @@ void LoadPolicies(void)
 	// les valeurs par défaut pour les DWORD sont initialisées dans la déclaration des variables globales
 	strcpy_s(gszPwdPolicy_Message,sizeof(gszPwdPolicy_Message),GetString(IDS_PASSWORD_POLICY_MESSAGE));
 	strcpy_s(gszServerAddress,sizeof(gszServerAddress),"ws.swsso.fr");
-	strcpy_s(gszWebServiceAddress,sizeof(gszWebServiceAddress),"/webservice5.php"); 
+	strcpy_s(gszWebServiceAddress,sizeof(gszWebServiceAddress),"/webservice5.php");
+	*gszServerAddress2=0;
+	*gszWebServiceAddress2=0;
 	strcpy_s(gszErrorMessageIniFile,sizeof(gszErrorMessageIniFile),GetString(IDS_ERROR_MESSAGE_INI_FILE));
 	strcpy_s(gszErrorServerNotAvailable,sizeof(gszErrorServerNotAvailable),GetString(IDS_CONFIG_PROXY));
 	strcpy_s(gszErrorServerConfigNotFound,sizeof(gszErrorServerConfigNotFound),GetString(IDS_CONFIG_NOT_FOUND));
@@ -452,20 +458,27 @@ void LoadPolicies(void)
 		dwValueType=REG_SZ;
 		dwValueSize=sizeof(szValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SERVER_ADDRESS,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) 
-			strcpy_s(gszServerAddress,sizeof(gszServerAddress),szValue);
+		if (rc==ERROR_SUCCESS) strcpy_s(gszServerAddress,sizeof(gszServerAddress),szValue);
+			
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SERVER_ADDRESS2,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) strcpy_s(gszServerAddress2,sizeof(gszServerAddress2),szValue);
 			
 		dwValueType=REG_SZ;
 		dwValueSize=sizeof(szValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_WEBSERVICE_ADDRESS,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) 
-			strcpy_s(gszWebServiceAddress,sizeof(gszWebServiceAddress),szValue);
+		if (rc==ERROR_SUCCESS) strcpy_s(gszWebServiceAddress,sizeof(gszWebServiceAddress),szValue);
+		
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_WEBSERVICE_ADDRESS2,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) strcpy_s(gszWebServiceAddress2,sizeof(gszWebServiceAddress2),szValue);
 		
 		dwValueType=REG_SZ;
 		dwValueSize=sizeof(szValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_ERROR_MESSAGE_INI_FILE,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) 
-			strcpy_s(gszErrorMessageIniFile,sizeof(gszErrorMessageIniFile),szValue);
+		if (rc==ERROR_SUCCESS) strcpy_s(gszErrorMessageIniFile,sizeof(gszErrorMessageIniFile),szValue);
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_RECOVERY_KEYID,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
@@ -581,8 +594,16 @@ void LoadPolicies(void)
 		if (rc==ERROR_SUCCESS) giServerPort=(int)dwValue; 
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SERVER_PORT2,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giServerPort2=(int)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SERVER_HTTPS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbServerHTTPS=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SERVER_HTTPS2,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbServerHTTPS2=(BOOL)dwValue; 
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_USE_AD_PASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
@@ -924,9 +945,13 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_IdMaxCommonChars=%d"	,giPwdPolicy_IdMaxCommonChars));
 	TRACE((TRACE_INFO,_F_,"ENTERPRISE OPTIONS ---------"));
 	TRACE((TRACE_INFO,_F_,"gszServerAddress=%s"				,gszServerAddress));
-	TRACE((TRACE_INFO,_F_,"gszServerPort=%d"				,giServerPort));
-	TRACE((TRACE_INFO,_F_,"gszServerHTTPS=%d"				,gbServerHTTPS));
-	TRACE((TRACE_INFO,_F_,"gszWebServiceAddress=%s"			,gszWebServiceAddress));
+	TRACE((TRACE_INFO,_F_,"giServerPort=%d"					,giServerPort));
+	TRACE((TRACE_INFO,_F_,"gbServerHTTPS=%d"				,gbServerHTTPS));
+	TRACE((TRACE_INFO,_F_,"gszWebServiceAddress=%s"			,gszWebServiceAddress2));
+	TRACE((TRACE_INFO,_F_,"gszServerAddress2=%s"			,gszServerAddress2));
+	TRACE((TRACE_INFO,_F_,"giServerPort2=%d"				,giServerPort2));
+	TRACE((TRACE_INFO,_F_,"gbServerHTTPS2=%d"				,gbServerHTTPS2));
+	TRACE((TRACE_INFO,_F_,"gszWebServiceAddress2=%s"		,gszWebServiceAddress));
 	TRACE((TRACE_INFO,_F_,"gszErrorMessageIniFile=%s"		,gszErrorMessageIniFile));
 	TRACE((TRACE_INFO,_F_,"giRecoveryKeyId=%04d"			,giRecoveryKeyId));
 	TRACE((TRACE_INFO,_F_,"gbGetAllConfigsAtFirstStart=%d"	,gbGetAllConfigsAtFirstStart));

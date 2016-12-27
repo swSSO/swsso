@@ -3050,14 +3050,15 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	BSTR bstrXML=NULL;
 	//ISSUE#149
 	//char szRequest[4096+1]; // attention, contient la liste des ids (500 configs * 4 octets => 2Ko au moins)
-	char *pszRequest=NULL;
-	int sizeofRequest;
+	char *pszParams=NULL;
+	int sizeofParams;
 	char *pszResult=NULL;
 	char *pszEncodedURL=NULL;
 	char *pszEncodedTitle=NULL;
 	char *pszEncodedIds=NULL;
 	char szType[3+1];
 	char szVersion[3+1];
+	DWORD dwStatusCode;
 	
 	if (strcmp(gcszCurrentBeta,"0000")==0) // pas de beta en cours
 	{
@@ -3076,9 +3077,9 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	pszEncodedIds=HTTPEncodeParam((char*)szIds); if (pszEncodedIds==NULL) goto end;
 
 	// ISSUE#149 : calcul dynamique taille de la requête
-	sizeofRequest=strlen(pszEncodedIds)+4096; // 2 Ko + taille des ids
-	pszRequest=(char*)malloc(sizeofRequest);
-	if (pszRequest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeofRequest)); goto end;};
+	sizeofParams=strlen(pszEncodedIds)+4096; // 2 Ko + taille des ids
+	pszParams=(char*)malloc(sizeofParams);
+	if (pszParams==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeofParams)); goto end;};
 	switch (iType)
 	{
 		case WINSSO : strcpy_s(szType,sizeof(szType),"WIN"); break;
@@ -3090,16 +3091,18 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	}
 
 	//&debug=1
-	sprintf_s(pszRequest,sizeofRequest,"%s?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s",
-			gszWebServiceAddress,
+	sprintf_s(pszParams,sizeofParams,"?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s",
 			pszEncodedTitle,
 			pszEncodedURL,
 			pszEncodedIds,
 			*szDate==0?"20000101000000":szDate,
 			bNew,bMod,bOld,szType,giDomainId,szVersion);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",pszRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,pszRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",pszRequest)); goto end; }
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",pszParams));
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  pszParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode);
+	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",pszParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",pszParams)); goto end; }
 
 	bstrXML=GetBSTRFromSZ(pszResult);
 	if (bstrXML==NULL) goto end;
@@ -3109,7 +3112,7 @@ end:
 	if (pszEncodedTitle!=NULL) free(pszEncodedTitle);
 	if (pszEncodedIds!=NULL) free(pszEncodedIds);
 	if (pszResult!=NULL) free(pszResult);
-	if (pszRequest!=NULL) free(pszRequest);
+	if (pszParams!=NULL) free(pszParams);
 	TRACE((TRACE_LEAVE,_F_, ""));
 	return bstrXML;
 }
@@ -3127,7 +3130,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 
 	char szType[3+1];
 	int rc=-1;
-	char szRequest[2048+1]; // augmenté en 1.02 pour ISSUE#160 (taille champ URL 128 -> 256)
+	char szParams[2048+1]; // augmenté en 1.02 pour ISSUE#160 (taille champ URL 128 -> 256)
 	char *pszResult=NULL;
 	char szId2Type[5+1]="";
 	char szId3Type[5+1]="";
@@ -3145,6 +3148,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 	char *pszDecryptedPwd=NULL;
 	char szWithIdPwd[20+1]="";
 	int iWithIdPwd=0;
+	DWORD dwStatusCode;
 
 	*piNewCategoryId=-1;
 
@@ -3196,8 +3200,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 														localTime.wHour,localTime.wMinute,localTime.wSecond);
 	TRACE((TRACE_DEBUG,_F_,"szLastModified=%s",szLastModified));
 
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%s&pwdGroup=%d&autoLock=%d",
-				gszWebServiceAddress,
+	sprintf_s(szParams,sizeof(szParams),"?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%s&pwdGroup=%d&autoLock=%d",
 				gptActions[iAction].iConfigId,
 				pszEncodedTitle,
 				pszEncodedURL,
@@ -3224,23 +3227,26 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 	if (gbShowMenu_UploadWithIdPwd) 
 	{
 		iWithIdPwd=0;
-		if (*gptActions[iAction].szId1Value!=0) { iWithIdPwd|=CONFIG_WITH_ID1; strcat_s(szRequest,sizeof(szRequest),"&id1Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId1Value); }
-		if (*gptActions[iAction].szId2Value!=0) { iWithIdPwd|=CONFIG_WITH_ID2; strcat_s(szRequest,sizeof(szRequest),"&id2Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId2Value); }
-		if (*gptActions[iAction].szId3Value!=0) { iWithIdPwd|=CONFIG_WITH_ID3; strcat_s(szRequest,sizeof(szRequest),"&id3Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId3Value); }
-		if (*gptActions[iAction].szId4Value!=0) { iWithIdPwd|=CONFIG_WITH_ID4; strcat_s(szRequest,sizeof(szRequest),"&id4Value="); strcat_s(szRequest,sizeof(szRequest),gptActions[iAction].szId4Value); }
+		if (*gptActions[iAction].szId1Value!=0) { iWithIdPwd|=CONFIG_WITH_ID1; strcat_s(szParams,sizeof(szParams),"&id1Value="); strcat_s(szParams,sizeof(szParams),gptActions[iAction].szId1Value); }
+		if (*gptActions[iAction].szId2Value!=0) { iWithIdPwd|=CONFIG_WITH_ID2; strcat_s(szParams,sizeof(szParams),"&id2Value="); strcat_s(szParams,sizeof(szParams),gptActions[iAction].szId2Value); }
+		if (*gptActions[iAction].szId3Value!=0) { iWithIdPwd|=CONFIG_WITH_ID3; strcat_s(szParams,sizeof(szParams),"&id3Value="); strcat_s(szParams,sizeof(szParams),gptActions[iAction].szId3Value); }
+		if (*gptActions[iAction].szId4Value!=0) { iWithIdPwd|=CONFIG_WITH_ID4; strcat_s(szParams,sizeof(szParams),"&id4Value="); strcat_s(szParams,sizeof(szParams),gptActions[iAction].szId4Value); }
 
 		pszDecryptedPwd=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
 		if (pszDecryptedPwd!=NULL)
 		{
-			if (*pszDecryptedPwd!=0) { iWithIdPwd|=CONFIG_WITH_PWD; strcat_s(szRequest,sizeof(szRequest),"&pwdValue="); strcat_s(szRequest,sizeof(szRequest),pszDecryptedPwd); }
+			if (*pszDecryptedPwd!=0) { iWithIdPwd|=CONFIG_WITH_PWD; strcat_s(szParams,sizeof(szParams),"&pwdValue="); strcat_s(szParams,sizeof(szParams),pszDecryptedPwd); }
 		}
 		sprintf_s(szWithIdPwd,sizeof(szWithIdPwd),"&withIdPwd=%d",iWithIdPwd);
-		strcat_s(szRequest,sizeof(szRequest),szWithIdPwd);
+		strcat_s(szParams,sizeof(szParams),szWithIdPwd);
 	}
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
 	
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,5,NULL,NULL); // timeout : 5 secondes
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,5,NULL,&dwStatusCode); // timeout : 5 secondes
+	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 	TRACE((TRACE_INFO,_F_,"Result : %s",pszResult));
 
 	// 0.91 : vérifie que la requete a bien retourné OK, sinon on sort en erreur
@@ -4187,7 +4193,7 @@ int DeleteConfigsNotOnServer(void)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	char szRequest[512+1];
+	char szParams[512+1];
 	char *pszResult=NULL;
 	char *p;
 	int *pitabConfigsOnServer=NULL;
@@ -4195,12 +4201,16 @@ int DeleteConfigsNotOnServer(void)
 	int iConfigId;
 	int i,j,k;
 	char *strtokContext=NULL;
+	DWORD dwStatusCode;
 	
 	// appel webservice
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getdomainconfigs&domainId=%d",gszWebServiceAddress,giDomainId);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	sprintf_s(szParams,sizeof(szParams),"?action=getdomainconfigs&domainId=%d",giDomainId);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode);
+	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 
 	if (pszResult[0]=='N' && pszResult[1]=='O' && pszResult[2]=='N' && pszResult[3]=='E') 
 	{
@@ -4285,15 +4295,19 @@ int DeleteConfigOnServer(int iAction)
 {
 	TRACE((TRACE_ENTER,_F_, "iAction=%d",iAction));
 	int rc=-1;
-	char szRequest[512+1];
+	char szParams[512+1];
 	char *pszResult=NULL;
+	DWORD dwStatusCode;
 
 	if (iAction==-1) goto end;
 	// appel webservice
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deleteconfig&configId=%d",gszWebServiceAddress,gptActions[iAction].iConfigId);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	sprintf_s(szParams,sizeof(szParams),"?action=deleteconfig&configId=%d",gptActions[iAction].iConfigId);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode);
+	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 
 	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
 
@@ -4312,15 +4326,19 @@ int DeleteCategOnServer(int iCategory)
 {
 	TRACE((TRACE_ENTER,_F_, "iCategory=%d",iCategory));
 	int rc=-1;
-	char szRequest[512+1];
+	char szParams[512+1];
 	char *pszResult=NULL;
+	DWORD dwStatusCode;
 
 	if (iCategory==-1) goto end;
 	// appel webservice
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deletecateg&categId=%d",gszWebServiceAddress,gptCategories[iCategory].id);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	sprintf_s(szParams,sizeof(szParams),"?action=deletecateg&categId=%d",gptCategories[iCategory].id);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode);
+	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 
 	if (pszResult[0]=='O' && pszResult[1]=='K') rc=0;
 
@@ -4876,10 +4894,11 @@ int InternetCheckProxyParams(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	char szRequest[255+1];
+	char szParams[255+1];
 	char *pszResult=NULL;
 	HCURSOR hCursorOld=NULL;
 	T_PROXYPARAMS ProxyParams;
+	DWORD dwStatusCode;
 
 	hCursorOld=SetCursor(ghCursorWait);
 	
@@ -4890,10 +4909,13 @@ int InternetCheckProxyParams(HWND w)
 	GetDlgItemText(w,TB_PROXY_PWD ,ProxyParams.szProxyPwd ,LEN_PROXY_PWD);
 
 	// effectue la requête getversion avec ces paramètres
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getversion",gszWebServiceAddress);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,5,&ProxyParams,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	strcpy_s(szParams,sizeof(szParams),"?action=getversion");
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,5,&ProxyParams,&dwStatusCode);
+	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 
 	rc=0;
 end:
@@ -4915,7 +4937,7 @@ end:
 void InternetCheckVersion()
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	char szRequest[255+1];
+	char szParams[255+1];
 	char *pszResult=NULL;
 	char *pReleaseVersion=NULL,*pBetaVersion=NULL;
 	char szMsg[255+1];
@@ -4923,11 +4945,15 @@ void InternetCheckVersion()
 	BOOL bNewVersion=FALSE;
 	BOOL bBeta=FALSE;
 	int iCurrentVersion,iInternetVersion;
+	DWORD dwStatusCode;
 
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=getversion",gszWebServiceAddress);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,3,NULL,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	strcpy_s(szParams,sizeof(szParams),"?action=getversion");
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,3,NULL,&dwStatusCode);
+	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 	
 	TRACE((TRACE_INFO,_F_,"Version sur internet = %s",pszResult));
 	if (strlen(pszResult)!=8) goto end;
@@ -5051,7 +5077,7 @@ int GetDomains(BOOL bAllDomains,int iConfigId,T_DOMAIN *pgtabDomain)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=0;
-	char szRequest[512+1];
+	char szParams[512+1];
 	char *pszResult=NULL;
 	BSTR bstrXML=NULL;
 	HRESULT hr;
@@ -5063,21 +5089,25 @@ int GetDomains(BOOL bAllDomains,int iConfigId,T_DOMAIN *pgtabDomain)
 	IXMLDOMNode		*pNextChildApp=NULL;
 	IXMLDOMNode		*pNextChildElement=NULL;
 	VARIANT_BOOL	vbXMLLoaded=VARIANT_FALSE;
+	DWORD dwStatusCode;
 	BSTR bstrNodeName=NULL;
 	char tmp[10];
 
 	// requete le serveur pour obtenir la liste des domaines
 	if (bAllDomains)
 	{
-		sprintf_s(szRequest,sizeof(szRequest),"%s?action=getdomains",gszWebServiceAddress);
+		strcpy_s(szParams,sizeof(szParams),"?action=getdomains");
 	}
 	else
 	{
-		sprintf_s(szRequest,sizeof(szRequest),"%s?action=getconfigdomains&configId=%d",gszWebServiceAddress,iConfigId);
+		sprintf_s(szParams,sizeof(szParams),"?action=getconfigdomains&configId=%d",iConfigId);
 	}
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode);
+	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 	bstrXML=GetBSTRFromSZ(pszResult);
 	if (bstrXML==NULL) goto end;
 

@@ -5118,17 +5118,21 @@ int UploadDomain(HWND w,int iDomain)
 	int rc=-1;
 	HCURSOR hCursorOld=NULL;
 	hCursorOld=SetCursor(ghCursorWait);
-	char szRequest[512+1];
+	char szParams[512+1];
 	char *pszResult=NULL;
 	BOOL bRename=FALSE;
+	DWORD dwStatusCode;
 
 	if (iDomain==giNbDomains) // c'est un ajout
 	{
 		// ajout dans la base et récupération de l'identifiant du domaine
-		sprintf_s(szRequest,sizeof(szRequest),"%s?action=adddomain&domainLabel=%s",gszWebServiceAddress,gtabDomains[iDomain].szDomainLabel);
-		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
-		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+		sprintf_s(szParams,sizeof(szParams),"?action=adddomain&domainLabel=%s",gtabDomains[iDomain].szDomainLabel);
+		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+							  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+							  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode);
+		if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 
 		// lecture du domainId généré en base de données et remplissage du champ iDomainId
 		if (pszResult[0]!='O' || pszResult[1]!='K') { TRACE((TRACE_ERROR,_F_,"Result=%s",pszResult)); goto end; }
@@ -5139,10 +5143,13 @@ int UploadDomain(HWND w,int iDomain)
 	{
 		bRename=TRUE;
 		// renommage du domaine
-		sprintf_s(szRequest,sizeof(szRequest),"%s?action=renamedomain&domainId=%d&domainLabel=%s",gszWebServiceAddress,gtabDomains[iDomain].iDomainId,gtabDomains[iDomain].szDomainLabel);
-		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
-		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+		sprintf_s(szParams,sizeof(szParams),"?action=renamedomain&domainId=%d&domainLabel=%s",gtabDomains[iDomain].iDomainId,gtabDomains[iDomain].szDomainLabel);
+		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+							  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+							  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode);
+		if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 		if (pszResult[0]!='O' || pszResult[1]!='K') { TRACE((TRACE_ERROR,_F_,"Result=%s",pszResult)); goto end; }
 	}
 	rc=0;
@@ -5201,10 +5208,11 @@ void DeleteDomain(HWND w)
 	TRACE((TRACE_ENTER,_F_, ""));
 	HTREEITEM hItem;
 	int iDomain;
-	char szRequest[512+1];
+	char szParams[512+1];
 	char *pszResult=NULL;
 	char szMsg[500];
 	HCURSOR hCursorOld=NULL;
+	DWORD dwStatusCode;
 
 	hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
 	iDomain=TVItemGetLParam(w,hItem);
@@ -5216,10 +5224,13 @@ void DeleteDomain(HWND w)
 	hCursorOld=SetCursor(ghCursorWait);
 
 	// appel webservice
-	sprintf_s(szRequest,sizeof(szRequest),"%s?action=deletedomain&domainId=%d",gszWebServiceAddress,gtabDomains[iDomain].iDomainId);
-	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szRequest));
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,szRequest,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,NULL);
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szRequest)); goto end; }
+	sprintf_s(szParams,sizeof(szParams),"?action=deletedomain&domainId=%d",gtabDomains[iDomain].iDomainId);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode);
+	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 	if (pszResult[0]=='O' && pszResult[1]=='K')
 	{
 		giNbDomains=GetDomains(TRUE,0,gtabDomains);

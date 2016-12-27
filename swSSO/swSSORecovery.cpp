@@ -837,10 +837,9 @@ int RecoveryWebservice(void)
 	bHTTPRequestOK=FALSE;
 	while (bRetry)
 	{
-		pszResult=HTTPRequest(gszRecoveryWebserviceServer,
-							  giRecoveryWebservicePort,
-							  gbRecoveryWebserviceHTTPS,
-							  gszRecoveryWebserviceURL,
+		pszResult=HTTPRequest(gszRecoveryWebserviceServer,giRecoveryWebservicePort,gbRecoveryWebserviceHTTPS,gszRecoveryWebserviceURL,
+							  "",0,FALSE,"", // pas de failover pour le webservice de recouvrement pour l'instant
+							  "", // pas de paramètres en GET							  
 							  L"POST",
 							  szData,
 							  strlen(szData),

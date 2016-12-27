@@ -218,6 +218,10 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_CONFIG_NOT_FOUND_MAILSUBJECT		"ConfigNotFoundMailSubject"
 #define REGVALUE_CONFIG_NOT_FOUND_MAILBODY			"ConfigNotFoundMailBody"
 #define REGVALUE_WAIT_BEFORE_NEW_SSO				"WaitBeforeNewSSO"
+#define REGVALUE_SERVER_ADDRESS2					"ServerAddress2"
+#define REGVALUE_WEBSERVICE_ADDRESS2				"WebServiceAddress2"
+#define REGVALUE_SERVER_PORT2						"ServerPort2"
+#define REGVALUE_SERVER_HTTPS2						"ServerHTTPS2"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -271,6 +275,10 @@ extern char *gpszConfigNotFoundMailBody;	// 1.08
 extern int	giWaitBeforeNewSSO;				// 1.08 - ISSUE#253
 extern int  giRecoveryWebserviceNbTry;		// 1.10 - ISSUE#275
 extern int  giRecoveryWebserviceWaitBeforeRetry;	// 1.10 - ISSUE#275
+extern char gszServerAddress2[];			// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
+extern char gszWebServiceAddress2[];		// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
+extern BOOL gbServerHTTPS2;					// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
+extern int  giServerPort2;					// 1.14 - ISSUE#309 : adresse de failover pour le web service de configuration
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"
