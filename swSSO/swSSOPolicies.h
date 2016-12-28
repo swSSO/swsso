@@ -33,6 +33,7 @@
 
 //-----------------------------------------------------------------------------
 #define REGKEY_GLOBAL_POLICY "SOFTWARE\\swSSO\\GlobalPolicy"
+#define REGKEY_DOMAIN_POLICY "SOFTWARE\\swSSO\\DomainPolicy\\%s"
 #define REGKEY_GLOBAL_POLICY_ADMIN "SOFTWARE\\swSSOAdmin\\GlobalPolicy"
 //-----------------------------------------------------------------------------
 #define REGVALUE_ENABLEOPTION_PORTAL				"SavePortal"
@@ -340,6 +341,7 @@ extern char gszPastePwd_Text[];
 
 // FONCTIONS PUBLIQUES
 void LoadPolicies(void);
+void LoadGlobalOrDomainPolicies(char *pcszDomain);
 BOOL IsPasswordPolicyCompliant(const char *szPwd);
 
 //-----------------------------------------------------------------------------

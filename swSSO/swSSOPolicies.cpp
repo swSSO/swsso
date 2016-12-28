@@ -218,183 +218,7 @@ void LoadPolicies(void)
 	//--------------------------------------------------------------
 	// GLOBAL POLICY
 	//--------------------------------------------------------------
-	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_GLOBAL_POLICY_ADMIN:REGKEY_GLOBAL_POLICY,0,KEY_READ,&hKey);
-	if (rc==ERROR_SUCCESS)
-	{
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_PORTAL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_Portal=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_VIEWINI,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_ViewIni=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_OPENINI,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_OpenIni=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWOPTIONS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_ShowOptions=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SESSIONLOCK,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_SessionLock=(BOOL)dwValue; 
-		
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_CHECKVERSION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_CheckVersion=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_GETCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_GetConfig=(BOOL)dwValue; 
-
-		//dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		//rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_PUTCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		//if (rc==ERROR_SUCCESS) gbEnableOption_PutConfig=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_MANUALPUTCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_ManualPutConfig=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_PROXY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_Proxy=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SAVEPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_SavePassword=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_ShowPassword=(BOOL)dwValue; 
-
-#ifndef _DEBUG
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_PASSWORDCHOICELEVEL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbPasswordChoiceLevel=(BOOL)dwValue;
-		// ISSUE#83 : on interdit les modes où le mot de passe maître n'est pas sécurisé
-		if (gbPasswordChoiceLevel!=PP_WINDOWS && gbPasswordChoiceLevel!=PP_ENCRYPTED) gbPasswordChoiceLevel=PP_ENCRYPTED;
-#endif
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_VIEWAPPCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_ViewAppConfig=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_MODIFYAPPCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_ModifyAppConfig=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_CHANGECATEGIDS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_ChangeCategIds=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_LAUNCHAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_LaunchApp=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_AddApp=(BOOL)dwValue; 
-
-		// ISSUE#84 : ajout de nouvelles options de restriction de l'IHM (items de menu categorie et appli)
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ENABLEDISABLE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_EnableDisable=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_RENAME,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_Rename=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_MOVE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_Move=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_DELETE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_Delete=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDCATEG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_AddCateg=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_DUPLICATE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_Duplicate=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDACCOUNT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_AddAccount=(BOOL)dwValue; 
-
-		// ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDTHISAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_AddThisApp=(BOOL)dwValue; 
-
-		// ISSUE#107
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_CHANGEAPPPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_AppPasswordMenu=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_OLD_PWD_AUTO_FILL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbOldPwdAutoFill=(BOOL)dwValue; 
-
-		// ISSUE#140
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_REACTIVATE_WITHOUT_PWD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbReactivateWithoutPwd=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_UPLOAD_WITH_ID_PWD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_UploadWithIdPwd=(BOOL)dwValue; 
-
-		// ISSUE#164
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_CHECK_INI_INTEGRITY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbCheckIniIntegrity=(BOOL)dwValue; 
-
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_NO_MASTER_PASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbNoMasterPwd=(BOOL)dwValue; 
-
-		// ISSUE#180
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOW_AUTO_LOCK_OPTION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowAutoLockOption=(BOOL)dwValue; 
-
-		// ISSUE#183
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWBROWSERS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_ShowBrowsers=(BOOL)dwValue; 
-
-		// ISSUE#204
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_REFRESH_RIGHTS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_RefreshRights=(BOOL)dwValue; 
-
-		// ISSUE#256
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOW_PASSWORD_GROUP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) giShowPasswordGroup=dwValue; 
-
-		// ISSUE#257
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_QUIT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_Quit=(BOOL)dwValue; 
-
-		// ISSUE#306
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_HELP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbShowMenu_Help=(BOOL)dwValue; 
-
-		// ISSUE#309
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_MASTER_PASSWORD_EXPIRATION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) giMasterPwdMaxExpiration=(int)dwValue; 
-
-		RegCloseKey(hKey);
-	}
+	LoadGlobalOrDomainPolicies(NULL);
 
 	//--------------------------------------------------------------
 	// PASSWORD POLICY
@@ -1033,6 +857,263 @@ suite:;
 		TRACE((TRACE_INFO,_F_,"PwdGroupColor[%d]=0x%08lx",i,gtabPwdGroupColors[i]));
 	}
 
+#endif
+end:
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// LoadGlobalOrDomainPolicies()
+//-----------------------------------------------------------------------------
+// Charge les valeurs de la clé GlobalPolicy ou DomainPolicy en fonction 
+// du paramètre pcszDomain : si NULL --> GlobalPolicy, sinon DomainPolicy
+// Remarque : ne charge pas de DomainPolicy pour un administrateur
+//-----------------------------------------------------------------------------
+void LoadGlobalOrDomainPolicies(char *pcszDomain)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc;
+	HKEY hKey=NULL;
+	char szKey[128+1];
+	DWORD dwValue,dwValueSize,dwValueType;
+
+	if (pcszDomain==NULL) // GlobalPolicy
+	{
+		rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_GLOBAL_POLICY_ADMIN:REGKEY_GLOBAL_POLICY,0,KEY_READ,&hKey);
+	}
+	else
+	{
+		if (gbAdmin) { TRACE((TRACE_INFO,_F_,"No DomainPolicy for admin",gszPastePwd_Text)); goto end; }
+		sprintf_s(szKey,sizeof(szKey),REGKEY_DOMAIN_POLICY,pcszDomain);
+		rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,szKey,0,KEY_READ,&hKey);
+	}
+
+	if (rc==ERROR_SUCCESS)
+	{
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_PORTAL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_Portal=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_VIEWINI,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_ViewIni=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_OPENINI,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_OpenIni=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWOPTIONS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_ShowOptions=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SESSIONLOCK,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_SessionLock=(BOOL)dwValue; 
+		
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_CHECKVERSION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_CheckVersion=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_GETCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_GetConfig=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_MANUALPUTCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_ManualPutConfig=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_PROXY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_Proxy=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SAVEPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_SavePassword=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_ShowPassword=(BOOL)dwValue; 
+
+#ifndef _DEBUG
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_PASSWORDCHOICELEVEL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbPasswordChoiceLevel=(BOOL)dwValue;
+		// ISSUE#83 : on interdit les modes où le mot de passe maître n'est pas sécurisé
+		if (gbPasswordChoiceLevel!=PP_WINDOWS && gbPasswordChoiceLevel!=PP_ENCRYPTED) gbPasswordChoiceLevel=PP_ENCRYPTED;
+#endif
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_VIEWAPPCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_ViewAppConfig=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_MODIFYAPPCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_ModifyAppConfig=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_CHANGECATEGIDS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_ChangeCategIds=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_LAUNCHAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_LaunchApp=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AddApp=(BOOL)dwValue; 
+
+		// ISSUE#84 : ajout de nouvelles options de restriction de l'IHM (items de menu categorie et appli)
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ENABLEDISABLE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_EnableDisable=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_RENAME,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Rename=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_MOVE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Move=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_DELETE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Delete=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDCATEG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AddCateg=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_DUPLICATE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Duplicate=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDACCOUNT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AddAccount=(BOOL)dwValue; 
+
+		// ISSUE#99 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ADDTHISAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AddThisApp=(BOOL)dwValue; 
+
+		// ISSUE#107
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_CHANGEAPPPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AppPasswordMenu=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_OLD_PWD_AUTO_FILL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbOldPwdAutoFill=(BOOL)dwValue; 
+
+		// ISSUE#140
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_REACTIVATE_WITHOUT_PWD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbReactivateWithoutPwd=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_UPLOAD_WITH_ID_PWD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_UploadWithIdPwd=(BOOL)dwValue; 
+
+		// ISSUE#164
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_CHECK_INI_INTEGRITY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbCheckIniIntegrity=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_NO_MASTER_PASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbNoMasterPwd=(BOOL)dwValue; 
+
+		// ISSUE#180
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOW_AUTO_LOCK_OPTION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowAutoLockOption=(BOOL)dwValue; 
+
+		// ISSUE#183
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWBROWSERS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_ShowBrowsers=(BOOL)dwValue; 
+
+		// ISSUE#204
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_REFRESH_RIGHTS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_RefreshRights=(BOOL)dwValue; 
+
+		// ISSUE#256
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOW_PASSWORD_GROUP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giShowPasswordGroup=dwValue; 
+
+		// ISSUE#257
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_QUIT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Quit=(BOOL)dwValue; 
+
+		// ISSUE#306
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_HELP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_Help=(BOOL)dwValue; 
+
+		// ISSUE#309
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_MASTER_PASSWORD_EXPIRATION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giMasterPwdMaxExpiration=(int)dwValue; 
+
+		RegCloseKey(hKey);
+	}
+
+#ifdef TRACES_ACTIVEES
+	if (gbAdmin)
+	{
+		TRACE((TRACE_INFO,_F_,"GLOBAL POLICY (ADMIN) --------------"));
+	}
+	else
+	{
+		if (pcszDomain==NULL)
+		{
+			TRACE((TRACE_INFO,_F_,"GLOBAL POLICY --------------"));
+		}
+		else
+		{
+			TRACE((TRACE_INFO,_F_,"DOMAIN POLICY [%s]--------------",pcszDomain));
+		}
+	}
+	TRACE((TRACE_INFO,_F_,"DOMAIN POLICY --------------"));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_Portal=%d"		,gbEnableOption_Portal));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowOptions=%d"	,gbEnableOption_ShowOptions));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_SessionLock=%d"	,gbEnableOption_SessionLock));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_CheckVersion=%d"	,gbEnableOption_CheckVersion));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_GetConfig=%d"		,gbEnableOption_GetConfig));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_ManualPutConfig=%d",gbEnableOption_ManualPutConfig));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_Proxy=%d"			,gbEnableOption_Proxy));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_SavePassword=%d"	,gbEnableOption_SavePassword));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowPassword=%d"	,gbEnableOption_ShowPassword));
+	TRACE((TRACE_INFO,_F_,"gbPasswordChoiceLevel=%d"		,gbPasswordChoiceLevel));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_ViewAppConfig=%d"	,gbEnableOption_ViewAppConfig));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_ModifyAppConfig=%d",gbEnableOption_ModifyAppConfig));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_ChangeCategIds=%d"	,gbShowMenu_ChangeCategIds));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_LaunchApp=%d"			,gbShowMenu_LaunchApp));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddApp=%d"			,gbShowMenu_AddApp));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_EnableDisable=%d"		,gbShowMenu_EnableDisable));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Rename=%d"			,gbShowMenu_Rename));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Move=%d"				,gbShowMenu_Move));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Delete=%d"			,gbShowMenu_Delete));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddCateg=%d"			,gbShowMenu_AddCateg));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Duplicate=%d"			,gbShowMenu_Duplicate));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddAccount=%d"		,gbShowMenu_AddAccount));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AddThisApp=%d"		,gbShowMenu_AddThisApp));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AppPasswordMenu=%d"	,gbShowMenu_AppPasswordMenu));
+	TRACE((TRACE_INFO,_F_,"gbOldPwdAutoFill=%d"		        ,gbOldPwdAutoFill));
+	TRACE((TRACE_INFO,_F_,"gbReactivateWithoutPwd=%d"		,gbReactivateWithoutPwd));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_UploadWithIdPwd=%d"	,gbShowMenu_UploadWithIdPwd));
+	TRACE((TRACE_INFO,_F_,"gbNoMasterPwd=%d"				,gbNoMasterPwd));
+	TRACE((TRACE_INFO,_F_,"gbCheckIniIntegrity=%d"			,gbCheckIniIntegrity));
+	TRACE((TRACE_INFO,_F_,"gbShowAutoLockOption=%d"			,gbShowAutoLockOption));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowBrowsers=%d"	,gbEnableOption_ShowBrowsers));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_RefreshRights=%d"		,gbShowMenu_RefreshRights));
+	TRACE((TRACE_INFO,_F_,"giShowPasswordGroup=%d"			,giShowPasswordGroup));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Quit=%d"				,gbShowMenu_Quit));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_Help=%d"				,gbShowMenu_Help));
+	TRACE((TRACE_INFO,_F_,"giMasterPwdMaxExpiration=%d"		,giMasterPwdMaxExpiration));
 #endif
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));

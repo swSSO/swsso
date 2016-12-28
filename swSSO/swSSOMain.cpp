@@ -2156,19 +2156,10 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 
 	// lecture du header de la config (=lecture section swSSO)
 	if (GetConfigHeader()!=0) { iError=-2; goto end; }
-/*
-	if (gbAdmin && gbNoMasterPwd && gcszK1[0]!='1') // si défini, demande le mot de passe admin, sinon demande de le définir
-	{
-		if (IsAdminPwdSet())
-		{
-			if (AskAdminPwd()!=0) goto end;
-		}
-		else
-		{
-			if (SetAdminPwd()!=0) goto end;
-		}
-	}
-*/
+
+	// ISSUE#318
+	LoadGlobalOrDomainPolicies(gszDomainLabel);
+
 	if (*gszCfgVersion==0 || giPwdProtection==0) // version <0.50 ou premier lancement... // ISSUE#295
 	{
 		// ISSUE#260 : crée le répertoire qui doit contenir le fichier .ini
