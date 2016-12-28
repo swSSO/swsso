@@ -3067,7 +3067,7 @@ end:
 // Recherche de la configuration d'un SSO sur le serveur
 // ----------------------------------------------------------------------------------
 static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *szIds,
-						  char *szDate, BOOL bNew,BOOL bMod,BOOL bOld,int iType)
+						  char *szDate, BOOL bNew,BOOL bMod,BOOL bOld,int iType,int iAutoPublish)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	BSTR bstrXML=NULL;
@@ -3114,12 +3114,12 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	}
 
 	//&debug=1
-	sprintf_s(pszParams,sizeofParams,"?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s",
+	sprintf_s(pszParams,sizeofParams,"?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s&autoPublish=%d",
 			pszEncodedTitle,
 			pszEncodedURL,
 			pszEncodedIds,
 			*szDate==0?"20000101000000":szDate,
-			bNew,bMod,bOld,szType,giDomainId,szVersion);
+			bNew,bMod,bOld,szType,giDomainId,szVersion,iAutoPublish);
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",pszParams));
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
@@ -4075,7 +4075,7 @@ int GetAllConfigsFromServer(void)
 	BSTR bstrXML=NULL;
 
 	// récupère toutes les configurations sur le serveur
-	bstrXML=LookForConfig("","","","",TRUE,FALSE,FALSE,UNK);
+	bstrXML=LookForConfig("","","","",TRUE,FALSE,FALSE,UNK,FALSE);
 	if (bstrXML==NULL) // la requete n'a pas abouti
 	{
 		// 0.92 / ISSUE#26 : n'affiche pas les messages d'erreur si gbDisplayConfigsNotifications=FALSE
@@ -4093,6 +4093,74 @@ int GetAllConfigsFromServer(void)
 	if (rc==-1)
 	{
 		// 0.92 / ISSUE#26 : n'affiche pas les messages d'erreur si gbDisplayConfigsNotifications=FALSE
+		if (gbDisplayConfigsNotifications) MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
+		goto end;
+	}
+	else if (rc==-2) // ISSUE#149
+	{
+		MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP);
+		goto end;
+	}
+	SaveApplications();
+	SavePortal();
+	SaveLastConfigUpdate();
+	rc=0;
+end:
+	if (bstrXML!=NULL) SysFreeString(bstrXML);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// GetAutoPublishConfigsFromServer()
+// ----------------------------------------------------------------------------------
+// Récupère les configurations marquées autoPublish et correspondant au domaine
+// de rattachement de l'utilisateur, à condition qu'elle n'existe pas déjà côté client.
+// Si elle existe déjà côté client, elle sera mise à jour comme précédemment.
+// ----------------------------------------------------------------------------------
+int GetAutoPublishConfigsFromServer(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+						
+	int rc=-1;
+	BSTR bstrXML=NULL;
+	char *pszIds=NULL;
+	int sizeofIdsList;
+	int i;
+	int pos;
+
+	if (giNbActions==0) // cas du premier lancement
+	{
+		bstrXML=LookForConfig("","","","",FALSE,FALSE,FALSE,UNK,TRUE);
+	}
+	else // il y a déjà des configurations, on fournit la liste au serveur pour ne récupérer que celles qu'on n'a pas déjà
+	{
+		// construction de la liste des configurations connues localement
+		sizeofIdsList=6*giNbActions; // on prend un peu de marge avec 5 octets par Id + 1 pour séparateur 
+		pszIds=(char*)malloc(sizeofIdsList);
+		if (pszIds==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeofIdsList)); goto end; }
+		pos=0;
+		for (i=0;i<giNbActions;i++)
+		{
+			pos+=wsprintf(pszIds+pos,"%d,",gptActions[i].iConfigId);
+		}
+		*(pszIds+pos-1)=0; // supprime la virgule
+		bstrXML=LookForConfig("","",pszIds,"",FALSE,FALSE,FALSE,UNK,TRUE);
+	}
+
+	if (bstrXML==NULL) // la requete n'a pas abouti
+	{
+		if (gbDisplayConfigsNotifications) MessageBox(NULL,gszErrorServerNotAvailable,"swSSO",MB_OK | MB_ICONEXCLAMATION);
+		goto end;
+	}
+	if (CompareBSTRtoSZ(bstrXML,"<app>NOT FOUND</app>")) // rien trouvé
+	{
+		goto end;
+	}
+	// OK, on a le résultat de la requête HTTP : parsing du XML et remplissage des configs
+	rc=AddApplicationFromXML(NULL,bstrXML,TRUE);
+	if (rc==-1)
+	{
 		if (gbDisplayConfigsNotifications) MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 		goto end;
 	}
@@ -4136,7 +4204,7 @@ int GetNewOrModifiedConfigsFromServer(BOOL bForced)
 		// depuis la dernière vérification puis traiter au cas par cas les configs
 		sizeofIdsList=0;
 		bstrXML=LookForConfig("","","",bForced?"20000101000000":gszLastConfigUpdate,
-							gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK);
+							gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK,FALSE);
 	}
 	else
 	{
@@ -4148,7 +4216,7 @@ int GetNewOrModifiedConfigsFromServer(BOOL bForced)
 			// la requête ! (d'autant que le serveur retourne les configs existantes !)
 			if (!gbGetNewConfigsAtStart) { rc=0; goto end; }
 			bstrXML=LookForConfig("","","",bForced?"20000101000000":gszLastConfigUpdate,
-								gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK);
+								gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK,FALSE);
 		}
 		else
 		{
@@ -4163,7 +4231,7 @@ int GetNewOrModifiedConfigsFromServer(BOOL bForced)
 			}
 			*(pszIds+pos-1)=0; // supprime la virgule
 			bstrXML=LookForConfig("","",pszIds,bForced?"20000101000000":gszLastConfigUpdate,
-								gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK);
+								gbGetNewConfigsAtStart,gbGetModifiedConfigsAtStart,gbDisableArchivedConfigsAtStart,UNK,FALSE);
 		}
 	}
 	if (bstrXML==NULL) // la requete n'a pas abouti, pb serveur
@@ -4722,7 +4790,7 @@ int AddApplicationFromCurrentWindow(void)
 	if (gbInternetGetConfig)
 	{
 		// recherche de la configuration sur le serveur
-		bstrXML=LookForConfig(szTitle,pszURL==NULL?"":pszURL,"","",FALSE,FALSE,FALSE,iType);
+		bstrXML=LookForConfig(szTitle,pszURL==NULL?"":pszURL,"","",FALSE,FALSE,FALSE,iType,FALSE);
 		if (bstrXML==NULL) // la requete n'a pas abouti
 		{
 			bServerAvailable=FALSE;

@@ -2489,6 +2489,9 @@ askpwd:
 				SaveConfigHeader();
 			}
 		}
+		// ISSUE#310 : récupère les configurations en autopublish, si demandé
+		GetAutoPublishConfigsFromServer();
+
 		// 0.91 : si demandé, récupère les nouvelles configurations et/ou les configurations modifiées
 		if (gbGetNewConfigsAtStart || gbGetModifiedConfigsAtStart)
 		{

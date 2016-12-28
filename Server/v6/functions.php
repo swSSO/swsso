@@ -29,7 +29,8 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.4.1
+// VERSION INTERNE : 6.5
+// - ajout de la colonne autoPublish
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
@@ -81,7 +82,7 @@ function showAll($active,$domain,$title,$export)
 	{
 		$szRequest="select config.id,categId,categ.label,".$szDomainField.",".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
 				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
-				   ",lastModified,pwdGroup,autoLock,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
+				   ",lastModified,pwdGroup,autoLock,autoPublish,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
 				   ",".$param_id4Value.",".$param_pwdValue.
 				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ".$szDomainTable." where active=".$active." AND categId=categ.id ".
 				   $szWhere." group by id order by id";
@@ -90,7 +91,7 @@ function showAll($active,$domain,$title,$export)
 	{
 		$szRequest="select config.id,categId,categ.label,".$szDomainField.",".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
 				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
-				   ",lastModified,pwdGroup,autoLock".
+				   ",lastModified,pwdGroup,autoLock,autoPublish".
 				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ".$szDomainTable." where active=".$active." AND categId=categ.id ".
 				   $szWhere." group by id order by id";
 	}
@@ -131,6 +132,7 @@ function showAll($active,$domain,$title,$export)
 		echo "<th>lastModified</th>";
 		echo "<th>pwdGroup</th>";
 		echo "<th>autoLock</th>";
+		echo "<th>autoPublish</th>";
 		if (_ENCRYPT_=="TRUE")
 		{
 			echo "<th>withIdPwd</th>";
@@ -152,7 +154,7 @@ function showAll($active,$domain,$title,$export)
 			header('Content-Disposition: attachement; filename="swsso-config-archivees.csv";');
 		$header="Id."._SEPARATOR_."CategId."._SEPARATOR_."CategName."._SEPARATOR_."Domaine"._SEPARATOR_."Nom"._SEPARATOR_."Titre"._SEPARATOR_."URL"._SEPARATOR_."Type"._SEPARATOR_."KBSim?"._SEPARATOR_.
 				"Champ id."._SEPARATOR_."Champ mdp"._SEPARATOR_."Validation"._SEPARATOR_."Saisie clavier"._SEPARATOR_."Nom Id2"._SEPARATOR_."Type Id2"._SEPARATOR_."Nom Id3"._SEPARATOR_."Type Id3"._SEPARATOR_.
-				"Nom Id4"._SEPARATOR_."Type Id4"._SEPARATOR_."FullPathName"._SEPARATOR_."LastModified"._SEPARATOR_."PwdGroup"._SEPARATOR_."AutoLock";
+				"Nom Id4"._SEPARATOR_."Type Id4"._SEPARATOR_."FullPathName"._SEPARATOR_."LastModified"._SEPARATOR_."PwdGroup"._SEPARATOR_."AutoLock"._SEPARATOR_."AutoPublish";
 		if (_ENCRYPT_=="TRUE")
 		{		
 			$header=$header._SEPARATOR_."withIdPwd"._SEPARATOR_."id1Value"._SEPARATOR_."id2Value"._SEPARATOR_."id3Value"._SEPARATOR_."id4Value"._SEPARATOR_."pwdValue";
@@ -218,14 +220,15 @@ function showAll($active,$domain,$title,$export)
 			if ($ligne[20]!="") echo "<td>".utf8_encode($ligne[20])."</td>"; else echo "<td align=center>-</td>";   // lastModified
 			if ($ligne[21]!="") echo "<td>".utf8_encode($ligne[21])."</td>"; else echo "<td align=center>-</td>";   // pwdGroup
 			if ($ligne[22]!="") echo "<td>".utf8_encode($ligne[22])."</td>"; else echo "<td align=center>-</td>";   // autoLock
+			if ($ligne[23]!="") echo "<td>".utf8_encode($ligne[23])."</td>"; else echo "<td align=center>-</td>";   // autoPublish
 			if (_ENCRYPT_=="TRUE")
 			{
-				if ($ligne[23]!="") echo "<td>".utf8_encode($ligne[23])."</td>"; else echo "<td align=center>-</td>";   // withIdPwd
-				if ($ligne[24]!="") echo "<td>".utf8_encode($ligne[24])."</td>"; else echo "<td align=center>-</td>";   // id1Value
-				if ($ligne[25]!="") echo "<td>".utf8_encode($ligne[25])."</td>"; else echo "<td align=center>-</td>";   // id2Value
-				if ($ligne[26]!="") echo "<td>".utf8_encode($ligne[26])."</td>"; else echo "<td align=center>-</td>";   // id3Value
-				if ($ligne[27]!="") echo "<td>".utf8_encode($ligne[27])."</td>"; else echo "<td align=center>-</td>";   // id4Value
-				if ($ligne[28]!="") echo "<td>".utf8_encode($ligne[28])."</td>"; else echo "<td align=center>-</td>";   // pwdValue
+				if ($ligne[24]!="") echo "<td>".utf8_encode($ligne[24])."</td>"; else echo "<td align=center>-</td>";   // withIdPwd
+				if ($ligne[25]!="") echo "<td>".utf8_encode($ligne[25])."</td>"; else echo "<td align=center>-</td>";   // id1Value
+				if ($ligne[26]!="") echo "<td>".utf8_encode($ligne[26])."</td>"; else echo "<td align=center>-</td>";   // id2Value
+				if ($ligne[27]!="") echo "<td>".utf8_encode($ligne[27])."</td>"; else echo "<td align=center>-</td>";   // id3Value
+				if ($ligne[28]!="") echo "<td>".utf8_encode($ligne[28])."</td>"; else echo "<td align=center>-</td>";   // id4Value
+				if ($ligne[29]!="") echo "<td>".utf8_encode($ligne[29])."</td>"; else echo "<td align=center>-</td>";   // pwdValue
 			}
 			echo "</tr>";
 		}

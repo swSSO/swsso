@@ -35,7 +35,9 @@ include('util.php');
 //                   Le client 1.05 et les suivants resteront compatibles avec webservice5.php tant
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
 //------------------------------------------------------------------------------
-// VERSION INTERNE : 6.4.3
+// VERSION INTERNE : 6.5
+// - ajout de getdomainid : fournit l'id d'un domaine à partir de son libellé
+// - ajout de la colonne autoPublish
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
@@ -82,6 +84,7 @@ else if ($_GET['action']=="getconfig")
 	if (isset($_GET["type"]))		$var_type			=utf8_decode(myaddslashes($_GET['type']));  // 0.92B6 : type de la config recherchée (WIN, POP, WEB ou XEB) ou chaine vide sinon
 	if (isset($_GET["version"]))	$var_version		=utf8_decode(myaddslashes($_GET['version'])); // 0.92B8 : version client swsso (format 0928)
 	if (isset($_GET["domainId"]))	$var_domainId		=utf8_decode(myaddslashes($_GET['domainId'])); // 0.94 domaine 
+	if (isset($_GET["autoPublish"])) $var_autoPublish	=utf8_decode(myaddslashes($_GET['autoPublish']));	// 1.14 : idem new mais uniquement les autoPublish
 	
 	if ($var_new=="") $var_new="0";
 	if ($var_mod=="") $var_mod="0";
@@ -111,7 +114,7 @@ else if ($_GET['action']=="getconfig")
 	$columns="typeapp,".$param_title.",".$param_url.",id1Name,pwdName,id2Name,id2Type,id3Name,".
 			"id3Type,id4Name,id4Type,validateName,bKBSim,szKBSim,".
 			$param_szName.",".$param_szFullPathName.",categId,"._TABLE_PREFIX_."categ.label,".
-			_TABLE_PREFIX_."config.id,lastModified,active,"._TABLE_PREFIX_."configs_domains.domainId,pwdGroup,autoLock";
+			_TABLE_PREFIX_."config.id,lastModified,active,"._TABLE_PREFIX_."configs_domains.domainId,pwdGroup,autoLock,autoPublish";
 			
 	if (_ENCRYPT_=="TRUE")
 	{
@@ -119,7 +122,7 @@ else if ($_GET['action']=="getconfig")
 	}
 				
 	if (isset($_GET["debug"])) echo $columns;
-	if (isset($_GET["debug"])) echo "new=".$var_new." mod=".$var_mod." old=".$var_old;
+	if (isset($_GET["debug"])) echo "new=".$var_new." mod=".$var_mod." old=".$var_old." autoPublish=".$var_autoPublish;
 	
 	// si titre vide, c'est une récupération de l'ensemble des configs au démarrage
 	if ($var_title=="")
@@ -133,6 +136,8 @@ else if ($_GET['action']=="getconfig")
 		// var_old=1 -> retourne les configurations qui sont dans la liste fournie
 		//				et dont la date de modification est supérieure à var_modifiedSince 
 		//              et active=0
+		// var_autoPublish=1 -> retourne les configurations qui ne sont pas dans la liste fournie 
+		//              et qui ont le flag autoPublish et active=1 (indépendamment de la date)
 		// REMARQUE : si var_new=1 et liste vide et lastModified=01/01/2000, retourne toutes les configs actives
 		// REMARQUE : les 3 options sont cumulables !
 		
@@ -144,11 +149,15 @@ else if ($_GET['action']=="getconfig")
 				$conditions="AND "._TABLE_PREFIX_."config.id IN (".$var_ids.") ";
 			else if ($var_new=="1" && (var_mod=="0" && $var_old=="0"))
 				$conditions="AND "._TABLE_PREFIX_."config.id NOT IN (".$var_ids.") ";
+			else if ($var_autoPublish=="1")
+				$conditions="AND "._TABLE_PREFIX_."config.id NOT IN (".$var_ids.") ";
 		}
 		if (($var_new=="1" || $var_mod=="1") && $var_old=="0")
 			$conditions=$conditions."AND active=1 ";
 		else if ($var_old=="1" && ($var_new=="0" || $var_mod=="0"))
 			$conditions=$conditions." AND active=0 ";
+		else if ($var_autoPublish=="1")
+			$conditions=$conditions." AND active=1 AND autoPublish=1 ";
 		
 		$conditions=$conditions."AND config.id=configs_domains.configId ";
 		// ISSUE#125  : lorsque GetModifiedConfigsAtStart=1 et GetNewConfigsAtStart=0, seules les configurations modifiées devraient être mises à jour)
@@ -263,12 +272,13 @@ else if ($_GET['action']=="getconfig")
 			echo "<domainId><![CDATA[".$ligne[21]."]]></domainId>\n";
 			echo "<pwdGroup><![CDATA[".$ligne[22]."]]></pwdGroup>\n";
 			echo "<autoLock><![CDATA[".$ligne[23]."]]></autoLock>\n";
-			if (isset($ligne[24])) echo "<withIdPwd><![CDATA[".$ligne[24]."]]></withIdPwd>\n";
-			if (isset($ligne[25])) echo "<id1Value><![CDATA[".$ligne[25]."]]></id1Value>\n";
-			if (isset($ligne[26])) echo "<id2Value><![CDATA[".$ligne[26]."]]></id2Value>\n";
-			if (isset($ligne[27])) echo "<id3Value><![CDATA[".$ligne[27]."]]></id3Value>\n";
-			if (isset($ligne[28])) echo "<id4Value><![CDATA[".$ligne[28]."]]></id4Value>\n";
-			if (isset($ligne[29])) echo "<pwdValue><![CDATA[".$ligne[29]."]]></pwdValue>\n";
+			echo "<autoPublish><![CDATA[".$ligne[24]."]]></autoPublish>\n";
+			if (isset($ligne[25])) echo "<withIdPwd><![CDATA[".$ligne[25]."]]></withIdPwd>\n";
+			if (isset($ligne[26])) echo "<id1Value><![CDATA[".$ligne[26]."]]></id1Value>\n";
+			if (isset($ligne[27])) echo "<id2Value><![CDATA[".$ligne[27]."]]></id2Value>\n";
+			if (isset($ligne[28])) echo "<id3Value><![CDATA[".$ligne[28]."]]></id3Value>\n";
+			if (isset($ligne[29])) echo "<id4Value><![CDATA[".$ligne[29]."]]></id4Value>\n";
+			if (isset($ligne[30])) echo "<pwdValue><![CDATA[".$ligne[30]."]]></pwdValue>\n";
 			echo "</app>\n";
 			$i++;
 		}
@@ -318,18 +328,21 @@ else if ($_GET['action']=="putconfig")
 	$var_pwdValue	="";
 	$var_pwdGroup	="";
 	$var_autoLock	="";
-	if (isset($_GET["withIdPwd"]))	$var_withIdPwd	=utf8_decode(myaddslashes($_GET['withIdPwd'])); // ajouté en 5.3 pour client 1.03
-	if (isset($_GET["id1Value"])) 	$var_id1Value	=utf8_decode(myaddslashes($_GET['id1Value']));  // ajouté en 5.3 pour client 1.03
-	if (isset($_GET["id2Value"])) 	$var_id2Value	=utf8_decode(myaddslashes($_GET['id2Value']));  // ajouté en 5.3 pour client 1.03
-	if (isset($_GET["id3Value"])) 	$var_id3Value	=utf8_decode(myaddslashes($_GET['id3Value']));  // ajouté en 5.3 pour client 1.03
-	if (isset($_GET["id4Value"])) 	$var_id4Value	=utf8_decode(myaddslashes($_GET['id4Value']));  // ajouté en 5.3 pour client 1.03
-	if (isset($_GET["pwdValue"])) 	$var_pwdValue	=utf8_decode(myaddslashes($_GET['pwdValue']));  // ajouté en 5.3 pour client 1.03
-	if (isset($_GET["pwdGroup"])) 	$var_pwdGroup	=utf8_decode(myaddslashes($_GET['pwdGroup']));  // ajouté en 5.3 pour client 1.03
-	if (isset($_GET["autoLock"])) 	$var_autoLock	=utf8_decode(myaddslashes($_GET['autoLock']));  // ajouté en 5.5 pour client 1.04
+	$var_autoPublish	="";
+	if (isset($_GET["withIdPwd"]))		$var_withIdPwd	=utf8_decode(myaddslashes($_GET['withIdPwd'])); // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["id1Value"])) 		$var_id1Value	=utf8_decode(myaddslashes($_GET['id1Value']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["id2Value"])) 		$var_id2Value	=utf8_decode(myaddslashes($_GET['id2Value']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["id3Value"])) 		$var_id3Value	=utf8_decode(myaddslashes($_GET['id3Value']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["id4Value"])) 		$var_id4Value	=utf8_decode(myaddslashes($_GET['id4Value']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["pwdValue"])) 		$var_pwdValue	=utf8_decode(myaddslashes($_GET['pwdValue']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["pwdGroup"])) 		$var_pwdGroup	=utf8_decode(myaddslashes($_GET['pwdGroup']));  // ajouté en 5.3 pour client 1.03
+	if (isset($_GET["autoLock"])) 		$var_autoLock	=utf8_decode(myaddslashes($_GET['autoLock']));  // ajouté en 5.5 pour client 1.04
+	if (isset($_GET["autoPublish"])) 	$var_autoPublish=utf8_decode(myaddslashes($_GET['autoPublish']));  // ajouté en 6.5 pour client 1.14
 	
-	if ($var_pwdGroup=='') $var_pwdGroup=-1;  // pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
-	if ($var_withIdPwd=='') $var_withIdPwd=0; // pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
-	if ($var_autoLock=='') $var_autoLock=1;   // pour compatibilité avec les clients <1.04 qui ne gèrent pas ce paramètre
+	if ($var_pwdGroup=='') $var_pwdGroup=-1;  		// pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
+	if ($var_withIdPwd=='') $var_withIdPwd=0; 		// pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
+	if ($var_autoLock=='') $var_autoLock=1;   		// pour compatibilité avec les clients <1.04 qui ne gèrent pas ce paramètre
+	if ($var_autoPublish=='') $var_autoPublish=0;   // pour compatibilité avec les clients <1.14 qui ne gèrent pas ce paramètre
     
 	// V6 : gestion des domaines multiples, exemple : $var_domainId=1,3,5
 	// Si la configuration existe déjà, supprime toutes les associations dans la table configs_domains
@@ -440,7 +453,8 @@ else if ($_GET['action']=="putconfig")
 									  "lastModified='".$var_lastModified."',".
 									  "pwdGroup=".$var_pwdGroup.",".
 									  "active='1',".
-									  "autoLock=".$var_autoLock.
+									  "autoLock=".$var_autoLock.",".
+									  "autoPublish=".$var_autoPublish.
 									  $szRequestOptions." WHERE ".
 									  _TABLE_PREFIX_."config.id='".$var_configId."'";
 		
@@ -463,12 +477,12 @@ else if ($_GET['action']=="putconfig")
 		
 		$szRequest="insert into "._TABLE_PREFIX_."config (active,typeapp,title,url,id1Name,id1Type,pwdName,validateName,".
 	           "id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,bKBSim,szKBSim,szName,categId,".
-			   "szFullPathName,lastModified,pwdGroup,autoLock".$szRequestOptions1.") ".
+			   "szFullPathName,lastModified,pwdGroup,autoLock,autoPublish".$szRequestOptions1.") ".
 	           "values (1,'".$var_typeapp."',".$param_title.",".$param_url.",'".$var_id1Name."','EDIT','".
 	           $var_pwdName."','".$var_validateName."','".$var_id2Name."','".$var_id2Type."','".
 	           $var_id3Name."','".$var_id3Type."','".$var_id4Name."','".$var_id4Type."','".
 	           $var_bKBSim."','".$var_szKBSim."',".$param_szName.",'".
-	           $var_categId."',".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.",".$var_autoLock.$szRequestOptions2.")";
+	           $var_categId."',".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.",".$var_autoLock.",".$var_autoPublish.$szRequestOptions2.")";
 		if (isset($_GET["debug"])) echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -910,10 +924,10 @@ else if ($_GET['action']=="renamedomain")
 // ------------------------------------------------------------
 else if ($_GET['action']=="getdomainid")
 {
-	/*if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
+	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
 	{
 		header("HTTP/1.0 404 Not Found"); return;
-	}*/
+	}
 	$cnx=dbConnect();
 	if (!$cnx) return;
 	

@@ -67,6 +67,7 @@ int SaveMasterPwdLastChange(void);
 long GetMasterPwdLastChange(void);
 int ChangeApplicationPassword(HWND w,int iAction);
 int GetAllConfigsFromServer(void);
+int GetAutoPublishConfigsFromServer(void);
 int GetNewOrModifiedConfigsFromServer(BOOL bForced);
 int DeleteConfigsNotOnServer(void);
 int DeleteConfigOnServer(int iAction);
