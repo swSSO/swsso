@@ -232,10 +232,12 @@
 #define CK_AD_ID                        40026
 #define IDS_MENU_APPNSITES              40026
 #define IDS_VALUE                       40027
+#define CK_AUTO_PUBLISH                 40027
 #define CK_AD_PWD                       40028
 #define IDS_MENU_RENOMMER               40028
 #define IDS_COMBOIDTYPE1                40029
 #define IDS_COMBOIDTYPE2                40030
+#define IMG_AUTO_PUBLISH                40030
 #define IDS_NON_CLASSE                  40031
 #define IDS_NEW_CATEG                   40032
 #define IDS_MENU_AJOUTER_CATEG          40033
@@ -413,8 +415,9 @@
 #define IDS_NOTIFY_TEXT_UPGRADED        42030
 #define IDS_NOTIFY_TEXT_UPGRADED_BETA   42031
 #define IDS_DEFAULT                     42032
+#define IDS_AUTO_PUBLISH                42033
+#define IDS_TIP_AUTO_PUBLISH            42033
 #define CB_LANGUE                       -19534
-#define IDC_SPIN1                       46004
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005
 #define IDC_STATIC                      -1

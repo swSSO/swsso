@@ -177,7 +177,7 @@ typedef struct
 	int iTip;
 	int idString;
 } T_TIP;
-T_TIP gtip[44];
+T_TIP gtip[46];
 
 typedef struct
 {
@@ -242,6 +242,8 @@ static void InitTooltip(HWND w)
     gtip[41].iTip=TB_PWD_GROUP;     gtip[41].idString=IDS_TIP_PWD_GROUP;
     gtip[42].iTip=CK_AUTO_LOCK;     gtip[42].idString=IDS_TIP_AUTO_LOCK;
     gtip[43].iTip=IMG_AUTO_LOCK;    gtip[43].idString=IDS_TIP_AUTO_LOCK;
+    gtip[44].iTip=CK_AUTO_PUBLISH;  gtip[44].idString=IDS_TIP_AUTO_PUBLISH;
+    gtip[45].iTip=IMG_AUTO_PUBLISH; gtip[45].idString=IDS_TIP_AUTO_PUBLISH;
 	gwTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL,
 							WS_POPUP | TTS_ALWAYSTIP /*| TTS_BALLOON*/,	
 							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
@@ -253,7 +255,7 @@ static void InitTooltip(HWND w)
     ti.uFlags = TTF_SUBCLASS | TTF_IDISHWND ;
     ti.hinst = ghInstance;
 
-	for (i=0;i<44;i++)
+	for (i=0;i<46;i++)
 	{
 		ti.hwnd = w;
 	    ti.lpszText=GetString(gtip[i].idString);
@@ -663,6 +665,7 @@ void HideConfigControls(HWND w)
 		ShowWindow(GetDlgItem(w,TX_ID4_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_PWD_GROUP),SW_HIDE);
 		ShowWindow(GetDlgItem(w,CK_AUTO_LOCK),SW_HIDE);
+		ShowWindow(GetDlgItem(w,CK_AUTO_PUBLISH),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_PWD_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_VALIDATION),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_TYPE),SW_HIDE);
@@ -704,6 +707,7 @@ void DisableConfigControls(HWND w)
 		EnableWindow(GetDlgItem(w,TB_ID4_ID),FALSE);
 		EnableWindow(GetDlgItem(w,TB_PWD_GROUP),FALSE);
 		EnableWindow(GetDlgItem(w,CK_AUTO_LOCK),FALSE);
+		EnableWindow(GetDlgItem(w,CK_AUTO_PUBLISH),FALSE);
 		EnableWindow(GetDlgItem(w,TB_PWD_ID),FALSE);
 		EnableWindow(GetDlgItem(w,TB_VALIDATION),FALSE);
 		EnableWindow(GetDlgItem(w,CB_TYPE),FALSE);
@@ -749,6 +753,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 		SetDlgItemText(w,TB_ID4_ID,"");		EnableWindow(GetDlgItem(w,TB_ID4_ID),FALSE);
 		SetDlgItemText(w,TB_PWD_GROUP,"");	EnableWindow(GetDlgItem(w,TB_PWD_GROUP),FALSE);
 		EnableWindow(GetDlgItem(w,CK_AUTO_LOCK),FALSE);
+		EnableWindow(GetDlgItem(w,CK_AUTO_PUBLISH),FALSE);
 		SetDlgItemText(w,TB_PWD_ID,"");		EnableWindow(GetDlgItem(w,TB_PWD_ID),FALSE);
 		SetDlgItemText(w,TB_VALIDATION,"");	EnableWindow(GetDlgItem(w,TB_VALIDATION),FALSE);
 		SendMessage(GetDlgItem(w,CB_TYPE),CB_SETCURSEL,0,0);		EnableWindow(GetDlgItem(w,CB_TYPE),FALSE);
@@ -795,6 +800,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 				EnableWindow(GetDlgItem(w,TB_ID4_ID),FALSE);
 				EnableWindow(GetDlgItem(w,TB_PWD_GROUP),FALSE);
 				EnableWindow(GetDlgItem(w,CK_AUTO_LOCK),FALSE);
+				EnableWindow(GetDlgItem(w,CK_AUTO_PUBLISH),FALSE);
 				EnableWindow(GetDlgItem(w,CK_KBSIM),FALSE);
 				EnableWindow(GetDlgItem(w,TB_KBSIM),FALSE);
 				EnableWindow(GetDlgItem(w,PB_PARCOURIR),FALSE);
@@ -817,6 +823,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 				EnableWindow(GetDlgItem(w,TB_ID4_ID),FALSE);
 				EnableWindow(GetDlgItem(w,TB_PWD_GROUP),TRUE);
 				EnableWindow(GetDlgItem(w,CK_AUTO_LOCK),TRUE);
+				EnableWindow(GetDlgItem(w,CK_AUTO_PUBLISH),TRUE);
 				break;
 			case WINSSO:
 			case XINSSO:
@@ -836,6 +843,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 				EnableWindow(GetDlgItem(w,TB_ID4_ID),TRUE);   // 0.90B1 : FALSE -> TRUE
 				EnableWindow(GetDlgItem(w,TB_PWD_GROUP),TRUE);
 				EnableWindow(GetDlgItem(w,CK_AUTO_LOCK),TRUE);
+				EnableWindow(GetDlgItem(w,CK_AUTO_PUBLISH),TRUE);
 				break;
 			case WEBSSO:
 			case XEBSSO:
@@ -855,6 +863,7 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 				EnableWindow(GetDlgItem(w,TB_ID4_ID),TRUE);
 				EnableWindow(GetDlgItem(w,TB_PWD_GROUP),TRUE);
 				EnableWindow(GetDlgItem(w,CK_AUTO_LOCK),TRUE);
+				EnableWindow(GetDlgItem(w,CK_AUTO_PUBLISH),TRUE);
 				break;
 		}
 	}
@@ -1250,6 +1259,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView)
 	gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
 	gptActions[giNbActions].bActive=bActive; // 0.93B6 (avant c'était FALSE)
 	gptActions[giNbActions].bAutoLock=TRUE;
+	gptActions[giNbActions].bAutoPublish=TRUE;
 	// gptActions[giNbActions].bConfigOK=FALSE; // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 	gptActions[giNbActions].bConfigSent=FALSE;
 	// gptActions[giNbActions].iDomainId=1;
@@ -2473,6 +2483,7 @@ void ShowApplicationDetails(HWND w,int iAction)
 	SetDlgItemText(w,TB_LANCEMENT,gptActions[iAction].szFullPathName);
 	//EnableControls(w,gptActions[iAction].iType,TRUE);
 	CheckDlgButton(w,CK_AUTO_LOCK,gptActions[iAction].bAutoLock?BST_CHECKED:BST_UNCHECKED);
+	CheckDlgButton(w,CK_AUTO_PUBLISH,gptActions[iAction].bAutoPublish?BST_CHECKED:BST_UNCHECKED);
 	// 0.90 : affichage de l'application en cours de modification dans la barre de titre
 	// 0.92B8 : affichage d'infos techniques dans la barre de titre si SHIFT enfoncée
 	if (GetKeyState(VK_SHIFT) & 0x8000)
@@ -2635,6 +2646,13 @@ void GetApplicationDetails(HWND w,int iAction)
 		TRACE((TRACE_DEBUG,_F_,"Chgt config %s (bAutoLock : %d -> %d)",gptActions[iAction].szApplication,gptActions[iAction].bAutoLock,bTmpChecked));
 		bChanged=TRUE;
 		gptActions[iAction].bAutoLock=bTmpChecked;
+	}
+	bTmpChecked=IsDlgButtonChecked(w,CK_AUTO_PUBLISH)==BST_CHECKED?TRUE:FALSE;
+	if (bTmpChecked!=gptActions[iAction].bAutoPublish) 
+	{
+		TRACE((TRACE_DEBUG,_F_,"Chgt config %s (bAutoPublish : %d -> %d)",gptActions[iAction].szApplication,gptActions[iAction].bAutoPublish,bTmpChecked));
+		bChanged=TRUE;
+		gptActions[iAction].bAutoPublish=bTmpChecked;
 	}
 	GetDlgItemText(w,TB_KBSIM,buf2048,sizeof(buf2048));
 	if (strcmp(buf2048,gptActions[iAction].szKBSim)!=0) 
@@ -3087,6 +3105,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	SendDlgItemMessage(w, IMG_KBSIM, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
 	SendDlgItemMessage(w, IMG_PWD_GROUP, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
 	SendDlgItemMessage(w, IMG_AUTO_LOCK, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
+	SendDlgItemMessage(w, IMG_AUTO_PUBLISH, STM_SETIMAGE, IMAGE_ICON, (LPARAM)ghIconHelp);
 	
 	// Chargement de l'image list
 	TreeView_SetImageList(GetDlgItem(w,TV_APPLICATIONS),ghImageList,TVSIL_STATE);
@@ -3121,6 +3140,9 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	// ISSUE#180
 	ShowWindow(GetDlgItem(w,CK_AUTO_LOCK),gbShowAutoLockOption?SW_SHOW:SW_HIDE);
 	ShowWindow(GetDlgItem(w,IMG_AUTO_LOCK),gbShowAutoLockOption?SW_SHOW:SW_HIDE);
+
+	ShowWindow(GetDlgItem(w,CK_AUTO_PUBLISH),gbAdmin?SW_SHOW:SW_HIDE);
+	ShowWindow(GetDlgItem(w,IMG_AUTO_PUBLISH),gbAdmin?SW_SHOW:SW_HIDE);
 
 	if (gbAdmin) { SetTextBold(w,TX_MODE_ADMIN); ShowWindow(GetDlgItem(w,TX_MODE_ADMIN),SW_SHOW); }
 
@@ -3284,6 +3306,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,TX_ID4_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_PWD_GROUP),SW_HIDE);
 		ShowWindow(GetDlgItem(w,CK_AUTO_LOCK),SW_HIDE);
+		ShowWindow(GetDlgItem(w,CK_AUTO_PUBLISH),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID2_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID3_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_ID4_ID),SW_HIDE);
@@ -3302,6 +3325,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		ShowWindow(GetDlgItem(w,IMG_ID4_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_PWD_GROUP),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_AUTO_LOCK),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_AUTO_PUBLISH),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TX_TYPE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+35+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,CB_TYPE)		,NULL,rect.right*2/5+25+110,rect.bottom*1/3+35-3+yOffset,rect.right*3/5-170,20,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SetWindowPos(GetDlgItem(w,TX_TITRE)		,NULL,rect.right*2/5+25,rect.bottom*1/3+65+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
@@ -3405,6 +3429,11 @@ static void MoveControls(HWND w,HWND wToRefresh)
 		{
 			SetWindowPos(GetDlgItem(w,CK_AUTO_LOCK)	,NULL,rect.right*2/5+25,rect.bottom*1/3+yPosAutoLock+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 			SetWindowPos(GetDlgItem(w,IMG_AUTO_LOCK),NULL,rect.right-30,rect.bottom*1/3+yPosAutoLock-2+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+		}
+		if (gbAdmin) 
+		{
+			SetWindowPos(GetDlgItem(w,CK_AUTO_PUBLISH),NULL,rect.right*2/5+25,rect.bottom*1/3+yPosAutoLock+yOffset+30,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
+			SetWindowPos(GetDlgItem(w,IMG_AUTO_PUBLISH),NULL,rect.right-30,rect.bottom*1/3+yPosAutoLock-2+yOffset+30,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 	}
 	HideConfigControls(w);
@@ -3844,6 +3873,8 @@ int LoadApplications(void)
 
 		gptActions[i].bActive=GetConfigBoolValue(p,"active",FALSE,TRUE);
 		gptActions[i].bAutoLock=GetConfigBoolValue(p,"autoLock",FALSE,TRUE);
+		gptActions[i].bAutoPublish=GetConfigBoolValue(p,"autoPublish",FALSE,TRUE);
+
 		// gptActions[i].bConfigOK=GetConfigBoolValue(p,"configOK",FALSE); // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 		gptActions[i].bConfigSent=GetConfigBoolValue(p,"configSent",FALSE,TRUE);
 		gptActions[i].bKBSim=GetConfigBoolValue(p,"UseKBSim",FALSE,TRUE);
@@ -4085,7 +4116,7 @@ int SaveApplications(void)
 			sprintf_s(szWithIdPwd,sizeof(szWithIdPwd),"%d",gptActions[i].iWithIdPwd);
 		// le plus beau sprintf de ma carrière... en espérant que le buffer soit assez grand ;-(
 		sprintf_s(tmpBuf,sizeof(tmpBuf),
-			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
+			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nautoPublish=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
 			gptActions[i].szApplication,
 			gptActions[i].iConfigId,
 			gptActions[i].iCategoryId,
@@ -4100,6 +4131,7 @@ int SaveApplications(void)
 			szType,
 			gptActions[i].bActive?"YES":"NO",
 			gptActions[i].bAutoLock?"YES":"NO",
+			gptActions[i].bAutoPublish?"YES":"NO",
 			// gptActions[i].bConfigOK?"YES":"NO", // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 			gptActions[i].bConfigSent?"YES":"NO",
 			gptActions[i].bKBSim?"YES":"NO",
@@ -4384,6 +4416,9 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case CK_AUTO_LOCK:
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE);
 					break;
+				case CK_AUTO_PUBLISH:
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE);
+					break;
 				case CK_AD_ID:
 					if (IsDlgButtonChecked(w,CK_AD_ID))
 					{
@@ -4643,6 +4678,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case CK_AD_PWD:
 				case CK_KBSIM:
 				case CK_AUTO_LOCK:
+				case CK_AUTO_PUBLISH:
 				{
 					// Si pas déjà fait, création de la BRUSH pour peinture arrière plan des CHECKBOX...
 					// Comment ça marche : on récupère la couleur du pixel juste à côté de la check box,

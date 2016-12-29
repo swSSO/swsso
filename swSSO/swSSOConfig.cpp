@@ -3223,7 +3223,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 														localTime.wHour,localTime.wMinute,localTime.wSecond);
 	TRACE((TRACE_DEBUG,_F_,"szLastModified=%s",szLastModified));
 
-	sprintf_s(szParams,sizeof(szParams),"?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%s&pwdGroup=%d&autoLock=%d",
+	sprintf_s(szParams,sizeof(szParams),"?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%s&pwdGroup=%d&autoLock=%d&autoPublish=%d",
 				gptActions[iAction].iConfigId,
 				pszEncodedTitle,
 				pszEncodedURL,
@@ -3246,7 +3246,8 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 				szLastModified,
 				pszDomainIds,
 				gptActions[iAction].iPwdGroup,
-				gptActions[iAction].bAutoLock); 
+				gptActions[iAction].bAutoLock,
+				gptActions[iAction].bAutoPublish); 
 	if (gbShowMenu_UploadWithIdPwd) 
 	{
 		iWithIdPwd=0;
@@ -3504,6 +3505,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 						gptActions[iAction].iWaitFor=giWaitBeforeNewSSO;
 						gptActions[iAction].bActive=gbActivateNewConfigs;
 						gptActions[iAction].bAutoLock=TRUE;
+						gptActions[iAction].bAutoPublish=FALSE;
 						gptActions[iAction].bConfigSent=TRUE;
 						gptActions[iAction].bSaved=FALSE; // 0.93B6 ISSUE#55
 						gptActions[iAction].iConfigId=iConfigId;
@@ -3976,6 +3978,19 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					{
 						gptActions[ptiActions[i]].bAutoLock=atoi(tmp);
 						TRACE((TRACE_DEBUG,_F_,"gptActions[%d].bAutoLock=%d",ptiActions[i],gptActions[ptiActions[i]].bAutoLock));
+					}
+				}
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"autoPublish")) 
+			{
+				char tmp[10+1];
+				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
+				if (rc>0) 
+				{
+					for (i=0;i<iReplaceExistingConfig;i++)
+					{
+						gptActions[ptiActions[i]].bAutoPublish=atoi(tmp);
+						TRACE((TRACE_DEBUG,_F_,"gptActions[%d].bAutoLock=%d",ptiActions[i],gptActions[ptiActions[i]].bAutoPublish));
 					}
 				}
 			}
@@ -4580,6 +4595,7 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 	gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
 	gptActions[giNbActions].bActive=TRUE; //0.93B6
 	gptActions[giNbActions].bAutoLock=TRUE;
+	gptActions[giNbActions].bAutoPublish=FALSE;
 	gptActions[giNbActions].bConfigSent=FALSE;
 	gptActions[giNbActions].bSaved=FALSE; // 0.93B6 ISSUE#55
 	// gptActions[giNbActions].iDomainId=1; //  1.00 ISSUE#112

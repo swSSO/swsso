@@ -102,6 +102,7 @@ typedef struct
 	int  iNbEssais;		//
 	BOOL bActive;		// action active
 	BOOL bAutoLock;		// 0.66 : désactivation autorisée ou non (oui par défaut)
+	BOOL bAutoPublish;	// 1.14 : configuration publiée automatiquement	
 	//BOOL bConfigOK;		// FALSE au début, TRUE dès qu'on a détecté qu'un SSO a été fait correctement avec cette config
 	BOOL bConfigSent;	// TRUE si la config a été envoyée au serveur
 	BOOL bKBSim;				// 0.89

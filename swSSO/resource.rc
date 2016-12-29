@@ -197,6 +197,9 @@ BEGIN
     ICON            "",IMG_LOUPE,407,36,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
     CONTROL         "",TV_DOMAINS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,22,33,168,202
     LTEXT           "This application belongs to a password group. Any password change for this username will be applied on all configurations belonging to this group (same highlight color).",TX_INFO_PWD_GROUP,345,92,691,8,NOT WS_VISIBLE
+    CONTROL         "&Publish this configuration automatically",CK_AUTO_PUBLISH,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,27,281,180,8
+    ICON            "",IMG_AUTO_PUBLISH,379,287,21,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
 END
 
 IDD_CHALLENGE DIALOGEX 0, 0, 325, 245
@@ -985,6 +988,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_DEFAULT             "OS language"
+    IDS_TIP_AUTO_PUBLISH    "If checked, this configuration will be automatically downloaded by all users belonging to the domain. You must set GetAutoPublishedConfigsAtStart=1 in EnterpriseOptions."
 END
 
 #endif    // English resources
@@ -1115,6 +1119,9 @@ BEGIN
     ICON            "",IMG_LOUPE,407,36,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
     CONTROL         "",TV_DOMAINS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,22,33,168,202
     LTEXT           "Cette application appartient à un groupement de mot de passe. Le changement de mot de passe de cet identifiant sera également réalisé dans tous vos enregistrements de ce groupe (surlignés de la même couleur).",TX_INFO_PWD_GROUP,345,92,691,8,NOT WS_VISIBLE
+    CONTROL         "&Publier automatiquement cette configuration",CK_AUTO_PUBLISH,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,27,281,180,8
+    ICON            "",IMG_AUTO_PUBLISH,377,286,21,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
 END
 
 IDD_CHALLENGE DIALOG 0, 0, 325, 245
@@ -1865,6 +1872,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_DEFAULT             "Langue du système"
+    IDS_TIP_AUTO_PUBLISH    "Permet de publier automatiquement cette configuration (pensez à configurer la clé GetAutoPublishedConfigsAtStart)"
 END
 
 #endif    // French resources
