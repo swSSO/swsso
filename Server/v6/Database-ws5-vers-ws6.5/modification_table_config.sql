@@ -29,5 +29,5 @@
 --  
 -- ------------------------------------------------------------------------------
 
-ALTER TABLE `config` ADD `autoPublish` tinyint (1) DEFAULT '0'
+ALTER TABLE `config` ADD `autoPublish` tinyint (1) DEFAULT '0';
 ALTER TABLE `config` DROP domainId
