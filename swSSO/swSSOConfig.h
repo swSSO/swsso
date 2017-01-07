@@ -50,7 +50,7 @@ int InitWindowsSSO(void);	// 0.96
 int ChangeMasterPwd(const char *szNewPwd);
 int WindowChangeMasterPwd(BOOL bForced);
 void SavePortal();
-int AddApplicationFromCurrentWindow(void);
+int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage);
 void ReactivateApplicationFromCurrentWindow(void);
 int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds);
 int InternetCheckProxyParams(HWND w);

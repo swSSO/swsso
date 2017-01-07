@@ -87,6 +87,8 @@
 #define REGVALUE_SHOWMENU_HELP						"ShowHelpMenu"
 // ISSUE#309
 #define REGVALUE_MASTER_PASSWORD_EXPIRATION			"MasterPwdExpiration"
+// ISSUE#319
+#define REGVALUE_SHOWMENU_ASKTHISAPP				"ShowAskThisAppMenu "
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -139,6 +141,8 @@ extern BOOL gbShowMenu_Quit;
 extern BOOL gbShowMenu_Help;
 // ISSUE#309
 extern int giMasterPwdMaxExpiration;
+// ISSUE#319
+extern BOOL gbShowMenu_AskThisApp;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
@@ -226,6 +230,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_DOMAIN_REG_KEY						"DomainRegKey"
 #define REGVALUE_DOMAIN_REG_VALUE					"DomainRegValue"
 #define REGVALUE_GET_AUTO_PUBLISHED_CONFIGS_AT_START	"GetAutoPublishedConfigsAtStart"
+#define REGVALUE_ASK_THIS_APP_MESSAGE				"AskThisAppMessage"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -286,6 +291,7 @@ extern int  giServerPort2;					// 1.14 - ISSUE#309 : adresse de failover pour le
 extern char gszDomainRegKey[];				// 1.14 - ISSUE#317
 extern char gszDomainRegValue[];			// 1.14 - ISSUE#317
 extern BOOL gbGetAutoPublishedConfigsAtStart;	// 1.14 - ISSUE#310
+extern char gszAskThisAppMessage[];			// 1.14 - ISSUE#319
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"

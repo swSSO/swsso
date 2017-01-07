@@ -4,7 +4,7 @@
 -- 
 --        SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 -- 
---                 Copyright (C) 2004-2017 - Sylvain WERDEFROY
+--                 Copyright (C) 2004-2013 - Sylvain WERDEFROY
 -- 
 -- 							 http://www.swsso.fr
 --                    
@@ -29,5 +29,4 @@
 --  
 -- ------------------------------------------------------------------------------
 
-ALTER TABLE `config` ADD `autoPublish` tinyint (1) DEFAULT '0'
-ALTER TABLE `config` ADD `autoPublish` tinyint (1) DEFAULT '0'
+insert into `configs_domains` (configId,domainId) select id,domainId from `config`

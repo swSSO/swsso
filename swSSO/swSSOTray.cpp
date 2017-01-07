@@ -77,6 +77,10 @@ static void ShowContextMenu(HWND w)
 	{
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_THIS_APPLI,GetString(IDS_MENU_THIS_APPLI));
 	}
+	if (gbShowMenu_AskThisApp)
+	{
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_ASK_THIS_APP,GetString(IDS_MENU_ASK_THIS_APP));
+	}
 	if (!gbAdmin) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_SSO_NOW,GetString(IDS_MENU_SSO_NOW));
 	if (!gbAdmin && gbShowMenu_AppPasswordMenu && giLastApplicationSSO!=-1) // ISSUE#107
 	{
@@ -228,7 +232,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						else
 							SSOActivate(w);
 					}
-					if (HIBYTE(GetAsyncKeyState(VK_SHIFT))!=0 && HIBYTE(GetAsyncKeyState(VK_CONTROL))!=0) AddApplicationFromCurrentWindow();
+					if (HIBYTE(GetAsyncKeyState(VK_SHIFT))!=0 && HIBYTE(GetAsyncKeyState(VK_CONTROL))!=0) AddApplicationFromCurrentWindow(FALSE);
 					break;
 				case WM_RBUTTONUP:
 					TRACE((TRACE_INFO,_F_, "WM_APP + WM_RBUTTONDOWN"));
@@ -340,7 +344,16 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					// ISSUE#149
 					if (giNbActions>=giMaxConfigs) { MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
-					AddApplicationFromCurrentWindow();
+					AddApplicationFromCurrentWindow(FALSE);
+					break;
+				case TRAY_MENU_ASK_THIS_APP:
+					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_ASK_THIS_APP"));
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
+					{
+						if (AskPwd(NULL,TRUE)!=0) goto end;
+						SSOActivate(w);
+					}
+					AddApplicationFromCurrentWindow(TRUE);
 					break;
 				case TRAY_MENU_SSO_NOW:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_SSO_NOW"));

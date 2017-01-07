@@ -88,6 +88,8 @@ BOOL gbShowMenu_Quit=TRUE;
 BOOL gbShowMenu_Help=FALSE;
 // ISSUE#309
 int giMasterPwdMaxExpiration=-1;	// 1.14 : valeur max pour l'expiration du master password
+// ISSUE#309
+BOOL gbShowMenu_AskThisApp=TRUE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=8;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
@@ -155,6 +157,7 @@ int  giServerPort2=INTERNET_DEFAULT_HTTP_PORT;	// 1.14 - ISSUE#309 : adresse de 
 char gszDomainRegKey[256+1];					// 1.14 - ISSUE#317
 char gszDomainRegValue[128+1];					// 1.14 - ISSUE#317
 BOOL gbGetAutoPublishedConfigsAtStart;			// 1.14 - ISSUE#310
+char gszAskThisAppMessage[1024+1];				// 1.14 - ISSUE#319
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -206,6 +209,7 @@ void LoadPolicies(void)
 	strcpy_s(gszErrorMessageIniFile,sizeof(gszErrorMessageIniFile),GetString(IDS_ERROR_MESSAGE_INI_FILE));
 	strcpy_s(gszErrorServerNotAvailable,sizeof(gszErrorServerNotAvailable),GetString(IDS_CONFIG_PROXY));
 	strcpy_s(gszErrorServerConfigNotFound,sizeof(gszErrorServerConfigNotFound),GetString(IDS_CONFIG_NOT_FOUND));
+	*gszAskThisAppMessage=0;
 	*gszLogFileName=0;
 	*gszWelcomeMessage=0;
 	*gszPastePwd_Text=0;
@@ -577,6 +581,11 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_GET_AUTO_PUBLISHED_CONFIGS_AT_START,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbGetAutoPublishedConfigsAtStart=(BOOL)dwValue; 
 
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ASK_THIS_APP_MESSAGE,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 	strcpy_s(gszAskThisAppMessage,sizeof(gszAskThisAppMessage),szValue);
+		
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -773,6 +782,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_Quit=%d"				,gbShowMenu_Quit));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_Help=%d"				,gbShowMenu_Help));
 	TRACE((TRACE_INFO,_F_,"giMasterPwdMaxExpiration=%d"		,giMasterPwdMaxExpiration));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_AskThisApp=%d"		,gbShowMenu_AskThisApp));
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
@@ -833,6 +843,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gszDomainRegKey=%s"					,gszDomainRegKey));
 	TRACE((TRACE_INFO,_F_,"gszDomainRegValue=%s"				,gszDomainRegValue));
 	TRACE((TRACE_INFO,_F_,"gbGetAutoPublishedConfigsAtStart=%d"	,gbGetAutoPublishedConfigsAtStart));
+	TRACE((TRACE_INFO,_F_,"gszAskThisAppMessage=%s"				,gszAskThisAppMessage));
 
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
@@ -1063,6 +1074,11 @@ void LoadGlobalOrDomainPolicies(char *pcszDomain)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_MASTER_PASSWORD_EXPIRATION,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) giMasterPwdMaxExpiration=(int)dwValue; 
+
+		// ISSUE#319
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_ASKTHISAPP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowMenu_AskThisApp=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}

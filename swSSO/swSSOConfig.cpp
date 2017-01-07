@@ -4686,7 +4686,7 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 // ----------------------------------------------------------------------------------
 // Ajoute l'application actuellement affichée sur le dessus
 // ----------------------------------------------------------------------------------
-int AddApplicationFromCurrentWindow(void)
+int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 						
@@ -4803,6 +4803,27 @@ int AddApplicationFromCurrentWindow(void)
 	}
 	else iType=XINSSO;
 
+	if (bJustDisplayTheMessage) // ISSUE#319
+	{
+		char szSubTitle[256];
+		T_MESSAGEBOX3B_PARAMS params;
+		params.szIcone=IDI_EXCLAMATION;
+		params.iB1String=IDS_FERMER; // fermer
+		params.iB2String=-1; // rien 
+		params.iB3String=-1; // rien
+		params.wParent=w;
+		params.iTitleString=IDS_MESSAGEBOX_TITLE;
+		params.bVCenterSubTitle=TRUE;
+		strcpy_s(szSubTitle,sizeof(szSubTitle),GetString(IDS_MENU_ASK_THIS_APP));
+		params.szSubTitle=szSubTitle;
+		params.szMessage=gszAskThisAppMessage;
+		params.szMailTo=gszConfigNotFoundMailTo;
+		gpszURLBeingAdded=pszURL;
+		gpszTitleBeingAdded=szTitle;
+		MessageBox3B(&params);
+		goto end;
+	}
+
 	if (gbInternetGetConfig)
 	{
 		// recherche de la configuration sur le serveur
@@ -4858,7 +4879,7 @@ int AddApplicationFromCurrentWindow(void)
 				params.wParent=w;
 				params.iTitleString=IDS_MESSAGEBOX_TITLE;
 				params.bVCenterSubTitle=TRUE;
-				strcpy_s(szSubTitle,sizeof(szSubTitle),"Configuration non trouvée");
+				strcpy_s(szSubTitle,sizeof(szSubTitle),GetString(IDS_SUBTITLE_CONFIG_NOT_FOUND));
 				params.szSubTitle=szSubTitle;
 				params.szMessage=gszErrorServerConfigNotFound;
 				params.szMailTo=gszConfigNotFoundMailTo;

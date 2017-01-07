@@ -710,8 +710,14 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					SetDlgItemText(w,IDCANCEL,GetString(pParams->iB3String));
 				else
 					ShowWindow(GetDlgItem(w,IDCANCEL),SW_HIDE);
-				// centre les boutons s'il n'y en a que deux
-				if (pParams->iB3String==-1)
+				// centre le boutons s'il n'y en a qu'un
+				if (pParams->iB2String==-1 && pParams->iB3String==-1)
+				{
+					RECT rect;
+					GetClientRect(w,&rect);
+					SetWindowPos(GetDlgItem(w,PB_B1),NULL,((rect.right-rect.left)/2)-40,rect.bottom-30,0,0,SWP_NOSIZE | SWP_NOZORDER);
+				}
+				else if (pParams->iB3String==-1) // centre les boutons s'il n'y en a que deux
 				{
 					RECT rect;
 					GetClientRect(w,&rect);
