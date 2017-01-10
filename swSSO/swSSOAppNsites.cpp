@@ -146,6 +146,7 @@ static int giSetForegroundTimer=20;
 #define MENU_RENOMMER_DOMAINE	50017
 #define MENU_SUPPRIMER_DOMAINE	50018
 #define MENU_AJOUTER_DOMAINE 50019
+#define MENU_AJOUTER_COFFRE	50020
 
 #define TYPE_APPLICATION	1
 #define TYPE_CATEGORY		2
@@ -1242,7 +1243,7 @@ end:
 //-----------------------------------------------------------------------------
 // Ajout d'une nouvelle application (suite menu clic-droit ajouter)
 //-----------------------------------------------------------------------------
-int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView)
+int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView,BOOL bSafe)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
@@ -1264,6 +1265,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView)
 	gptActions[giNbActions].bConfigSent=FALSE;
 	// gptActions[giNbActions].iDomainId=1;
 	gptActions[giNbActions].iPwdGroup=-1;
+	gptActions[giNbActions].bSafe=bSafe;
 
 	// si le clic-droit est fait sur une catégorie, on ajoute
 	// l'application dans la catégorie sélectionnée, sinon dans non classé
@@ -1872,7 +1874,7 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 	TRACE((TRACE_INFO,_F_,"Duplication application %s (%d)",szAppName,iAction));
 	
 	// création de la nouvelle application
-	NewApplication(w,szAppName,TRUE,!bKeepId); // un giNbActions++ est fait à l'intérieur
+	NewApplication(w,szAppName,TRUE,!bKeepId,FALSE); // un giNbActions++ est fait à l'intérieur
 	// ISSUE#240
 	if (bKeepId) // cas de l'ajout de compte, on demande les infos de login et mdp à renseigner dans le nouveau compte
 	{
@@ -2279,6 +2281,8 @@ static void TVShowContextMenu(HWND w)
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
 		if (gbShowMenu_AddCateg) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COFFRE,GetString(IDS_MENU_AJOUTER_COFFRE));
 	}
 	else // c'est une appli
 	{
@@ -2323,6 +2327,8 @@ static void TVShowContextMenu(HWND w)
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
 		if (gbShowMenu_AddCateg) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COFFRE,GetString(IDS_MENU_AJOUTER_COFFRE));
 	}
 	SetForegroundWindow(w);
 	TrackPopupMenu(hMenu, TPM_TOPALIGN,pt.x, pt.y, 0, w, NULL );
@@ -2511,7 +2517,20 @@ void ShowApplicationDetails(HWND w,int iAction)
 		EnableWindow(GetDlgItem(w,TB_ID4),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_ID4)==0));
 		EnableWindow(GetDlgItem(w,TB_PWD),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_PWD)==0));
 	}
-
+	if (gptActions[iAction].bSafe)
+	{
+		if (gbEnableOption_ViewAppConfig)
+		{
+			gbEnableOption_ViewAppConfig=FALSE;
+			HideConfigControls(w);
+			gbEnableOption_ViewAppConfig=TRUE;
+		}
+	}
+	else
+	{
+		if (gbEnableOption_ViewAppConfig) ShowWindow(GetDlgItem(w,TAB_CONFIG),SW_SHOW);
+		HideConfigControls(w);
+	}
 end:
 	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -3796,6 +3815,7 @@ int LoadApplications(void)
 	i=0;
 	while (*p!=0)
 	{
+		gptActions[i].bSafe=FALSE;
 		gptActions[i].bError=FALSE;
 		gptActions[i].szId1Value[0]=0;
 		gptActions[i].szId2Value[0]=0;
@@ -3925,6 +3945,7 @@ int LoadApplications(void)
 		{
 			if (*gptActions[i].szId1Value!=0 || *gptActions[i].szPwdEncryptedValue!=0) gptActions[i].bError=FALSE;
 		}
+		gptActions[i].bSafe=!GetConfigBoolValue(p,"SSO",TRUE,FALSE);
 #if 0
 		// 0.9X : gestion des changements de mot de passe sur les pages web
 		if (gptActions[i].bPwdChangeInfos)
@@ -4116,7 +4137,7 @@ int SaveApplications(void)
 			sprintf_s(szWithIdPwd,sizeof(szWithIdPwd),"%d",gptActions[i].iWithIdPwd);
 		// le plus beau sprintf de ma carrière... en espérant que le buffer soit assez grand ;-(
 		sprintf_s(tmpBuf,sizeof(tmpBuf),
-			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nautoPublish=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\n", //pwdChange=%s\r\n",
+			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nautoPublish=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\nSSO=%s\r\n", //pwdChange=%s\r\n",
 			gptActions[i].szApplication,
 			gptActions[i].iConfigId,
 			gptActions[i].iCategoryId,
@@ -4140,7 +4161,8 @@ int SaveApplications(void)
 			*(gptActions[i].szLastUpload)==0?"":gptActions[i].szLastUpload,
 			gptActions[i].bAddAccount?"YES":"NO", // 0.97 ISSUE#86
 			szWithIdPwd, // 1.03 + 1.05
-			gptActions[i].iPwdGroup); // 1.03
+			gptActions[i].iPwdGroup,
+			gptActions[i].bSafe?"NO":"YES"); 
 			//,	gptActions[i].bPwdChangeInfos?"YES":"NO");
 		if (!WriteFile(hf,tmpBuf,strlen(tmpBuf),&dw,NULL)) 
 		{ 
@@ -4375,8 +4397,12 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
 					break;
 				case MENU_AJOUTER_APPLI:
-					NewApplication(w,GetString(IDS_NEW_APP),TRUE,TRUE);
+					NewApplication(w,GetString(IDS_NEW_APP),TRUE,TRUE,FALSE);
 					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+					break;
+				case MENU_AJOUTER_COFFRE:
+					NewApplication(w,GetString(IDS_NEW_COFFRE),TRUE,TRUE,TRUE);  // ISSUE#320
+					if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE);
 					break;
 				case MENU_AJOUTER_CATEG:
 					NewCategory(w);

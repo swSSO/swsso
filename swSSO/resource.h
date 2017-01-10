@@ -419,6 +419,8 @@
 #define IDS_TIP_AUTO_PUBLISH            42033
 #define IDS_MENU_ASK_THIS_APP           42034
 #define IDS_SUBTITLE_CONFIG_NOT_FOUND   42035
+#define IDS_MENU_AJOUTER_COFFRE         42036
+#define IDS_NEW_COFFRE                  42037
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005
