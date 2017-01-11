@@ -1968,14 +1968,21 @@ void TVUpdateItemState(HWND w, HTREEITEM hItem,int iAction)
 	itemex.mask=TVIF_STATE;
 	itemex.stateMask=TVIS_STATEIMAGEMASK;
 	itemex.hItem=hItem;
-	// voila le genre de truc complètement immaintenable dont je ne suis pas fier...
-	// alors : il faut comprendre qu'on met la bulle :
-	// - en rouge si l'action est désactivée
-	// - en vert avec un ! si l'action n'est pas marquée comme envoyée au serveur ET 
-	//   que l'utilisateur a autorisé la remontée des configs
-	// - en vert tout cout si l'action est marquée comme envoyée au serveur OU
-	//   que l'utilisateur n'a pas autorisé les remontées (ni manuelles ni automatiques)
-	itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2);
+	if (gptActions[iAction].bSafe) 
+	{
+		itemex.state=INDEXTOSTATEIMAGEMASK(5);
+	}
+	else
+	{
+		// voila le genre de truc complètement immaintenable dont je ne suis pas fier...
+		// alors : il faut comprendre qu'on met la bulle :
+		// - en rouge si l'action est désactivée
+		// - en vert avec un ! si l'action n'est pas marquée comme envoyée au serveur ET 
+		//   que l'utilisateur a autorisé la remontée des configs
+		// - en vert tout cout si l'action est marquée comme envoyée au serveur OU
+		//   que l'utilisateur n'a pas autorisé les remontées (ni manuelles ni automatiques)
+		itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2);
+	}
 	if (gptActions[iAction].bError) // la config est en erreur : si on trouve un id ou un mdp c'est que l'utilisateur l'a réparée donc on supprime ce statut
 	{
 		if (*gptActions[iAction].szId1Value!=0 || *gptActions[iAction].szPwdEncryptedValue!=0) 
@@ -2281,8 +2288,11 @@ static void TVShowContextMenu(HWND w)
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
 		if (gbShowMenu_AddCateg) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COFFRE,GetString(IDS_MENU_AJOUTER_COFFRE));
+		if (gbShowMenu_PutInSafeBox)
+		{
+			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COFFRE,GetString(IDS_MENU_AJOUTER_COFFRE));
+		}
 	}
 	else // c'est une appli
 	{
@@ -2294,13 +2304,13 @@ static void TVShowContextMenu(HWND w)
 		if (iAction==-1) goto end;
 		// le menu "lancer cette application" n'est affiché que si config en base de registre et
 		// si le fullpathname n'est pas vide (sauf pour applis web où à défaut on utilisera l'URL)
-		if (gbShowMenu_LaunchApp && (gptActions[iAction].iType==WEBSSO || gptActions[iAction].iType==XEBSSO || *gptActions[iAction].szFullPathName!=0))
+		if (!gptActions[iAction].bSafe && gbShowMenu_LaunchApp && (gptActions[iAction].iType==WEBSSO || gptActions[iAction].iType==XEBSSO || *gptActions[iAction].szFullPathName!=0))
 		{
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_LANCER_APPLI,GetString(IDS_LAUNCH_APP));
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 			bAddSeparator=TRUE;
 		}
-		if (gbShowMenu_EnableDisable && !gbAdmin)
+		if (!gptActions[iAction].bSafe && gbShowMenu_EnableDisable && !gbAdmin)
 		{
 			if (gptActions[iAction].bActive)
 				InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DESACTIVER,GetString(IDS_MENU_DESACTIVER));
@@ -2311,11 +2321,11 @@ static void TVShowContextMenu(HWND w)
 		}
 		if (gbShowMenu_Rename) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_RENOMMER,GetString(IDS_MENU_RENOMMER));
 		if (gbShowMenu_Move) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION |MF_POPUP,(UINT_PTR)hSubMenuCateg,GetString(IDS_MENU_DEPLACER));
-		if (gbShowMenu_Duplicate) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DUPLIQUER,GetString(IDS_MENU_DUPLIQUER));
-		if (gbShowMenu_AddAccount) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COMPTE,GetString(IDS_MENU_AJOUTER_COMPTE));
+		if (!gptActions[iAction].bSafe && gbShowMenu_Duplicate) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_DUPLIQUER,GetString(IDS_MENU_DUPLIQUER));
+		if (!gptActions[iAction].bSafe && gbShowMenu_AddAccount) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COMPTE,GetString(IDS_MENU_AJOUTER_COMPTE));
 		if (gbShowMenu_Delete) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_SUPPRIMER,GetString(IDS_MENU_SUPPRIMER));
 		if (gbShowMenu_Rename||gbShowMenu_Move||gbShowMenu_Duplicate||gbShowMenu_AddAccount||gbShowMenu_Delete) bAddSeparator=TRUE;
-		if (gbInternetManualPutConfig && gbEnableOption_ManualPutConfig)
+		if (!gptActions[iAction].bSafe && gbInternetManualPutConfig && gbEnableOption_ManualPutConfig)
 		{
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 			if (giNbDomains>1)
@@ -2327,8 +2337,11 @@ static void TVShowContextMenu(HWND w)
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
 		if (gbShowMenu_AddCateg) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COFFRE,GetString(IDS_MENU_AJOUTER_COFFRE));
+		if (gbShowMenu_PutInSafeBox)
+		{
+			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COFFRE,GetString(IDS_MENU_AJOUTER_COFFRE));
+		}
 	}
 	SetForegroundWindow(w);
 	TrackPopupMenu(hMenu, TPM_TOPALIGN,pt.x, pt.y, 0, w, NULL );

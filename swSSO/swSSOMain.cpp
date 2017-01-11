@@ -680,7 +680,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 	// boucle dans la liste d'action pour voir si la fenêtre correspond à une config connue
     for (i=0;i<giNbActions;i++)
     {
-    	if (!gptActions[i].bActive) goto suite; // action désactivée
+    	if (gptActions[i].bSafe) goto suite;
+		if (!gptActions[i].bActive) goto suite; // action désactivée
 		if (!gptActions[i].bSaved) { TRACE((TRACE_INFO,_F_,"action %d non enregistrée => SSO non exécuté",i)); goto suite; } // 0.93B6 ISSUE#55
 		if (gptActions[i].iType==UNK) goto suite; // 0.85 : ne traite pas si type inconnu
 		

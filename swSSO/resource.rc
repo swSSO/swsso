@@ -1879,7 +1879,7 @@ BEGIN
     IDS_TIP_AUTO_PUBLISH    "Permet de publier automatiquement cette configuration (pensez à configurer la clé GetAutoPublishedConfigsAtStart)"
     IDS_MENU_ASK_THIS_APP   "Demander l'ajout de cette application"
     IDS_SUBTITLE_CONFIG_NOT_FOUND "Configuration non trouvée"
-    IDS_MENU_AJOUTER_COFFRE "Mise en coffre"
+    IDS_MENU_AJOUTER_COFFRE "Mettre un compte au coffre"
     IDS_NEW_COFFRE          "Compte"
 END
 

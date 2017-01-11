@@ -88,7 +88,9 @@
 // ISSUE#309
 #define REGVALUE_MASTER_PASSWORD_EXPIRATION			"MasterPwdExpiration"
 // ISSUE#319
-#define REGVALUE_SHOWMENU_ASKTHISAPP				"ShowAskThisAppMenu "
+#define REGVALUE_SHOWMENU_ASKTHISAPP				"ShowAskThisAppMenu"
+// ISSUE#320
+#define REGVALUE_SHOWMENU_PUTINSAFEBOX				"ShowPutInSafeBoxMenu"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -143,6 +145,8 @@ extern BOOL gbShowMenu_Help;
 extern int giMasterPwdMaxExpiration;
 // ISSUE#319
 extern BOOL gbShowMenu_AskThisApp;
+// ISSUE#320
+extern BOOL gbShowMenu_PutInSafeBox;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
