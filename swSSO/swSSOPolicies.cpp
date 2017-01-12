@@ -89,7 +89,7 @@ BOOL gbShowMenu_Help=FALSE;
 // ISSUE#309
 int giMasterPwdMaxExpiration=-1;	// 1.14 : valeur max pour l'expiration du master password
 // ISSUE#319
-BOOL gbShowMenu_AskThisApp=TRUE;
+BOOL gbShowMenu_AskThisApp=FALSE;
 // ISSUE#320
 BOOL gbShowMenu_PutInSafeBox=TRUE;
 

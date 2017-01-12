@@ -58,6 +58,7 @@ Windows Registry Editor Version 5.00
 "CheckVersionOption"=dword:00000001
 "GetConfigOption"=dword:00000001
 "ManualPutConfigOption"=dword:00000001
+"MasterPwdExpiration"=dword:FFFFFFFF
 "ModifyApplicationConfig"=dword:00000001
 "OldPwdAutoFill"=dword:00000000
 "OpenConfigFile"=dword:00000001
@@ -71,6 +72,7 @@ Windows Registry Editor Version 5.00
 "ShowAddAppMenu"=dword:00000001
 "ShowAddCategMenu"=dword:00000001
 "ShowAddThisAppMenu"=dword:00000001
+"ShowAskThisAppMenu"=dword:00000000
 "ShowAutoLockOption"=dword:00000001
 "ShowBrowsers"=dword:00000001
 "ShowChangeAppPwdMenu"=dword:00000000
@@ -83,6 +85,7 @@ Windows Registry Editor Version 5.00
 "ShowOptions"=dword:00000001
 "ShowPasswordGroup"=dword:00000002
 "ShowPasswordOption"=dword:00000001
+"ShowPutInSafeBoxMenu"=dword:00000001
 "ShowQuitMenu"=dword:00000001
 "ShowRefreshRightsMenu"=dword:00000000
 "ShowRenameMenu"=dword:00000001

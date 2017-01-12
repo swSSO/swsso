@@ -639,11 +639,11 @@ end:
 //-----------------------------------------------------------------------------
 // HideConfigControls()
 //-----------------------------------------------------------------------------
-void HideConfigControls(HWND w)
+void HideConfigControls(HWND w,int iAction)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	
-	if (!gbEnableOption_ViewAppConfig)
+	if (!gbEnableOption_ViewAppConfig || (iAction!=-1 && iAction<giNbActions && gptActions[iAction].bSafe))
 	{
 		ShowWindow(GetDlgItem(w,TB_TITRE),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_URL),SW_HIDE);
@@ -679,7 +679,6 @@ void HideConfigControls(HWND w)
 		ShowWindow(GetDlgItem(w,TX_LANCEMENT),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_LANCEMENT),SW_HIDE);
 		ShowWindow(GetDlgItem(w,PB_PARCOURIR),SW_HIDE);
-		// ISSUE#199
 		ShowWindow(GetDlgItem(w,IMG_TYPE)	  ,SW_HIDE); 
 		ShowWindow(GetDlgItem(w,IMG_TITRE)	  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_URL)	  ,SW_HIDE);
@@ -688,6 +687,15 @@ void HideConfigControls(HWND w)
 		ShowWindow(GetDlgItem(w,IMG_VALIDATION),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_KBSIM)     ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_LANCEMENT) ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID2_TYPE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID3_TYPE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID4_TYPE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID2_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID3_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID4_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_PWD_GROUP),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_AUTO_LOCK),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_AUTO_PUBLISH),SW_HIDE);
 	}	
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
@@ -2288,7 +2296,7 @@ static void TVShowContextMenu(HWND w)
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
 		if (gbShowMenu_AddCateg) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
-		if (gbShowMenu_PutInSafeBox)
+		if (gbShowMenu_PutInSafeBox && !gbAdmin)
 		{
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COFFRE,GetString(IDS_MENU_AJOUTER_COFFRE));
@@ -2337,7 +2345,7 @@ static void TVShowContextMenu(HWND w)
 		if (bAddSeparator && (gbShowMenu_AddApp || gbShowMenu_AddCateg)) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 		if (gbShowMenu_AddApp) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_APPLI,GetString(IDS_MENU_AJOUTER_APPLI));
 		if (gbShowMenu_AddCateg) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_CATEG,GetString(IDS_MENU_AJOUTER_CATEG));
-		if (gbShowMenu_PutInSafeBox)
+		if (gbShowMenu_PutInSafeBox && !gbAdmin)
 		{
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
 			InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, MENU_AJOUTER_COFFRE,GetString(IDS_MENU_AJOUTER_COFFRE));
@@ -2530,7 +2538,7 @@ void ShowApplicationDetails(HWND w,int iAction)
 		EnableWindow(GetDlgItem(w,TB_ID4),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_ID4)==0));
 		EnableWindow(GetDlgItem(w,TB_PWD),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_PWD)==0));
 	}
-	if (gptActions[iAction].bSafe)
+/*	if (gptActions[iAction].bSafe)
 	{
 		if (gbEnableOption_ViewAppConfig)
 		{
@@ -2543,7 +2551,9 @@ void ShowApplicationDetails(HWND w,int iAction)
 	{
 		if (gbEnableOption_ViewAppConfig) ShowWindow(GetDlgItem(w,TAB_CONFIG),SW_SHOW);
 		HideConfigControls(w);
-	}
+	}*/
+	if (gbEnableOption_ViewAppConfig) ShowWindow(GetDlgItem(w,TAB_CONFIG),SW_SHOW);
+	HideConfigControls(w,iAction);
 end:
 	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -3194,6 +3204,8 @@ void ClearApplicationDetails(HWND w)
 	// 0.90 : affichage de l'application en cours de modification dans la barre de titre
 	SetWindowText(w,GetString(IDS_TITRE_APPNSITES));
 	ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),SW_HIDE);
+	if (gbEnableOption_ViewAppConfig) ShowWindow(GetDlgItem(w,TAB_CONFIG),SW_SHOW);
+	MoveControls(w,GetDlgItem(w,TAB_CONFIG));
 	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
@@ -3468,7 +3480,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 			SetWindowPos(GetDlgItem(w,IMG_AUTO_PUBLISH),NULL,rect.right-30,rect.bottom*1/3+yPosAutoLock-2+yOffset+30,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 	}
-	HideConfigControls(w);
+	HideConfigControls(w,giLastApplicationConfig);
 	if (wToRefresh==NULL)
 		InvalidateRect(w,NULL,FALSE);
 	else
@@ -4773,8 +4785,8 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),pnmtv->itemNew.hItem);
 						if (hParentItem==NULL) // c'est une catégorie 
 						{
-							ClearApplicationDetails(w);
 							giLastApplicationConfig=-1; // ISSUE#152
+							ClearApplicationDetails(w);
 							TRACE((TRACE_DEBUG,_F_,"pnmtv->itemNew.lParam=%ld",pnmtv->itemNew.lParam));
 							if (GetKeyState(VK_SHIFT) & 0x8000)
 							{
