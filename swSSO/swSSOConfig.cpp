@@ -205,8 +205,16 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				SetDlgItemText(w,TX_PORTAL,gszCfgPortal);
 			}
 			// 0.89B2 #94 : affichage de l'URL serveur
-			wsprintf(buf2048,"%s%s",gszServerAddress,gszWebServiceAddress);
-			SetDlgItemText(w,TX_SERVER,buf2048);
+			if (gbEnableOption_ViewServerInfos)
+			{
+				wsprintf(buf2048,"%s%s",gszServerAddress,gszWebServiceAddress);
+				SetDlgItemText(w,TX_SERVER,buf2048);
+			}
+			else
+			{
+				ShowWindow(GetDlgItem(w,TX_SERVER),SW_HIDE);
+				ShowWindow(GetDlgItem(w,TX_SERVER2),SW_HIDE);
+			}
 			// 0.90 positionnement séparateurs (bug RESEDIT) -> alignement sur bouton licence
 			{ 
 				RECT rectSeparator,rectBouton;

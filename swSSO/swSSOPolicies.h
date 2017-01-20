@@ -91,6 +91,8 @@
 #define REGVALUE_SHOWMENU_ASKTHISAPP				"ShowAskThisAppMenu"
 // ISSUE#320
 #define REGVALUE_SHOWMENU_PUTINSAFEBOX				"ShowPutInSafeBoxMenu"
+// ISSUE#326
+#define REGVALUE_ENABLEOPTION_VIEWSERVERINFOS		"ViewServerInfos"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -147,6 +149,8 @@ extern int giMasterPwdMaxExpiration;
 extern BOOL gbShowMenu_AskThisApp;
 // ISSUE#320
 extern BOOL gbShowMenu_PutInSafeBox;
+// ISSUE#326
+extern BOOL gbEnableOption_ViewServerInfos;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
