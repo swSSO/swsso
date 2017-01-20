@@ -2071,6 +2071,14 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		TRACE((TRACE_INFO,_F_,"lpCmdLine=%s",lpCmdLine));
 	}
 	
+	// ISSUE#321 : si client d'admin, ferme la trace standard et ouvre la trace admin
+	if (gbAdmin)
+	{
+		TRACE((TRACE_INFO,_F_,"Fermeture trace, ouverture trace admin"));
+		TRACE_CLOSE();
+		TRACE_OPEN();
+	}
+	
 	// 0.42 vérif pas déjà lancé
 	if (gbAdmin)
 		hMutex=CreateMutex(NULL,TRUE,"swSSO.exe[admin]");

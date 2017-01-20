@@ -34,17 +34,17 @@
 #include "stdafx.h"
 
 #define REGKEY_TRACE			"SOFTWARE\\swSSO\\Trace"
+#define REGKEY_TRACEADMIN		"SOFTWARE\\swSSOAdmin\\Trace"
 #define REGVALUE_TRACE_LEVEL	"Level" 
 #define REGVALUE_TRACE_FILENAME "FileName"
 #define REGVALUE_TRACE_FILESIZE "FileSize"
 
 #ifdef _DEBUG 
 static int giTraceLevel=TRACE_DEBUG;
-static char gszTraceFileName[_MAX_PATH+1]="c:\\temp\\swssotrace.txt";
 #else
 static int giTraceLevel=TRACE_NONE;
-static char gszTraceFileName[_MAX_PATH+1]="";
 #endif
+static char gszTraceFileName[_MAX_PATH+1]="";
 static DWORD gdwTraceFileSize=20000000; 
 static char gszTraceBuf[4096];
 HANDLE ghfTrace=INVALID_HANDLE_VALUE;
@@ -61,13 +61,18 @@ void swTraceOpen(void)
 	DWORD dw;
 	int len;
 
-#ifndef _DEBUG 
+#ifdef _DEBUG 
+	if (gbAdmin)
+		strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\temp\\swssotrace-admin.txt");
+	else
+		strcpy_s(gszTraceFileName,sizeof(gszTraceFileName),"c:\\temp\\swssotrace.txt");
+#else
 	HKEY hKey=NULL;
 	int rc;
 	char szValue[1024+1];
 	DWORD dwValue,dwValueSize,dwValueType;
 
-	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_TRACE,0,KEY_READ,&hKey);
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_TRACEADMIN:REGKEY_TRACE,0,KEY_READ,&hKey);
 	if (rc==ERROR_SUCCESS)
 	{
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
