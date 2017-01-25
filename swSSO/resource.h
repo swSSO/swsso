@@ -424,6 +424,7 @@
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005
+#define TX_COFFRE                       -19530
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -432,7 +433,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        42010
 #define _APS_NEXT_COMMAND_VALUE         44000
-#define _APS_NEXT_CONTROL_VALUE         46006
+#define _APS_NEXT_CONTROL_VALUE         46007
 #define _APS_NEXT_SYMED_VALUE           48000
 #endif
 #endif

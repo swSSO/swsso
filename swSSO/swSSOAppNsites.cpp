@@ -697,6 +697,10 @@ void HideConfigControls(HWND w,int iAction)
 		ShowWindow(GetDlgItem(w,IMG_AUTO_LOCK),SW_HIDE);
 		ShowWindow(GetDlgItem(w,IMG_AUTO_PUBLISH),SW_HIDE);
 	}	
+	else
+	{
+		ShowWindow(GetDlgItem(w,TX_COFFRE),SW_HIDE);
+	}
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 //-----------------------------------------------------------------------------
@@ -1289,18 +1293,17 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView,BOOL 
 	// génère le nom de l'application
 	GenerateApplicationName(giNbActions,szAppName);
 	
+	giNbActions++;
 	if (bAddInTreeView)
 	{
-		hNewItem=TVAddApplication(w,giNbActions,NULL);
+		hNewItem=TVAddApplication(w,giNbActions-1,NULL);
 		if (hNewItem!=NULL) 
 		{
 			TreeView_SelectItem(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
 			TreeView_EditLabel(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
 		}
-		ShowApplicationDetails(w,giNbActions);
+		ShowApplicationDetails(w,giNbActions-1);
 	}
-
-	giNbActions++;
 	//ClearApplicationDetails(w);
 	rc=0;
 end:
@@ -3343,7 +3346,8 @@ static void MoveControls(HWND w,HWND wToRefresh)
 
 	// TabControl bas droite (config)
 	SetWindowPos(GetDlgItem(w,TAB_CONFIG),NULL,rect.right*2/5+15,rect.bottom*1/3-5+yOffset,rect.right*3/5-20,rect.bottom*2/3-30-yOffset,SWP_NOZORDER);
-	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==0) // onglet sélectionné = configuration
+	SetWindowPos(GetDlgItem(w,TX_COFFRE),NULL,rect.right*2/5+25,rect.bottom*1/3+5+yOffset,rect.right*3/5-40,52,SWP_NOZORDER|SWP_SHOWWINDOW);
+	if ((TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==0) && !(giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions && gptActions[giLastApplicationConfig].bSafe))  // onglet sélectionné = configuration
 	{
 		ShowWindow(GetDlgItem(w,TX_ID2_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_ID3_ID),SW_HIDE);
@@ -3416,7 +3420,7 @@ static void MoveControls(HWND w,HWND wToRefresh)
 			SetWindowPos(GetDlgItem(w,PB_PARCOURIR),NULL,rect.right-92,rect.bottom*1/3+267+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 	}
-	else // onglet sélectionné = champs complémentaires
+	else if ((TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==1)  && !(giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions && gptActions[giLastApplicationConfig].bSafe)) // onglet sélectionné = champs complémentaires
 	{
 		ShowWindow(GetDlgItem(w,TX_TYPE)	  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_TITRE)	  ,SW_HIDE);
