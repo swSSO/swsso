@@ -643,7 +643,7 @@ void HideConfigControls(HWND w,int iAction)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	
-	if (!gbEnableOption_ViewAppConfig || (iAction!=-1 && iAction<giNbActions && gptActions[iAction].bSafe))
+	if (!gbEnableOption_ViewAppConfig || (TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==1) || (iAction!=-1 && iAction<giNbActions && gptActions[iAction].bSafe))
 	{
 		ShowWindow(GetDlgItem(w,TB_TITRE),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_URL),SW_HIDE);
@@ -700,6 +700,31 @@ void HideConfigControls(HWND w,int iAction)
 	else
 	{
 		ShowWindow(GetDlgItem(w,TX_COFFRE),SW_HIDE);
+	}
+	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==1)
+	{
+		ShowWindow(GetDlgItem(w,TAB_IDPWD),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_COFFRE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_ID2),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_ID3),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_ID4),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TB_ID2),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TB_ID3),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TB_ID4),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID2),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID3),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID4),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_ID)   ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_PWD)  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,TB_ID)   ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,TB_PWD)  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,TB_PWD_CLEAR)  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_ID)   ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_PWD)  ,SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_LOUPE),SW_HIDE);
+		ShowWindow(GetDlgItem(w,CK_AD_ID),SW_HIDE);
+		ShowWindow(GetDlgItem(w,CK_AD_PWD),SW_HIDE);
+		ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),SW_HIDE);
 	}
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
@@ -2541,22 +2566,10 @@ void ShowApplicationDetails(HWND w,int iAction)
 		EnableWindow(GetDlgItem(w,TB_ID4),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_ID4)==0));
 		EnableWindow(GetDlgItem(w,TB_PWD),((gptActions[giLastApplicationConfig].iWithIdPwd & CONFIG_WITH_PWD)==0));
 	}
-/*	if (gptActions[iAction].bSafe)
-	{
-		if (gbEnableOption_ViewAppConfig)
-		{
-			gbEnableOption_ViewAppConfig=FALSE;
-			HideConfigControls(w);
-			gbEnableOption_ViewAppConfig=TRUE;
-		}
-	}
-	else
-	{
-		if (gbEnableOption_ViewAppConfig) ShowWindow(GetDlgItem(w,TAB_CONFIG),SW_SHOW);
-		HideConfigControls(w);
-	}*/
 	if (gbEnableOption_ViewAppConfig) ShowWindow(GetDlgItem(w,TAB_CONFIG),SW_SHOW);
+	ShowWindow(GetDlgItem(w,TAB_IDPWD),SW_SHOW);
 	HideConfigControls(w,iAction);
+	ShowWindow(GetDlgItem(w,TAB_IDPWD),SW_SHOW);
 end:
 	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -3347,7 +3360,9 @@ static void MoveControls(HWND w,HWND wToRefresh)
 	// TabControl bas droite (config)
 	SetWindowPos(GetDlgItem(w,TAB_CONFIG),NULL,rect.right*2/5+15,rect.bottom*1/3-5+yOffset,rect.right*3/5-20,rect.bottom*2/3-30-yOffset,SWP_NOZORDER);
 	SetWindowPos(GetDlgItem(w,TX_COFFRE),NULL,rect.right*2/5+25,rect.bottom*1/3+5+yOffset,rect.right*3/5-40,52,SWP_NOZORDER|SWP_SHOWWINDOW);
-	if ((TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==0) && !(giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions && gptActions[giLastApplicationConfig].bSafe))  // onglet sélectionné = configuration
+	if ((TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==0) &&    // onglet sélectionné = configuration
+		!(giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions && gptActions[giLastApplicationConfig].bSafe) &&
+		TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==0)
 	{
 		ShowWindow(GetDlgItem(w,TX_ID2_ID),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_ID3_ID),SW_HIDE);
@@ -3420,7 +3435,9 @@ static void MoveControls(HWND w,HWND wToRefresh)
 			SetWindowPos(GetDlgItem(w,PB_PARCOURIR),NULL,rect.right-92,rect.bottom*1/3+267+yOffset,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_SHOWWINDOW);
 		}
 	}
-	else if ((TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==1)  && !(giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions && gptActions[giLastApplicationConfig].bSafe)) // onglet sélectionné = champs complémentaires
+	else if ((TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==1)  && // onglet sélectionné = champs complémentaires
+		!(giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions && gptActions[giLastApplicationConfig].bSafe) &&
+		TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==0) 
 	{
 		ShowWindow(GetDlgItem(w,TX_TYPE)	  ,SW_HIDE);
 		ShowWindow(GetDlgItem(w,TX_TITRE)	  ,SW_HIDE);
@@ -4794,6 +4811,11 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			{
 				case TCN_SELCHANGE:
 					MoveControls(w,NULL); // 0.90, avant il y avait (w,w), correction bug#102
+					if (gbAdmin && TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==0)
+					{
+						ShowWindow(GetDlgItem(w,TAB_IDPWD),SW_SHOW);
+						ShowWindow(GetDlgItem(w,TAB_CONFIG),SW_SHOW);
+					}
 					break;
 				case TVN_SELCHANGED:
 					if (wp==TV_APPLICATIONS && !gbEffacementEnCours && !gbAjoutDeCompteEnCours)

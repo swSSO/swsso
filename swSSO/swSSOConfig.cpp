@@ -1455,7 +1455,7 @@ int GetConfigHeader()
 		WritePrivateProfileString("swSSO","ShowLaunchAppWithoutCtrl",gbShowLaunchAppWithoutCtrl?"YES":"NO",gszCfgFile);
 		bChangeIni=TRUE;
 	}
-	if (giRecoveryInfosKeyId==giRecoveryKeyId_ChangeValue) 
+	if (giRecoveryInfosKeyId!=-1 && giRecoveryInfosKeyId==giRecoveryKeyId_ChangeValue) 
 	{
 		// dans ce cas, l'utilisateur est probablement bloqué car en décalage sur le keyid
 		// il ne peut donc faire de recouvrement, il faut forcer nouveau mot de passe + recalcul du recovery infos
