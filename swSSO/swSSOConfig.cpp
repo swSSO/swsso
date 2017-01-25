@@ -1455,11 +1455,11 @@ int GetConfigHeader()
 		WritePrivateProfileString("swSSO","ShowLaunchAppWithoutCtrl",gbShowLaunchAppWithoutCtrl?"YES":"NO",gszCfgFile);
 		bChangeIni=TRUE;
 	}
-	if (giRecoveryKeyId_ChangeValue!=-1 && giRecoveryInfosKeyId!=giRecoveryKeyId_ChangeValue) 
+	if (giRecoveryInfosKeyId==giRecoveryKeyId_ChangeValue) 
 	{
 		// dans ce cas, l'utilisateur est probablement bloqué car en décalage sur le keyid
 		// il ne peut donc faire de recouvrement, il faut forcer nouveau mot de passe + recalcul du recovery infos
-		TRACE((TRACE_INFO,_F_,"KeyId du RecoveryInfos=%04d KeyId de ChangeIniValues=%04d",giRecoveryInfosKeyId,giRecoveryKeyId_ChangeValue));
+		TRACE((TRACE_INFO,_F_,"KeyId du RecoveryInfos=%04d KeyId de ChangeIniValues=%04d KeyId à appliquer=%04d",giRecoveryInfosKeyId,giRecoveryKeyId_ChangeValue,giRecoveryKeyId));
 		WritePrivateProfileString("swSSO","recoveryInfos",NULL,gszCfgFile);		
 		WritePrivateProfileString("swSSO","pwdValue",NULL,gszCfgFile);		
 		WritePrivateProfileString("swSSO","CheckSynchro",NULL,gszCfgFile);		
