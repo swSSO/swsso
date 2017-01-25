@@ -1217,6 +1217,7 @@ int GetConfigHeader()
 	BOOL bCheckVersion;
 	char szRegDomainLabel[LEN_DOMAIN+1];
 	int iRegDomainId;
+	BOOL bChangeIni=FALSE;
 	
 	// ISSUE#164 vérifie l'intégrité du fichier .ini. Il faut le faire avant de toucher au .ini
 	// Si le fichier .ini n'existe pas (cas de la première utilisation), on ne fait pas évidemment pas la vérification...
@@ -1361,6 +1362,101 @@ int GetConfigHeader()
 		if (giMasterPwdMaxExpiration!=-1 && giMasterPwdExpiration>giMasterPwdMaxExpiration) giMasterPwdExpiration=giMasterPwdMaxExpiration;
 	}
 	
+	// ISSUE#322 - change les paramètres si définis dans la clé ChangeIniValues
+	if (gbSessionLock_ChangeValue!=-1 && gbSessionLock!=gbSessionLock_ChangeValue)				
+	{
+		gbSessionLock=gbSessionLock_ChangeValue; 
+		WritePrivateProfileString("swSSO","sessionLock",gbSessionLock?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbInternetCheckVersion_ChangeValue!=-1 && gbInternetCheckVersion!=gbInternetCheckVersion_ChangeValue)		
+	{
+		gbInternetCheckVersion=gbInternetCheckVersion_ChangeValue;
+		WritePrivateProfileString("swSSO","internetCheckVersion",gbInternetCheckVersion?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbInternetCheckBeta_ChangeValue!=-1 && gbInternetCheckBeta!=gbInternetCheckBeta_ChangeValue)		
+	{
+		gbInternetCheckBeta=gbInternetCheckBeta_ChangeValue;
+		WritePrivateProfileString("swSSO","internetCheckBeta",gbInternetCheckBeta?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbInternetGetConfig_ChangeValue!=-1 && gbInternetGetConfig!=gbInternetGetConfig_ChangeValue)		
+	{
+		gbInternetGetConfig=gbInternetGetConfig_ChangeValue;
+		WritePrivateProfileString("swSSO","internetGetConfig",gbInternetGetConfig?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbInternetManualPutConfig_ChangeValue!=-1 && gbInternetManualPutConfig!=gbInternetManualPutConfig_ChangeValue)	
+	{
+		gbInternetManualPutConfig=gbInternetManualPutConfig_ChangeValue;
+		WritePrivateProfileString("swSSO","internetManualPutConfig",gbInternetManualPutConfig?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gszCfgPortal_ChangeValue[0]!='*' && strcmp(gszCfgPortal,gszCfgPortal_ChangeValue)!=0)			
+	{
+		strcpy_s(gszCfgPortal,sizeof(gszCfgPortal),gszCfgPortal_ChangeValue);
+		WritePrivateProfileString("swSSO","Portal",gszCfgPortal,gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbLaunchTopMost_ChangeValue!=-1 && gbLaunchTopMost!=gbLaunchTopMost_ChangeValue)			
+	{
+		gbLaunchTopMost=gbLaunchTopMost_ChangeValue;
+		WritePrivateProfileString("swSSO","LaunchTopMost",gbLaunchTopMost?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbParseWindowsOnStart_ChangeValue!=-1 && gbParseWindowsOnStart!=gbParseWindowsOnStart_ChangeValue)		
+	{
+		gbParseWindowsOnStart=gbParseWindowsOnStart_ChangeValue;
+		WritePrivateProfileString("swSSO","parseWindowsOnStart",gbParseWindowsOnStart?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (giDomainId_ChangeValue!=-1 && giDomainId!=giDomainId_ChangeValue) 				
+	{
+		char szItem[16+1];
+		giDomainId=giDomainId_ChangeValue;	
+		sprintf_s(szItem,sizeof(szItem),"%d",giDomainId);
+		WritePrivateProfileString("swSSO","domainId",szItem,gszCfgFile); 
+		bChangeIni=TRUE;
+	}
+	if (gszDomainLabel_ChangeValue[0]!='*' && strcmp(gszDomainLabel,gszDomainLabel_ChangeValue)!=0)			
+	{
+		strcpy_s(gszDomainLabel,sizeof(gszDomainLabel),gszDomainLabel_ChangeValue);
+		WritePrivateProfileString("swSSO","domainLabel",gszDomainLabel,gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbDisplayChangeAppPwdDialog_ChangeValue!=-1 && gbDisplayChangeAppPwdDialog!=gbDisplayChangeAppPwdDialog_ChangeValue) 
+	{
+		gbDisplayChangeAppPwdDialog=gbDisplayChangeAppPwdDialog_ChangeValue;
+		WritePrivateProfileString("swSSO","displayChangeAppPwdDialog",gbDisplayChangeAppPwdDialog?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbSSOInternetExplorer_ChangeValue!=-1 && gbSSOInternetExplorer!=gbSSOInternetExplorer_ChangeValue)		
+	{
+		gbSSOInternetExplorer=gbSSOInternetExplorer_ChangeValue;
+		WritePrivateProfileString("swSSO","InternetExplorer",gbSSOInternetExplorer?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbSSOFirefox_ChangeValue!=-1 && gbSSOFirefox!=gbSSOFirefox_ChangeValue)				
+	{
+		gbSSOFirefox=gbSSOFirefox_ChangeValue;	
+		WritePrivateProfileString("swSSO","Firefox",gbSSOFirefox?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbSSOChrome_ChangeValue!=-1 && gbSSOChrome!=gbSSOChrome_ChangeValue)				
+	{
+		gbSSOChrome=gbSSOChrome_ChangeValue;
+		WritePrivateProfileString("swSSO","Chrome",gbSSOChrome?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbShowLaunchAppWithoutCtrl_ChangeValue!=-1 && gbShowLaunchAppWithoutCtrl!=gbShowLaunchAppWithoutCtrl_ChangeValue) 
+	{
+		gbShowLaunchAppWithoutCtrl=gbShowLaunchAppWithoutCtrl_ChangeValue;
+		WritePrivateProfileString("swSSO","ShowLaunchAppWithoutCtrl",gbShowLaunchAppWithoutCtrl?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (bChangeIni) StoreIniEncryptedHash(); 
+
 	// REMARQUE : la config proxy est lue plus loin dans le démarrage du main, sinon la clé n'est pas disponible
 	//            pour déchiffrer le mot de passe proxy !
 	rc=0;

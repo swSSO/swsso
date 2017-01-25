@@ -315,6 +315,9 @@ extern int  giNbExcludedWindows;
 #define REGKEY_DEFAULTINIVALUES "SOFTWARE\\swSSO\\DefaultIniValues"
 #define REGKEY_DEFAULTINIVALUES_ADMIN "SOFTWARE\\swSSOAdmin\\DefaultIniValues"
 //-----------------------------------------------------------------------------
+#define REGKEY_CHANGEINIVALUES "SOFTWARE\\swSSO\\ChangeIniValues"
+#define REGKEY_CHANGEINIVALUES_ADMIN "SOFTWARE\\swSSOAdmin\\ChangeIniValues"
+//-----------------------------------------------------------------------------
 #define REGVALUE_DEFAULT_SESSION_LOCK			"sessionLock"
 #define REGVALUE_DEFAULT_CHECK_VERSION			"internetCheckVersion"
 #define REGVALUE_DEFAULT_CHECK_BETA				"internetCheckBeta"
@@ -331,7 +334,6 @@ extern int  giNbExcludedWindows;
 #define REGVALUE_DEFAULT_CHROME					"Chrome"
 #define REGVALUE_DEFAULT_SHOW_LAUNCHAPP_WITHOUT_CTRL	"ShowLaunchAppWithoutCtrl"
 
-
 extern BOOL gbSessionLock_DefaultValue;					// 1.04
 extern BOOL gbInternetCheckVersion_DefaultValue;		// 1.04
 extern BOOL gbInternetCheckBeta_DefaultValue;			// 1.04
@@ -347,6 +349,22 @@ extern BOOL gbSSOInternetExplorer_DefaultValue;			// 1.04
 extern BOOL gbSSOFirefox_DefaultValue;					// 1.04
 extern BOOL gbSSOChrome_DefaultValue;					// 1.04
 extern BOOL gbShowLaunchAppWithoutCtrl_DefaultValue;	// 1.08
+
+extern BOOL gbSessionLock_ChangeValue;					// 1.14
+extern BOOL gbInternetCheckVersion_ChangeValue;			// 1.14
+extern BOOL gbInternetCheckBeta_ChangeValue;			// 1.14
+extern BOOL gbInternetGetConfig_ChangeValue;			// 1.14
+extern BOOL gbInternetManualPutConfig_ChangeValue;		// 1.14
+extern char gszCfgPortal_ChangeValue[];					// 1.14
+extern BOOL gbLaunchTopMost_ChangeValue;				// 1.14
+extern BOOL gbParseWindowsOnStart_ChangeValue;			// 1.14
+extern int  giDomainId_ChangeValue;						// 1.14
+extern char gszDomainLabel_ChangeValue[];				// 1.14
+extern BOOL gbDisplayChangeAppPwdDialog_ChangeValue;	// 1.14
+extern BOOL gbSSOInternetExplorer_ChangeValue;			// 1.14
+extern BOOL gbSSOFirefox_ChangeValue;					// 1.14
+extern BOOL gbSSOChrome_ChangeValue;					// 1.14
+extern BOOL gbShowLaunchAppWithoutCtrl_ChangeValue;		// 1.14
 
 //-----------------------------------------------------------------------------
 #define REGKEY_HOTKEY "SOFTWARE\\swSSO\\HotKey"
