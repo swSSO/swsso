@@ -200,6 +200,7 @@ BOOL gbSSOInternetExplorer_ChangeValue=-1;			// 1.14
 BOOL gbSSOFirefox_ChangeValue=-1;					// 1.14
 BOOL gbSSOChrome_ChangeValue=-1;					// 1.14
 BOOL gbShowLaunchAppWithoutCtrl_ChangeValue=-1;		// 1.14
+int  giRecoveryKeyId_ChangeValue=-1;				// 1.14
 
 // REGKEY_REGKEY_PWDGROUP_COLORS
 COLORREF gtabPwdGroupColors[MAX_COLORS];
@@ -775,6 +776,10 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_SHOW_LAUNCHAPP_WITHOUT_CTRL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowLaunchAppWithoutCtrl_ChangeValue=(BOOL)dwValue; 
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_CHANGE_RECOVERY_KEY_ID,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giRecoveryKeyId_ChangeValue=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -978,6 +983,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbSSOFirefox_ChangeValue=%d",gbSSOFirefox_ChangeValue));
 	TRACE((TRACE_INFO,_F_,"gbSSOChrome_ChangeValue=%d",gbSSOChrome_ChangeValue));
 	TRACE((TRACE_INFO,_F_,"gbShowLaunchAppWithoutCtrl_ChangeValue=%d",gbShowLaunchAppWithoutCtrl_ChangeValue));
+	TRACE((TRACE_INFO,_F_,"giRecoveryKeyId_ChangeValue=%d",giRecoveryKeyId_ChangeValue));
 	TRACE((TRACE_INFO,_F_,"REGKEY_HOTKEY ---------"));
 	TRACE((TRACE_INFO,_F_,"gszPastePwd_Text=%s",gszPastePwd_Text));
 	for (i=0;i<giNbPwdGroupColors;i++)

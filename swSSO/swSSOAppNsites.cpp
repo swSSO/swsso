@@ -3880,10 +3880,13 @@ int LoadApplications(void)
 				}
 				else 
 				{
-					if (gbRecoveryRunning) 
+					//if (gbRecoveryRunning) // 1.14 on loggue à chaque chargement si pb de déchiffrement
 					{
 						char szMessage[1024+1];
-						sprintf_s(szMessage,sizeof(szMessage),"Erreur de tranchiffrement de l'identifiant de la config #%d (%s)\r\n",i,gptActions[i].szApplication);
+						if (gbRecoveryRunning)
+							sprintf_s(szMessage,sizeof(szMessage),"Erreur de tranchiffrement de l'identifiant de la config #%d (%s)\r\n",i,gptActions[i].szApplication);
+						else
+							sprintf_s(szMessage,sizeof(szMessage),"Erreur de déchiffrement de l'identifiant de la config #%d (%s)\r\n",i,gptActions[i].szApplication);
 						LogTranscryptError(szMessage);
 						giNbTranscryptError++;
 						gptActions[i].bError=TRUE;
@@ -3900,11 +3903,30 @@ int LoadApplications(void)
 		GetPrivateProfileString(p,"pwdName","",gptActions[i].szPwdName,sizeof(gptActions[i].szPwdName),gszCfgFile);
 		// 0.50
 		// 0.65B3 on ne déchiffre plus qu'à l'utilisation !
+		// 1.14 mais il faut essayer quand même pour voir si la config n'est pas pourrie
 		GetPrivateProfileString(p,"pwdValue","",gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),gszCfgFile);
 		if (*gptActions[i].szPwdEncryptedValue==0) 
 		{
 			TRACE((TRACE_INFO,_F_,"Mot de passe vide pour appli %s",gptActions[i].szApplication));
 		}
+		else if (strlen(szId1EncryptedValue)==LEN_ENCRYPTED_AES256)
+		{
+			char *psz=GetDecryptedPwd(gptActions[i].szPwdEncryptedValue);
+			if (psz!=NULL) { SecureZeroMemory(psz,strlen(psz)); free(psz); }
+			else 
+			{
+				TRACE((TRACE_ERROR,_F_,"Impossible de déchiffrer le mot de passe de l'appli %s",gptActions[i].szApplication));
+				*gptActions[i].szPwdEncryptedValue=0;
+				gptActions[i].bError=TRUE;
+			}
+		}
+		else
+		{
+			TRACE((TRACE_ERROR,_F_,"Longeur mot de passe incorrecte pour appli %s",gptActions[i].szApplication));
+			*gptActions[i].szPwdEncryptedValue=0;
+			gptActions[i].bError=TRUE;
+		}
+
 		GetPrivateProfileString(p,"validateName","",gptActions[i].szValidateName,sizeof(gptActions[i].szValidateName),gszCfgFile);
 		// 0.80 : renommage de <SANSNOM> en [SANSNOM] pour compatibilité XML...
 		if (strcmp(gptActions[i].szValidateName,gcszFormNoName1)==0) strcpy_s(gptActions[i].szValidateName,sizeof(gptActions[i].szValidateName),gcszFormNoName2);
