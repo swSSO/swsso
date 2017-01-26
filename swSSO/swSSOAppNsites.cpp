@@ -3135,6 +3135,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 		ShowWindow(GetDlgItem(w,TX_LANCEMENT),SW_HIDE);
 		ShowWindow(GetDlgItem(w,TB_LANCEMENT),SW_HIDE);
 		ShowWindow(GetDlgItem(w,PB_PARCOURIR),SW_HIDE);
+		ShowWindow(GetDlgItem(w,IMG_LANCEMENT),SW_HIDE);
 	}
 		
 	// Remplissage des combo
@@ -3963,10 +3964,14 @@ int LoadApplications(void)
 		{
 			TRACE((TRACE_INFO,_F_,"Mot de passe vide pour appli %s",gptActions[i].szApplication));
 		}
-		else if (strlen(szId1EncryptedValue)==LEN_ENCRYPTED_AES256)
+		else if (strlen(gptActions[i].szPwdEncryptedValue)==LEN_ENCRYPTED_AES256)
 		{
 			char *psz=GetDecryptedPwd(gptActions[i].szPwdEncryptedValue);
-			if (psz!=NULL) { SecureZeroMemory(psz,strlen(psz)); free(psz); }
+			if (psz!=NULL) 
+			{ 
+				SecureZeroMemory(psz,strlen(psz)); // on n'en a pas besoin, on le supprime tout de suite
+				free(psz); 
+			}
 			else 
 			{
 				TRACE((TRACE_ERROR,_F_,"Impossible de déchiffrer le mot de passe de l'appli %s",gptActions[i].szApplication));
@@ -3976,7 +3981,7 @@ int LoadApplications(void)
 		}
 		else
 		{
-			TRACE((TRACE_ERROR,_F_,"Longeur mot de passe incorrecte pour appli %s",gptActions[i].szApplication));
+			TRACE((TRACE_ERROR,_F_,"Longueur mot de passe incorrecte pour appli %s",gptActions[i].szApplication));
 			*gptActions[i].szPwdEncryptedValue=0;
 			gptActions[i].bError=TRUE;
 		}
