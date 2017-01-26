@@ -92,6 +92,7 @@ char gcszADPassword[]="%ADPASSWORD%";
 #define TB_PWD_CLEAR_SUBCLASS_ID 2
 static BOOL gbPwdSubClass=FALSE;
 static BOOL gbPwdClearSubClass=FALSE;
+BOOL gbAtLeastOneAppAdded=FALSE;
 
 BOOL gbIsChanging=FALSE;
 
@@ -1328,6 +1329,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView,BOOL 
 			TreeView_EditLabel(GetDlgItem(w,TV_APPLICATIONS),hNewItem);
 		}
 		ShowApplicationDetails(w,giNbActions-1);
+		if (!bSafe) gbAtLeastOneAppAdded=TRUE;
 	}
 	//ClearApplicationDetails(w);
 	rc=0;
@@ -2081,6 +2083,37 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
+
+//-----------------------------------------------------------------------------
+// TVActivateActionFromIndex()
+//-----------------------------------------------------------------------------
+// Active l'application dont l'index est passé en paramètre
+//-----------------------------------------------------------------------------
+void TVActivateActionFromIndex(HWND w,int i,int iActivate)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	
+	if (i==-1) goto end;
+	HTREEITEM hNextCateg,hNextApp;
+	hNextCateg=TreeView_GetRoot(GetDlgItem(w,TV_APPLICATIONS));
+	while (hNextCateg!=NULL)
+	{
+		hNextApp=TreeView_GetChild(GetDlgItem(w,TV_APPLICATIONS),hNextCateg);
+		while(hNextApp!=NULL)
+		{
+			if (TVItemGetLParam(w,hNextApp)==i)
+			{
+				TVActivateAction(w,hNextApp,iActivate);
+				goto end;
+			}
+			hNextApp=TreeView_GetNextSibling(GetDlgItem(w,TV_APPLICATIONS),hNextApp);
+		}
+		hNextCateg=TreeView_GetNextSibling(GetDlgItem(w,TV_APPLICATIONS),hNextCateg);
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
 
 //-----------------------------------------------------------------------------
 // TVActivateSelectedAppOrCateg()
@@ -4285,6 +4318,64 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// CheckIfAppAlreadyExists() -- 1.14 ISSUE#328
+//-----------------------------------------------------------------------------
+// L'utilisateur vient de cliquer sur OK ou Appliquer et il a ajouté au moins
+// une nouvelle configuration. On va donc vérifier que la dernière configuration 
+// qu'on suppose être la seule ajoutée est déjà présente (même config et 
+// même identifiant). Si c'est le cas, on lui demande de confirmer et s'il confirme
+// on désactive la configuration existante 
+//-----------------------------------------------------------------------------
+// rc :  0 = pas de configuration identique existante
+//		-1 = configuration identifique existante et l'utilisateur choisit de désactiver l'ancienne
+//		-2 = configuration identifique existante et l'utilisateur choisit de ne pas ajouter la nouvelle
+//-----------------------------------------------------------------------------
+int CheckIfAppAlreadyExists(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int i;
+	int rc=0;
+
+	for (i=0;i<giNbActions-1;i++)
+	{
+		// exclut les configurations inactives, de type ajout de compte, en erreur ou de type mise en coffre
+		if (!gptActions[i].bActive || gptActions[i].bAddAccount || gptActions[i].bError || gptActions[i].bSafe) continue;
+
+		// compare les principaux champs
+		if (gptActions[i].iType==gptActions[giNbActions-1].iType &&
+			gptActions[i].bKBSim==gptActions[giNbActions-1].bKBSim &&
+			_stricmp(gptActions[i].szTitle,gptActions[giNbActions-1].szTitle)==0 &&
+			_stricmp(gptActions[i].szURL,gptActions[giNbActions-1].szURL)==0 &&
+			_stricmp(gptActions[i].szId1Value,gptActions[giNbActions-1].szId1Value)==0 &&
+			_stricmp(gptActions[i].szId1Name,gptActions[giNbActions-1].szId1Name)==0 &&
+			_stricmp(gptActions[i].szId2Name,gptActions[giNbActions-1].szId2Name)==0 &&
+			_stricmp(gptActions[i].szId3Name,gptActions[giNbActions-1].szId3Name)==0 &&
+			_stricmp(gptActions[i].szId4Name,gptActions[giNbActions-1].szId4Name)==0 &&
+			_stricmp(gptActions[i].szPwdName,gptActions[giNbActions-1].szPwdName)==0 &&
+			_stricmp(gptActions[i].szValidateName,gptActions[giNbActions-1].szValidateName)==0 &&
+			_stricmp(gptActions[i].szKBSim,gptActions[giNbActions-1].szKBSim)==0)
+		{
+			TRACE((TRACE_INFO,_F_,"Nouvelle onfiguration %d (%s) identique à %d (%s)",giNbActions-1,gptActions[giNbActions-1].szApplication,i,gptActions[i].szApplication));
+			if (MessageBox(w,GetString(IDS_APP_ALREADY_EXISTS),"swSSO",MB_OKCANCEL | MB_ICONEXCLAMATION)==IDOK)
+			{
+				gptActions[i].bActive=FALSE;
+				TVActivateActionFromIndex(w,i,ACTIVATE_NO);
+				rc=-1;
+			}
+			else 
+			{
+				rc=-2;
+			}
+			goto end;
+		}
+
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
 // AppNsitesDialogProc()
 //-----------------------------------------------------------------------------
 // DialogProc de la fenêtre de config des applications et sites 
@@ -4369,6 +4460,10 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 								if (lp!=-1) GetApplicationDetails(w,lp);
 							}
 							//if (gbAtLeastOneAppRenamed) UpdateActionsTitleFromTreeview(w);// 0.90B1 : renommage direct, flag inutile
+							if (gbAtLeastOneAppAdded && !gbAdmin) 
+							{
+								if (CheckIfAppAlreadyExists(w)==-2) goto end; // config existe déjà et l'utilisateur ne veut pas continuer
+							}
 							SaveWindowPos(w);
 							SaveApplications();
 							SavePortal();
@@ -4392,6 +4487,10 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							TVUpdateItemState(w,hItem,lp);
 						}
 						//if (gbAtLeastOneAppRenamed) UpdateActionsTitleFromTreeview(w);// 0.90B1 : renommage direct, flag inutile
+						if (gbAtLeastOneAppAdded && !gbAdmin) 
+						{
+							if (CheckIfAppAlreadyExists(w)==-2) goto end; // config existe déjà et l'utilisateur ne veut pas continuer
+						}
 						SaveApplications();
 						SavePortal();
 						BackupAppsNcategs();
@@ -5182,6 +5281,7 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 		}	
 		goto end;
 	}
+	gbAtLeastOneAppAdded=FALSE;
 	DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_APPNSITES),HWND_DESKTOP,AppNsitesDialogProc,(LPARAM)&tAppNsites);
 
 	gwAppNsites=NULL;

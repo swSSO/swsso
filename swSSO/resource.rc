@@ -994,6 +994,7 @@ BEGIN
     IDS_SUBTITLE_CONFIG_NOT_FOUND "Configuration not found"
     IDS_MENU_AJOUTER_COFFRE "Save a login / password"
     IDS_NEW_COFFRE          "Account"
+    IDS_APP_ALREADY_EXISTS  "A configuration with the same id already exists and will be disabled. Do you want to proceed?"
 END
 
 #endif    // English resources
@@ -1883,6 +1884,7 @@ BEGIN
     IDS_SUBTITLE_CONFIG_NOT_FOUND "Configuration non trouvée"
     IDS_MENU_AJOUTER_COFFRE "Mettre un compte au coffre"
     IDS_NEW_COFFRE          "Compte"
+    IDS_APP_ALREADY_EXISTS  "La configuration que vous venez de définir existe déjà avec le même identifiant. Si vous continuez, la configuration existante sera automatiquement désactivée."
 END
 
 #endif    // French resources

@@ -421,6 +421,7 @@
 #define IDS_SUBTITLE_CONFIG_NOT_FOUND   42035
 #define IDS_MENU_AJOUTER_COFFRE         42036
 #define IDS_NEW_COFFRE                  42037
+#define IDS_APP_ALREADY_EXISTS          42038
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005
