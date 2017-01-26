@@ -355,7 +355,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 	char *pszResult=NULL;
 	pszResult=HTTPRequestOneServer(pszServer,iPort,bHTTPS,pszAddress,
 						pszParams,pwszMethod,pRequestData,dwLenRequestData,pwszHeaders,
-						dwAutologonSecurityLevel, timeout,	pInProxyParams,pdwStatusCode);
+						dwAutologonSecurityLevel, timeout==-1?giWebServiceTimeout:timeout,	pInProxyParams,pdwStatusCode);
 	if (*pdwStatusCode!=200 || pszResult==NULL)
 	{
 		if (*pszServer2!=0 && *pszAddress2!=0)
@@ -364,7 +364,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 			if (pszResult!=NULL) free(pszResult);
 			pszResult=HTTPRequestOneServer(pszServer2,iPort2,bHTTPS2,pszAddress2,
 						pszParams,pwszMethod,pRequestData,dwLenRequestData,pwszHeaders,
-						dwAutologonSecurityLevel, timeout,	pInProxyParams,pdwStatusCode);
+						dwAutologonSecurityLevel, timeout==-1?giWebServiceTimeout2:timeout,	pInProxyParams,pdwStatusCode);
 		}
 	}
 	TRACE((TRACE_LEAVE,_F_, "pszResult=0x%08lx",pszResult));

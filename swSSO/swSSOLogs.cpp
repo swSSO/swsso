@@ -240,7 +240,7 @@ int swStat(void)
 		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",buf2048));
 		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 							  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
-							  buf2048,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,8,NULL,&dwStatusCode); // remarque : RAF du résultat
+							  buf2048,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode); // remarque : RAF du résultat
 	}
 	rc=0;
 end:

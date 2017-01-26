@@ -239,6 +239,8 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_DOMAIN_REG_VALUE					"DomainRegValue"
 #define REGVALUE_GET_AUTO_PUBLISHED_CONFIGS_AT_START	"GetAutoPublishedConfigsAtStart"
 #define REGVALUE_ASK_THIS_APP_MESSAGE				"AskThisAppMessage"
+#define REGVALUE_WEBSERVICE_TIMEOUT					"WebServiceTimeout"
+#define REGVALUE_WEBSERVICE_TIMEOUT2				"WebServiceTimeout2"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -300,6 +302,8 @@ extern char gszDomainRegKey[];				// 1.14 - ISSUE#317
 extern char gszDomainRegValue[];			// 1.14 - ISSUE#317
 extern BOOL gbGetAutoPublishedConfigsAtStart;	// 1.14 - ISSUE#310
 extern char gszAskThisAppMessage[];			// 1.14 - ISSUE#319
+extern int	giWebServiceTimeout;			// 1.14 - ISSUE#329
+extern int	giWebServiceTimeout2;			// 1.14 - ISSUE#329
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"
