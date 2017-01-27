@@ -186,7 +186,7 @@ BOOL CheckIfURLStillOK(HWND w,int iAction,int iBrowser,IAccessible *pInAccessibl
 // ----------------------------------------------------------------------------------
 // KBSimWeb
 // ----------------------------------------------------------------------------------
-int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,int iBrowser)
+int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,int iBrowser,T_SUIVI_ACCESSIBLE *ptSuivi,VARIANT vtChild)
 {
 	UNREFERENCED_PARAMETER(bPwd); 
 	TRACE((TRACE_ENTER,_F_, "bErase=%d iTempo=%d",bErase,iTempo));
@@ -200,6 +200,7 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 	IAccessible *pAccessible=NULL;
 
 	// en 1.09, déplacement du control du caps lock tout au début
+	TRACE((TRACE_DEBUG,_F_,"GetKeyState(VK_CAPITAL)=%04x",GetKeyState(VK_CAPITAL)));
 	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
 	{
 		bCapsLock=TRUE;
@@ -233,6 +234,7 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
 
 		if (i%4==0) { if (!CheckIfURLStillOK(w,iAction,iBrowser,pAccessible,(pAccessible==NULL),&pAccessible)) goto end; }
+		if (bPwd && ptSuivi!=NULL) ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
 		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
@@ -305,6 +307,10 @@ int PutAccValueWeb(HWND w,IAccessible *pAccessible,VARIANT index,const char *szV
 	HRESULT hr;
 	BSTR bstrValue=NULL;
 	int rc=-1;
+	VARIANT vtNone;
+
+	vtNone.vt=VT_I4;
+	vtNone.lVal=0;
 
 	SetForegroundWindow(w);
 	hr=pAccessible->accSelect(SELFLAG_TAKEFOCUS,index);
@@ -320,7 +326,7 @@ int PutAccValueWeb(HWND w,IAccessible *pAccessible,VARIANT index,const char *szV
 	}
 	if (bstrValue==NULL || FAILED(hr))
 	{
-		if (KBSimWeb(w,TRUE,100,GetComputedValue(szValue),FALSE,iAction,iBrowser)!=0) goto end; // 1.09B1 : bErase à TRUE toujours
+		if (KBSimWeb(w,TRUE,100,GetComputedValue(szValue),FALSE,iAction,iBrowser,NULL,vtNone)!=0) goto end; // 1.09B1 : bErase à TRUE toujours
 	}
 	rc=0;
 end:
