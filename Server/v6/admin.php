@@ -8,7 +8,7 @@ include('functions.php');
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -33,6 +33,7 @@ include('functions.php');
 // 
 //-----------------------------------------------------------------------------
 // VERSION INTERNE : 6.5
+// VERSION INTERNE : 6.5.1
 //------------------------------------------------------------------------------
 
 $title="<title>swSSO - Serveur de configuration (v6.5)</title>";

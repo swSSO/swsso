@@ -7,7 +7,7 @@ include('util.php');
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -38,6 +38,7 @@ include('util.php');
 // VERSION INTERNE : 6.5
 // - ajout de getdomainid : fournit l'id d'un domaine à partir de son libellé
 // - ajout de la colonne autoPublish
+// VERSION INTERNE : 6.5.1
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client

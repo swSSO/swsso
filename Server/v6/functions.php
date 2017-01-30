@@ -5,7 +5,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -30,6 +30,8 @@
 // 
 //-----------------------------------------------------------------------------
 // VERSION INTERNE : 6.5
+// - ajout de la colonne autoPublish
+// VERSION INTERNE : 6.5.1
 // - ajout de la colonne autoPublish
 //------------------------------------------------------------------------------
 
@@ -162,6 +164,7 @@ function showAll($active,$domain,$title,$export)
 		$header=$header."\n";
 		fputs($csv,$header);
 	}
+	$domainLabel=getDomainLabel($cnx,$domain);
 	for ($i=0;$i<mysql_num_rows($req);$i++)
 	{
 		$ligne = mysql_fetch_row($req);
@@ -186,7 +189,7 @@ function showAll($active,$domain,$title,$export)
 			{
 				if ($ligne[3]!="-1")
 				{
-					echo "<td>".utf8_encode($ligne[3])."</td>";   
+					echo "<td>".$domainLabel."(".$domain.")</td>";
 				}
 				else
 				{
@@ -234,6 +237,28 @@ function showAll($active,$domain,$title,$export)
 		}
 		else // $export!=0
 		{
+			if ($ligne[3]!="") // domainId
+			{
+				if ($ligne[3]=="-1")
+				{
+					$szRequestDomains="select label,domainId from domains,configs_domains where domains.id=configs_domains.domainId and configs_domains.configId=".$ligne[0]." order by domainId";
+					$reqDomains=mysql_query($szRequestDomains,$cnx);
+					if (!$reqDomains) { dbError($cnx,$szRequestDomains); dbClose($cnx); return; }
+					$szDomainsList="";
+					for ($j=0;$j<mysql_num_rows($reqDomains);$j++)
+					{
+						if ($j!=0) $szDomainsList = $szDomainsList."+";
+						$ligneDomain=mysql_fetch_row($reqDomains);
+						$szDomainsList = $szDomainsList.$ligneDomain[0]."(".$ligneDomain[1].")";
+					}
+					if ($szDomainsList=="") $szDomainsList="-";
+					$ligne[3]=utf8_encode($szDomainsList);
+				}
+				else
+				{
+					$ligne[3]=$domainLabel."(".$domain.")";
+				}
+			}
 			fputcsv($csv,$ligne,_SEPARATOR_);
 		}
 	}

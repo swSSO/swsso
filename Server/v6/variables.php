@@ -5,7 +5,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -29,7 +29,7 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.5
+// VERSION INTERNE : 6.5.1
 //------------------------------------------------------------------------------
 
 /*----------------------------------------------------------------------------------------------
