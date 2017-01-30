@@ -827,13 +827,15 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			{
 				int lenMailTo;
 				char *pszMailTo=NULL;
-				lenMailTo=50+strlen(gpszTitleBeingAdded)+strlen(gszConfigNotFoundMailTo)+strlen(gpszConfigNotFoundMailSubject)+strlen(gpszConfigNotFoundMailBody);
+				lenMailTo=100+strlen(gpszTitleBeingAdded)+strlen(gszConfigNotFoundMailTo)+strlen(gpszConfigNotFoundMailSubject)+strlen(gpszConfigNotFoundMailBody)+strlen(gszDomainLabel);
 				if (gpszURLBeingAdded!=NULL) lenMailTo+=strlen(gpszURLBeingAdded);
 					
 				pszMailTo=(char*)malloc(lenMailTo);
 				if (pszMailTo==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenMailTo)); goto end; }
 				sprintf_s(pszMailTo,lenMailTo,"mailto:%s?subject=%s&body=%s",gszConfigNotFoundMailTo,gpszConfigNotFoundMailSubject,gpszConfigNotFoundMailBody);
-				strcat_s(pszMailTo,lenMailTo,"%0DTitre : ");
+				strcat_s(pszMailTo,lenMailTo,"%0DDomaine : ");
+				strcat_s(pszMailTo,lenMailTo,gszDomainLabel);
+				strcat_s(pszMailTo,lenMailTo,"%0D%0DTitre : ");
 				strcat_s(pszMailTo,lenMailTo,gpszTitleBeingAdded);
 				if (gpszURLBeingAdded!=NULL) 
 				{
