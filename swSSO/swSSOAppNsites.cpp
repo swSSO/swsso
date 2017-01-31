@@ -5286,7 +5286,7 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 		}	
 		goto end;
 	}
-	gbAtLeastOneAppAdded=FALSE;
+	gbAtLeastOneAppAdded=!bFromSystray;
 	DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_APPNSITES),HWND_DESKTOP,AppNsitesDialogProc,(LPARAM)&tAppNsites);
 
 	gwAppNsites=NULL;
