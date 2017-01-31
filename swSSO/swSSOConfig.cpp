@@ -4933,9 +4933,11 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 		params.szSubTitle=szSubTitle;
 		params.szMessage=gszAskThisAppMessage;
 		params.szMailTo=gszConfigNotFoundMailTo;
-		gpszURLBeingAdded=pszURL;
-		gpszTitleBeingAdded=szTitle;
+		gpszURLBeingAdded=HTTPEncodeURL(pszURL);
+		gpszTitleBeingAdded=HTTPEncodeURL(szTitle);
 		MessageBox3B(&params);
+		if (gpszURLBeingAdded!=NULL) { free (gpszURLBeingAdded); gpszURLBeingAdded=NULL; }
+		if (gpszTitleBeingAdded!=NULL) { free (gpszTitleBeingAdded); gpszTitleBeingAdded=NULL; }
 		goto end;
 	}
 
@@ -5000,7 +5002,11 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 				params.szMailTo=gszConfigNotFoundMailTo;
 				gpszURLBeingAdded=pszURL;
 				gpszTitleBeingAdded=szTitle;
+				gpszURLBeingAdded=HTTPEncodeURL(pszURL);
+				gpszTitleBeingAdded=HTTPEncodeURL(szTitle);
 				reponse=MessageBox3B(&params);
+				if (gpszURLBeingAdded!=NULL) { free (gpszURLBeingAdded); gpszURLBeingAdded=NULL; }
+				if (gpszTitleBeingAdded!=NULL) { free (gpszTitleBeingAdded); gpszTitleBeingAdded=NULL; }
 				if (reponse==B1) GenerateConfigAndOpenAppNsites(iType,iBrowser,szTitle,pszURL);
 			}
 		}

@@ -385,6 +385,8 @@ char *HTTPEncodeURL(char *pszToEncode)
 	int nbCarsToEncode;
 	int i,j;
 	
+	if (pszToEncode==NULL) goto end; // ce n'est pas une erreur
+
 	// compte le nb de caractères & pour connaitre la taille à allouer
 	lenToEncode=strlen(pszToEncode);
 	if (lenToEncode>1024) // c'est quand même beaucoup, cf. ISSUE#298, dans ce cas, on tronque 
@@ -890,7 +892,7 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				sprintf_s(pszMailTo,lenMailTo,"mailto:%s?subject=%s&body=%s",gszConfigNotFoundMailTo,gpszConfigNotFoundMailSubject,gpszConfigNotFoundMailBody);
 				strcat_s(pszMailTo,lenMailTo,"%0DDomaine : ");
 				strcat_s(pszMailTo,lenMailTo,gszDomainLabel);
-				strcat_s(pszMailTo,lenMailTo,"%0D%0DTitre : ");
+				strcat_s(pszMailTo,lenMailTo,"%0DTitre : ");
 				strcat_s(pszMailTo,lenMailTo,gpszTitleBeingAdded);
 				if (gpszURLBeingAdded!=NULL) 
 				{

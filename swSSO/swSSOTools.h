@@ -56,6 +56,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 				  DWORD *pdwStatusCode);			// [out] status http renseigné (l'appelant peut passer NULL s'il veut pas le statut http)
 char *HTTPEncodeParam(char *pszToEncode);
 char *HTTPDecodeParam(char *pszToDecode);
+char *HTTPEncodeURL(char *pszToEncode);
 int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle);
 BOOL GetConfigBoolValue(char *szSection,char *szItem,BOOL bDefault,BOOL bWriteIfNotFound);
 void Help(void);
