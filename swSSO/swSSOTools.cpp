@@ -372,6 +372,61 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 }
 
 //-----------------------------------------------------------------------------
+// HTTPEncodeURL()
+//-----------------------------------------------------------------------------
+// Encode une URL -- ISSUE#332
+// Dans la version actuelle, seuls le caractère ? et & sont encodé en %3F et %26
+//-----------------------------------------------------------------------------
+char *HTTPEncodeURL(char *pszToEncode)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	char *pszEncoded=NULL;
+	int lenToEncode,lenEncoded;
+	int nbCarsToEncode;
+	int i,j;
+	
+	// compte le nb de caractères & pour connaitre la taille à allouer
+	lenToEncode=strlen(pszToEncode);
+	if (lenToEncode>1024) // c'est quand même beaucoup, cf. ISSUE#298, dans ce cas, on tronque 
+	{
+		lenToEncode=1024;
+	}
+	nbCarsToEncode=0;
+	for (i=0;i<lenToEncode;i++)
+	{
+		if (pszToEncode[i]=='?' || pszToEncode[i]=='&') nbCarsToEncode++;
+	}
+	lenEncoded=lenToEncode+(2*nbCarsToEncode);
+	TRACE((TRACE_DEBUG,_F_,"lenToEncode=%d nbCarsToEncode=%d lenEncoded=%d",lenToEncode,nbCarsToEncode,lenEncoded));
+	// allocation destination
+	pszEncoded=(char*)malloc(lenEncoded+1);
+	if (pszEncoded==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenEncoded+1)); goto end; }
+	// copie avec encodage des caractères
+	for (i=0,j=0;i<lenToEncode;i++)
+	{
+		if (pszToEncode[i]=='?') 
+		{
+			memcpy(pszEncoded+j,"%3F",3);
+			j+=3;
+		}
+		else if (pszToEncode[i]=='&') 
+		{
+			memcpy(pszEncoded+j,"%26",3);
+			j+=3;
+		}
+		else
+		{
+			pszEncoded[j]=pszToEncode[i];
+			j++;
+		}
+	}
+	pszEncoded[j]=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%s",pszEncoded));
+	return pszEncoded;
+}
+
+//-----------------------------------------------------------------------------
 // HTTPEncodeParam()
 //-----------------------------------------------------------------------------
 // Encode un paramètre à passer dans une URL
