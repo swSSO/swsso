@@ -81,7 +81,7 @@ typedef struct
 	int  iB3String;
 	char *szMailTo;
 } T_MESSAGEBOX3B_PARAMS;
-
+extern HWND gwMessageBox3B;
 int MessageBox3B(T_MESSAGEBOX3B_PARAMS *pParams);
 
 HFONT GetModifiedFont(HWND w,long lfWeight);

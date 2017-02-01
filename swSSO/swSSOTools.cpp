@@ -41,6 +41,7 @@ static int giRefreshTimer=10;
 char gszRes[512];
 char gcszK3[]="33333333";
 char gszComputedValue[256+1];
+HWND gwMessageBox3B=NULL;
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -745,6 +746,7 @@ static int CALLBACK MessageBox3BDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		case WM_INITDIALOG:
 			{
 				TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+				gwMessageBox3B=w;
 				T_MESSAGEBOX3B_PARAMS *pParams=(T_MESSAGEBOX3B_PARAMS *)lp;
 				// icone ALT-TAB
 				SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
@@ -927,6 +929,7 @@ int MessageBox3B(T_MESSAGEBOX3B_PARAMS *pParams)
 	int rc;
 
 	rc=DialogBoxParam(ghInstance,MAKEINTRESOURCE(pParams->szMailTo==NULL?IDD_MESSAGEBOX3B:IDD_MESSAGEBOX3BLINK),pParams->wParent,MessageBox3BDialogProc,(LPARAM)pParams);
+	gwMessageBox3B=NULL;
 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;

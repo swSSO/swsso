@@ -107,6 +107,8 @@ typedef BOOL (WINAPI *GETUSERPREFERREDUILANGUAGES)(DWORD dwFlags,PULONG pulNumLa
 
 int giMasterPwdExpiration;
 
+HWND gwChangeApplicationPassword=NULL;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -2876,6 +2878,7 @@ static int CALLBACK ChangeApplicationPasswordDialogProc(HWND w,UINT msg,WPARAM w
 	{
 		case WM_INITDIALOG:
 			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			gwChangeApplicationPassword=w;
 			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
 			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
 			// init champ de saisie
@@ -2987,8 +2990,9 @@ int ChangeApplicationPassword(HWND w,int iAction)
 	TRACE((TRACE_ENTER,_F_, "%d",iAction));
 	int rc=-1;
 	
-	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_FORCE_CHANGE_PWD),w,ChangeApplicationPasswordDialogProc,iAction)==IDOK)
-		rc=0;
+	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_FORCE_CHANGE_PWD),w,ChangeApplicationPasswordDialogProc,iAction)==IDOK) rc=0;
+
+	gwChangeApplicationPassword=NULL;
 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;

@@ -51,6 +51,8 @@ extern HCURSOR ghCursorWait;
 extern HIMAGELIST ghImageList;
 extern HFONT ghBoldFont;
 
+extern HWND gwChooseConfig;
+
 extern UINT guiNbWEBSSO;
 extern UINT guiNbPOPSSO;
 extern UINT guiNbWINSSO;

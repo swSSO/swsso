@@ -174,3 +174,5 @@ void ReportConfigSync(int iErrorMessage,BOOL bShowMessage,BOOL bShowIfZero);
 int SyncSecondaryPasswordGroup(void);
 void SetLanguage(void);
 void GetOSLanguage(void);
+
+extern HWND gwChangeApplicationPassword;

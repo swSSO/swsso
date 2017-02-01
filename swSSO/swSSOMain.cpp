@@ -42,7 +42,7 @@ const char gcszCurrentVersion[]="113";	// 101 = 1.01
 const char gcszCurrentBeta[]="1146";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
-
+HWND gwChooseConfig=NULL;
 HINSTANCE ghInstance;
 HRESULT   ghrCoIni=E_FAIL;	 // code retour CoInitialize()
 bool gbSSOActif=TRUE;	 // Etat swSSO : actif / désactivé	
@@ -355,6 +355,8 @@ void ChooseConfigInitDialog(HWND w,LPARAM lp)
 	LVITEM   lvi;
 	int i,pos;
 
+	gwChooseConfig=w;
+
 	// conserve le lp pour la suite
 	SetWindowLong(w,DWL_USER,lp);
 
@@ -622,6 +624,7 @@ int ChooseConfig(HWND w,int *piAction)
 	}
 	rc=0;
 end:
+	gwChooseConfig=NULL;
 	TRACE((TRACE_LEAVE,_F_, "rc=%d iAction=%d",rc,*piAction));
 	return rc;
 }

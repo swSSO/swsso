@@ -32,5 +32,6 @@
 //-----------------------------------------------------------------------------
 
 extern int giSelectedAccount;
+extern HWND gwSelectAccount;
 int ShowSelectAccount(HWND w);
 
