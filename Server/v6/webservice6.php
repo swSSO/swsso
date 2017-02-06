@@ -100,7 +100,7 @@ else if ($_GET['action']=="getconfigautopublish")
 {
 	if ($_SERVER['HTTP_USER_AGENT']!="swsso.exe") 
 	{
-		//header("HTTP/1.0 404 Not Found"); return;
+		header("HTTP/1.0 404 Not Found"); return;
 	}
 
 	$var_title			="";
