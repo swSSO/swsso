@@ -501,7 +501,7 @@ BEGIN
     LTEXT           "Statistics",TX_STATISTIQUES,7,168,31,10
     LTEXT           "Number of connections:",-1,17,182,77,8
     LTEXT           "0",TX_NBSSO,101,182,230,8
-    CTEXT           "http://www.swsso.com",TX_URL,206,16,95,10,0,WS_EX_TRANSPARENT
+    CTEXT           "https://www.swsso.com",TX_URL,206,16,95,10,0,WS_EX_TRANSPARENT
     LTEXT           "Informations",TX_INFORMATIONS,7,78,44,11
     LTEXT           "Encryption:",-1,17,137,79,8
     LTEXT           "???",TX_PWDENCRYPTED,101,137,171,8
@@ -1401,7 +1401,7 @@ BEGIN
     LTEXT           "Statistiques",TX_STATISTIQUES,7,168,41,10
     LTEXT           "Nombre de SSO réalisés :",-1,17,182,82,8
     LTEXT           "0",TX_NBSSO,101,182,230,8
-    CTEXT           "http://www.swsso.fr",TX_URL,206,16,95,10,0,WS_EX_TRANSPARENT
+    CTEXT           "https://www.swsso.fr",TX_URL,206,16,95,10,0,WS_EX_TRANSPARENT
     LTEXT           "Informations",TX_INFORMATIONS,7,78,44,11
     LTEXT           "Algorithme chiffrement :",-1,17,137,79,8
     LTEXT           "???",TX_PWDENCRYPTED,101,137,171,8

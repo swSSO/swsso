@@ -289,13 +289,13 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				char szURL[50];
 				*szURL=0;
 				GetWindowText(GetDlgItem(w,TX_URL),szURL,sizeof(szURL));
-				if (strcmp(szURL,"http://www.swsso.fr")==0)
+				if (strcmp(szURL,"https://www.swsso.fr")==0)
 				{
-					strcpy_s(szURL,"http://www.swsso.fr/?page_id=201");
+					strcpy_s(szURL,"https://www.swsso.fr/?page_id=201");
 				}
 				else
 				{
-					strcpy_s(szURL,"http://www.swsso.fr/?page_id=31929");
+					strcpy_s(szURL,"https://www.swsso.fr/?page_id=31929");
 				}
 				ShellExecute(NULL,"open",szURL,NULL,"",SW_SHOW );
 			}
