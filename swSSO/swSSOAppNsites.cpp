@@ -4357,7 +4357,6 @@ int CheckIfAppAlreadyExists(HWND w)
 			_stricmp(gptActions[i].szId3Name,gptActions[giNbActions-1].szId3Name)==0 &&
 			_stricmp(gptActions[i].szId4Name,gptActions[giNbActions-1].szId4Name)==0 &&
 			_stricmp(gptActions[i].szPwdName,gptActions[giNbActions-1].szPwdName)==0 &&
-			_stricmp(gptActions[i].szValidateName,gptActions[giNbActions-1].szValidateName)==0 &&
 			_stricmp(gptActions[i].szKBSim,gptActions[giNbActions-1].szKBSim)==0)
 		{
 			TRACE((TRACE_INFO,_F_,"Nouvelle onfiguration %d (%s) identique à %d (%s)",giNbActions-1,gptActions[giNbActions-1].szApplication,i,gptActions[i].szApplication));
