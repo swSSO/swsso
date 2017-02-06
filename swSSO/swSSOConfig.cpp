@@ -3233,12 +3233,24 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	}
 
 	//&debug=1
-	sprintf_s(pszParams,sizeofParams,"?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s&autoPublish=%d",
-			pszEncodedTitle,
-			pszEncodedURL,
-			pszEncodedIds,
-			*szDate==0?"20000101000000":szDate,
-			bNew,bMod,bOld,szType,giDomainId,szVersion,iAutoPublish);
+	if (iAutoPublish)
+	{
+		sprintf_s(pszParams,sizeofParams,"?action=getconfigautopublish&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s",
+				pszEncodedTitle,
+				pszEncodedURL,
+				pszEncodedIds,
+				*szDate==0?"20000101000000":szDate,
+				bNew,bMod,bOld,szType,giDomainId,szVersion);
+	}
+	else
+	{
+		sprintf_s(pszParams,sizeofParams,"?action=getconfig&title=%s&url=%s&ids=%s&date=%s&new=%d&mod=%d&old=%d&type=%s&domainId=%d&version=%s",
+				pszEncodedTitle,
+				pszEncodedURL,
+				pszEncodedIds,
+				*szDate==0?"20000101000000":szDate,
+				bNew,bMod,bOld,szType,giDomainId,szVersion);
+	}
 	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",pszParams));
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
@@ -3246,8 +3258,16 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",pszParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",pszParams)); goto end; }
 
-	bstrXML=GetBSTRFromSZ(pszResult);
-	if (bstrXML==NULL) goto end;
+	if (*pszResult==0) // cas où la méthode est inconnue donc retour vide du webservice
+	{
+		bstrXML=SysAllocString(L"<app>NOT FOUND</app>");
+		if (bstrXML==NULL) goto end;
+	}
+	else
+	{
+		bstrXML=GetBSTRFromSZ(pszResult);
+		if (bstrXML==NULL) goto end;
+	}
 
 end:
 	if (pszEncodedURL!=NULL) free(pszEncodedURL);
