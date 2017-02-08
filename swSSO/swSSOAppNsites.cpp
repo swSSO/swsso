@@ -1298,7 +1298,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView,BOOL 
 	gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
 	gptActions[giNbActions].bActive=bActive; // 0.93B6 (avant c'était FALSE)
 	gptActions[giNbActions].bAutoLock=TRUE;
-	gptActions[giNbActions].bAutoPublish=TRUE;
+	gptActions[giNbActions].bAutoPublish=FALSE;
 	// gptActions[giNbActions].bConfigOK=FALSE; // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 	gptActions[giNbActions].bConfigSent=FALSE;
 	// gptActions[giNbActions].iDomainId=1;
