@@ -42,6 +42,7 @@ char gszRes[512];
 char gcszK3[]="33333333";
 char gszComputedValue[256+1];
 HWND gwMessageBox3B=NULL;
+BOOL gbLastRequestOnFailOverServer=FALSE;
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -354,6 +355,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	char *pszResult=NULL;
+	gbLastRequestOnFailOverServer=FALSE;
 	pszResult=HTTPRequestOneServer(pszServer,iPort,bHTTPS,pszAddress,
 						pszParams,pwszMethod,pRequestData,dwLenRequestData,pwszHeaders,
 						dwAutologonSecurityLevel, timeout==-1?giWebServiceTimeout:timeout,	pInProxyParams,pdwStatusCode);
@@ -361,6 +363,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 	{
 		if (*pszServer2!=0 && *pszAddress2!=0)
 		{
+			gbLastRequestOnFailOverServer=TRUE;
 			TRACE((TRACE_INFO,_F_, "Trying failover server now"));
 			if (pszResult!=NULL) free(pszResult);
 			pszResult=HTTPRequestOneServer(pszServer2,iPort2,bHTTPS2,pszAddress2,

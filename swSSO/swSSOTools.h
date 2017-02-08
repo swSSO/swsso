@@ -68,6 +68,8 @@ char *strnistr (const char *szStringToBeSearched,
 #define B2 2
 #define B3 3
 
+extern BOOL gbLastRequestOnFailOverServer;
+
 typedef struct
 {
 	HWND wParent;

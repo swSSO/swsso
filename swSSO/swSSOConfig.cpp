@@ -209,7 +209,10 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			// 0.89B2 #94 : affichage de l'URL serveur
 			if (gbEnableOption_ViewServerInfos)
 			{
-				wsprintf(buf2048,"%s%s",gszServerAddress,gszWebServiceAddress);
+				if (gbLastRequestOnFailOverServer)
+					wsprintf(buf2048,"%s%s",gszServerAddress2,gszWebServiceAddress2);
+				else
+					wsprintf(buf2048,"%s%s",gszServerAddress,gszWebServiceAddress);
 				SetDlgItemText(w,TX_SERVER,buf2048);
 			}
 			else
