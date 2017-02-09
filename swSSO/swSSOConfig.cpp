@@ -5025,7 +5025,7 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 				params.wParent=w;
 				params.iTitleString=IDS_MESSAGEBOX_TITLE;
 				params.bVCenterSubTitle=TRUE;
-				strcpy_s(szSubTitle,sizeof(szSubTitle),GetString(IDS_SUBTITLE_CONFIG_NOT_FOUND));
+				strcpy_s(szSubTitle,sizeof(szSubTitle),gszErrorServerTitleConfigNotFound);
 				params.szSubTitle=szSubTitle;
 				params.szMessage=gszErrorServerConfigNotFound;
 				params.szMailTo=gszConfigNotFoundMailTo;

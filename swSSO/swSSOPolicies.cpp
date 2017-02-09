@@ -114,6 +114,7 @@ char gszWebServiceAddress[256+1];
 char gszErrorMessageIniFile[1024+1];       	// 0.88 : message d'erreur en cas de corruption swsso.ini
 char gszErrorServerNotAvailable[1024+1];   	// 0.90 : serveur non joignable / pb config proxy
 char gszErrorServerConfigNotFound[1024+1]; 	// 0.90 : configuration demandée non trouvée
+char gszErrorServerTitleConfigNotFound[256+1]; // 1.14 : configuration demandée non trouvée
 BOOL gbCategoryManagement=FALSE;  		   	// 0.91 : prise en compte des catégories dans putconfig et getconfig
 BOOL gbGetAllConfigsAtFirstStart=FALSE;		// 0.91 : propose à l'utilisateur de récupérer toutes les config au 1er lancement
 BOOL gbGetNewConfigsAtStart=FALSE;			// 0.91 : récupère les nouvelles configurations à chaque démarrage
@@ -233,6 +234,7 @@ void LoadPolicies(void)
 	strcpy_s(gszErrorMessageIniFile,sizeof(gszErrorMessageIniFile),GetString(IDS_ERROR_MESSAGE_INI_FILE));
 	strcpy_s(gszErrorServerNotAvailable,sizeof(gszErrorServerNotAvailable),GetString(IDS_CONFIG_PROXY));
 	strcpy_s(gszErrorServerConfigNotFound,sizeof(gszErrorServerConfigNotFound),GetString(IDS_CONFIG_NOT_FOUND));
+	strcpy_s(gszErrorServerTitleConfigNotFound,sizeof(gszErrorServerTitleConfigNotFound),GetString(IDS_SUBTITLE_CONFIG_NOT_FOUND));
 	*gszAskThisAppMessage=0;
 	*gszLogFileName=0;
 	*gszWelcomeMessage=0;
@@ -369,6 +371,14 @@ void LoadPolicies(void)
 		{
 			strcpy_s(gszErrorServerConfigNotFound,sizeof(gszErrorServerConfigNotFound),szValue);
 			gbErrorServerConfigNotFoundDefaultMessage=FALSE;
+		}
+
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ERROR_TITLE_CONFIG_NOT_FOUND,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+		{
+			strcpy_s(gszErrorServerTitleConfigNotFound,sizeof(gszErrorServerTitleConfigNotFound),szValue);
 		}
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
@@ -946,6 +956,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gszSyncSecondaryPasswordOU=%s"		,gszSyncSecondaryPasswordOU));
 	TRACE((TRACE_INFO,_F_,"gbCheckCertificates=%d"				,gbCheckCertificates));
 	TRACE((TRACE_INFO,_F_,"gszErrorServerConfigNotFound=%s"		,gszErrorServerConfigNotFound));
+	TRACE((TRACE_INFO,_F_,"gszErrorServerTitleConfigNotFound=%s",gszErrorServerTitleConfigNotFound));
 	TRACE((TRACE_INFO,_F_,"gszConfigNotFoundMailTo=%s"			,gszConfigNotFoundMailTo));
 	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailSubject=%s"	,gpszConfigNotFoundMailSubject));
 	TRACE((TRACE_INFO,_F_,"gpszConfigNotFoundMailBody=%s"		,gpszConfigNotFoundMailBody));

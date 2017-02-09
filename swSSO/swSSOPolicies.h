@@ -188,6 +188,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_WEBSERVICE_ADDRESS					"WebServiceAddress"
 #define REGVALUE_ERROR_MESSAGE_INI_FILE				"ErrorMessageIniFile"
 #define REGVALUE_ERROR_SERVER_NOT_AVAILABLE			"ErrorMessageServerNotAvailable"
+#define REGVALUE_ERROR_TITLE_CONFIG_NOT_FOUND		"ErrorTitleConfigNotFound"
 #define REGVALUE_ERROR_CONFIG_NOT_FOUND				"ErrorMessageConfigNotFound"
 #define REGVALUE_RECOVERY_KEYID						"RecoveryKeyId"
 #define REGVALUE_RECOVERY_KEYVALUE					"RecoveryKeyValue"
@@ -253,6 +254,7 @@ extern char gszWebServiceAddress[];		// 0.80 : adresse du serveur pour stockage 
 extern char gszErrorMessageIniFile[]; 	// 0.88 : message d'erreur en cas de corruption swsso.ini
 extern char gszErrorServerNotAvailable[];   // 0.90 : serveur non joignable / pb config proxy
 extern char gszErrorServerConfigNotFound[]; // 0.90 : configuration demandée non trouvée
+extern char gszErrorServerTitleConfigNotFound[]; // 1.14 : configuration demandée non trouvée
 extern BOOL gbErrorServerConfigNotFoundDefaultMessage;
 extern BOOL gbCategoryManagement;  			// 0.91 : prise en compte des catégories dans putconfig et getconfig
 extern BOOL gbGetAllConfigsAtFirstStart;	// 0.91 : propose à l'utilisateur de récupérer toutes les config au 1er lancement
