@@ -643,7 +643,17 @@ end:
 void HideConfigControls(HWND w,int iAction)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
-	
+
+	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==0)
+	{
+		if (giLastApplicationConfig==-1)  // catégorie
+			ShowWindow(GetDlgItem(w,TX_COFFRE),SW_HIDE);
+		else if (giLastApplicationConfig<giNbActions && gptActions[giLastApplicationConfig].bSafe) // config mise en coffre
+			ShowWindow(GetDlgItem(w,TX_COFFRE),SW_SHOW);
+		else // config autre
+			ShowWindow(GetDlgItem(w,TX_COFFRE),SW_HIDE);
+	}
+
 	if (!gbEnableOption_ViewAppConfig || (TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==1) || (iAction!=-1 && iAction<giNbActions && gptActions[iAction].bSafe))
 	{
 		ShowWindow(GetDlgItem(w,TB_TITRE),SW_HIDE);
@@ -700,7 +710,7 @@ void HideConfigControls(HWND w,int iAction)
 	}	
 	else
 	{
-		ShowWindow(GetDlgItem(w,TX_COFFRE),SW_HIDE);
+		//ShowWindow(GetDlgItem(w,TX_COFFRE),SW_HIDE);
 	}
 	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==1)
 	{
@@ -766,16 +776,19 @@ void DisableConfigControls(HWND w)
 //-----------------------------------------------------------------------------
 // [in] iType=UNK | WINSSO | POPSSO | WEBSSO | XEBSSO | XINSSO
 //-----------------------------------------------------------------------------
-void EnableControls(HWND w,int iType,BOOL bEnable)
+void EnableControls(HWND w,int iType,BOOL bEnable,BOOL bSafe)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
 	if (!bEnable)
 	{
 		SetDlgItemText(w,TB_ID,"");			EnableWindow(GetDlgItem(w,TB_ID),FALSE);
-		SetDlgItemText(w,TB_ID2,"");		EnableWindow(GetDlgItem(w,TB_ID2),FALSE);
-		SetDlgItemText(w,TB_ID3,"");		EnableWindow(GetDlgItem(w,TB_ID3),FALSE);
-		SetDlgItemText(w,TB_ID4,"");		EnableWindow(GetDlgItem(w,TB_ID4),FALSE);	
+		if (!bSafe)
+		{
+			SetDlgItemText(w,TB_ID2,"");		EnableWindow(GetDlgItem(w,TB_ID2),FALSE);
+			SetDlgItemText(w,TB_ID3,"");		EnableWindow(GetDlgItem(w,TB_ID3),FALSE);
+			SetDlgItemText(w,TB_ID4,"");		EnableWindow(GetDlgItem(w,TB_ID4),FALSE);	
+		}
 		SetDlgItemText(w,TB_PWD,"");		EnableWindow(GetDlgItem(w,TB_PWD),FALSE);
 		SetDlgItemText(w,TB_PWD_CLEAR,"");		EnableWindow(GetDlgItem(w,TB_PWD_CLEAR),FALSE);
 		if (gbAdmin) 
@@ -823,9 +836,9 @@ void EnableControls(HWND w,int iType,BOOL bEnable)
 		switch (iType)
 		{
 			case UNK:
-				EnableWindow(GetDlgItem(w,TB_ID2),FALSE);
-				EnableWindow(GetDlgItem(w,TB_ID3),FALSE);
-				EnableWindow(GetDlgItem(w,TB_ID4),FALSE);	
+				EnableWindow(GetDlgItem(w,TB_ID2),bSafe);
+				EnableWindow(GetDlgItem(w,TB_ID3),bSafe);
+				EnableWindow(GetDlgItem(w,TB_ID4),bSafe);	
 				EnableWindow(GetDlgItem(w,TB_TITRE),FALSE);
 				EnableWindow(GetDlgItem(w,TB_URL),FALSE);
 				EnableWindow(GetDlgItem(w,TB_ID_ID),FALSE);	
@@ -2481,7 +2494,7 @@ void ShowApplicationDetails(HWND w,int iAction)
 	// 1.05 : sauf pour l'admin
 	if ((gptActions[iAction].iWithIdPwd & CONFIG_WITH_PWD) && !gbInternetManualPutConfig) gbShowPwd=FALSE;
 
-	EnableControls(w,gptActions[iAction].iType,TRUE);
+	EnableControls(w,gptActions[iAction].iType,TRUE,gptActions[iAction].bSafe);
 
 	// déchiffrement mot de passe
 	SetDlgItemText(w,TB_PWD,"");
@@ -3250,7 +3263,7 @@ void ClearApplicationDetails(HWND w)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	gbIsChanging=TRUE;
-	EnableControls(w,UNK,FALSE);
+	EnableControls(w,UNK,FALSE,FALSE);
 	// 0.90 : affichage de l'application en cours de modification dans la barre de titre
 	SetWindowText(w,GetString(IDS_TITRE_APPNSITES));
 	ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),SW_HIDE);
@@ -3393,8 +3406,9 @@ static void MoveControls(HWND w,HWND wToRefresh)
 
 	// TabControl bas droite (config)
 	SetWindowPos(GetDlgItem(w,TAB_CONFIG),NULL,rect.right*2/5+15,rect.bottom*1/3-5+yOffset,rect.right*3/5-20,rect.bottom*2/3-30-yOffset,SWP_NOZORDER);
-	SetWindowPos(GetDlgItem(w,TX_COFFRE),NULL,rect.right*2/5+25,rect.bottom*1/3+5+yOffset,rect.right*3/5-40,52,SWP_NOZORDER|SWP_SHOWWINDOW);
-	if ((TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==0) &&    // onglet sélectionné = configuration
+	SetWindowPos(GetDlgItem(w,TX_COFFRE),NULL,rect.right*2/5+25,rect.bottom*1/3+5+yOffset,rect.right*3/5-40,52,SWP_NOZORDER);
+	if (gbEnableOption_ViewAppConfig && 
+		(TabCtrl_GetCurSel(GetDlgItem(w,TAB_CONFIG))==0) &&    // onglet sélectionné = configuration
 		!(giLastApplicationConfig!=-1 && giLastApplicationConfig<giNbActions && gptActions[giLastApplicationConfig].bSafe) &&
 		TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==0)
 	{
@@ -4604,7 +4618,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (HIWORD(wp)==CBN_SELCHANGE)
 					{
 						int iType=SendMessage(GetDlgItem(w,CB_TYPE),CB_GETCURSEL,0,0);
-						EnableControls(w,iType,TRUE);
+						EnableControls(w,iType,TRUE,FALSE);
 					}
 					break;
 				case CK_KBSIM:
