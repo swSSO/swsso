@@ -68,6 +68,7 @@ BOOL gbSSOChrome=TRUE;					// ISSUE#176
 BOOL gbShowLaunchAppWithoutCtrl=FALSE;	// ISSUE#254
 int giLanguage=0; // 0=langue de l'OS, 1=FR, 2=EN
 wchar_t gwszDefaultLanguage[256]=L"";
+HWND gwIdAndPwdDialogProc=NULL;
 
 int gx,gy,gcx,gcy; 		// positionnement de la fenêtre sites et applications
 int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; 	// positionnement de lancement d'application
@@ -742,6 +743,7 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	{
 		case WM_INITDIALOG:
 		{
+			gwIdAndPwdDialogProc=w;
 			// récupération de la structure T_IDANDPWDDIALOG passée en LPARAM
 			T_IDANDPWDDIALOG *params=(T_IDANDPWDDIALOG*)lp;
 			giActionIdPwdAsked=params->iAction;
@@ -5131,7 +5133,15 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 			if (len>0) { if (gptActions[giNbActions].szApplication[len-1]=='*') gptActions[giNbActions].szApplication[len-1]=0; }
 		}
 		wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_NEW),gptActions[giNbActions].szApplication);
-		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),NULL,IdAndPwdDialogProc,(LPARAM)&params)!=IDOK) {rc=-2; goto end; }
+		// ISSUE#334
+		//if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),NULL,IdAndPwdDialogProc,(LPARAM)&params)!=IDOK) {rc=-2; goto end; }
+		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),w,IdAndPwdDialogProc,(LPARAM)&params)!=IDOK) 
+		{
+			gwIdAndPwdDialogProc=NULL;
+			rc=-2; 
+			goto end; 
+		}
+		gwIdAndPwdDialogProc=NULL;
 		// rend le nom unique
 		GenerateApplicationName(giNbActions,gptActions[giNbActions].szApplication);
 		gptActions[giNbActions].bActive=TRUE;

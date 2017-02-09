@@ -122,6 +122,8 @@ extern BOOL gbParseWindowsOnStart;  // 0.93B4 : parse / ne parse pas les fenêtre
 extern int  giNbExcludedHandles;
 extern HWND gTabExcludedHandles[];
 
+extern HWND gwIdAndPwdDialogProc;
+
 #define LEN_PROXY_USER 50
 #define LEN_PROXY_PWD 50
 #define LEN_PROXY_URL 512

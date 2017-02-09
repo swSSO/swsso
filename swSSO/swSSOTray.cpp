@@ -392,6 +392,7 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					gbWillTerminate=TRUE;
 					if (gwMessageBox3B!=NULL) { EndDialog(gwMessageBox3B,-1); gwMessageBox3B=NULL; }
 					if (gwChooseConfig!=NULL) { EndDialog(gwChooseConfig,-1); gwChooseConfig=NULL; }
+					if (gwIdAndPwdDialogProc!=NULL) { EndDialog(gwIdAndPwdDialogProc,-1); gwIdAndPwdDialogProc=NULL; }
 					if (gwChangeApplicationPassword!=NULL) { EndDialog(gwChangeApplicationPassword,-1); gwChangeApplicationPassword=NULL; }
 					if (gwSelectAccount!=NULL) { EndDialog(gwSelectAccount,-1); gwSelectAccount=NULL; }
 					PostQuitMessage(0);

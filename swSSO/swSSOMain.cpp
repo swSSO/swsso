@@ -1102,12 +1102,16 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				params.iTitle=IDS_IDANDPWDTITLE_MISSING;
 				wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_MISSING),gptActions[i].szApplication);
 					
-				if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),HWND_DESKTOP,IdAndPwdDialogProc,(LPARAM)&params)==IDOK) 
+				// ISSUE#334
+				// if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),HWND_DESKTOP,IdAndPwdDialogProc,(LPARAM)&params)==IDOK)
+				if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),w,IdAndPwdDialogProc,(LPARAM)&params)==IDOK) 
 				{
+					gwIdAndPwdDialogProc=NULL;
 					SaveApplications();
 				}
 				else
 				{
+					gwIdAndPwdDialogProc=NULL;
 					// l'utilisateur a annulé, on marque la config en WAIT_ONE_MINUTE comme ça on ne fait pas 
 					// le SSO tout de suite -> repositionne tLastDetect et wLastDetect 
 					//time(&gptActions[i].tLastDetect);
