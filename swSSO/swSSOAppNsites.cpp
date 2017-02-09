@@ -4500,6 +4500,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						BackupAppsNcategs();
 						EnableWindow(GetDlgItem(w,IDAPPLY),FALSE); // ISSUE#114
 						if (hCursorOld!=NULL) SetCursor(hCursorOld);
+						gbAtLeastOneAppAdded=FALSE;
 					}
 					break;
 				case IDCANCEL:
@@ -5259,6 +5260,8 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 	cmonitors=GetSystemMetrics(SM_CMONITORS);
 	TRACE((TRACE_DEBUG,_F_,"cmonitors=%d cx=%d cy=%d gx=%d gy=%d",cmonitors,cx,cy,gx,gy));
 
+	gbAtLeastOneAppAdded=!bFromSystray;
+
 	// si fenêtre déjà affichée, la replace au premier plan
 	if (gwAppNsites!=NULL)
 	{
@@ -5285,7 +5288,6 @@ int ShowAppNsites(int iSelected, BOOL bFromSystray)
 		}	
 		goto end;
 	}
-	gbAtLeastOneAppAdded=!bFromSystray;
 	DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_APPNSITES),HWND_DESKTOP,AppNsitesDialogProc,(LPARAM)&tAppNsites);
 
 	gwAppNsites=NULL;
