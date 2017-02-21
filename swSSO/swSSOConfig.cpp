@@ -4309,7 +4309,8 @@ int GetAutoPublishConfigsFromServer(void)
 
 	if (bstrXML==NULL) // la requete n'a pas abouti
 	{
-		if (gbDisplayConfigsNotifications) MessageBox(NULL,gszErrorServerNotAvailable,"swSSO",MB_OK | MB_ICONEXCLAMATION);
+		// 1.14FIX1 : on n'affiche pas de message d'erreur, sinon risque de doublon
+		// if (gbDisplayConfigsNotifications) MessageBox(NULL,gszErrorServerNotAvailable,"swSSO",MB_OK | MB_ICONEXCLAMATION);
 		goto end;
 	}
 	if (CompareBSTRtoSZ(bstrXML,"<app>NOT FOUND</app>")) // rien trouvé
@@ -4947,29 +4948,6 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 	}
 	else iType=XINSSO;
 
-	if (bJustDisplayTheMessage) // ISSUE#319
-	{
-		char szSubTitle[256];
-		T_MESSAGEBOX3B_PARAMS params;
-		params.szIcone=IDI_EXCLAMATION;
-		params.iB1String=IDS_FERMER; // fermer
-		params.iB2String=-1; // rien 
-		params.iB3String=-1; // rien
-		params.wParent=w;
-		params.iTitleString=IDS_MESSAGEBOX_TITLE;
-		params.bVCenterSubTitle=TRUE;
-		strcpy_s(szSubTitle,sizeof(szSubTitle),GetString(IDS_MENU_ASK_THIS_APP));
-		params.szSubTitle=szSubTitle;
-		params.szMessage=gszAskThisAppMessage;
-		params.szMailTo=gszConfigNotFoundMailTo;
-		gpszURLBeingAdded=HTTPEncodeURL(pszURL);
-		gpszTitleBeingAdded=HTTPEncodeURL(szTitle);
-		MessageBox3B(&params);
-		if (gpszURLBeingAdded!=NULL) { free (gpszURLBeingAdded); gpszURLBeingAdded=NULL; }
-		if (gpszTitleBeingAdded!=NULL) { free (gpszTitleBeingAdded); gpszTitleBeingAdded=NULL; }
-		goto end;
-	}
-
 	if (gbInternetGetConfig)
 	{
 		// recherche de la configuration sur le serveur
@@ -5019,15 +4997,25 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 				T_MESSAGEBOX3B_PARAMS params;
 				int reponse;
 				params.szIcone=IDI_EXCLAMATION;
-				params.iB1String=IDS_AJOUTER; // ajouter
-				params.iB2String=IDS_FERMER; // fermer
-				params.iB3String=-1; // rien
+				if (bJustDisplayTheMessage)
+				{
+					params.iB1String=IDS_FERMER; // fermer
+					params.iB2String=-1; // rien 
+					params.iB3String=-1; // rien
+					params.szMessage=gszAskThisAppMessage;
+				}
+				else
+				{
+					params.iB1String=IDS_AJOUTER; // ajouter
+					params.iB2String=IDS_FERMER; // fermer
+					params.iB3String=-1; // rien
+					params.szMessage=gszErrorServerConfigNotFound;
+				}
 				params.wParent=w;
 				params.iTitleString=IDS_MESSAGEBOX_TITLE;
 				params.bVCenterSubTitle=TRUE;
 				strcpy_s(szSubTitle,sizeof(szSubTitle),gszErrorServerTitleConfigNotFound);
 				params.szSubTitle=szSubTitle;
-				params.szMessage=gszErrorServerConfigNotFound;
 				params.szMailTo=gszConfigNotFoundMailTo;
 				gpszURLBeingAdded=pszURL;
 				gpszTitleBeingAdded=szTitle;
@@ -5036,7 +5024,7 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 				reponse=MessageBox3B(&params);
 				if (gpszURLBeingAdded!=NULL) { free (gpszURLBeingAdded); gpszURLBeingAdded=NULL; }
 				if (gpszTitleBeingAdded!=NULL) { free (gpszTitleBeingAdded); gpszTitleBeingAdded=NULL; }
-				if (reponse==B1) GenerateConfigAndOpenAppNsites(iType,iBrowser,szTitle,pszURL);
+				if (!bJustDisplayTheMessage && (reponse==B1)) GenerateConfigAndOpenAppNsites(iType,iBrowser,szTitle,pszURL);
 			}
 		}
 		goto end;
