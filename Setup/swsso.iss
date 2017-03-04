@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "swSSO"
-#define MyAppVersion "1.13"
+#define MyAppVersion "1.14"
 #define MyAppURL "www.swsso.fr"
 #define MyAppExeName "swSSO.exe"
 
@@ -62,7 +62,7 @@ Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\services\swSSOCM\NetworkProvider
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; Flags: uninsdeletekey
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; ValueType: dword; ValueName: "PasswordChoiceLevel"; ValueData: "4"; Flags: uninsdeletevalue
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: none; Flags: uninsdeletekey
-Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "8C7D3B181908C01D1E2EE35DF2A3AEAB570C34A9A4F4E1FB32421D96CEC90566"; Flags: uninsdeletevalue
+Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "7D126F6C8CA274164A3A0F9575CB6B5CF24BEEDC860E4F748550CD3ABB68FAF9"; Flags: uninsdeletevalue
 
 [CustomMessages]
 french.CreateStartupIcon=Lancer swSSO au démarrage de Windows
