@@ -204,10 +204,20 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
 	{
 		bCapsLock=TRUE;
-		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
-		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+		//keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
+		//keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+		// test 1
+		// keybd_event(VK_CAPITAL,0x45,KEYEVENTF_EXTENDEDKEY,0);
+		// keybd_event(VK_CAPITAL,0x45,KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+		// test 2
+		// INPUT input[2];
+		// ZeroMemory(input, sizeof(input));        
+		// input[0].type = input[1].type = INPUT_KEYBOARD;
+		// input[0].ki.wVk  = input[1].ki.wVk = VK_CAPITAL;        
+		// input[1].ki.dwFlags = KEYEVENTF_KEYUP;  // THIS IS IMPORTANT
+		// SendInput(2, input, sizeof(INPUT));
+		
 	}
-	
 	// ISSUE#264 : changement de la technique d'effacement, on fait CTRL+A puis DEL, ça évite les changements de champs.
 	if (bErase) // ISSUE#286 : refait comme avant, n'efface pas systématiquement sinon la config type "simulation de frappe" ne fonctionne plus !
 	{
@@ -229,7 +239,15 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		hiVk=HIBYTE(wKeyScan);
 		loVk=LOBYTE(wKeyScan);
 		
-		if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+		//if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+		if (bCapsLock)
+		{
+			if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+		}
+		else
+		{
+			if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+		}
 		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0); }
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
 
@@ -241,15 +259,34 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		
 		// ISSUE#163 : inversion des lignes pour CONTROL et MENU il relacher les touches dans le même sens sinon la touche ALT
 		//             reste enfoncée (uniquement constaté dans IE9, reproduit nulle par ailleurs)
-		if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
+		// if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
+		if (bCapsLock)
+		{
+			if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
+		}
+		else
+		{
+			if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
+		}
 		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); } 
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); } 
 	}
 
 	if (bCapsLock) // 0.75 : on remet caps lock
 	{
-		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
-		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+		//keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
+		//keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+		// test 1
+		// keybd_event(VK_CAPITAL,0x45,KEYEVENTF_EXTENDEDKEY,0);
+		// keybd_event(VK_CAPITAL,0x45,KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+		// test 2
+		// INPUT input[2];
+		// ZeroMemory(input, sizeof(input));        
+		// input[0].type = input[1].type = INPUT_KEYBOARD;
+		// input[0].ki.wVk  = input[1].ki.wVk = VK_CAPITAL;        
+		// input[1].ki.dwFlags = KEYEVENTF_KEYUP;  // THIS IS IMPORTANT
+		// SendInput(2, input, sizeof(INPUT));
+		
 	}
 	Sleep(iTempo);
 	rc=0;
