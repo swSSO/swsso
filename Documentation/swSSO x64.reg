@@ -41,9 +41,11 @@ Windows Registry Editor Version 5.00
 "ActivateNewConfigs"=dword:00000000
 "AdminDeleteConfigsOnServer"=dword:00000000
 "AllowManagedConfigsDeletion"=dword:00000001
+"AllowManagedConfigsModification"=dword:00000001
 "__AskThisAppMessage"=""
 "CategoryAutoUpdate"=dword:00000000
 "CategoryManagement"=dword:00000000
+"CheckCertificates"=dword:00000001
 "__ConfigNotFoundMailTo"=""
 "__ConfigNotFoundMailSubject"=""
 "__ConfigNotFoundMailBody"=""
