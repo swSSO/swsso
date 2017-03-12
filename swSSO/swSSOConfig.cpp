@@ -128,6 +128,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	switch (msg)
 	{
 		case WM_INITDIALOG:
+		{
 			TRACE((TRACE_DEBUG,_F_,"WM_INITDIALOG"));
 			LOGFONT logfont;
 			HFONT hFont;
@@ -235,7 +236,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			}
 			rc=FALSE;
 			break;
-
+		}
 		case WM_CTLCOLORSTATIC:
 			int ctrlID;
 			ctrlID=GetDlgCtrlID((HWND)lp);

@@ -1339,20 +1339,20 @@ int GetNbCharsInString(const char *s,int iSearchType)
 // Vérifie que szPwd ne contient pas plus de giPwdPolicy_IdMaxCommonChars
 // caractères consécutifs de la chaine szUserName
 //-----------------------------------------------------------------------------
-BOOL CheckCommonChars(const char *szPwd,const char *szUserName,int giPwdPolicy_IdMaxCommonChars)
+BOOL CheckCommonChars(const char *szPwd,const char *szUserName,int iPwdPolicy_IdMaxCommonChars)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	BOOL rc=TRUE;
 	char szExtract[50+1];
 	unsigned int i;
 
-	TRACE((TRACE_DEBUG,_F_,"szPwd=%s szUserName=%s giPwdPolicy_IdMaxCommonChars=%d",szPwd,szUserName,giPwdPolicy_IdMaxCommonChars));
-	if (giPwdPolicy_IdMaxCommonChars>30) goto end;
+	TRACE((TRACE_DEBUG,_F_,"szPwd=%s szUserName=%s giPwdPolicy_IdMaxCommonChars=%d",szPwd,szUserName, iPwdPolicy_IdMaxCommonChars));
+	if (iPwdPolicy_IdMaxCommonChars>30) goto end;
 
-	for (i=0;i<strlen(szUserName)-giPwdPolicy_IdMaxCommonChars+1;i++)
+	for (i=0;i<strlen(szUserName)- iPwdPolicy_IdMaxCommonChars +1;i++)
 	{
-		memcpy(szExtract,szUserName+i,giPwdPolicy_IdMaxCommonChars);
-		szExtract[giPwdPolicy_IdMaxCommonChars]=0;
+		memcpy(szExtract,szUserName+i, iPwdPolicy_IdMaxCommonChars);
+		szExtract[iPwdPolicy_IdMaxCommonChars]=0;
 		TRACE((TRACE_DEBUG,_F_,"Look for szExtract=%s in pwd=%s",szExtract,szPwd));
 
 		//if (strstr(szPwd,szExtract)!=NULL) { rc=FALSE; goto end; }

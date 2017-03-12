@@ -4408,9 +4408,11 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	switch (msg)
 	{
 		case WM_APP+1: // gestion du tri après renommage (v0.88-#58)
-			HTREEITEM hParentItem;
-			hParentItem=(HTREEITEM)lp;
-			TreeView_SortChildren(GetDlgItem(w,TV_APPLICATIONS),hParentItem,FALSE);
+			{
+				HTREEITEM hParentItem;
+				hParentItem=(HTREEITEM)lp;
+				TreeView_SortChildren(GetDlgItem(w,TV_APPLICATIONS),hParentItem,FALSE);
+			}
 			break;
 		case WM_INITDIALOG:	// ---------------------------------------------------------------------- WM_INITDIALOG
 			{
@@ -4474,8 +4476,8 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							if (hItem!=NULL) hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),hItem);
 							if (hParentItem!=NULL) 
 							{
-								LPARAM lp=TVItemGetLParam(w,hItem);
-								if (lp!=-1) GetApplicationDetails(w,lp);
+								LPARAM lparam=TVItemGetLParam(w,hItem);
+								if (lparam!=-1) GetApplicationDetails(w,lparam);
 							}
 							//if (gbAtLeastOneAppRenamed) UpdateActionsTitleFromTreeview(w);// 0.90B1 : renommage direct, flag inutile
 							if (gbAtLeastOneAppAdded && !gbAdmin) 
@@ -4500,9 +4502,9 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (hItem!=NULL) hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),hItem);
 						if (hParentItem!=NULL) 
 						{
-							LPARAM lp=TVItemGetLParam(w,hItem);
-							if (lp!=-1) GetApplicationDetails(w,lp);
-							TVUpdateItemState(w,hItem,lp);
+							LPARAM lparam=TVItemGetLParam(w,hItem);
+							if (lparam!=-1) GetApplicationDetails(w,lparam);
+							TVUpdateItemState(w,hItem,lparam);
 						}
 						//if (gbAtLeastOneAppRenamed) UpdateActionsTitleFromTreeview(w);// 0.90B1 : renommage direct, flag inutile
 						if (gbAtLeastOneAppAdded && !gbAdmin) 

@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="114";	// 101 = 1.01
-const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1151";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 HWND gwChooseConfig=NULL;
@@ -1473,6 +1473,7 @@ static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			switch (LOWORD(wp))
 			{
 				case IDOK:
+				{
 					char szPwd1[LEN_PWD+1];
 					GetDlgItemText(w,TB_PWD1,szPwd1,sizeof(szPwd1));
 					// Password Policy
@@ -1501,6 +1502,7 @@ static int CALLBACK SimplePwdChoiceDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 						EndDialog(w,IDOK);
 					}
 					break;
+				}
 				case IDCANCEL:
 					EndDialog(w,IDCANCEL);
 					break;
@@ -2231,9 +2233,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 
 			// ISSUE#262 : force le username en minuscule
 			//memcpy(szTemp+32,gszUserName,strlen(gszUserName)<16?strlen(gszUserName):16);
-			int i,len;
-			len=min(strlen(gszUserName),16);
-			for (i=0;i<len;i++) szTemp[32+i]=(char)tolower(gszUserName[i]);
+			int i,lenUserName;
+			lenUserName=min(strlen(gszUserName),16);
+			for (i=0;i<lenUserName;i++) szTemp[32+i]=(char)tolower(gszUserName[i]);
 			//TRACE((TRACE_PWD,_F_,"sel=%s",szTemp));
 
 			swCryptDeriveKey(szTemp,ghKey1);
@@ -2260,9 +2262,9 @@ askpwd:
 		{
 			// Regarde si l'utilisateur utilisait le couplage Windows précédemment
 			char szSynchroValue[192+1]; // (16+64+16)*2+1 = 193
-			int len;
-			len=GetPrivateProfileString("swSSO","CheckSynchro","",szSynchroValue,sizeof(szSynchroValue),gszCfgFile);
-			if (len!=0) // ISSUE#181 (découplage) : l'utilisateur était en PP_WINDOWS et passe PP_ENCRYPTED
+			int lenCheckSynchro;
+			lenCheckSynchro =GetPrivateProfileString("swSSO","CheckSynchro","",szSynchroValue,sizeof(szSynchroValue),gszCfgFile);
+			if (lenCheckSynchro !=0) // ISSUE#181 (découplage) : l'utilisateur était en PP_WINDOWS et passe PP_ENCRYPTED
 			{
 				// demande le mot de passe à l'utilisateur (pas le choix, pour hasher, il faut le connaitre)
 				// bidouille pour se retrouver dans le même cas que le clic sur la loupe et vérifier le mot de passe windows facilement...
@@ -2310,13 +2312,13 @@ askpwd:
 		else if (giPwdProtection==PP_WINDOWS) // MODE mot de passe Windows
 		{
 			char szConfigHashedPwd[SALT_LEN*2+HASH_LEN*2+1];
-			int len;
+			int lenConfigHashedPwd;
 			
 			// Regarde si l'utilisateur utilisait un mot de passe maitre avant de demander le couplage Windows
 			GetPrivateProfileString("swSSO","pwdValue","",szConfigHashedPwd,sizeof(szConfigHashedPwd),gszCfgFile);
 			TRACE((TRACE_DEBUG,_F_,"pwdValue=%s",szConfigHashedPwd));
-			len=strlen(szConfigHashedPwd);
-			if (len==PBKDF2_PWD_LEN*2) // L'utilisateur a encore un mot de passe maitre mais doit passer en couplage Windows
+			lenConfigHashedPwd=strlen(szConfigHashedPwd);
+			if (lenConfigHashedPwd==PBKDF2_PWD_LEN*2) // L'utilisateur a encore un mot de passe maitre mais doit passer en couplage Windows
 			{
 				char szPwd[LEN_PWD+1];
 				int ret=DPAPIGetMasterPwd(szPwd);
@@ -2332,7 +2334,7 @@ askpwd:
 				giPwdProtection=PP_WINDOWS;
 				bMigrationWindowsSSO=TRUE; // On note de faire la migration (se fait plus tard une fois les configs chargées)
 			}
-			else if (len==0) // L'utilisateur est déjà en mode PP_WINDOWS
+			else if (lenConfigHashedPwd==0) // L'utilisateur est déjà en mode PP_WINDOWS
 			{
 				// regarde s'il y a une réinit de mdp en cours
 				int ret=RecoveryResponse(NULL);
@@ -2366,7 +2368,7 @@ askpwd:
 					goto end;
 				}
 			}
-			else if (len==296) // L'utilisateur a une vieille version de swSSO (ISSUE#172 : il faut migrer quand même)
+			else if (lenConfigHashedPwd==296) // L'utilisateur a une vieille version de swSSO (ISSUE#172 : il faut migrer quand même)
 			{
 				char szPwd[LEN_PWD+1];
 				int ret=DPAPIGetMasterPwd(szPwd);
@@ -2384,7 +2386,7 @@ askpwd:
 			}
 			else // L'utilisateur a un problème avec son .ini...
 			{
-				TRACE((TRACE_ERROR,_F_,"len(pwdValue)=%d",len));
+				TRACE((TRACE_ERROR,_F_,"lenConfigHashedPwd=%d", lenConfigHashedPwd));
 				MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_VER),"swSSO",MB_OK | MB_ICONSTOP);
 				goto end;
 			}
