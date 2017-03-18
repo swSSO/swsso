@@ -34,12 +34,19 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 //
 
 IDB_EXCLAMATION         BITMAP                  ".\\exclamation.bmp"
+
 IDB_LOGO                BITMAP                  "swsso-v5 52x44.bmp"
+
 IDB_LOGO_FONDBLANC50    BITMAP                  "logo-50.bmp"
+
 IDB_LOGO_FONDBLANC90    BITMAP                  "logo-90.bmp"
+
 IDB_LOUPE               BITMAP                  "loupe.bmp"
+
 IDB_QUESTION            BITMAP                  ".\\question.bmp"
+
 IDB_TVIMAGES            BITMAP                  "tvImages.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -47,6 +54,7 @@ IDB_TVIMAGES            BITMAP                  "tvImages.bmp"
 //
 
 IDC_CURSOR_HAND         CURSOR                  "hand.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -56,12 +64,19 @@ IDC_CURSOR_HAND         CURSOR                  "hand.cur"
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SYSTRAY_ACTIVE      ICON                    "SystrayActive.ico"
+
 IDI_HELP                ICON                    ".\\help-8bits.ico"
+
 IDI_LOGO                ICON                    "logo.ICO"
+
 IDI_LOUPE               ICON                    ".\\loupe-8bits.ico"
+
 IDI_SYSTRAY_ADMIN_ACTIVE ICON                    ".\\SystrayAdminActive.ico"
+
 IDI_SYSTRAY_ADMIN_INACTIVE ICON                    ".\\SystrayAdminInactive.ico"
+
 IDI_SYSTRAY_INACTIVE    ICON                    "SystrayInactive.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -69,6 +84,7 @@ IDI_SYSTRAY_INACTIVE    ICON                    "SystrayInactive.ico"
 //
 
 1                       RT_MANIFEST             ".\\manifest.xml"
+
 #endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1504,6 +1520,21 @@ BEGIN
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,256,1
 END
 
+IDD_ADMIN_LOGIN DIALOGEX 0, 0, 268, 109
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Mode administrateur"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    EDITTEXT        TB_ID,72,46,189,13,ES_AUTOHSCROLL
+    EDITTEXT        TB_PWD,72,65,189,13,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,158,88,50,14,WS_DISABLED
+    PUSHBUTTON      "Annuler",IDCANCEL,212,88,50,14
+    LTEXT           "&Mot de passe :",IDC_STATIC,12,68,50,10
+    LTEXT           "&Identifiant :",IDC_STATIC,12,48,53,8
+    LTEXT           "Veuillez saisir votre identifiant et votre mot de passe administrateur swSSO ci-dessous.",TX_FRAME,47,7,211,19
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,256,1
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1545,6 +1576,10 @@ BEGIN
     BEGIN
     END
 
+    IDD_PWD_ADMIN_ASK, DIALOG
+    BEGIN
+    END
+
     PSP_ABOUT, DIALOG
     BEGIN
     END
@@ -1562,6 +1597,10 @@ BEGIN
     END
 
     IDD_ASK_AD_PWD, DIALOG
+    BEGIN
+    END
+
+    IDD_ADMIN_LOGIN, DIALOG
     BEGIN
     END
 END
@@ -1595,6 +1634,17 @@ BEGIN
         MENUITEM "&Générer (15 lettres et chiffres)", IDM_GENERATE_ALPHANUM_15
         MENUITEM "&Générer (20 lettres et chiffres)", IDM_GENERATE_ALPHANUM_20
     END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_ADMIN_LOGIN AFX_DIALOG_LAYOUT
+BEGIN
+    0
 END
 
 

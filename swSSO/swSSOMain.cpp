@@ -2178,6 +2178,8 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	// ISSUE#318
 	LoadGlobalOrDomainPolicies(gszDomainLabel);
 
+	if (gbAdmin) AskAdminIdPwd();
+
 	if (*gszCfgVersion==0 || giPwdProtection==0) // version <0.50 ou premier lancement... // ISSUE#295
 	{
 		// ISSUE#260 : crée le répertoire qui doit contenir le fichier .ini

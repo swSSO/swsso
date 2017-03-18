@@ -158,6 +158,8 @@
 #define IDC_SEPARATOR                   1175
 #define IDD_CHANGE_IDS                  1177
 #define IDD_MESSAGEBOX3BLINK            1178
+#define IDD_ASK_AD_PWD1                 1179
+#define IDD_ADMIN_LOGIN                 1179
 #define CK_CHROME                       40000
 #define CK_DISPLAY_MSG                  40000
 #define IDS_BADPWD                      40000
@@ -432,7 +434,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        42010
+#define _APS_NEXT_RESOURCE_VALUE        42011
 #define _APS_NEXT_COMMAND_VALUE         44000
 #define _APS_NEXT_CONTROL_VALUE         46007
 #define _APS_NEXT_SYMED_VALUE           48000

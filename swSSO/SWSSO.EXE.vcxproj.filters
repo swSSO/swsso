@@ -131,10 +131,13 @@
     <ClCompile Include="swSSOSelectAccount.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="swSSOAdmin.cpp">
+    <ClCompile Include="swSSODomains.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="swSSODomains.cpp">
+    <ClCompile Include="swSSOAdminNoPwd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOAdmin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -217,10 +220,13 @@
     <ClInclude Include="swSSOSelectAccount.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="swSSOAdmin.h">
+    <ClInclude Include="swSSODomains.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="swSSODomains.h">
+    <ClInclude Include="swSSOAdminNoPwd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOAdmin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

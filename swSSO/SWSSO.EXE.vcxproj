@@ -234,6 +234,7 @@
   <ItemGroup>
     <ClCompile Include="swSSOAD.cpp" />
     <ClCompile Include="swSSOAdmin.cpp" />
+    <ClCompile Include="swSSOAdminNoPwd.cpp" />
     <ClCompile Include="swSSOAppNsites.cpp" />
     <ClCompile Include="swSSOChrome.cpp" />
     <ClCompile Include="swSSOConfig.cpp" />
@@ -266,6 +267,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="swSSOAD.h" />
     <ClInclude Include="swSSOAdmin.h" />
+    <ClInclude Include="swSSOAdminNoPwd.h" />
     <ClInclude Include="swSSOAppNsites.h" />
     <ClInclude Include="swSSOChrome.h" />
     <ClInclude Include="swSSOConfig.h" />
