@@ -2,6 +2,7 @@
 include('variables.php');
 include('util.php');
 include('functions.php');
+include('sessions.php');
 //-----------------------------------------------------------------------------
 //
 //                                  swSSO
@@ -34,6 +35,17 @@ include('functions.php');
 //-----------------------------------------------------------------------------
 // VERSION INTERNE : 6.5.2
 //------------------------------------------------------------------------------
+
+if (!isAdminAuthorized())
+{
+	header('Location: ./login.php');
+	exit();
+}
+if (!isset($_GET['action']))
+{
+	header('Location: ./admin.php?action=menu');
+	exit();
+}
 
 $title="<title>swSSO - Serveur de configuration (v6.5)</title>";
 
@@ -248,11 +260,13 @@ else if ($_GET['action']=="menu"._MENUSUFFIX_)
 			echo "<br/>+ <a href=./admin.php?action=showdomains"._READSUFFIX_.">Ajouter ou supprimer un domaine</a>";
 			echo "<br/>+ <a href=./export.php?data=stats>T&eacute;l&eacute;charger les statistiques (csv)</a>";    
 			if (_SHOWRESETPWD_=="TRUE") echo "<br/>+ <a href=./admin.php?action=deleteadminpwd"._WRITESUFFIX_.">Effacer le mot de passe administrateur</a>";   
-			echo "<br/>+ <a href=./webservice6.php?action=isalive>Test \"isalive\"</a>";   
+			echo "<br/>+ <a href=./webservice6.php?action=isalive>Test \"isalive\"</a>"; 
+			if (_AUTH_=="TRUE") echo "<br/>+ <a href=./logout.php>D&eacute;connexion</a>";    			
 			if (_ENCRYPT_=="TRUE")
 				echo "<br/><br/>Chiffrement : activ&eacute;";
 			else
 				echo "<br/><br/>Chiffrement : non activ&eacute;";
+			
 			echo "</font>";
 		}
 	}

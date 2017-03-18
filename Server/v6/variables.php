@@ -5,7 +5,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2014 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -29,15 +29,15 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.5.2
+// VERSION INTERNE : 6.4
 //------------------------------------------------------------------------------
 
 /*----------------------------------------------------------------------------------------------
 VARIABLES DE CONNEXION A LA BASE DE DONNEES
 ----------------------------------------------------------------------------------------------*/
-define("_HOST_","");			// Nom du serveur hebergeant la base de donnees
-define("_DB_",""); 				// Nom de la base de données
-define("_USER_","");			// Utilisateur MySQL
+define("_HOST_","localhost");			// Nom du serveur hebergeant la base de donnees
+define("_DB_","swsso"); 				// Nom de la base de données
+define("_USER_","root");			// Utilisateur MySQL
 define("_PWD_","");				// Mot de passe utilisateur MySQL
 define("_TABLE_PREFIX_",""); 	// Préfixe à utiliser pour les tables
 
@@ -50,7 +50,8 @@ define("_AESPWD_","");			// Mot de passe pour chiffrement
 /*----------------------------------------------------------------------------------------------
 OPTIONS
 ----------------------------------------------------------------------------------------------*/
-define("_LOGS_","TRUE");  			// TRUE | FALSE (genere des logs a chaque getconfig / ou pas)
+define("_AUTH_","TRUE");  			// TRUE | FALSE (impose l'authentification pour les fonctions d'écriture)
+define("_LOGS_","FALSE");  			// TRUE | FALSE (genere des logs a chaque getconfig / ou pas)
 define("_SHOWMENU_","TRUE");		// TRUE | FALSE (affichage menu autorise / interdit)
 define("_MENUSUFFIX_","");  		// "protection" de l'URL presentant le menu
 define("_READSUFFIX_","");  		// "protection" des URLs permettant la lecture de la base
