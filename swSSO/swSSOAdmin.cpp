@@ -30,18 +30,18 @@
 //-----------------------------------------------------------------------------
 // swSSOAdmin.cpp
 //-----------------------------------------------------------------------------
-// Fonctions spécifiques au mode admin avec login/mdp
+// Fonctions spécifiques au mode admin avec authentification serveur
 //-----------------------------------------------------------------------------
 
 #include "stdafx.h"
 static int giRefreshTimer=10;
 
 //-----------------------------------------------------------------------------
-// CheckAdminIdPwd()
+// ServerAdminLogin()
 //-----------------------------------------------------------------------------
 // Vérifie le login/mdp admin avec le serveur et stocke le cookie de session
 //-----------------------------------------------------------------------------
-int CheckAdminIdPwd(char *szId, char *szPwd)
+int ServerAdminLogin(HWND w,char *szId, char *szPwd)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
@@ -59,123 +59,48 @@ int CheckAdminIdPwd(char *szId, char *szPwd)
 	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 
-	if (pszResult[0]=='0')
-		rc=0;
+	rc=atoi(pszResult);
 
 end:
+	// si échec, c'est non bloquant mais il faut afficher un message pour prévenir que 
+	// les fonctions d'upload seront non disponibles et qu'il faut vérifier que le serveur
+	// est bien up ou changer le mot de passe sur le serveur pour le réaligner
+	if (dwStatusCode!=200 || pszResult==NULL) // problème serveur
+	{
+		MessageBox(w,GetString(IDS_CONFIG_PROXY),"swSSO",MB_ICONEXCLAMATION);
+	}
+	else if (rc!=0)
+	{
+		if (rc==-1) // identifiant ou mot de passe incorrect
+		{
+			MessageBox(w,GetString(IDS_SERVER_ADMIN_BAD_PWD),"swSSO",MB_ICONEXCLAMATION);
+		}
+		else if (rc==-2) // compte verrouillé
+		{
+			MessageBox(w,GetString(IDS_SERVER_ADMIN_LOCKED),"swSSO",MB_ICONEXCLAMATION);
+		}
+		else // erreur inconnue
+		{
+			MessageBox(w,GetString(IDS_CONFIG_PROXY),"swSSO",MB_ICONEXCLAMATION);
+		}
+	}
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
 
+//-----------------------------------------------------------------------------
+// ServerAdminLogout()
+//-----------------------------------------------------------------------------
+// Déconnecte l'admin du serveur de configuration
+//-----------------------------------------------------------------------------
+
+
+
 
 //-----------------------------------------------------------------------------
-// AskAdminIdPwdDialogProc()
+// ServerAdminChangePassword()
 //-----------------------------------------------------------------------------
-// DialogProc de la fenêtre de saisie du login/mdp admin
+// Change le mot de passe admin sur le serveur
 //-----------------------------------------------------------------------------
-static int CALLBACK AskAdminIdPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
-{
-	UNREFERENCED_PARAMETER(lp);
-	CheckIfQuitMessage(msg);
-	int rc=FALSE;
-	switch (msg)
-	{
-		case WM_INITDIALOG:
-			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
-			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
-			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
-			// init champ de saisie
-			SendMessage(GetDlgItem(w,TB_ID),EM_LIMITTEXT,LEN_ID,0);
-			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,LEN_PWD,0);
-			// titre en gras
-			SetTextBold(w,TX_FRAME);
-			MACRO_SET_SEPARATOR;
-			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
-			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
-			if (giRefreshTimer==giTimer) giRefreshTimer=11;
-			SetTimer(w,giRefreshTimer,200,NULL);
-			break;
-		case WM_TIMER:
-			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
-			if (giRefreshTimer==(int)wp) 
-			{
-				KillTimer(w,giRefreshTimer);
-				InvalidateRect(w,NULL,FALSE);
-				SetForegroundWindow(w); 
-			}
-			break;
-		case WM_CTLCOLORSTATIC:
-			int ctrlID;
-			ctrlID=GetDlgCtrlID((HWND)lp);
-			switch(ctrlID)
-			{
-				case TX_FRAME:
-					SetBkMode((HDC)wp,TRANSPARENT);
-					rc=(int)GetStockObject(HOLLOW_BRUSH);
-					break;
-			}
-			break;
-		case WM_COMMAND:
-			switch (LOWORD(wp))
-			{
-				case IDOK:
-				{
-					char szId[LEN_ID+1];
-					char szPwd[LEN_PWD+1];
-					int ret;
-					GetDlgItemText(w,TB_ID,szId,sizeof(szId));
-					GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
-					ret=CheckAdminIdPwd(szId,szPwd);
-					SecureZeroMemory(szPwd,strlen(szPwd));
-					if (ret==0)
-						EndDialog(w,IDOK);
-					else
-						MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_ICONEXCLAMATION);
-					break;
-				}
-				case IDCANCEL:
-					EndDialog(w,IDCANCEL);
-					break;
-				case TB_ID:
-				case TB_PWD:
-					if (HIWORD(wp)==EN_CHANGE)
-					{
-						char szId[LEN_ID + 1]; 
-						char szPwd[LEN_PWD+1];
-						int lenId,lenPwd;
-						lenId=GetDlgItemText(w,TB_ID,szId,sizeof(szId));
-						lenPwd=GetDlgItemText(w,TB_PWD,szPwd,sizeof(szPwd));
-						SecureZeroMemory(szPwd, strlen(szPwd));
-						EnableWindow(GetDlgItem(w,IDOK),(lenId==0||lenPwd==0)?FALSE:TRUE);
-					}
-					break;
-			}
-			break;
-		case WM_HELP:
-			Help();
-			break;
-		case WM_PAINT:
-			DrawLogoBar(w,50,ghLogoFondBlanc50);
-			rc=TRUE;
-			break;
-	}
-	return rc;
-}
-
-//-----------------------------------------------------------------------------
-// AskAdminIdPwd() 
-//-----------------------------------------------------------------------------
-// Demande le login/mdp admin, vérifie et garde le cookie de session
-//-----------------------------------------------------------------------------
-int AskAdminIdPwd()
-{
-	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=-1;
-
-	if (DialogBox(ghInstance,MAKEINTRESOURCE(IDD_ADMIN_LOGIN),NULL,AskAdminIdPwdDialogProc)==IDOK) rc=0;
-
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
-}
 

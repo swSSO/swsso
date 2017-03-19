@@ -411,7 +411,7 @@ BEGIN
     EDITTEXT        TB_PWD,60,45,200,13,ES_PASSWORD | ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,156,71,50,14,WS_DISABLED
     PUSHBUTTON      "Cancel",IDCANCEL,210,71,50,14
-    LTEXT           "Please enter administrator password below:",TX_FRAME,49,11,200,8
+    LTEXT           "Please enter swSSO administrator password below:",TX_FRAME,49,11,200,8
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,242,1
 END
 
@@ -738,6 +738,17 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_PWD_ADMIN_ASK AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
@@ -773,7 +784,7 @@ BEGIN
     IDS_MENU_DEPLACER       "&Move to..."
     IDS_CONFIG_ALREADY_EXISTS 
                             "Username and password are already defined for this application. What do you want to do?\r\n\r\n- Replace existing configuration: select Yes.\r\n- Keep existing configuration and add a new one (existing configuration will be disabled): select No.\r\n- Keep existing configuration without adding the new one: select Cancel."
-    IDS_CONFIG_PROXY        "Failed to connect to swSSO server. Please check your proxy options."
+    IDS_CONFIG_PROXY        "Failed to connect to swSSO server."
     IDS_MENU_APPNSITES      "Web sites and applications management..."
     IDS_VALUE               "%s :"
     IDS_MENU_RENOMMER       "&Rename"
@@ -1011,6 +1022,9 @@ BEGIN
     IDS_MENU_AJOUTER_COFFRE "Save a login / password"
     IDS_NEW_COFFRE          "Account"
     IDS_APP_ALREADY_EXISTS  "A configuration with the same id already exists and will be disabled. Do you want to proceed?"
+    IDS_SERVER_ADMIN_BAD_PWD 
+                            "Cannot connect to swSSO server (bad password). Please contact a super admin to reset your swSSO password. In the meantime, you can work locally. "
+    IDS_SERVER_ADMIN_LOCKED "Your swSSO account is locked. Please contact a super admin to unlock it. In the meantime, you can work locally."
 END
 
 #endif    // English resources
@@ -1302,16 +1316,16 @@ BEGIN
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,5,60,242,1
 END
 
-IDD_PWD_ADMIN_ASK DIALOG 0, 0, 267, 90
+IDD_PWD_ADMIN_ASK DIALOGEX 0, 0, 267, 90
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "swSSO - Mode administration"
-FONT 8, "Tahoma"
+FONT 8, "Tahoma", 0, 0, 0x0
 BEGIN
     LTEXT           "&Mot de passe :",IDC_STATIC,9,47,48,10
     EDITTEXT        TB_PWD,60,45,200,13,ES_PASSWORD | ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,156,71,50,14,WS_DISABLED
     PUSHBUTTON      "Annuler",IDCANCEL,210,71,50,14
-    LTEXT           "Veuillez saisir le mot de passe administrateur :",TX_FRAME,49,11,200,8
+    LTEXT           "Veuillez saisir le mot de passe administrateur swSSO :",TX_FRAME,49,11,200,8
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,242,1
 END
 
@@ -1520,21 +1534,6 @@ BEGIN
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,256,1
 END
 
-IDD_ADMIN_LOGIN DIALOGEX 0, 0, 268, 109
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "swSSO - Mode administrateur"
-FONT 8, "Tahoma", 0, 0, 0x0
-BEGIN
-    EDITTEXT        TB_ID,72,46,189,13,ES_AUTOHSCROLL
-    EDITTEXT        TB_PWD,72,65,189,13,ES_PASSWORD | ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,158,88,50,14,WS_DISABLED
-    PUSHBUTTON      "Annuler",IDCANCEL,212,88,50,14
-    LTEXT           "&Mot de passe :",IDC_STATIC,12,68,50,10
-    LTEXT           "&Identifiant :",IDC_STATIC,12,48,53,8
-    LTEXT           "Veuillez saisir votre identifiant et votre mot de passe administrateur swSSO ci-dessous.",TX_FRAME,47,7,211,19
-    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,256,1
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1599,10 +1598,6 @@ BEGIN
     IDD_ASK_AD_PWD, DIALOG
     BEGIN
     END
-
-    IDD_ADMIN_LOGIN, DIALOG
-    BEGIN
-    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1642,7 +1637,7 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_ADMIN_LOGIN AFX_DIALOG_LAYOUT
+IDD_PWD_ADMIN_ASK AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -1685,7 +1680,7 @@ BEGIN
     IDS_MENU_DEPLACER       "&Déplacer vers..."
     IDS_CONFIG_ALREADY_EXISTS 
                             "Vous avez déjà défini un identifiant et un mot de passe pour ce site. Que souhaitez-vous faire ?\r\n\r\n- Remplacer la configuration actuelle par la nouvelle : cliquez sur Oui.\r\n- Ajouter la nouvelle configuration, tout en conservant la configuration actuelle (cette dernière sera désactivée) : cliquez sur Non.\r\n- Conserver l'ancienne configuration sans ajouter la nouvelle : cliquez sur Annuler."
-    IDS_CONFIG_PROXY        "Impossible de joindre le serveur swSSO. Veuillez vérifier votre configuration proxy (menu Propriétés, onglet Options)."
+    IDS_CONFIG_PROXY        "Impossible de joindre le serveur swSSO."
     IDS_MENU_APPNSITES      "Gestion des sites et applications..."
     IDS_VALUE               "%s :"
     IDS_MENU_RENOMMER       "&Renommer"
@@ -1935,6 +1930,9 @@ BEGIN
     IDS_MENU_AJOUTER_COFFRE "Mettre un compte au coffre"
     IDS_NEW_COFFRE          "Compte"
     IDS_APP_ALREADY_EXISTS  "La configuration que vous venez de définir existe déjà avec le même identifiant. Si vous continuez, la configuration existante sera automatiquement désactivée."
+    IDS_SERVER_ADMIN_BAD_PWD 
+                            "Impossible de se connecter au serveur swSSO avec ce mot de passe administrateur. Veuillez contacter un super administrateur pour réinitialiser votre mot de passe swSSO. En attendant, vous pouvez travailler localement."
+    IDS_SERVER_ADMIN_LOCKED "Votre compte administrateur est verrouillé sur le serveur swSSO. Veuillez contacter un super administrateur pour le déverrouiller. En attendant, vous pouvez travailler localement."
 END
 
 #endif    // French resources

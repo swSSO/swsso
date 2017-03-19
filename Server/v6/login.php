@@ -65,8 +65,8 @@ if (!empty($_POST))
 					}
 					?>
 					</caption>
-					<tr height=35px><td align=right width=30%>Identifiant :</td><td width=70%><INPUT TYPE="text" NAME="id" ID="defaultfocus" style="width:80%" maxlength='50'></td></tr>
-					<tr height=35px><td align=right width=30%>Mot de passe : </td><td width=70%><INPUT TYPE="password" NAME="pwd" style="width:80%" maxlength='50'></td></tr>
+					<tr height=35px><td align=right width=30%>Identifiant :</td><td width=70%><INPUT TYPE="text" NAME="id" ID="defaultfocus" autocomplete="off" style="width:80%" maxlength='50'></td></tr>
+					<tr height=35px><td align=right width=30%>Mot de passe : </td><td width=70%><INPUT TYPE="password" NAME="pwd" autocomplete="off" style="width:80%" maxlength='50'></td></tr>
 					<tr><td></td><td align=left><INPUT TYPE=submit VALUE="Connexion" style="font-family:Verdana; font-size:12px;"></td></tr>
 				</table>
 			</form>

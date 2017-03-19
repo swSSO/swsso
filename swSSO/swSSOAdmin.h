@@ -31,5 +31,5 @@
 // swSSOAdmin.h
 //-----------------------------------------------------------------------------
 
-int AskAdminIdPwd();
+int ServerAdminLogin(HWND w,char *szId, char *szPwd);
 
