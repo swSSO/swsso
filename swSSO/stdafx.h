@@ -81,6 +81,7 @@
 #include "swSSOLogMessages.h"
 #include "swSSOAD.h"
 #include "swSSOSelectAccount.h"
+#include "swSSOAdminNoPwd.h"
 #include "swSSOAdmin.h"
 
 

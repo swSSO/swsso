@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -28,8 +28,9 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
-// swSSOAdmin.h
+// swSSOAdminNoPwd.h
 //-----------------------------------------------------------------------------
 
-int ServerAdminLogin(HWND w,char *szId, char *szPwd);
-
+BOOL IsAdminPwdSet();
+int SetAdminPwd();
+int AskAdminPwd();

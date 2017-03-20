@@ -422,6 +422,8 @@
 #define IDS_MENU_AJOUTER_COFFRE         42036
 #define IDS_NEW_COFFRE                  42037
 #define IDS_APP_ALREADY_EXISTS          42038
+#define IDS_SERVER_ADMIN_BAD_PWD        42039
+#define IDS_SERVER_ADMIN_LOCKED         42040
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005
@@ -432,7 +434,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        42010
+#define _APS_NEXT_RESOURCE_VALUE        42013
 #define _APS_NEXT_COMMAND_VALUE         44000
 #define _APS_NEXT_CONTROL_VALUE         46007
 #define _APS_NEXT_SYMED_VALUE           48000
