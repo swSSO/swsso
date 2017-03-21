@@ -4,7 +4,7 @@ include('util.php');
 include('functions.php');
 include('sessions.php');
 
-if (!isSuperAdminAuthorized())
+if (countSuperadmin()!=0 && !isSuperAdminAuthorized())
 {
 	header('Location: ./login.php');
 	exit();
@@ -14,10 +14,9 @@ $message="";
 
 if (isset($_POST['create'])) 
 {
-	echo $_POST['role'];
 	if (!empty($_POST['id']) && !empty($_POST['pwd1']) && !empty($_POST['pwd2']) && !empty($_POST['firstname']) && !empty($_POST['lastname']))
 	{
-		if (!isSuperAdminAuthorized())
+		if (countSuperadmin()!=0 && !isSuperAdminAuthorized())
 		{
 			$message="Vous n'avez pas l'autorisation de créer comptes.";
 		}
@@ -64,20 +63,38 @@ else if (isset($_POST['logout']))
 	</head>
 	<body bgcolor="#F2F2F2">
 		<font face=verdana size=2>
-			<table border=0px style="font-family:verdana; font-size:12px; border-spacing:0px;" align=left width=800px>
-				<tr height=35px style="color:#FFFFFF; background-color:#6080B0;">
-					<td width=80% align=left style="padding:10px">
-						<b>Cr&eacute;ation d'un administrateur</b> [Utilisateur connect&eacute; : <?php echo $_SESSION['userid'];?>] 
-					</td>
-					<td width=20% align=center>
-						<form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">			
-							<INPUT TYPE=submit NAME="logout" VALUE="D&eacute;connexion" style="font-family:Verdana; font-size:12px; width:120px;">
-						</form>	
-					</td>
-				</tr>
-				<tr height=15px>
-				</tr>				
-			</table>
+			<?php 
+			if (countSuperadmin()==0) 
+			{ ?>
+				<table border=0px style="font-family:verdana; font-size:12px; border-spacing:0px;" align=left width=800px>
+					<tr height=50px style="color:#FFFFFF; background-color:#6080B0;">
+						<td width=80% align=center style="padding:10px">
+							<b>Bienvenue ! Pour commencer, veuillez cr&eacute;er un compte super administrateur ci-dessous :</b>
+						</td>
+					</tr>
+					<tr height=15px>
+					</tr>				
+				</table>
+			<?php } 
+			else 
+			{ ?>
+				<table border=0px style="font-family:verdana; font-size:12px; border-spacing:0px;" align=left width=800px>
+					<tr height=35px style="color:#FFFFFF; background-color:#6080B0;">
+						<td width=80% align=left style="padding:10px">
+							<b>Cr&eacute;ation d'un administrateur</b> [Utilisateur connecté : <?php echo $_SESSION['userid']?>]
+						</td>
+						<td width=20% align=center>
+							<form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">			
+								<INPUT TYPE=submit NAME="logout" VALUE="D&eacute;connexion" style="font-family:Verdana; font-size:12px; width:120px;">
+							</form>	
+						</td>
+					</tr>
+					<tr height=15px>
+					</tr>				
+				</table>
+			<?php
+			}
+			?>
 			<table border=0 style="font-family:verdana; font-size:12px" width=800px>
 				<caption height=50px style="color:#FF0000; padding:8px;">
 				<?php
@@ -97,7 +114,13 @@ else if (isset($_POST['logout']))
 						<td align=right width=20%>R&ocirc;le :</td>
 						<td width=80%>
 						<select name="role">
+						<?php 
+						if (countSuperadmin()!=0) 
+						{ ?>
 							<option value="admin">admin</option>
+						<?php
+						}
+						?>
 							<option value="superadmin">superadmin</option>
 							</select>
 						</td>

@@ -40,19 +40,36 @@ static int giRefreshTimer=10;
 // ServerAdminLogin()
 //-----------------------------------------------------------------------------
 // Vérifie le login/mdp admin avec le serveur et stocke le cookie de session
+// Si szPwd=NULL, c'est qu'on est en mode mot de passe Windows, dans ce cas il 
+// faut déchiffrer le mot de passe AD déjà récupéré auprès de swSSOSVC au démarrage
 //-----------------------------------------------------------------------------
-int ServerAdminLogin(HWND w,char *szId, char *szPwd)
+int ServerAdminLogin(HWND w,char *pszId, char *pszPwd)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 	char szParams[512+1];
 	char *pszResult=NULL;
 	HCURSOR hCursorOld=NULL;
-	DWORD dwStatusCode;
+	DWORD dwStatusCode=500;
+	char *pszAdminPwd=NULL;
+	int lenAdminPwd;
 
 	hCursorOld=SetCursor(ghCursorWait);
 
-	sprintf_s(szParams,sizeof(szParams),"?action=login&id=%s&pwd=%s",szId,szPwd);
+	if (pszPwd==NULL)
+	{
+		pszAdminPwd=swCryptDecryptString(gszEncryptedADPwd,ghKey1);
+		if (pszAdminPwd==NULL) goto end;
+		lenAdminPwd=strlen(pszAdminPwd);
+		sprintf_s(szParams,sizeof(szParams),"?action=login&id=%s&pwd=%s",pszId,pszAdminPwd);
+		SecureZeroMemory(pszAdminPwd,lenAdminPwd);
+		free(pszAdminPwd); pszAdminPwd=NULL;
+	}
+	else
+	{
+		sprintf_s(szParams,sizeof(szParams),"?action=login&id=%s&pwd=%s",pszId,pszPwd);
+	}
+	
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
 						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);

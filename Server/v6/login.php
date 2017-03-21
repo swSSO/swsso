@@ -6,6 +6,12 @@ include('sessions.php');
 
 $message="";
 
+if (countSuperadmin()==0)
+{
+	header('Location: ./createadmin.php');
+	exit();
+}
+
 if (!empty($_POST)) 
 {
 	if(!empty($_POST['id']) && !empty($_POST['pwd'])) 

@@ -243,4 +243,25 @@ function resetPwd($id,$pwd)
 	sqliClose($cnx);
 	return $rc;
 }
+// ------------------------------------------------------------
+// countSuperadmin
+// ------------------------------------------------------------
+// rc : retourne le nb de super admin non verrouillés
+// ------------------------------------------------------------
+function countSuperadmin()
+{
+	$cnx=sqliConnect();	if (!$cnx) return;
+	$szRequest="select count(*) from "._TABLE_PREFIX_."admins where userrole='superadmin' and userlocked=0";
+	$stmt = mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$rc);
+		$fetch=mysqli_stmt_fetch($stmt);
+		mysqli_stmt_close($stmt);
+	}
+	sqliClose($cnx);
+	if ($fetch==NULL) $rc=-1;
+	return $rc;
+}
 ?>

@@ -1091,13 +1091,13 @@ void LoadGlobalOrDomainPolicies(char *pcszDomain)
 		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbEnableOption_ShowPassword=(BOOL)dwValue; 
 
-#ifndef _DEBUG
+//#ifndef _DEBUG
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_PASSWORDCHOICELEVEL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbPasswordChoiceLevel=(BOOL)dwValue;
 		// ISSUE#83 : on interdit les modes où le mot de passe maître n'est pas sécurisé
 		if (gbPasswordChoiceLevel!=PP_WINDOWS && gbPasswordChoiceLevel!=PP_ENCRYPTED) gbPasswordChoiceLevel=PP_ENCRYPTED;
-#endif
+//#endif
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_VIEWAPPCONFIG,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);

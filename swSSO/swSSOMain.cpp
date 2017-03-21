@@ -1682,7 +1682,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							gbRememberOnThisComputer=TRUE;
 							DPAPIStoreMasterPwd(szPwd);
 						}
-						// Si mode admin, login de l'admin sur le serveur (non bloquant + message d'erreur dans la fonction ServerAdminLogin)
+						// ISSUE#342 Si mode admin, login de l'admin sur le serveur (non bloquant + message d'erreur dans la fonction ServerAdminLogin)
 						ServerAdminLogin(w,gszUserName,szPwd);
 
 						swCryptDeriveKey(szPwd,ghKey1);
@@ -2354,6 +2354,9 @@ askpwd:
 						goto end;
 					else if(rc==-3) // l'utilisateur a cliqué sur continuer dans le recovery
 						goto askpwd;
+					// ISSUE#342 Si mode admin, login de l'admin sur le serveur (non bloquant + message d'erreur dans la fonction ServerAdminLogin)
+					ServerAdminLogin(NULL,gszUserName,NULL);
+
 				}
 				else if (ret==-1 || ret==-3)  // erreur ou format de response incorrect
 				{
