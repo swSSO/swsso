@@ -65,7 +65,12 @@ else if ($_GET['action']=="login")
 	{
 		$var_userid			=utf8_decode(myaddslashes($_POST['id'])); 
 		$var_userpwd		=utf8_decode(myaddslashes($_POST['pwd'])); 
-		login($var_userid,$var_userpwd);
+		$rc=login($var_userid,$var_userpwd);
+		echo $rc;
+	}
+	else
+	{
+		header("HTTP/1.0 400 Bad Request");
 	}
 }
 else if ($_GET['action']=="logout")

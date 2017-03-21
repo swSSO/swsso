@@ -1683,7 +1683,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							DPAPIStoreMasterPwd(szPwd);
 						}
 						// ISSUE#342 Si mode admin, login de l'admin sur le serveur (non bloquant + message d'erreur dans la fonction ServerAdminLogin)
-						ServerAdminLogin(w,gszUserName,szPwd);
+						if (gbAdmin) ServerAdminLogin(w,gszUserName,szPwd);
 
 						swCryptDeriveKey(szPwd,ghKey1);
 						SecureZeroMemory(szPwd,strlen(szPwd));
@@ -2354,9 +2354,6 @@ askpwd:
 						goto end;
 					else if(rc==-3) // l'utilisateur a cliqué sur continuer dans le recovery
 						goto askpwd;
-					// ISSUE#342 Si mode admin, login de l'admin sur le serveur (non bloquant + message d'erreur dans la fonction ServerAdminLogin)
-					ServerAdminLogin(NULL,gszUserName,NULL);
-
 				}
 				else if (ret==-1 || ret==-3)  // erreur ou format de response incorrect
 				{
@@ -2647,6 +2644,8 @@ askpwd:
 		}
 		// ISSUE#169 : Demande le mot de passe à swSSOSVC et le stocke pour répondre aux demandes ultérieures traitées par GetDecryptedPwd() dans swSSOAD.cpp
 		if (GetADPassword()!=0) { iError=-1; goto end; }
+		// ISSUE#342 Si mode admin, login de l'admin sur le serveur (non bloquant + message d'erreur dans la fonction ServerAdminLogin)
+		if (gbAdmin) ServerAdminLogin(NULL,gszUserName,NULL);
 
 		// 1.08 ISSUE#248 : si configuré, synchronise un groupe de mot de passe secondaires avec le mot de passe AD
 		if (!gbAdmin && gbSyncSecondaryPasswordActive)

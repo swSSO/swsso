@@ -47,34 +47,43 @@ int ServerAdminLogin(HWND w,char *pszId, char *pszPwd)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
-	char szParams[512+1];
+	char szGetParams[128+1];
+	char szPostParams[256+1];
+	char *pszEncodedAdminPwd=NULL;
 	char *pszResult=NULL;
 	HCURSOR hCursorOld=NULL;
 	DWORD dwStatusCode=500;
 	char *pszAdminPwd=NULL;
 	int lenAdminPwd;
+	int lenEncodedAdminPwd;
 
 	hCursorOld=SetCursor(ghCursorWait);
 
+	strcpy_s(szGetParams,sizeof(szGetParams),"?action=login");
+	
 	if (pszPwd==NULL)
 	{
 		pszAdminPwd=swCryptDecryptString(gszEncryptedADPwd,ghKey1);
 		if (pszAdminPwd==NULL) goto end;
+		pszEncodedAdminPwd=HTTPEncodeParam(pszAdminPwd);
 		lenAdminPwd=strlen(pszAdminPwd);
-		sprintf_s(szParams,sizeof(szParams),"?action=login&id=%s&pwd=%s",pszId,pszAdminPwd);
 		SecureZeroMemory(pszAdminPwd,lenAdminPwd);
-		free(pszAdminPwd); pszAdminPwd=NULL;
 	}
 	else
 	{
-		sprintf_s(szParams,sizeof(szParams),"?action=login&id=%s&pwd=%s",pszId,pszPwd);
+		pszEncodedAdminPwd=HTTPEncodeParam(pszPwd);
 	}
-	
+	if (pszEncodedAdminPwd==NULL) goto end;
+	sprintf_s(szPostParams,sizeof(szPostParams),"id=%s&pwd=%s",pszId,pszEncodedAdminPwd);
+	lenEncodedAdminPwd=strlen(pszEncodedAdminPwd);
+	SecureZeroMemory(pszEncodedAdminPwd,lenEncodedAdminPwd);
+
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
-						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);
-	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
-	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
+						  szGetParams,L"POST",szPostParams,strlen(szPostParams),NULL,
+						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);
+	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szGetParams)); goto end; }
 
 	rc=atoi(pszResult);
 
@@ -102,6 +111,8 @@ end:
 		}
 	}
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
+	if (pszEncodedAdminPwd!=NULL) free(pszEncodedAdminPwd);
+	if (pszAdminPwd!=NULL) free(pszAdminPwd);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
