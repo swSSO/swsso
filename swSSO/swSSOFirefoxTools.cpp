@@ -199,6 +199,8 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 	int rc=-1;
 	IAccessible *pAccessible=NULL;
 
+	int rcSendInput=-1;
+
 	// en 1.09, déplacement du control du caps lock tout au début
 	TRACE((TRACE_DEBUG,_F_,"GetKeyState(VK_CAPITAL)=%04x",GetKeyState(VK_CAPITAL)));
 	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
@@ -210,13 +212,16 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		// keybd_event(VK_CAPITAL,0x45,KEYEVENTF_EXTENDEDKEY,0);
 		// keybd_event(VK_CAPITAL,0x45,KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
 		// test 2
-		// INPUT input[2];
-		// ZeroMemory(input, sizeof(input));        
-		// input[0].type = input[1].type = INPUT_KEYBOARD;
-		// input[0].ki.wVk  = input[1].ki.wVk = VK_CAPITAL;        
-		// input[1].ki.dwFlags = KEYEVENTF_KEYUP;  // THIS IS IMPORTANT
-		// SendInput(2, input, sizeof(INPUT));
-		
+		INPUT input[2];
+		ZeroMemory(input, sizeof(input));        
+		input[0].type = input[1].type = INPUT_KEYBOARD;
+		input[0].ki.wVk  = input[1].ki.wVk = VK_CAPITAL;        
+		input[1].ki.dwFlags = KEYEVENTF_KEYUP;  // THIS IS IMPORTANT
+		rcSendInput=SendInput(2, input, sizeof(INPUT));
+		if (rcSendInput==0)
+		{
+			TRACE((TRACE_ERROR,_F_,"SendInput(desactive caps lock)=0"));
+		}
 	}
 	// ISSUE#264 : changement de la technique d'effacement, on fait CTRL+A puis DEL, ça évite les changements de champs.
 	if (bErase) // ISSUE#286 : refait comme avant, n'efface pas systématiquement sinon la config type "simulation de frappe" ne fonctionne plus !
@@ -239,14 +244,20 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		hiVk=HIBYTE(wKeyScan);
 		loVk=LOBYTE(wKeyScan);
 		
-		//if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
-		if (bCapsLock)
-		{
-			if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
-		}
-		else
+		if (rcSendInput!=0) // test 4 : si on a réussi à désactiver caps lock, on fait comme avant, juste la saisie
 		{
 			if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+		}
+		else // sinon on fait shift à l'envers pour compenser le caps lock
+		{
+			if (bCapsLock)
+			{
+				if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+			}
+			else
+			{
+				if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+			}
 		}
 		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0); }
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
@@ -258,8 +269,12 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
 		
 		// ISSUE#163 : inversion des lignes pour CONTROL et MENU il relacher les touches dans le même sens sinon la touche ALT
-		//             reste enfoncée (uniquement constaté dans IE9, reproduit nulle par ailleurs)
-		// if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
+		//             reste enfoncée (uniquement constaté dans IE9, reproduit nulle part ailleurs)
+
+		if (rcSendInput!=0) // test 4 : si on a réussi à désactiver caps lock, on fait comme avant, juste la saisie
+		{
+			if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
+		}
 		if (bCapsLock)
 		{
 			if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
@@ -280,13 +295,19 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		// keybd_event(VK_CAPITAL,0x45,KEYEVENTF_EXTENDEDKEY,0);
 		// keybd_event(VK_CAPITAL,0x45,KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
 		// test 2
-		// INPUT input[2];
-		// ZeroMemory(input, sizeof(input));        
-		// input[0].type = input[1].type = INPUT_KEYBOARD;
-		// input[0].ki.wVk  = input[1].ki.wVk = VK_CAPITAL;        
-		// input[1].ki.dwFlags = KEYEVENTF_KEYUP;  // THIS IS IMPORTANT
-		// SendInput(2, input, sizeof(INPUT));
-		
+		if (rcSendInput!=0) // on remet caps lock uniquement si on a eu la confirmation qu'on avait réussi à l'enlever...
+		{
+			INPUT input[2];
+			ZeroMemory(input, sizeof(input));        
+			input[0].type = input[1].type = INPUT_KEYBOARD;
+			input[0].ki.wVk  = input[1].ki.wVk = VK_CAPITAL;        
+			input[1].ki.dwFlags = KEYEVENTF_KEYUP;  // THIS IS IMPORTANT
+			rcSendInput=SendInput(2, input, sizeof(INPUT));
+			if (rcSendInput==0)
+			{
+				TRACE((TRACE_ERROR,_F_,"SendInput(active caps lock)=0"));
+			}
+		}
 	}
 	Sleep(iTempo);
 	rc=0;
