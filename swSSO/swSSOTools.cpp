@@ -303,6 +303,22 @@ char *HTTPRequestOneServer(const char *pszServer,			// [in] FQDN du serveur (www
 
 	WinHttpQueryHeaders(hRequest,WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,NULL,pdwStatusCode,&dwStatusCodeSize,NULL);
 	TRACE((TRACE_INFO,_F_,"dwStatusCode=%d",*pdwStatusCode));
+	
+	/*
+	{
+		char szCookie[1024];
+		DWORD dwSizeCookie = 1024;
+		if (!WinHttpQueryHeaders(hRequest,WINHTTP_QUERY_SET_COOKIE,WINHTTP_HEADER_NAME_BY_INDEX,szCookie,&dwSizeCookie,WINHTTP_NO_HEADER_INDEX))
+		{
+			TRACE((TRACE_ERROR,_F_,"WinHttpQueryHeaders()=%ld",GetLastError())); 
+		}
+		else
+		{
+			TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szCookie,dwSizeCookie,"szCookie:"));
+		}
+	}
+	*/
+	
 
 #ifdef TRACES_ACTIVEES	
 	if (dwLenResult>2048)

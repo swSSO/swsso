@@ -75,7 +75,8 @@ else if ($_GET['action']=="login")
 }
 else if ($_GET['action']=="logout")
 {
-	if (!isClientReadAuthorized()) return;
+	// if (!isClientReadAuthorized()) return;
+	if (!isClientWriteAuthorized()) return;
 	logout();
 }
 // ------------------------------------------------------------

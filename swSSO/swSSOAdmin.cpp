@@ -61,7 +61,7 @@ int ServerAdminLogin(HWND w,char *pszId, char *pszPwd)
 
 	strcpy_s(szGetParams,sizeof(szGetParams),"?action=login");
 	
-	if (pszPwd==NULL)
+	if (pszPwd==NULL) // pas de mot de passe passé en paramètre, utilise mot de passe Windows
 	{
 		pszAdminPwd=swCryptDecryptString(gszEncryptedADPwd,ghKey1);
 		if (pszAdminPwd==NULL) goto end;
@@ -69,23 +69,34 @@ int ServerAdminLogin(HWND w,char *pszId, char *pszPwd)
 		lenAdminPwd=strlen(pszAdminPwd);
 		SecureZeroMemory(pszAdminPwd,lenAdminPwd);
 	}
-	else
+	else // utilise le mot de passe passé en paramètre
 	{
 		pszEncodedAdminPwd=HTTPEncodeParam(pszPwd);
 	}
 	if (pszEncodedAdminPwd==NULL) goto end;
+	// prépare les paramètres à passer en POST
 	sprintf_s(szPostParams,sizeof(szPostParams),"id=%s&pwd=%s",pszId,pszEncodedAdminPwd);
 	lenEncodedAdminPwd=strlen(pszEncodedAdminPwd);
 	SecureZeroMemory(pszEncodedAdminPwd,lenEncodedAdminPwd);
-
+	// POSTe la requête
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
-						  szGetParams,L"POST",szPostParams,strlen(szPostParams),NULL,
+						  szGetParams,L"POST",szPostParams,strlen(szPostParams),L"Content-Type: application/x-www-form-urlencoded\r\n",
 						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);
 	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szGetParams)); goto end; }
 
 	rc=atoi(pszResult);
+	
+	/*
+	TEST POUR VOIR SI SESSION OK
+	TRACE((TRACE_ERROR,_F_,"LOGOUT"));
+	strcpy_s(szGetParams,sizeof(szGetParams),"?action=logout");
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szGetParams,L"GET",NULL,0,NULL,
+						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);
+	*/
 
 end:
 	// si échec, c'est non bloquant mais il faut afficher un message pour prévenir que 

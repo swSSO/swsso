@@ -1574,7 +1574,7 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			SetTextBold(w,TX_FRAME);
 			// policies
 			bUseDPAPI=(BOOL)lp;
-			if (!gbEnableOption_SavePassword || !bUseDPAPI || giPwdProtection==PP_WINDOWS || gbAdmin) ShowWindow(GetDlgItem(w,CK_SAVE),SW_HIDE);
+			if (!gbEnableOption_SavePassword || !bUseDPAPI || giPwdProtection==PP_WINDOWS) ShowWindow(GetDlgItem(w,CK_SAVE),SW_HIDE);
 			// Complément ISSUE#136 : ne pas afficher le bouton mdp oublié si synchro mdp Windows activée
 			if (giPwdProtection==PP_WINDOWS) ShowWindow(GetDlgItem(w,PB_MDP_OUBLIE),SW_HIDE);
 			// 0.81 : centrage si parent!=NULL
@@ -1848,6 +1848,9 @@ int AskPwd(HWND wParent,BOOL bUseDPAPI)
 		{
 			if (CheckMasterPwd(szPwd)==0)
 			{
+				// ISSUE#342 Si mode admin, login de l'admin sur le serveur (non bloquant + message d'erreur dans la fonction ServerAdminLogin)
+				if (gbAdmin && !gbNoMasterPwd) ServerAdminLogin(wParent,gszUserName,szPwd);
+
 				// 0.90 : si une clé de recouvrement existe et les infos de recouvrement n'ont pas encore
 				//        été enregistrée dans le .ini (cas de la première utilisation après déploiement de la clé
 				swCryptDeriveKey(szPwd,ghKey1);
