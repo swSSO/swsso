@@ -77,6 +77,8 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 	if (isset($_GET["debug"])) echo $columns;
 	if (isset($_GET["debug"])) echo "new=".$var_new." mod=".$var_mod." old=".$var_old." autoPublish=".$var_autoPublish;
 	
+	$conditions="";
+	
 	// si titre vide, c'est une récupération de l'ensemble des configs au démarrage
 	if ($var_title=="")
 	{
@@ -95,7 +97,6 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 		// REMARQUE : les 3 options sont cumulables !
 		
 		// Construction de la clause IN ou NOT IN et active=0/1
-		$conditions="";
 		if ($var_ids!="") // une liste de config id a été passée en paramètre
 		{
 			if (($var_mod=="1" || $var_old=="1") && $var_new=="0") 
