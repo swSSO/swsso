@@ -36,6 +36,9 @@
 #include "stdafx.h"
 static int giRefreshTimer=10;
 
+WCHAR gwcszAdminCookie[1024]=L"";
+DWORD dwAdminCookie=1024;
+
 //-----------------------------------------------------------------------------
 // ServerAdminLogin()
 //-----------------------------------------------------------------------------
@@ -82,20 +85,27 @@ int ServerAdminLogin(HWND w,char *pszId, char *pszPwd)
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
 						  szGetParams,L"POST",szPostParams,strlen(szPostParams),L"Content-Type: application/x-www-form-urlencoded\r\n",
-						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);
-	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
+						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,gwcszAdminCookie,dwAdminCookie,&dwStatusCode);
+	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szGetParams)); goto end; }
-
-	rc=atoi(pszResult);
+	if (strlen(pszResult)==1 && pszResult[0]=='0') rc=0;
 	
 	/*
-	TEST POUR VOIR SI SESSION OK
-	TRACE((TRACE_ERROR,_F_,"LOGOUT"));
+	// TEST POUR VOIR SI SESSION OK
 	strcpy_s(szGetParams,sizeof(szGetParams),"?action=logout");
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
 						  szGetParams,L"GET",NULL,0,NULL,
-						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);
+						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,gwcszAdminCookie,NULL,0,&dwStatusCode);
+	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
+
+	// TEST POUR VOIR SI SESSION OK
+	strcpy_s(szGetParams,sizeof(szGetParams),"?action=logout");
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szGetParams,L"GET",NULL,0,NULL,
+						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,gwcszAdminCookie,NULL,0,&dwStatusCode);
+	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
 	*/
 
 end:

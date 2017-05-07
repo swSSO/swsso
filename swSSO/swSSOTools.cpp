@@ -168,6 +168,9 @@ char *HTTPRequestOneServer(const char *pszServer,			// [in] FQDN du serveur (www
 				  DWORD dwAutologonSecurityLevel,	// [in] WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW | MEDIUM | HIGH
 				  int timeout,						// [in] timeout
 				  T_PROXYPARAMS *pInProxyParams,	// [in] paramètre proxy ou NULL si pas de proxy
+				  LPWSTR pwszInCookie,				// [in] cookie à envoyer
+				  LPWSTR pwszOutCookie,				// [out] cookie reçu (buffer alloué par l'appelant, de taille suffisante)
+				  DWORD  dwOutCookie,				// [out] taille du buffer fourni pour recevoir le cookie
 				  DWORD *pdwStatusCode)				// [out] status http renseigné
 {
 	TRACE((TRACE_ENTER,_F_, ""));
@@ -270,6 +273,28 @@ char *HTTPRequestOneServer(const char *pszServer,			// [in] FQDN du serveur (www
 	}
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)pRequestData,dwLenRequestData,"pRequestData (methode %S)",pwszMethod));
 	
+	// ISSUE#342 : envoi cookie si fourni
+	if (pwszInCookie!=NULL && wcslen(pwszInCookie)!=0)
+	{
+		WCHAR wcszCookie[1024]=L"Cookie:";
+		if (wcslen(pwszInCookie)>900)
+		{
+			TRACE((TRACE_ERROR,_F_,"Cookie trop long (%d) ignoré :",wcslen(pwszInCookie),pwszInCookie));
+		}
+		else
+		{
+			wcscat_s(wcszCookie,1024,pwszInCookie);
+			if (WinHttpAddRequestHeaders(hRequest,wcszCookie,(DWORD)-1L,WINHTTP_ADDREQ_FLAG_ADD))
+			{
+				TRACE((TRACE_INFO,_F_,"Cookie ajouté : %S",wcszCookie));
+			}
+			else
+			{
+				TRACE((TRACE_ERROR,_F_,"WinHttpAddRequestHeaders()=%ld, cookie non ajouté : %S",GetLastError(),wcszCookie));
+			}
+		}
+	}
+
 	brc = WinHttpSendRequest(hRequest,pwszHeaders==NULL?WINHTTP_NO_ADDITIONAL_HEADERS:pwszHeaders,(DWORD)-1L,pRequestData,dwLenRequestData,dwLenRequestData,0);
 	if (!brc) 
 	{ 
@@ -304,22 +329,15 @@ char *HTTPRequestOneServer(const char *pszServer,			// [in] FQDN du serveur (www
 	WinHttpQueryHeaders(hRequest,WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,NULL,pdwStatusCode,&dwStatusCodeSize,NULL);
 	TRACE((TRACE_INFO,_F_,"dwStatusCode=%d",*pdwStatusCode));
 	
-	/*
+	// Récupère les cookies éventuels si buffer passé en paramètre
+	if (pwszOutCookie!=NULL && dwOutCookie>0)
 	{
-		char szCookie[1024];
-		DWORD dwSizeCookie = 1024;
-		if (!WinHttpQueryHeaders(hRequest,WINHTTP_QUERY_SET_COOKIE,WINHTTP_HEADER_NAME_BY_INDEX,szCookie,&dwSizeCookie,WINHTTP_NO_HEADER_INDEX))
+		if (WinHttpQueryHeaders(hRequest,WINHTTP_QUERY_SET_COOKIE,WINHTTP_HEADER_NAME_BY_INDEX,pwszOutCookie,&dwOutCookie,WINHTTP_NO_HEADER_INDEX))
 		{
-			TRACE((TRACE_ERROR,_F_,"WinHttpQueryHeaders()=%ld",GetLastError())); 
-		}
-		else
-		{
-			TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szCookie,dwSizeCookie,"szCookie:"));
+			TRACE((TRACE_DEBUG,_F_,"Cookie recu : %S",pwszOutCookie));
 		}
 	}
-	*/
 	
-
 #ifdef TRACES_ACTIVEES	
 	if (dwLenResult>2048)
 	{
@@ -367,6 +385,9 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 				  DWORD dwAutologonSecurityLevel,	// [in] WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW | MEDIUM | HIGH
 				  int timeout,						// [in] timeout
 				  T_PROXYPARAMS *pInProxyParams,	// [in] paramètre proxy ou NULL si pas de proxy
+				  LPWSTR pwszInCookie,				// [in] cookie à envoyer
+				  LPWSTR pwszOutCookie,				// [out] cookie reçu (buffer alloué par l'appelant, de taille suffisante)
+				  DWORD  dwOutCookie,				// [out] taille du buffer fourni pour recevoir le cookie
 				  DWORD *pdwStatusCode)				// [out] status http renseigné
 {
 	TRACE((TRACE_ENTER,_F_, ""));
@@ -374,7 +395,8 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 	gbLastRequestOnFailOverServer=FALSE;
 	pszResult=HTTPRequestOneServer(pszServer,iPort,bHTTPS,pszAddress,
 						pszParams,pwszMethod,pRequestData,dwLenRequestData,pwszHeaders,
-						dwAutologonSecurityLevel, timeout==-1?giWebServiceTimeout:timeout,	pInProxyParams,pdwStatusCode);
+						dwAutologonSecurityLevel, timeout==-1?giWebServiceTimeout:timeout,pInProxyParams,
+						pwszInCookie,pwszOutCookie,dwOutCookie,pdwStatusCode);
 	if (*pdwStatusCode!=200 || pszResult==NULL)
 	{
 		if (*pszServer2!=0 && *pszAddress2!=0)
@@ -384,7 +406,8 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 			if (pszResult!=NULL) free(pszResult);
 			pszResult=HTTPRequestOneServer(pszServer2,iPort2,bHTTPS2,pszAddress2,
 						pszParams,pwszMethod,pRequestData,dwLenRequestData,pwszHeaders,
-						dwAutologonSecurityLevel, timeout==-1?giWebServiceTimeout2:timeout,	pInProxyParams,pdwStatusCode);
+						dwAutologonSecurityLevel, timeout==-1?giWebServiceTimeout2:timeout,pInProxyParams,
+						pwszInCookie,pwszOutCookie,dwOutCookie,pdwStatusCode);
 		}
 	}
 	TRACE((TRACE_LEAVE,_F_, "pszResult=0x%08lx",pszResult));

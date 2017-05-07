@@ -53,6 +53,9 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 				  DWORD dwAutologonSecurityLevel,	// [in] WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW | MEDIUM | HIGH
 				  int timeout,						// [in] timeout
 				  T_PROXYPARAMS *pInProxyParams,	// [in] paramètre proxy ou NULL si pas de proxy
+				  LPWSTR pwszInCookie,				// [in] cookie à envoyer
+				  LPWSTR pwszOutCookie,				// [out] cookie reçu (buffer alloué par l'appelant, de taille suffisante)
+				  DWORD  dwOutCookie,				// [out] taille du buffer fourni pour recevoir le cookie
 				  DWORD *pdwStatusCode);			// [out] status http renseigné (l'appelant peut passer NULL s'il veut pas le statut http)
 char *HTTPEncodeParam(char *pszToEncode);
 char *HTTPDecodeParam(char *pszToDecode);

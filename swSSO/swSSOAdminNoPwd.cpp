@@ -62,7 +62,7 @@ int CheckAdminPwd(char *szPwd)
 	sprintf_s(szParams,sizeof(szParams),"?action=checkadminpwd&salt=%s&pwd=%s",szSalt,szPwd);
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
-						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,NULL,0,&dwStatusCode);
 	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 
@@ -99,7 +99,7 @@ int StoreAdminPwd(char *szNewPwd)
 	sprintf_s(szParams,sizeof(szParams),"?action=setadminpwd&salt=%s&pwd=%s",szSalt,szNewPwd);
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
-						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,NULL,0,&dwStatusCode);
 	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 	
@@ -358,7 +358,7 @@ BOOL IsAdminPwdSet()
 	strcpy_s(szParams,sizeof(szParams),"?action=isadminpwdset");
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
-						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,&dwStatusCode);
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,NULL,0,&dwStatusCode);
 	if (dwStatusCode!=200){ TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 	

@@ -75,9 +75,9 @@ else if ($_GET['action']=="login")
 }
 else if ($_GET['action']=="logout")
 {
-	// if (!isClientReadAuthorized()) return;
 	if (!isClientWriteAuthorized()) return;
 	logout();
+	echo "0";
 }
 // ------------------------------------------------------------
 // getconfig

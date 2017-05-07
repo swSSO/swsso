@@ -846,7 +846,7 @@ int RecoveryWebservice(void)
 							  L"Content-Type: application/json",
 							  WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW,
 							  giRecoveryWebserviceTimeout,
-							  NULL,
+							  NULL,NULL,NULL,0,
 							  &dwHTTPReturnCode);
 		iNbTry++;
 		if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",gszRecoveryWebserviceURL)); }

@@ -31,5 +31,6 @@
 // swSSOAdmin.h
 //-----------------------------------------------------------------------------
 
+extern WCHAR gwcszAdminCookie[];
 int ServerAdminLogin(HWND w,char *szId, char *szPwd);
 
