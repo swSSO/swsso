@@ -93,6 +93,8 @@
 #define REGVALUE_SHOWMENU_PUTINSAFEBOX				"ShowPutInSafeBoxMenu"
 // ISSUE#326
 #define REGVALUE_ENABLEOPTION_VIEWSERVERINFOS		"ViewServerInfos"
+// ISSUE#337
+#define REGVALUE_SHOW_SYSTRAY_ICON					"ShowSystrayIcon"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -151,6 +153,8 @@ extern BOOL gbShowMenu_AskThisApp;
 extern BOOL gbShowMenu_PutInSafeBox;
 // ISSUE#326
 extern BOOL gbEnableOption_ViewServerInfos;
+// ISSUE#337
+extern BOOL gbShowSystrayIcon;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"

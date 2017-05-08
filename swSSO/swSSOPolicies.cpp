@@ -94,6 +94,8 @@ BOOL gbShowMenu_AskThisApp=FALSE;
 BOOL gbShowMenu_PutInSafeBox=TRUE;
 // ISSUE#326
 BOOL gbEnableOption_ViewServerInfos=TRUE;
+// ISSUE#337
+BOOL gbShowSystrayIcon=TRUE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=8;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
@@ -903,6 +905,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_AskThisApp=%d"		,gbShowMenu_AskThisApp));
 	TRACE((TRACE_INFO,_F_,"gbShowMenu_PutInSafeBox=%d"		,gbShowMenu_PutInSafeBox));
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_ViewServerInfos=%d",gbEnableOption_ViewServerInfos));
+	TRACE((TRACE_INFO,_F_,"gbShowSystrayIcon=%d"			,gbShowSystrayIcon));
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
@@ -946,6 +949,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceActive=%d"		,gbRecoveryWebserviceActive));
 	TRACE((TRACE_INFO,_F_,"gszRecoveryWebserviceServer=%s"		,gszRecoveryWebserviceServer));
 	TRACE((TRACE_INFO,_F_,"gszRecoveryWebserviceURL=%s"			,gszRecoveryWebserviceURL));
+	TRACE((TRACE_INFO,_F_,"giRecoveryWebservicePort=%d"			,giRecoveryWebservicePort));
 	TRACE((TRACE_INFO,_F_,"giRecoveryWebserviceTimeout=%d"		,giRecoveryWebserviceTimeout));
 	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceHTTPS=%d"		,gbRecoveryWebserviceHTTPS));
 	TRACE((TRACE_INFO,_F_,"gbRecoveryWebserviceManualBackup=%d"	,gbRecoveryWebserviceManualBackup));
@@ -1229,6 +1233,11 @@ void LoadGlobalOrDomainPolicies(char *pcszDomain)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_VIEWSERVERINFOS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbEnableOption_ViewServerInfos=(BOOL)dwValue; 
+
+		// ISSUE#337
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOW_SYSTRAY_ICON,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbShowSystrayIcon=(BOOL)dwValue; 
 
 		RegCloseKey(hKey);
 	}

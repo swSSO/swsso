@@ -500,10 +500,14 @@ int CreateSystray(HWND wMain)
 		strcpy_s(nid.szTip,sizeof(nid.szTip),GetString(gbSSOActif ? IDS_ACTIVE : IDS_DESACTIVE)); //max=64 // #113 cas de la recréation du systray
 	}
 
-	if (!Shell_NotifyIcon(NIM_ADD,&nid)) 
+	// ISSUE#337
+	if (gbShowSystrayIcon)
 	{
-		TRACE((TRACE_ERROR,_F_,"Shell_NotifyIcon()=0x%08lx",GetLastError())); 
-		goto end; 
+		if (!Shell_NotifyIcon(NIM_ADD,&nid)) 
+		{
+			TRACE((TRACE_ERROR,_F_,"Shell_NotifyIcon()=0x%08lx",GetLastError())); 
+			goto end; 
+		}
 	}
 	TRACE((TRACE_INFO,_F_,"Shell_NotifyIcon() OK"));
 	rc=0;
