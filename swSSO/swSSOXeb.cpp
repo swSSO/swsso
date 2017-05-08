@@ -196,7 +196,9 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 			// TRACE((TRACE_DEBUG,_F_,"%sptSuivi->iBrowser=%d",szTab,ptSuivi->iBrowser));
 			if (ptSuivi->iBrowser!=BROWSER_IE)
 			{
-				if ((vtRole.lVal == ROLE_SYSTEM_TEXT) && 
+				// ISSUE#340 : accepte aussi les listes saisissables
+				// if ((vtRole.lVal == ROLE_SYSTEM_TEXT) && 
+				if ((vtRole.lVal == ROLE_SYSTEM_TEXT || vtRole.lVal==ROLE_SYSTEM_COMBOBOX) && 
 					((vtState.lVal & STATE_SYSTEM_FOCUSED) || (vtState.lVal & STATE_SYSTEM_FOCUSABLE)))
 				{
 					// c'est un champ de saisie, s'il est protégé c'est le mdp sinon c'est un id
