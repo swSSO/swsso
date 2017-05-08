@@ -58,26 +58,78 @@ if ($_GET['action']=="isalive")
   	if ($cnx) echo "ALIVE";
 	dbClose($cnx);
 }
+// ------------------------------------------------------------
+// login
+// -----------------------------------------------------------
 else if ($_GET['action']=="login")
 {
 	if (!isClientReadAuthorized()) return;
-	if (isset($_POST['id']) && isset($_POST['pwd']))
+	if (_AUTH_=="TRUE")
 	{
-		$var_userid			=utf8_decode(myaddslashes($_POST['id'])); 
-		$var_userpwd		=utf8_decode(myaddslashes($_POST['pwd'])); 
-		$rc=login($var_userid,$var_userpwd);
-		echo $rc;
+		if (isset($_POST['id']) && isset($_POST['pwd']))
+		{
+			$var_userid			=utf8_decode(myaddslashes($_POST['id'])); 
+			$var_userpwd		=utf8_decode(myaddslashes($_POST['pwd'])); 
+			$rc=login($var_userid,$var_userpwd);
+			echo $rc;
+		}
+		else
+		{
+			header("HTTP/1.0 400 Bad Request");
+		}
 	}
 	else
 	{
-		header("HTTP/1.0 400 Bad Request");
+		echo "0";
 	}
 }
+// ------------------------------------------------------------
+// logout
+// -----------------------------------------------------------
 else if ($_GET['action']=="logout")
 {
 	if (!isClientWriteAuthorized()) return;
 	logout();
 	echo "0";
+}
+// ------------------------------------------------------------
+// changepwd
+// -----------------------------------------------------------
+else if ($_GET['action']=="changepwd")
+{
+	if (!isClientWriteAuthorized()) return;
+	if (_AUTH_=="TRUE")
+	{
+		if (isset($_POST['oldpwd']) && isset($_POST['newpwd']))
+		{
+			$var_oldpwd	=utf8_decode(myaddslashes($_POST['oldpwd'])); 
+			$var_newpwd	=utf8_decode(myaddslashes($_POST['newpwd'])); 
+			if (checkPwd($_SESSION['userid'],$var_oldpwd)==0)
+			{
+				if (resetPwd($_SESSION['userid'],$var_newpwd)==0)
+				{
+					echo "0"; // changement OK
+				}
+				else
+				{
+					echo "-2"; // changement KO 
+				}
+			}
+			else
+			{
+				echo "-1"; // mauvais mot de passe
+			}
+			echo $rc;
+		}
+		else
+		{
+			header("HTTP/1.0 400 Bad Request");
+		}
+	}
+	else
+	{
+		echo "0";
+	}
 }
 // ------------------------------------------------------------
 // getconfig
