@@ -105,7 +105,14 @@ HTREEITEM TVSelectAccountAddApplication(HWND w,int iAction)
 	tvis.itemex.mask=TVIF_TEXT|TVIF_PARAM|TVIF_STATE;
 	tvis.itemex.stateMask=TVIS_STATEIMAGEMASK;
 	tvis.itemex.cchTextMax=0;
-	tvis.itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2);
+	if (gptActions[iAction].bSafe) // ISSUE#341
+	{
+		tvis.itemex.state=INDEXTOSTATEIMAGEMASK(5);
+	}
+	else
+	{
+		tvis.itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2);
+	}
 	sprintf_s(buf,sizeof(buf),"%s (identifiant : %s)",gptActions[iAction].szApplication,gptActions[iAction].szId1Value);
 	tvis.itemex.pszText=buf;
 	tvis.itemex.lParam=iAction;
