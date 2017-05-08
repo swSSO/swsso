@@ -2713,6 +2713,8 @@ askpwd:
 	}
 	iError=0;
 end:
+	if (gbAdmin && !gbNoMasterPwd) ServerAdminLogout(); // ISSUE#342
+
 	if (iError==-1)
 	{
 		swLogEvent(EVENTLOG_ERROR_TYPE,MSG_GENERIC_START_ERROR,NULL,NULL,NULL,NULL,0);

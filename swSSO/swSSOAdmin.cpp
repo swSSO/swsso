@@ -86,28 +86,14 @@ int ServerAdminLogin(HWND w,char *pszId, char *pszPwd)
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
 						  szGetParams,L"POST",szPostParams,strlen(szPostParams),L"Content-Type: application/x-www-form-urlencoded\r\n",
 						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,gwcszAdminCookie,dwAdminCookie,&dwStatusCode);
+	SecureZeroMemory(szPostParams,sizeof(szPostParams));
 	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szGetParams)); goto end; }
-	if (strlen(pszResult)==1 && pszResult[0]=='0') rc=0;
+	if (strcmp(pszResult,"0")==0) rc=0;
+	else if (strcmp(pszResult,"-1")==0) rc=-1;
+	else if (strcmp(pszResult,"-2")==0) rc=-2;
+	else rc=-3;
 	
-	/*
-	// TEST POUR VOIR SI SESSION OK
-	strcpy_s(szGetParams,sizeof(szGetParams),"?action=logout");
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
-						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
-						  szGetParams,L"GET",NULL,0,NULL,
-						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,gwcszAdminCookie,NULL,0,&dwStatusCode);
-	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
-
-	// TEST POUR VOIR SI SESSION OK
-	strcpy_s(szGetParams,sizeof(szGetParams),"?action=logout");
-	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
-						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
-						  szGetParams,L"GET",NULL,0,NULL,
-						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,gwcszAdminCookie,NULL,0,&dwStatusCode);
-	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
-	*/
-
 end:
 	// si échec, c'est non bloquant mais il faut afficher un message pour prévenir que 
 	// les fonctions d'upload seront non disponibles et qu'il faut vérifier que le serveur
@@ -134,6 +120,7 @@ end:
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
 	if (pszEncodedAdminPwd!=NULL) free(pszEncodedAdminPwd);
 	if (pszAdminPwd!=NULL) free(pszAdminPwd);
+	if (pszResult!=NULL) free(pszResult);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -143,13 +130,101 @@ end:
 //-----------------------------------------------------------------------------
 // Déconnecte l'admin du serveur de configuration
 //-----------------------------------------------------------------------------
-
-
-
+int ServerAdminLogout()
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szGetParams[128+1];
+	char *pszResult=NULL;
+	HCURSOR hCursorOld=NULL;
+	DWORD dwStatusCode=500;
+	
+	hCursorOld=SetCursor(ghCursorWait);
+	strcpy_s(szGetParams,sizeof(szGetParams),"?action=logout");
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szGetParams,L"GET",NULL,0,NULL,
+						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,gwcszAdminCookie,NULL,0,&dwStatusCode);
+	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
+	rc=0;
+end:
+	if (hCursorOld!=NULL) SetCursor(hCursorOld);
+	if (pszResult!=NULL) free(pszResult);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
 
 //-----------------------------------------------------------------------------
 // ServerAdminChangePassword()
 //-----------------------------------------------------------------------------
 // Change le mot de passe admin sur le serveur
 //-----------------------------------------------------------------------------
+int ServerAdminChangePassword(HWND w,char *pszOldPwd, char *pszNewPwd)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szGetParams[128+1];
+	char szPostParams[256+1];
+	char *pszEncodedAdminOldPwd=NULL;
+	char *pszEncodedAdminNewPwd=NULL;
+	int lenEncodedAdminOldPwd;
+	int lenEncodedAdminNewPwd;
+	char *pszResult=NULL;
+	HCURSOR hCursorOld=NULL;
+	DWORD dwStatusCode=500;
+	
+	hCursorOld=SetCursor(ghCursorWait);
+	strcpy_s(szGetParams,sizeof(szGetParams),"?action=login");
+	
+	pszEncodedAdminOldPwd=HTTPEncodeParam(pszOldPwd);
+	if (pszEncodedAdminOldPwd==NULL) goto end;
+	pszEncodedAdminNewPwd=HTTPEncodeParam(pszNewPwd);
+	if (pszEncodedAdminNewPwd==NULL) goto end;
+	
+	// prépare les paramètres à passer en POST
+	sprintf_s(szPostParams,sizeof(szPostParams),"oldPwd=%s&newPwd=%s",pszEncodedAdminOldPwd,pszEncodedAdminNewPwd);
+	lenEncodedAdminOldPwd=strlen(pszEncodedAdminOldPwd);
+	lenEncodedAdminNewPwd=strlen(pszEncodedAdminNewPwd);
+	SecureZeroMemory(pszEncodedAdminOldPwd,lenEncodedAdminOldPwd);
+	SecureZeroMemory(pszEncodedAdminNewPwd,lenEncodedAdminNewPwd);
+	// POSTe la requête
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szGetParams,L"POST",szPostParams,strlen(szPostParams),L"Content-Type: application/x-www-form-urlencoded\r\n",
+						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,gwcszAdminCookie,dwAdminCookie,&dwStatusCode);
+	SecureZeroMemory(szPostParams,sizeof(szPostParams));
+	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szGetParams)); goto end; }
+	if (strcmp(pszResult,"0")==0) rc=0; // changement OK
+	else if (strcmp(pszResult,"-1")==0) rc=-1; // mauvais mot de passe
+	else if (strcmp(pszResult,"-2")==0) rc=-2; // changement KO
+	else rc=-3;
+	
+end:
+	if (dwStatusCode!=200 || pszResult==NULL) // problème serveur
+	{
+		MessageBox(w,GetString(IDS_CONFIG_PROXY),"swSSO",MB_ICONEXCLAMATION);
+	}
+	else 
+	{
+		if (rc==0) // changement OK
+		{
+			MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+		}
+		else if (rc==-1) // mot de passe incorrect
+		{
+			MessageBox(w,GetString(IDS_SERVER_ADMIN_BAD_PWD),"swSSO",MB_ICONEXCLAMATION);
+		}
+		else // erreur
+		{
+			MessageBox(w,GetString(IDS_CONFIG_PROXY),"swSSO",MB_ICONEXCLAMATION);
+		}
+	}
+	if (hCursorOld!=NULL) SetCursor(hCursorOld);
+	if (pszEncodedAdminOldPwd!=NULL) free(pszEncodedAdminOldPwd);
+	if (pszEncodedAdminNewPwd!=NULL) free(pszEncodedAdminNewPwd);
+	if (pszResult!=NULL) free(pszResult);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
 

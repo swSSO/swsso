@@ -2295,7 +2295,15 @@ static int CALLBACK ChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM wp,LPA
 							}
 							else
 							{
-								MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+								// ISSUE#342 : répercute le changement de mot de passe sur le serveur
+								if (gbAdmin && !gbNoMasterPwd)
+								{
+									ServerAdminChangePassword(w,szOldPwd,szNewPwd1);
+								}
+								else
+								{
+									MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+								}
 								EndDialog(w,IDOK);
 							}
 						}
@@ -2428,7 +2436,18 @@ static int CALLBACK ForceChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM w
 							}
 							else
 							{
-								if (!gbRecoveryRunning) MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+								if (!gbRecoveryRunning) 
+								{
+									// ISSUE#342 : répercute le changement de mot de passe sur le serveur
+									if (gbAdmin && !gbNoMasterPwd)
+									{
+										ServerAdminChangePassword(w,szOldPwd,szNewPwd1);
+									}
+									else
+									{
+										MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
+									}
+								}
 								EndDialog(w,IDOK);
 							}
 						}

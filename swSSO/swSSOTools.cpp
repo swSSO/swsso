@@ -96,7 +96,9 @@ BSTR GetBSTRFromSZ(const char *sz)
 	if (bstr==NULL) goto end;
 end:
 	if (pwc!=NULL) free(pwc);
-	TRACE((TRACE_LEAVE,_F_, "%S",bstr));
+	// Trace à activer en debug uniquement car peut contenir un mot de passe
+	// TRACE((TRACE_DEBUG,_F_, "%S",bstr));
+	TRACE((TRACE_LEAVE,_F_, ""));
 	return bstr;
 }
 
@@ -119,7 +121,9 @@ char *GetSZFromBSTR(BSTR bstr)
 	WideCharToMultiByte( CP_ACP, 0, bstr, -1, rc, len+1, NULL, NULL );
 	rc[len]=0;
 end:
-	TRACE((TRACE_LEAVE,_F_, "%s",rc));
+	// Trace à activer en debug uniquement car peut contenir un mot de passe
+	// TRACE((TRACE_DEBUG,_F_, "%s",rc));
+	TRACE((TRACE_LEAVE,_F_,""));
 	return rc;
 }
 
@@ -271,7 +275,9 @@ char *HTTPRequestOneServer(const char *pszServer,			// [in] FQDN du serveur (www
 		TRACE((TRACE_INFO,_F_,"WinHttpSetCredentials(user:%s)",pProxyParams->szProxyUser)); 
 		if (!brc) { TRACE((TRACE_ERROR,_F_,"WinHttpSetCredentials()=0x%08lx",GetLastError())); goto end; }
 	}
-	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)pRequestData,dwLenRequestData,"pRequestData (methode %S)",pwszMethod));
+	// Trace à activer en debug uniquement car dans les données postées il peut y avoir le mot de passe admin !
+	// TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)pRequestData,dwLenRequestData,"pRequestData (methode %S)",pwszMethod));
+	TRACE((TRACE_INFO,_F_,"pRequestData (methode %S) len=%d",pwszMethod,dwLenRequestData));
 	
 	// ISSUE#342 : envoi cookie si fourni
 	if (pwszInCookie!=NULL && wcslen(pwszInCookie)!=0)
@@ -517,7 +523,9 @@ char *HTTPEncodeParam(char *pszToEncode)
 	}
 	pszEncoded[j]=0;
 end:
-	TRACE((TRACE_LEAVE,_F_, "rc=%s",pszEncoded));
+	// Trace à activer en debug uniquement car peut contenir un mot de passe
+	// TRACE((TRACE_DEBUG_F_, "pszEncoded=%s",pszEncoded));
+	TRACE((TRACE_LEAVE,_F_,""));
 	return pszEncoded;
 }
 
