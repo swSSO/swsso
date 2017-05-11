@@ -2441,7 +2441,7 @@ static int CALLBACK ForceChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM w
 									// ISSUE#342 : répercute le changement de mot de passe sur le serveur
 									if (gbAdmin && !gbNoMasterPwd)
 									{
-										ServerAdminChangePassword(w,szOldPwd,szNewPwd1);
+										//ServerAdminChangePassword(w,szOldPwd,szNewPwd1);
 									}
 									else
 									{

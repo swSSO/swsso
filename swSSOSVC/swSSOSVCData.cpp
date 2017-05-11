@@ -132,14 +132,21 @@ int swGetUserDataIndex(const char *BufRequest,int iOffset)
 	int rc=-1;
 	int i;
 	char *pszUserName,*pszLogonDomainName;
+	char szShortLogonDomainName[DOMAIN_LEN];
+	char *p;
 	pszLogonDomainName=(char*)BufRequest+iOffset;
 	pszUserName=(char*)BufRequest+iOffset+USER_LEN;
+
 	for (i=0;i<giMaxUserDataIndex;i++)
 	{
-		TRACE((TRACE_DEBUG,_F_,"pszLogonDomainName=%s gUserData[%d].szLogonDomainName=%s",pszLogonDomainName,i,gUserData[i].szLogonDomainName));
 		TRACE((TRACE_DEBUG,_F_,"pszUserName=%s gUserData[%d].szUserName=%s",pszUserName,i,gUserData[i].szUserName));
+		// ISSUE#346
+		strcpy_s(szShortLogonDomainName,DOMAIN_LEN,gUserData[i].szLogonDomainName);
+		p=strchr(szShortLogonDomainName,'.');
+		if (p!=NULL) *p=0;
+		TRACE((TRACE_DEBUG,_F_,"pszLogonDomainName=%s gUserData[%d].szLogonDomainName=%s szShortLogonDomainName=%s",pszLogonDomainName,i,gUserData[i].szLogonDomainName,szShortLogonDomainName));
 		if (_stricmp(pszUserName,gUserData[i].szUserName)==0 &&
-			_stricmp(pszLogonDomainName,gUserData[i].szLogonDomainName)==0)
+			(_stricmp(pszLogonDomainName,gUserData[i].szLogonDomainName)==0 || _stricmp(pszLogonDomainName,szShortLogonDomainName)==0)) // ISSUE#346
 		{
 			TRACE((TRACE_INFO,_F_,"Trouvé %s\\%s index %d",pszLogonDomainName,pszUserName,i));
 			rc=i;
