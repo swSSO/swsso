@@ -109,10 +109,18 @@ void swTraceAuthentInfo(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)usUserName.Buffer,usUserName.Length,"usUserName"));
 	//TRACE_BUFFER((TRACE_PWD,_F_,(unsigned char*)usPassword.Buffer,usPassword.Length,"usPassword"));
 	// domaine
-	ret=WideCharToMultiByte(CP_ACP,0,usLogonDomainName.Buffer,usLogonDomainName.Length/2,szLogonDomainName,sizeof(szLogonDomainName),NULL,NULL);
-	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usLogonDomainName)=%d",GetLastError())); goto end; }
-	TRACE((TRACE_DEBUG,_F_,"szLogonDomainName=%s",szLogonDomainName));
-	lenLogonDomainName=(int)strlen(szLogonDomainName);
+	if (usLogonDomainName.Length==0) // ISSUE#346
+	{
+		TRACE((TRACE_INFO,_F_,"Domaine vide"));
+		lenLogonDomainName=0;
+	}
+	else
+	{
+		ret=WideCharToMultiByte(CP_ACP,0,usLogonDomainName.Buffer,usLogonDomainName.Length/2,szLogonDomainName,sizeof(szLogonDomainName),NULL,NULL);
+		if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usLogonDomainName)=%d",GetLastError())); goto end; }
+		TRACE((TRACE_DEBUG,_F_,"szLogonDomainName=%s",szLogonDomainName));
+		lenLogonDomainName=(int)strlen(szLogonDomainName);
+	}
 	// utilisateur
 	ret=WideCharToMultiByte(CP_ACP,0,usUserName.Buffer,usUserName.Length/2,szUserName,sizeof(szUserName),NULL,NULL);
 	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usUserName)=%d",GetLastError())); goto end; }

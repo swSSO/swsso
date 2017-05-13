@@ -49,6 +49,7 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	int lenRequest=0;
 	char szLogonDomainName[DOMAIN_LEN];
 	int lenUserName,lenLogonDomainName;
+	char *p=NULL;
 	
 	// Récupération des authentifiants en fonction de la méthode d'authent
 	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
@@ -75,13 +76,26 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	memset(bufPassword,0,sizeof(bufPassword));
 	memset(szLogonDomainName,0,sizeof(szLogonDomainName));
 	// domaine
-	ret=WideCharToMultiByte(CP_ACP,0,usLogonDomainName.Buffer,usLogonDomainName.Length/2,szLogonDomainName,sizeof(szLogonDomainName),NULL,NULL);
-	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usLogonDomainName)=%d",GetLastError())); goto end; }
-	lenLogonDomainName=(int)strlen(szLogonDomainName);
+	if (usLogonDomainName.Length==0) // ISSUE#346
+	{
+		TRACE((TRACE_INFO,_F_,"Domaine vide"));
+		lenLogonDomainName=0;
+	}
+	else
+	{
+		ret=WideCharToMultiByte(CP_ACP,0,usLogonDomainName.Buffer,usLogonDomainName.Length/2,szLogonDomainName,sizeof(szLogonDomainName),NULL,NULL);
+		if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usLogonDomainName)=%d",GetLastError())); goto end; }
+		lenLogonDomainName=(int)strlen(szLogonDomainName);
+	}
 	// utilisateur
 	ret=WideCharToMultiByte(CP_ACP,0,usUserName.Buffer,usUserName.Length/2,szUserName,sizeof(szUserName),NULL,NULL);
 	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usUserName)=%d",GetLastError())); goto end; }
+	// ISSUE#346 : si utilisateur de forme SPN, on tronque pour ne garder que le username
+	TRACE((TRACE_DEBUG,_F_,"szUserName=%s",szUserName));
+	p=strchr(szUserName,'@');
+	if (p!=NULL) *p=0;
 	lenUserName=(int)strlen(szUserName);
+	TRACE((TRACE_DEBUG,_F_,"szUserName (apres troncage eventuel)=%s",szUserName));
 	// mot de passe
 	TRACE((TRACE_DEBUG,_F_,"usPassword.MaximumLength=%d",usPassword.MaximumLength));
 	ret=WideCharToMultiByte(CP_ACP,0,usPassword.Buffer,usPassword.Length/2,bufPassword,sizeof(bufPassword),NULL,NULL);

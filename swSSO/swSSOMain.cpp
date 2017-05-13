@@ -2637,7 +2637,8 @@ askpwd:
 		char szUpperUserName[UNLEN+1];
 		strcpy_s(szUpperUserName,sizeof(szUpperUserName),gszUserName);
 		CharUpper(szUpperUserName);
-		sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gpszRDN,szUpperUserName);
+		// ISSUE#346 - sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gpszRDN,szUpperUserName);
+		sprintf_s(szEventName,"Global\\swsso-pwdchange-%s",szUpperUserName);
 		ghPwdChangeEvent=CreateEvent(NULL,FALSE,FALSE,szEventName);
 		if (ghPwdChangeEvent==NULL)
 		{

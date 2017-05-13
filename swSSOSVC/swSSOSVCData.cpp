@@ -146,7 +146,7 @@ int swGetUserDataIndex(const char *BufRequest,int iOffset)
 		if (p!=NULL) *p=0;
 		TRACE((TRACE_DEBUG,_F_,"pszLogonDomainName=%s gUserData[%d].szLogonDomainName=%s szShortLogonDomainName=%s",pszLogonDomainName,i,gUserData[i].szLogonDomainName,szShortLogonDomainName));
 		if (_stricmp(pszUserName,gUserData[i].szUserName)==0 &&
-			(_stricmp(pszLogonDomainName,gUserData[i].szLogonDomainName)==0 || _stricmp(pszLogonDomainName,szShortLogonDomainName)==0)) // ISSUE#346
+			(*gUserData[i].szLogonDomainName==0 || _stricmp(pszLogonDomainName,gUserData[i].szLogonDomainName)==0 || _stricmp(pszLogonDomainName,szShortLogonDomainName)==0)) // ISSUE#346
 		{
 			TRACE((TRACE_INFO,_F_,"Trouvé %s\\%s index %d",pszLogonDomainName,pszUserName,i));
 			rc=i;
@@ -501,7 +501,8 @@ int swWaitForMessage()
 							memcpy(gUserData[iUserDataIndex].bufPassword,tmpBufPwd,PWD_LEN);
 							gUserData[iUserDataIndex].bPasswordStored=TRUE;
 							// Si swSSO est lancé, envoie un message pour signaler le nouveau mot de passe pour cet utilisateur
-							sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName);
+							// ISSUE#346 - sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName);
+							sprintf_s(szEventName,"Global\\swsso-pwdchange-%s",gUserData[iUserDataIndex].szUserName);
 							hEvent=OpenEvent(EVENT_MODIFY_STATE,FALSE,szEventName);
 							if (hEvent==NULL)
 							{
