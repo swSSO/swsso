@@ -1950,7 +1950,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	OSVERSIONINFO osvi;
 	BOOL b64=false;
 	BOOL bMigrationWindowsSSO=FALSE;
-	BOOL bForcePwdChangeNow=FALSE;
+	// BOOL bForcePwdChangeNow=FALSE; // supprimé en 1.15, était toujours FALSE !
 	BOOL bQuit=FALSE;
 	int iWaitBeforeKill=5000; //en ms
 	
@@ -2578,10 +2578,11 @@ askpwd:
 	if (!gbParseWindowsOnStart) ExcludeOpenWindows();
 
 	// ISSUE#145
-	if (bForcePwdChangeNow)
-	{
-		if (WindowChangeMasterPwd(TRUE)!=0) goto end;
-	}
+	// supprimé en 1.15, était toujours FALSE !
+	// if (bForcePwdChangeNow) 
+	// {
+	// 	if (WindowChangeMasterPwd(TRUE)!=0) goto end;
+	// }
 
 	if (bMigrationWindowsSSO)
 	{

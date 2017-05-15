@@ -2298,7 +2298,7 @@ static int CALLBACK ChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM wp,LPA
 								// ISSUE#342 : répercute le changement de mot de passe sur le serveur
 								if (gbAdmin && !gbNoMasterPwd)
 								{
-									ServerAdminChangePassword(w,szOldPwd,szNewPwd1);
+									ServerAdminSetPassword(w,szNewPwd1);
 								}
 								else
 								{
@@ -2441,7 +2441,7 @@ static int CALLBACK ForceChangeMasterPasswordDialogProc(HWND w,UINT msg,WPARAM w
 									// ISSUE#342 : répercute le changement de mot de passe sur le serveur
 									if (gbAdmin && !gbNoMasterPwd)
 									{
-										//ServerAdminChangePassword(w,szOldPwd,szNewPwd1);
+										ServerAdminSetPassword(w,szNewPwd1);
 									}
 									else
 									{
@@ -2646,6 +2646,17 @@ int ChangeWindowsPwd(void)
 			if(SaveApplications()!=0) goto end;
 			// Récupère le nouveau mot de passe AD chiffré
 			if (GetADPassword()!=0) goto end;
+			// ISSUE#342 : répercute le changement de mot de passe sur le serveur
+			if (gbAdmin)
+			{
+				char *pszADPassword=GetDecryptedPwd(gszEncryptedADPwd);
+				if (pszADPassword!=NULL) 
+				{
+					ServerAdminSetPassword(NULL,pszADPassword);
+					SecureZeroMemory(pszADPassword,strlen(pszADPassword));
+					free(pszADPassword);
+				}
+			}
 			// Met à jour la valeur de checksynchro
 			if (GenWriteCheckSynchroValue()!=0) goto end;
 		}

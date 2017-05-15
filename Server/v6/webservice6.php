@@ -93,33 +93,24 @@ else if ($_GET['action']=="logout")
 	echo "0";
 }
 // ------------------------------------------------------------
-// changepwd
+// resetPwd
 // -----------------------------------------------------------
-else if ($_GET['action']=="changepwd")
+else if ($_GET['action']=="resetPwd")
 {
 	if (!isClientWriteAuthorized()) return;
 	if (_AUTH_=="TRUE")
 	{
-		if (isset($_POST['oldpwd']) && isset($_POST['newpwd']))
+		if (isset($_POST['newpwd']))
 		{
-			$var_oldpwd	=utf8_decode(myaddslashes($_POST['oldpwd'])); 
 			$var_newpwd	=utf8_decode(myaddslashes($_POST['newpwd'])); 
-			if (checkPwd($_SESSION['userid'],$var_oldpwd)==0)
+			if (resetPwd($_SESSION['userid'],$var_newpwd)==0)
 			{
-				if (resetPwd($_SESSION['userid'],$var_newpwd)==0)
-				{
-					echo "0"; // changement OK
-				}
-				else
-				{
-					echo "-2"; // changement KO 
-				}
+				echo "0"; // changement OK
 			}
 			else
 			{
-				echo "-1"; // mauvais mot de passe
+				echo "-1"; // changement KO 
 			}
-			echo $rc;
 		}
 		else
 		{

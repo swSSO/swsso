@@ -100,7 +100,7 @@ end:
 	// est bien up ou changer le mot de passe sur le serveur pour le réaligner
 	if (dwStatusCode!=200 || pszResult==NULL) // problème serveur
 	{
-		MessageBox(w,GetString(IDS_CONFIG_PROXY),"swSSO",MB_ICONEXCLAMATION);
+		MessageBox(w,GetString(IDS_SERVER_ADMIN_LOGIN_KO),"swSSO",MB_ICONEXCLAMATION);
 	}
 	else if (rc!=0)
 	{
@@ -114,7 +114,7 @@ end:
 		}
 		else // erreur inconnue
 		{
-			MessageBox(w,GetString(IDS_CONFIG_PROXY),"swSSO",MB_ICONEXCLAMATION);
+			MessageBox(w,gszErrorServerNotAvailable,"swSSO",MB_ICONEXCLAMATION);
 		}
 	}
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
@@ -155,73 +155,61 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// ServerAdminChangePassword()
+// ServerAdminSetPassword()
 //-----------------------------------------------------------------------------
 // Change le mot de passe admin sur le serveur
 //-----------------------------------------------------------------------------
-int ServerAdminChangePassword(HWND w,char *pszOldPwd, char *pszNewPwd)
+int ServerAdminSetPassword(HWND w,char *pszNewPwd)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 	char szGetParams[128+1];
 	char szPostParams[256+1];
-	char *pszEncodedAdminOldPwd=NULL;
 	char *pszEncodedAdminNewPwd=NULL;
-	int lenEncodedAdminOldPwd;
 	int lenEncodedAdminNewPwd;
 	char *pszResult=NULL;
 	HCURSOR hCursorOld=NULL;
 	DWORD dwStatusCode=500;
 	
 	hCursorOld=SetCursor(ghCursorWait);
-	strcpy_s(szGetParams,sizeof(szGetParams),"?action=login");
+	strcpy_s(szGetParams,sizeof(szGetParams),"?action=resetPwd");
 	
-	pszEncodedAdminOldPwd=HTTPEncodeParam(pszOldPwd);
-	if (pszEncodedAdminOldPwd==NULL) goto end;
 	pszEncodedAdminNewPwd=HTTPEncodeParam(pszNewPwd);
 	if (pszEncodedAdminNewPwd==NULL) goto end;
 	
 	// prépare les paramètres à passer en POST
-	sprintf_s(szPostParams,sizeof(szPostParams),"oldPwd=%s&newPwd=%s",pszEncodedAdminOldPwd,pszEncodedAdminNewPwd);
-	lenEncodedAdminOldPwd=strlen(pszEncodedAdminOldPwd);
+	sprintf_s(szPostParams,sizeof(szPostParams),"newPwd=%s",pszEncodedAdminNewPwd);
 	lenEncodedAdminNewPwd=strlen(pszEncodedAdminNewPwd);
-	SecureZeroMemory(pszEncodedAdminOldPwd,lenEncodedAdminOldPwd);
 	SecureZeroMemory(pszEncodedAdminNewPwd,lenEncodedAdminNewPwd);
 	// POSTe la requête
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
 						  szGetParams,L"POST",szPostParams,strlen(szPostParams),L"Content-Type: application/x-www-form-urlencoded\r\n",
-						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,gwcszAdminCookie,dwAdminCookie,&dwStatusCode);
+						  WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,gwcszAdminCookie,NULL,0,&dwStatusCode);
 	SecureZeroMemory(szPostParams,sizeof(szPostParams));
 	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szGetParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szGetParams)); goto end; }
 	if (strcmp(pszResult,"0")==0) rc=0; // changement OK
-	else if (strcmp(pszResult,"-1")==0) rc=-1; // mauvais mot de passe
-	else if (strcmp(pszResult,"-2")==0) rc=-2; // changement KO
-	else rc=-3;
+	else if (strcmp(pszResult,"-1")==0) rc=-1; // changement KO
+	else rc=-2;
 	
 end:
 	if (dwStatusCode!=200 || pszResult==NULL) // problème serveur
 	{
-		MessageBox(w,GetString(IDS_CONFIG_PROXY),"swSSO",MB_ICONEXCLAMATION);
+		MessageBox(w,GetString(IDS_CHANGE_ADMIN_PWD_KO),"swSSO",MB_ICONEXCLAMATION);
 	}
 	else 
 	{
 		if (rc==0) // changement OK
 		{
-			MessageBox(w,GetString(IDS_CHANGE_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
-		}
-		else if (rc==-1) // mot de passe incorrect
-		{
-			MessageBox(w,GetString(IDS_SERVER_ADMIN_BAD_PWD),"swSSO",MB_ICONEXCLAMATION);
+			MessageBox(w,GetString(IDS_CHANGE_ADMIN_PWD_OK),"swSSO",MB_OK | MB_ICONINFORMATION);
 		}
 		else // erreur
 		{
-			MessageBox(w,GetString(IDS_CONFIG_PROXY),"swSSO",MB_ICONEXCLAMATION);
+			MessageBox(w,GetString(IDS_CHANGE_ADMIN_PWD_KO),"swSSO",MB_ICONEXCLAMATION);
 		}
 	}
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
-	if (pszEncodedAdminOldPwd!=NULL) free(pszEncodedAdminOldPwd);
 	if (pszEncodedAdminNewPwd!=NULL) free(pszEncodedAdminNewPwd);
 	if (pszResult!=NULL) free(pszResult);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));

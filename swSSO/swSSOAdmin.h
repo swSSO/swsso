@@ -34,4 +34,4 @@
 extern WCHAR gwcszAdminCookie[];
 int ServerAdminLogin(HWND w,char *szId, char *szPwd);
 int ServerAdminLogout();
-int ServerAdminChangePassword(HWND w,char *pszOldPwd, char *pszNewPwd);
+int ServerAdminSetPassword(HWND w,char *pszNewPwd);

@@ -1025,6 +1025,10 @@ BEGIN
     IDS_SERVER_ADMIN_BAD_PWD 
                             "Cannot connect to swSSO server (bad password). Please contact a super admin to reset your swSSO password. In the meantime, you can work locally. "
     IDS_SERVER_ADMIN_LOCKED "Your swSSO account is locked. Please contact a super admin to unlock it. In the meantime, you can work locally."
+    IDS_CHANGE_ADMIN_PWD_OK "Password change successfull"
+    IDS_CHANGE_ADMIN_PWD_KO "Your password has been changed on your computer but cannot be changed on server. Please contact a super admin to reset it."
+    IDS_SERVER_ADMIN_LOGIN_KO 
+                            "Authentication failed on server: you can work locally, but you won't be able to publish configurations."
 END
 
 #endif    // English resources
@@ -1079,25 +1083,25 @@ FONT 8, "Tahoma", 400, 0, 0x0
 BEGIN
     CTEXT           "MODE ADMINISTRATEUR",TX_MODE_ADMIN,7,2,429,15,SS_CENTERIMAGE | NOT WS_VISIBLE
     ICON            "",IMG_ID,1016,18,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID2,415,57,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID3,417,70,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID4,416,86,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_TYPE,9,284,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_TITRE,32,285,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_URL,55,286,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID_ID,80,284,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_PWD_ID,106,284,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_VALIDATION,129,285,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_LANCEMENT,154,285,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID2_TYPE,179,286,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID2_ID,197,287,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID3_TYPE,226,285,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID3_ID,243,284,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID4_TYPE,264,285,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_ID4_ID,283,287,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
-    ICON            "",IMG_PWD_GROUP,332,286,21,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
-    ICON            "",IMG_AUTO_LOCK,357,286,21,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
-    ICON            "",IMG_KBSIM,309,284,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID2,415,57,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID3,417,70,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID4,416,86,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_TYPE,9,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_TITRE,32,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_URL,55,286,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID_ID,80,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_PWD_ID,106,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_VALIDATION,129,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_LANCEMENT,154,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID2_TYPE,179,286,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID2_ID,197,287,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID3_TYPE,226,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID3_ID,243,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID4_TYPE,264,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID4_ID,283,287,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_PWD_GROUP,332,286,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
+    ICON            "",IMG_AUTO_LOCK,357,286,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
+    ICON            "",IMG_KBSIM,309,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
     ICON            "",IMG_PWD,419,36,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
     CONTROL         "Tree1",TV_APPLICATIONS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,15,29,168,202
     CONTROL         "Tab1",TAB_APPLICATIONS,"SysTabControl32",0x0,7,7,181,235
@@ -1152,12 +1156,12 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,253,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,62,253,50,14
     PUSHBUTTON      "&Appliquer",IDAPPLY,121,253,50,14
-    ICON            "",IMG_LOUPE,407,36,21,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_LOUPE,407,36,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
     CONTROL         "",TV_DOMAINS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,22,33,168,202
     LTEXT           "Cette application appartient à un groupement de mot de passe. Le changement de mot de passe de cet identifiant sera également réalisé dans tous vos enregistrements de ce groupe (surlignés de la même couleur).",TX_INFO_PWD_GROUP,345,92,691,8,NOT WS_VISIBLE
     CONTROL         "&Publier automatiquement cette configuration",CK_AUTO_PUBLISH,
                     "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,27,281,180,8
-    ICON            "",IMG_AUTO_PUBLISH,377,286,21,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
+    ICON            "",IMG_AUTO_PUBLISH,377,286,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
     LTEXT           "Ce type de configuration ne réalise pas d'authentification automatique, mais vous permet de mémoriser des identifiants et mots de passe de façon sécurisée.",TX_COFFRE,213,278,204,24
 END
 
@@ -1642,6 +1646,11 @@ BEGIN
     0
 END
 
+IDD_APPNSITES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1933,6 +1942,10 @@ BEGIN
     IDS_SERVER_ADMIN_BAD_PWD 
                             "Impossible de se connecter au serveur swSSO avec ce mot de passe administrateur. Veuillez contacter un super administrateur pour réinitialiser votre mot de passe swSSO. En attendant, vous pouvez travailler localement."
     IDS_SERVER_ADMIN_LOCKED "Votre compte administrateur est verrouillé sur le serveur swSSO. Veuillez contacter un super administrateur pour le déverrouiller. En attendant, vous pouvez travailler localement."
+    IDS_CHANGE_ADMIN_PWD_OK "Votre mot de passe administrateur a bien été modifié en local et sur le serveur"
+    IDS_CHANGE_ADMIN_PWD_KO "Votre mot de passe administrateur a bien été modifié en local mais n'a pas pu être synchronisé sur le serveur.\r\nVeuillez contacter un super administrateur pour le réinitialiser."
+    IDS_SERVER_ADMIN_LOGIN_KO 
+                            "Authentification impossible sur le serveur : vous pouvez travailler localement, mais ne pourrez pas publier des configurations."
 END
 
 #endif    // French resources
