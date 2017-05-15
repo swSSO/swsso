@@ -2599,6 +2599,12 @@ void ShowApplicationDetails(HWND w,int iAction)
 	{
 		wsprintf(buf2048,"%s [%s]",GetString(IDS_TITRE_APPNSITES),gptActions[iAction].szApplication);		
 	}
+	// ISSUE#348
+	if (gbAdmin)
+	{
+		sprintf_s(buf2048,sizeof(buf2048),"%s [%d]",gptActions[iAction].szApplication,gptActions[iAction].iConfigId);
+		SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
+	}
 	SetWindowText(w,buf2048);
 	// 0.93B7 ISSUE#10
 	MoveControls(w,GetDlgItem(w,TAB_CONFIG));
@@ -2617,11 +2623,6 @@ void ShowApplicationDetails(HWND w,int iAction)
 	HideConfigControls(w,iAction);
 	ShowWindow(GetDlgItem(w,TAB_IDPWD),SW_SHOW);
 
-	if (gbAdmin)
-	{
-		sprintf_s(buf2048,sizeof(buf2048),"%s [%d]",gptActions[iAction].szApplication,gptActions[iAction].iConfigId);
-		SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
-	}
 end:
 	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -4971,6 +4972,16 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 									SetWindowText(w,buf2048);
 								}
 							}
+							// ISSUE#348
+							if (gbAdmin)
+							{
+								int iCategIndex=GetCategoryIndex(pnmtv->itemNew.lParam);
+								if (iCategIndex!=-1)
+								{
+									wsprintf(buf2048,"%s [%d]",gptCategories[iCategIndex].szLabel,gptCategories[iCategIndex].id);
+									SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
+								}
+							}
 						}
 						else
 						{
@@ -4994,6 +5005,19 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						else
 						{
 							SetWindowText(w,GetString(IDS_TITRE_APPNSITES));
+						}
+						// ISSUE#348
+						if (gbAdmin)
+						{
+							HTREEITEM hItem;
+							int iDomain;
+							hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
+							iDomain=TVItemGetLParam(w,hItem);
+							if (iDomain!=-1) 
+							{
+								wsprintf(buf2048,"%s [%d]",gtabDomains[iDomain].szDomainLabel,gtabDomains[iDomain].iDomainId);
+								SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
+							}
 						}
 					}
 					break;
