@@ -2616,6 +2616,9 @@ void ShowApplicationDetails(HWND w,int iAction)
 	ShowWindow(GetDlgItem(w,TAB_IDPWD),SW_SHOW);
 	HideConfigControls(w,iAction);
 	ShowWindow(GetDlgItem(w,TAB_IDPWD),SW_SHOW);
+
+	sprintf_s(buf2048,sizeof(buf2048),"%s [%d]",gptActions[iAction].szApplication,gptActions[iAction].iConfigId);
+	SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
 end:
 	gbIsChanging=FALSE;
 	TRACE((TRACE_LEAVE,_F_, ""));

@@ -95,11 +95,25 @@ void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 	BYTE hiVk,loVk;
 	WORD wKeyScan;
 	BOOL bCapsLock=FALSE;
+	BOOL bCapsLockReleased=FALSE;
 
 	// en 1.09, déplacement du control du caps lock tout au début
+	TRACE((TRACE_DEBUG,_F_,"GetKeyState(VK_CAPITAL)=%04x",GetKeyState(VK_CAPITAL)));
 	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
 	{
-		bCapsLock=TRUE;
+		// on tente de désactiver caps lock
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+		// on verifie que ca a marché
+		TRACE((TRACE_DEBUG,_F_,"GetKeyState(VK_CAPITAL) apres tentative de desactivation=%04x",GetKeyState(VK_CAPITAL)));
+		if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // caps lock toujours là...
+		{
+			bCapsLock=TRUE;
+		}
+		else // la désactivation de la touche caps lock a fonctionné, il faudra la remettre à la fin de la saisie
+		{
+			bCapsLockReleased=TRUE;
+		}
 	}
 	
 	// ISSUE#264 : changement de la technique d'effacement, on fait CTRL+A puis DEL, ça évite les changements de champs.
@@ -149,6 +163,11 @@ void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 		//             reste enfoncée (uniquement constaté dans IE9, reproduit nulle par ailleurs)
 		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); } 
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); } 
+	}
+	if (bCapsLockReleased) // si déverrouillée au début
+	{
+		 keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);		
+		 keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
 	}
 	Sleep(iTempo);
 
@@ -202,6 +221,7 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 	BYTE hiVk,loVk;
 	WORD wKeyScan;
 	BOOL bCapsLock=FALSE;
+	BOOL bCapsLockReleased=FALSE;
 	int rc=-1;
 	IAccessible *pAccessible=NULL;
 
@@ -209,7 +229,19 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 	TRACE((TRACE_DEBUG,_F_,"GetKeyState(VK_CAPITAL)=%04x",GetKeyState(VK_CAPITAL)));
 	if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // 0.75 : caps lock
 	{
-		bCapsLock=TRUE;
+		// on tente de désactiver caps lock
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);
+		keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+		// on verifie que ca a marché
+		TRACE((TRACE_DEBUG,_F_,"GetKeyState(VK_CAPITAL) apres tentative de desactivation=%04x",GetKeyState(VK_CAPITAL)));
+		if (LOBYTE(GetKeyState(VK_CAPITAL))==1) // caps lock toujours là...
+		{
+			bCapsLock=TRUE;
+		}
+		else // la désactivation de la touche caps lock a fonctionné, il faudra la remettre à la fin de la saisie
+		{
+			bCapsLockReleased=TRUE;
+		}
 	}
 	// ISSUE#264 : changement de la technique d'effacement, on fait CTRL+A puis DEL, ça évite les changements de champs.
 	if (bErase) // ISSUE#286 : refait comme avant, n'efface pas systématiquement sinon la config type "simulation de frappe" ne fonctionne plus !
@@ -262,7 +294,11 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); } 
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); } 
 	}
-
+	if (bCapsLockReleased) // si déverrouillée au début
+	{
+		 keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | 0,0);		
+		 keybd_event(VK_CAPITAL,LOBYTE(MapVirtualKey(VK_CAPITAL,0)),KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+	}
 	Sleep(iTempo);
 	rc=0;
 end:
