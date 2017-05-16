@@ -2453,7 +2453,7 @@ askpwd:
 	if (giNbActions==0 && gbGetAllConfigsAtFirstStart) // CAS DU PREMIER LANCEMENT (ou encore aucune config enregistrée)
 	{
 		// 1.03 : récupère la liste des domaines
-		giNbDomains=GetDomains(TRUE,0,gtabDomains);
+		giNbDomains=GetAllDomains(gtabDomains);
 		if (giNbDomains==0)
 		{ 
 			MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
@@ -2497,7 +2497,7 @@ askpwd:
 		// Pour ne pas générer une requête inutile, on ne fait que pour les utilisateurs qui ont le droit d'utiliser le menu upload
 		if (gbInternetManualPutConfig) 
 		{
-			giNbDomains=GetDomains(TRUE,0,gtabDomains);
+			giNbDomains=GetAllDomains(gtabDomains);
 		}
 		else
 		{
@@ -2507,7 +2507,7 @@ askpwd:
 			{
 				if (giDomainId!=-1 && giDomainId!=1)
 				{
-					giNbDomains=GetDomains(TRUE,0,gtabDomains);
+					giNbDomains=GetAllDomains(gtabDomains);
 				}
 				GetDomainLabel(giDomainId); 
 				SaveConfigHeader();

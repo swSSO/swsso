@@ -427,6 +427,8 @@
 #define IDS_CHANGE_ADMIN_PWD_OK         42041
 #define IDS_CHANGE_ADMIN_PWD_KO         42042
 #define IDS_SERVER_ADMIN_LOGIN_KO       42043
+#define IDS_YES                         42044
+#define IDS_NO                          42045
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005
@@ -437,7 +439,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        42014
+#define _APS_NEXT_RESOURCE_VALUE        42015
 #define _APS_NEXT_COMMAND_VALUE         44000
 #define _APS_NEXT_CONTROL_VALUE         46007
 #define _APS_NEXT_SYMED_VALUE           48000

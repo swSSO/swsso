@@ -1086,7 +1086,7 @@ int RefreshRights(BOOL bForced,BOOL bReportSync)
 
 	if (gbInternetManualPutConfig) 
 	{
-		giNbDomains=GetDomains(TRUE,0,gtabDomains);
+		giNbDomains=GetAllDomains(gtabDomains);
 	}
 	else
 	{
@@ -1096,7 +1096,7 @@ int RefreshRights(BOOL bForced,BOOL bReportSync)
 		{
 			if (giDomainId!=-1 && giDomainId!=1)
 			{
-				giNbDomains=GetDomains(TRUE,0,gtabDomains);
+				giNbDomains=GetAllDomains(gtabDomains);
 			}
 			GetDomainLabel(giDomainId); 
 			SaveConfigHeader();

@@ -1029,6 +1029,8 @@ BEGIN
     IDS_CHANGE_ADMIN_PWD_KO "Your password has been changed on your computer but cannot be changed on server. Please contact a super admin to reset it."
     IDS_SERVER_ADMIN_LOGIN_KO 
                             "Authentication failed on server: you can work locally, but you won't be able to publish configurations."
+    IDS_YES                 "Yes"
+    IDS_NO                  "No"
 END
 
 #endif    // English resources
@@ -1063,15 +1065,15 @@ BEGIN
     LTEXT           "&Mot de passe :",IDC_STATIC,9,47,48,10
 END
 
-IDD_PUBLISH_TO DIALOG 0, 0, 242, 151
-STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+IDD_PUBLISH_TO DIALOGEX 0, 0, 242, 151
+STYLE DS_SETFONT | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_WINDOWEDGE
 CAPTION "Publier la configuration vers ces domaines..."
-FONT 8, "Tahoma"
+FONT 8, "Tahoma", 0, 0, 0x0
 BEGIN
     PUSHBUTTON      "&Tout",PB_TOUT,185,108,50,14
     PUSHBUTTON      "&Rien",PB_RIEN,185,127,50,14
-    CONTROL         "",LV_DOMAINS,"SysListView32",LVS_LIST | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,7,174,137
+    CONTROL         "",LV_DOMAINS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,7,174,137
     PUSHBUTTON      "Annuler",IDCANCEL,185,24,50,14
     DEFPUSHBUTTON   "OK",IDOK,185,7,50,14
 END
@@ -1651,6 +1653,11 @@ BEGIN
     0
 END
 
+IDD_PUBLISH_TO AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1946,6 +1953,8 @@ BEGIN
     IDS_CHANGE_ADMIN_PWD_KO "Votre mot de passe administrateur a bien été modifié en local mais n'a pas pu être synchronisé sur le serveur.\r\nVeuillez contacter un super administrateur pour le réinitialiser."
     IDS_SERVER_ADMIN_LOGIN_KO 
                             "Authentification impossible sur le serveur : vous pouvez travailler localement, mais ne pourrez pas publier des configurations."
+    IDS_YES                 "Oui"
+    IDS_NO                  "Non"
 END
 
 #endif    // French resources

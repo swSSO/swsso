@@ -340,10 +340,12 @@ void PublishToOnInitDialog(HWND w)
 	TRACE((TRACE_ENTER,_F_, ""));
 	LVITEM lvi;
 	int i,j;
-	T_DOMAIN tabConfigDomains[MAX_DOMAINS];
+	T_CONFIGS_DOMAIN tabConfigDomains[MAX_DOMAINS];
 	int iNbDomains;
 	HCURSOR hCursorOld=NULL;
 	hCursorOld=SetCursor(ghCursorWait);
+
+	ZeroMemory(tabConfigDomains,sizeof(T_CONFIGS_DOMAIN)*MAX_DOMAINS);
 
 	// icone ALT-TAB
 	SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab); 
@@ -360,15 +362,26 @@ void PublishToOnInitDialog(HWND w)
 	}
 	PublishToMoveControls(w);
 	
+	LVCOLUMN lvc;
+	lvc.mask= LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	lvc.cx=160;
+	lvc.iSubItem = 0;
+    lvc.pszText = "Domaines";
+	ListView_InsertColumn(GetDlgItem(w,LV_DOMAINS),0,&lvc);
+	lvc.cx=85;
+	lvc.iSubItem = 1;
+    lvc.pszText = "Auto-publiée ?";
+	ListView_InsertColumn(GetDlgItem(w,LV_DOMAINS),1,&lvc);
+	
 	// affichage de la liste des domaines
 	ListView_SetExtendedListViewStyle(GetDlgItem(w,LV_DOMAINS),LVS_EX_CHECKBOXES);
 		
 	// récupère la liste des domaines auxquels la config est rattachée (si c'est une categ on ne coche rien)
 	if (!gtPublish.bCateg)
 	{
-		iNbDomains=GetDomains(FALSE,gptActions[gtPublish.iAction].iConfigId,tabConfigDomains); 
+		iNbDomains=GetConfigDomains(gptActions[gtPublish.iAction].iConfigId,tabConfigDomains); 
 	}
-	lvi.mask=LVIF_TEXT | LVIF_PARAM;
+	lvi.mask=LVIF_TEXT | LVIF_PARAM ;
 	for (i=0;i<giNbDomains;i++)
 	{
 		lvi.iItem=i;
@@ -376,6 +389,7 @@ void PublishToOnInitDialog(HWND w)
 		lvi.pszText=gtabDomains[i].szDomainLabel;
 		lvi.lParam=gtabDomains[i].iDomainId;
 		ListView_InsertItem(GetDlgItem(w,LV_DOMAINS),&lvi);
+	
 		if (!gtPublish.bCateg)
 		{
 			for (j=0;j<iNbDomains;j++)
@@ -383,6 +397,7 @@ void PublishToOnInitDialog(HWND w)
 				if (gtabDomains[i].iDomainId==tabConfigDomains[j].iDomainId) 
 				{
 					ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),i,TRUE);
+					ListView_SetItemText(GetDlgItem(w,LV_DOMAINS),i,1,tabConfigDomains[j].bAutoPublish?GetString(IDS_YES):GetString(IDS_NO));
 				}
 			}
 		}
@@ -400,10 +415,15 @@ void LVCheckAllDomains(HWND w,BOOL bChecked,BOOL bCommun)
 {
 	TRACE((TRACE_ENTER,_F_, "bChecked=%d",bChecked));
 	int i;
-	if (bCommun) ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),0,FALSE);
+	if (bCommun) 
+	{ 
+		ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),0,FALSE);
+		ListView_SetItemText(GetDlgItem(w,LV_DOMAINS),0,1,"");
+	}
 	for (i=1;i<ListView_GetItemCount(GetDlgItem(w,LV_DOMAINS));i++)
 	{
 		ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),i,bChecked);
+		ListView_SetItemText(GetDlgItem(w,LV_DOMAINS),i,1,bChecked?GetString(IDS_NO):"");
 	}
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
@@ -508,6 +528,37 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						TRACE((TRACE_DEBUG,_F_,"LVN_ITEMCHANGED: item=%d uchanged=%d unewstate=%d",pnmv->iItem,pnmv->uChanged,pnmv->uNewState));
 					}
 					break;
+				case NM_DBLCLK:
+					{
+						LPNMITEMACTIVATE pnmv = (LPNMITEMACTIVATE)lp;
+						TRACE((TRACE_DEBUG,_F_,"NM_DBLCLK: subitem=%d",pnmv->iSubItem));
+						
+						// si le double click est sur la colonne "auto-publiée ?" et que le domaine est coché, on change la valeur sinon on ne change rien
+						if (pnmv->iSubItem==1)
+						{
+							int i;
+							RECT rectItem;
+							for (i=0;i<giNbDomains;i++)
+							{
+								ListView_GetItemRect(GetDlgItem(w,LV_DOMAINS),i,&rectItem,LVIR_LABEL);
+								if (pnmv->ptAction.y >= rectItem.top && pnmv->ptAction.y <= rectItem.bottom)
+								{
+									char szText[20];
+									ListView_GetItemText(GetDlgItem(w,LV_DOMAINS),i,1,szText,sizeof(szText));
+									if (strcmp(szText,GetString(IDS_NO))==0)
+									{
+										ListView_SetItemText(GetDlgItem(w,LV_DOMAINS),i,1,GetString(IDS_YES));
+									}
+									else if (strcmp(szText,GetString(IDS_YES))==0)
+									{
+										ListView_SetItemText(GetDlgItem(w,LV_DOMAINS),i,1,GetString(IDS_NO));
+									}
+									break; // pas la peine de continuer l'énumération, on l'a trouvé
+								}
+							}
+						}
+					}
+					break;
 				case NM_CLICK:
 					{
 						LPNMITEMACTIVATE pnmv = (LPNMITEMACTIVATE)lp;
@@ -519,6 +570,7 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						{
 							ListView_SetItemState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,0,LVIS_SELECTED);
 							ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,!b);
+							ListView_SetItemText(GetDlgItem(w,LV_DOMAINS),pnmv->iItem,1,b?"":GetString(IDS_NO));
 						}
 						if (pnmv->iItem==0) // domaine commun --> si coché décoche tout le reste
 						{
@@ -526,7 +578,11 @@ static int CALLBACK PublishToDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						}
 						else // autre domaine coché, décoche commun
 						{
-							if (!b) ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),0,FALSE);
+							if (!b) 
+							{
+								ListView_SetCheckState(GetDlgItem(w,LV_DOMAINS),0,FALSE);
+								ListView_SetItemText(GetDlgItem(w,LV_DOMAINS),0,1,"");
+							}
 						}
 					}
 					break;
@@ -5114,7 +5170,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 									{
 										HCURSOR hCursorOld=NULL;
 										hCursorOld=SetCursor(ghCursorWait);
-										giNbDomains=GetDomains(TRUE,0,gtabDomains);
+										giNbDomains=GetAllDomains(gtabDomains);
 										FillTreeViewDomains(w);
 										if (hCursorOld!=NULL) SetCursor(hCursorOld);
 										SetWindowLong(w, DWL_MSGRESULT, FALSE);
@@ -5140,7 +5196,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 										{
 											HCURSOR hCursorOld=NULL;
 											hCursorOld=SetCursor(ghCursorWait);
-											giNbDomains=GetDomains(TRUE,0,gtabDomains);
+											giNbDomains=GetAllDomains(gtabDomains);
 											FillTreeViewDomains(w);
 											if (hCursorOld!=NULL) SetCursor(hCursorOld);
 											SetWindowLong(w, DWL_MSGRESULT, FALSE);
@@ -5152,7 +5208,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 										{
 											HCURSOR hCursorOld=NULL;
 											hCursorOld=SetCursor(ghCursorWait);
-											giNbDomains=GetDomains(TRUE,0,gtabDomains);
+											giNbDomains=GetAllDomains(gtabDomains);
 											FillTreeViewDomains(w);
 											if (hCursorOld!=NULL) SetCursor(hCursorOld);
 										}
@@ -5201,7 +5257,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 								{
 									HCURSOR hCursorOld=NULL;
 									hCursorOld=SetCursor(ghCursorWait);
-									giNbDomains=GetDomains(TRUE,0,gtabDomains);
+									giNbDomains=GetAllDomains(gtabDomains);
 									FillTreeViewDomains(w);
 									if (hCursorOld!=NULL) SetCursor(hCursorOld);
 								}
@@ -5520,7 +5576,7 @@ void DeleteDomain(HWND w)
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
 	if (pszResult[0]=='O' && pszResult[1]=='K')
 	{
-		giNbDomains=GetDomains(TRUE,0,gtabDomains);
+		giNbDomains=GetAllDomains(gtabDomains);
 		FillTreeViewDomains(w);
 		MessageBox(w,GetString(IDS_DELETE_DOMAIN_OK),"swSSO",MB_OK|MB_ICONINFORMATION);
 	}

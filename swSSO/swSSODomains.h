@@ -38,12 +38,23 @@ typedef struct
 	char szDomainLabel[LEN_DOMAIN+1];
 }
 T_DOMAIN;
+
+typedef struct 
+{
+	int iDomainId;
+	char szDomainLabel[LEN_DOMAIN+1];
+	BOOL bAutoPublish;
+}
+T_CONFIGS_DOMAIN;
+
 #define MAX_DOMAINS 100
 
 extern int  giDomainId;
 extern char gszDomainLabel[LEN_DOMAIN+1];
 
-int GetDomains(BOOL bAllDomains, int iConfigId,T_DOMAIN *pgtabDomain);
+int GetAllDomains(T_DOMAIN *pgtabDomain);
+int GetConfigDomains(int iConfigId,T_CONFIGS_DOMAIN *pgtabDomain);
+
 void GetDomainLabel(int iDomainId);
 int SelectDomain(void);
 

@@ -45,6 +45,9 @@ include('sessions.php');
 // - ajout URL getconfigautopublish
 // VERSION INTERNE : 6.5.3
 // - ajout de l'authentification des administrateurs sur les fonctions d'écriture
+// VERSION INTERNE : 6.5.4
+// - ajout de la colonne autoPublish dans configs_domains
+// - modification de la fonction getconfigautopublish
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
@@ -100,9 +103,9 @@ else if ($_GET['action']=="resetPwd")
 	if (!isClientWriteAuthorized()) return;
 	if (_AUTH_=="TRUE")
 	{
-		if (isset($_POST['newpwd']))
+		if (isset($_POST['newPwd']))
 		{
-			$var_newpwd	=utf8_decode(myaddslashes($_POST['newpwd'])); 
+			$var_newpwd	=utf8_decode(myaddslashes($_POST['newPwd'])); 
 			if (resetPwd($_SESSION['userid'],$var_newpwd)==0)
 			{
 				echo "0"; // changement OK
