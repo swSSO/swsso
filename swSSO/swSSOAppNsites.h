@@ -102,7 +102,7 @@ typedef struct
 	int  iNbEssais;		//
 	BOOL bActive;		// action active
 	BOOL bAutoLock;		// 0.66 : désactivation autorisée ou non (oui par défaut)
-	BOOL bAutoPublish;	// 1.14 : configuration publiée automatiquement	
+	// BOOL bAutoPublish;	// 1.14 : configuration publiée automatiquement	- supprimé en 1.15, lié au domaine maintenant ISSUE#349
 	//BOOL bConfigOK;		// FALSE au début, TRUE dès qu'on a détecté qu'un SSO a été fait correctement avec cette config
 	BOOL bConfigSent;	// TRUE si la config a été envoyée au serveur
 	BOOL bKBSim;				// 0.89
@@ -149,7 +149,7 @@ int BackupAppsNcategs(void);
 void ShowApplicationDetails(HWND w,int iAction);
 void GetApplicationDetails(HWND w,int iAction);
 int TVItemGetLParam(HWND w,HTREEITEM hItem);
-int UploadConfig(HWND w, char *pszDomainIds);
+int UploadConfig(HWND w, char *pszDomainIds,char *pszDomainAutoPublish);
 
 // ATTENTION, ces deux fonctions sont utilisées par swSSOLaunchApp.cpp, cela suppose
 // que l'identifiant du treeview TV_APPLICATIONS soit bien identique dans les 2 fenêtres !

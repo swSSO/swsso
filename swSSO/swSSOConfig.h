@@ -52,7 +52,7 @@ int WindowChangeMasterPwd(BOOL bForced);
 void SavePortal();
 int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage);
 void ReactivateApplicationFromCurrentWindow(void);
-int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds);
+int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds,char *pszDomainAutoPublish);
 int InternetCheckProxyParams(HWND w);
 void InternetCheckVersion();
 int GetProxyConfig(const char *szComputerName, BOOL *pbInternetUseProxy, char *szProxyURL,char *szProxyUser,char *szProxyPwd);

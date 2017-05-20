@@ -3322,9 +3322,9 @@ end:
 // ----------------------------------------------------------------------------------
 // Retour : 0=OK, -1=erreur, -2=configuration ignorée
 // ----------------------------------------------------------------------------------
-int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
+int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds,char *pszDomainAutoPublish)
 {
-	TRACE((TRACE_ENTER,_F_, "iAction=%d pszDomainIds=%s",iAction,pszDomainIds));
+	TRACE((TRACE_ENTER,_F_, "iAction=%d",iAction));
 
 	char szType[3+1];
 	int rc=-1;
@@ -3347,6 +3347,9 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 	char szWithIdPwd[20+1]="";
 	int iWithIdPwd=0;
 	DWORD dwStatusCode;
+	
+	TRACE((TRACE_ENTER,_F_, "pszDomainIds=%s",pszDomainIds));
+	TRACE((TRACE_ENTER,_F_, "pszDomainAutoPublish=%s",pszDomainAutoPublish));
 
 	*piNewCategoryId=-1;
 
@@ -3398,7 +3401,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 														localTime.wHour,localTime.wMinute,localTime.wSecond);
 	TRACE((TRACE_DEBUG,_F_,"szLastModified=%s",szLastModified));
 
-	sprintf_s(szParams,sizeof(szParams),"?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%s&pwdGroup=%d&autoLock=%d&autoPublish=%d",
+	sprintf_s(szParams,sizeof(szParams),"?action=putconfig&configId=%d&title=%s&url=%s&typeapp=%s&id1Name=%s&id1Type=EDIT&pwdName=%s&validateName=%s&id2Name=%s&id2Type=%s&id3Name=%s&id3Type=%s&id4Name=%s&id4Type=%s&bKBSim=%d&szKBSim=%s&szName=%s&categId=%s&categLabel=%s&szFullPathName=%s&lastModified=%s&domainId=%s&pwdGroup=%d&autoLock=%d&domainAutoPublish=%s",
 				gptActions[iAction].iConfigId,
 				pszEncodedTitle,
 				pszEncodedURL,
@@ -3422,7 +3425,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds)
 				pszDomainIds,
 				gptActions[iAction].iPwdGroup,
 				gptActions[iAction].bAutoLock,
-				gptActions[iAction].bAutoPublish); 
+				pszDomainAutoPublish); 
 	if (gbShowMenu_UploadWithIdPwd) 
 	{
 		iWithIdPwd=0;
@@ -3680,7 +3683,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 						gptActions[iAction].iWaitFor=giWaitBeforeNewSSO;
 						gptActions[iAction].bActive=gbActivateNewConfigs;
 						gptActions[iAction].bAutoLock=TRUE;
-						gptActions[iAction].bAutoPublish=FALSE;
+						//gptActions[iAction].bAutoPublish=FALSE;
 						gptActions[iAction].bConfigSent=TRUE;
 						gptActions[iAction].bSaved=FALSE; // 0.93B6 ISSUE#55
 						gptActions[iAction].iConfigId=iConfigId;
@@ -4156,7 +4159,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"autoPublish")) 
+			/*else if (CompareBSTRtoSZ(bstrNodeName,"autoPublish")) 
 			{
 				char tmp[10+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
@@ -4168,7 +4171,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 						TRACE((TRACE_DEBUG,_F_,"gptActions[%d].bAutoLock=%d",ptiActions[i],gptActions[ptiActions[i]].bAutoPublish));
 					}
 				}
-			}
+			}*/
 			TRACE((TRACE_DEBUG,_F_,"/<%S>",bstrNodeName));
 			if (bstrNodeName!=NULL) { SysFreeString(bstrNodeName); bstrNodeName=NULL; }
 			if (rc==-1) goto end; // erreur
@@ -4771,7 +4774,7 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 	gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
 	gptActions[giNbActions].bActive=TRUE; //0.93B6
 	gptActions[giNbActions].bAutoLock=TRUE;
-	gptActions[giNbActions].bAutoPublish=FALSE;
+	//gptActions[giNbActions].bAutoPublish=FALSE;
 	gptActions[giNbActions].bConfigSent=FALSE;
 	gptActions[giNbActions].bSaved=FALSE; // 0.93B6 ISSUE#55
 	// gptActions[giNbActions].iDomainId=1; //  1.00 ISSUE#112

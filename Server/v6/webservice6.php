@@ -45,8 +45,8 @@ include('sessions.php');
 // - ajout URL getconfigautopublish
 // VERSION INTERNE : 6.5.3
 // - ajout de l'authentification des administrateurs sur les fonctions d'écriture
-// VERSION INTERNE : 6.5.4
 // - ajout de la colonne autoPublish dans configs_domains
+// - modification de la fonction getconfigdomains
 // - modification de la fonction getconfigautopublish
 //------------------------------------------------------------------------------
 
@@ -235,7 +235,7 @@ else if ($_GET['action']=="putconfig")
 	$var_pwdValue	="";
 	$var_pwdGroup	="";
 	$var_autoLock	="";
-	$var_autoPublish	="";
+	$var_domainAutoPublish="";
 	if (isset($_GET["withIdPwd"]))		$var_withIdPwd	=utf8_decode(myaddslashes($_GET['withIdPwd'])); // ajouté en 5.3 pour client 1.03
 	if (isset($_GET["id1Value"])) 		$var_id1Value	=utf8_decode(myaddslashes($_GET['id1Value']));  // ajouté en 5.3 pour client 1.03
 	if (isset($_GET["id2Value"])) 		$var_id2Value	=utf8_decode(myaddslashes($_GET['id2Value']));  // ajouté en 5.3 pour client 1.03
@@ -244,12 +244,12 @@ else if ($_GET['action']=="putconfig")
 	if (isset($_GET["pwdValue"])) 		$var_pwdValue	=utf8_decode(myaddslashes($_GET['pwdValue']));  // ajouté en 5.3 pour client 1.03
 	if (isset($_GET["pwdGroup"])) 		$var_pwdGroup	=utf8_decode(myaddslashes($_GET['pwdGroup']));  // ajouté en 5.3 pour client 1.03
 	if (isset($_GET["autoLock"])) 		$var_autoLock	=utf8_decode(myaddslashes($_GET['autoLock']));  // ajouté en 5.5 pour client 1.04
-	if (isset($_GET["autoPublish"])) 	$var_autoPublish=utf8_decode(myaddslashes($_GET['autoPublish']));  // ajouté en 6.5 pour client 1.14
+	// if (isset($_GET["autoPublish"])) 	$var_autoPublish=utf8_decode(myaddslashes($_GET['autoPublish']));  // ajouté en 6.5 pour client 1.14 - supprimé en 6.5.4 pour client 1.15
+	if (isset($_GET["domainAutoPublish"])) 	$var_domainAutoPublish	=utf8_decode(myaddslashes($_GET['domainAutoPublish'])); // ajouté en 6.5.4 pour client 1.15
 	
 	if ($var_pwdGroup=='') $var_pwdGroup=-1;  		// pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
 	if ($var_withIdPwd=='') $var_withIdPwd=0; 		// pour compatibilité avec les clients <1.03 qui ne gèrent pas ce paramètre
 	if ($var_autoLock=='') $var_autoLock=1;   		// pour compatibilité avec les clients <1.04 qui ne gèrent pas ce paramètre
-	if ($var_autoPublish=='') $var_autoPublish=0;   // pour compatibilité avec les clients <1.14 qui ne gèrent pas ce paramètre
     
 	// V6 : gestion des domaines multiples, exemple : $var_domainId=1,3,5
 	// Si la configuration existe déjà, supprime toutes les associations dans la table configs_domains
@@ -360,8 +360,7 @@ else if ($_GET['action']=="putconfig")
 									  "lastModified='".$var_lastModified."',".
 									  "pwdGroup=".$var_pwdGroup.",".
 									  "active='1',".
-									  "autoLock=".$var_autoLock.",".
-									  "autoPublish=".$var_autoPublish.
+									  "autoLock=".$var_autoLock.
 									  $szRequestOptions." WHERE ".
 									  _TABLE_PREFIX_."config.id='".$var_configId."'";
 		
@@ -384,12 +383,12 @@ else if ($_GET['action']=="putconfig")
 		
 		$szRequest="insert into "._TABLE_PREFIX_."config (active,typeapp,title,url,id1Name,id1Type,pwdName,validateName,".
 	           "id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,bKBSim,szKBSim,szName,categId,".
-			   "szFullPathName,lastModified,pwdGroup,autoLock,autoPublish".$szRequestOptions1.") ".
+			   "szFullPathName,lastModified,pwdGroup,autoLock".$szRequestOptions1.") ".
 	           "values (1,'".$var_typeapp."',".$param_title.",".$param_url.",'".$var_id1Name."','EDIT','".
 	           $var_pwdName."','".$var_validateName."','".$var_id2Name."','".$var_id2Type."','".
 	           $var_id3Name."','".$var_id3Type."','".$var_id4Name."','".$var_id4Type."','".
 	           $var_bKBSim."','".$var_szKBSim."',".$param_szName.",'".
-	           $var_categId."',".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.",".$var_autoLock.",".$var_autoPublish.$szRequestOptions2.")";
+	           $var_categId."',".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.",".$var_autoLock.$szRequestOptions2.")";
 		if (isset($_GET["debug"])) echo $szRequest;
 		$result=mysql_query($szRequest,$cnx);
 		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
@@ -401,20 +400,23 @@ else if ($_GET['action']=="putconfig")
 	// sauf si le client demande explicitement à ne pas les modifier (cas concret : déplacement d'une config d'une categorie à une autre)
 	if ($var_domainId!="DONTCHANGE")
 	{
-		$tok = strtok($var_domainId,",");
-		$bFirst=1;
+		$var_domainsList = explode(",",$var_domainId);
+		$var_autoPubList="";
+		if ($var_domainAutoPublish!="") 
+			$var_autoPubList = explode(",",$var_domainAutoPublish); // client 1.15+
 		$szRequest="";
-		while ($tok !== false) 
+		if ($var_autoPubList!="") // client 1.15+
+			$szRequest="insert into "._TABLE_PREFIX_."configs_domains (configId,domainId,domainAutoPublish) values ";
+		else // client 1.14-
+			$szRequest="insert into "._TABLE_PREFIX_."configs_domains (configId,domainId) values ";
+		for ($i=0;$i<count($var_domainsList)-1;$i++)
 		{
-			if ($bFirst==0)
+			if ($i!=0)
 				$szRequest=$szRequest.",";
+			if ($var_autoPubList!="") // client 1.15+
+				$szRequest=$szRequest."(".$var_configId.",".$var_domainsList[$i].",".$var_autoPubList[$i].") ";
 			else
-			{
-				$szRequest="insert into "._TABLE_PREFIX_."configs_domains (configId,domainId) values ";
-				$bFirst=0;
-			}
-			$szRequest=$szRequest."(".$var_configId.",".$tok.") ";
-			$tok = strtok(",");
+				$szRequest=$szRequest."(".$var_configId.",".$var_domainsList[$i].") ";
 		}
 		if ($szRequest!="")
 		{
@@ -503,7 +505,7 @@ else if ($_GET['action']=="getconfigdomains")
 	// récupération des paramètres passés dans l'URL
     $var_configId=utf8_decode(myaddslashes($_GET['configId']));
 	
-	$szRequest= "select "._TABLE_PREFIX_."configs_domains.domainId,"._TABLE_PREFIX_."domains.label ".
+	$szRequest= "select "._TABLE_PREFIX_."configs_domains.domainId,"._TABLE_PREFIX_."domains.label,"._TABLE_PREFIX_."configs_domains.domainAutoPublish ".
 			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."domains where ".
 			"configId=".$var_configId." and "._TABLE_PREFIX_."configs_domains.domainId="._TABLE_PREFIX_."domains.id order by "._TABLE_PREFIX_."configs_domains.domainId";
 	if (isset($_GET["debug"])) echo $szRequest;
@@ -524,6 +526,7 @@ else if ($_GET['action']=="getconfigdomains")
 			echo "<domain num=\"".$i."\">\n";
 			echo "<id><![CDATA[".$ligne[0]."]]></id>\n";
 			echo "<label><![CDATA[".$ligne[1]."]]></label>\n";
+			echo "<domainAutoPublish><![CDATA[".$ligne[2]."]]></domainAutoPublish>\n";
 			echo "</domain>\n";
 			$i++;
 		}

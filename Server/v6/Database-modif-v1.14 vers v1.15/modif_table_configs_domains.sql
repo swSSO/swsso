@@ -29,4 +29,4 @@
 --  
 -- ------------------------------------------------------------------------------
 
-ALTER TABLE `configs_domains` ADD `autoPublish` tinyint (1) DEFAULT '0'
+ALTER TABLE `configs_domains` ADD `domainAutoPublish` tinyint (1) DEFAULT '0'

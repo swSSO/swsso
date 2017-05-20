@@ -440,11 +440,15 @@ int PublishConfigToDomains(HWND w)
 	int rc=-1;
 	char szDomainIds[1024];
 	char szDomainId[10];
+	char szDomainAutoPublish[1024];
+	char szDomainAutoValue[10];
+	char szYesNo[10];
 	int i;
 	int iNbDomains;
 	LVITEM lvitem;
 
 	*szDomainIds=0;
+	*szDomainAutoPublish=0;
 
 	// récupère la liste des domaines cochés
 	iNbDomains=ListView_GetItemCount(GetDlgItem(w,LV_DOMAINS));
@@ -459,10 +463,13 @@ int PublishConfigToDomains(HWND w)
 			{
 				sprintf_s(szDomainId,sizeof(szDomainId),"%d,",lvitem.lParam);
 				strcat_s(szDomainIds,sizeof(szDomainIds),szDomainId);
+				ListView_GetItemText(GetDlgItem(w,LV_DOMAINS),i,1,szYesNo,sizeof(szYesNo));
+				sprintf_s(szDomainAutoValue,sizeof(szDomainAutoValue),"%d,",strcmp(szYesNo,GetString(IDS_NO))==0?0:1);
+				strcat_s(szDomainAutoPublish,sizeof(szDomainAutoPublish),szDomainAutoValue);
 			}
 		}
 	}
-	rc=UploadConfig(gwAppNsites,szDomainIds);
+	rc=UploadConfig(gwAppNsites,szDomainIds,szDomainAutoPublish);
 
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
@@ -1367,7 +1374,7 @@ int NewApplication(HWND w,char *szAppName,BOOL bActive,BOOL bAddInTreeView,BOOL 
 	gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
 	gptActions[giNbActions].bActive=bActive; // 0.93B6 (avant c'était FALSE)
 	gptActions[giNbActions].bAutoLock=TRUE;
-	gptActions[giNbActions].bAutoPublish=FALSE;
+	//gptActions[giNbActions].bAutoPublish=FALSE;
 	// gptActions[giNbActions].bConfigOK=FALSE; // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 	gptActions[giNbActions].bConfigSent=FALSE;
 	// gptActions[giNbActions].iDomainId=1;
@@ -2640,7 +2647,7 @@ void ShowApplicationDetails(HWND w,int iAction)
 	SetDlgItemText(w,TB_LANCEMENT,gptActions[iAction].szFullPathName);
 	//EnableControls(w,gptActions[iAction].iType,TRUE);
 	CheckDlgButton(w,CK_AUTO_LOCK,gptActions[iAction].bAutoLock?BST_CHECKED:BST_UNCHECKED);
-	CheckDlgButton(w,CK_AUTO_PUBLISH,gptActions[iAction].bAutoPublish?BST_CHECKED:BST_UNCHECKED);
+	//CheckDlgButton(w,CK_AUTO_PUBLISH,gptActions[iAction].bAutoPublish?BST_CHECKED:BST_UNCHECKED);
 	// 0.90 : affichage de l'application en cours de modification dans la barre de titre
 	// 0.92B8 : affichage d'infos techniques dans la barre de titre si SHIFT enfoncée
 	if (GetKeyState(VK_SHIFT) & 0x8000)
@@ -2814,13 +2821,13 @@ void GetApplicationDetails(HWND w,int iAction)
 		bChanged=TRUE;
 		gptActions[iAction].bAutoLock=bTmpChecked;
 	}
-	bTmpChecked=IsDlgButtonChecked(w,CK_AUTO_PUBLISH)==BST_CHECKED?TRUE:FALSE;
+	/*bTmpChecked=IsDlgButtonChecked(w,CK_AUTO_PUBLISH)==BST_CHECKED?TRUE:FALSE;
 	if (bTmpChecked!=gptActions[iAction].bAutoPublish) 
 	{
 		TRACE((TRACE_DEBUG,_F_,"Chgt config %s (bAutoPublish : %d -> %d)",gptActions[iAction].szApplication,gptActions[iAction].bAutoPublish,bTmpChecked));
 		bChanged=TRUE;
 		gptActions[iAction].bAutoPublish=bTmpChecked;
-	}
+	}*/
 	GetDlgItemText(w,TB_KBSIM,buf2048,sizeof(buf2048));
 	if (strcmp(buf2048,gptActions[iAction].szKBSim)!=0) 
 	{
@@ -3719,7 +3726,7 @@ void MoveApp(HWND w,HTREEITEM hItem,int iNewCategoryIndex)
 	// ISSUE#206 : Mise à jour automatique sur le serveur quand une application est déplacée d’une catégorie à une autre
 	if (gbCategoryManagement && gbCategoryAutoUpdate)
 	{
-		PutConfigOnServer(tvItem.lParam,&iGnored,"DONTCHANGE");
+		PutConfigOnServer(tvItem.lParam,&iGnored,"DONTCHANGE","");
 	}
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -3733,9 +3740,9 @@ end:
 // auquel cas l'ensemble des configurations de la catégories sont remontées 
 // sur le serveur
 //-----------------------------------------------------------------------------
-int UploadConfig(HWND w, char *pszDomainIds)
+int UploadConfig(HWND w, char *pszDomainIds,char *pszDomainAutoPublish)
 {
-	TRACE((TRACE_ENTER,_F_, "pszDomainIds=%s",pszDomainIds));
+	TRACE((TRACE_ENTER,_F_, ""));
 
 	HTREEITEM hItem,hParentItem,hNextApp;
 	int iAction,iCategoryId;
@@ -3746,7 +3753,10 @@ int UploadConfig(HWND w, char *pszDomainIds)
 	int iNbConfigIgnored=0;
 	int iOldCategoryId=-1;
 	int iNewCategoryId=-1;
-	
+
+	TRACE((TRACE_INFO,_F_, "pszDomainIds=%s",pszDomainIds));
+	TRACE((TRACE_INFO,_F_, "pszDomainAutoPublish=%s",pszDomainAutoPublish));
+
 	hCursorOld=SetCursor(ghCursorWait);
 	hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
 	hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),hItem);
@@ -3761,7 +3771,7 @@ int UploadConfig(HWND w, char *pszDomainIds)
 			iAction=TVItemGetLParam(w,hNextApp); 
 			if (iAction==-1 || iAction>=giNbActions) { rc=-1; goto end; }
 			TRACE((TRACE_INFO,_F_,"Upload config n°%d (%s)",iAction,gptActions[iAction].szApplication));
-			rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds);
+			rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds,pszDomainAutoPublish);
 			TVUpdateItemState(w,hNextApp,iAction);
 			if (rc==0) iNbConfigUploaded++;
 			else if (rc==-2) { iNbConfigIgnored++; rc=0; }
@@ -3779,7 +3789,7 @@ int UploadConfig(HWND w, char *pszDomainIds)
 
 		TRACE((TRACE_INFO,_F_,"Upload config n°%d (%s)",iAction,gptActions[iAction].szApplication));
 		iOldCategoryId=gptActions[iAction].iCategoryId;
-		rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds);
+		rc=PutConfigOnServer(iAction,&iNewCategoryId,pszDomainIds,pszDomainAutoPublish);
 		TVUpdateItemState(w,hItem,iAction);
 		strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_UPLOAD_OK));
 	}
@@ -4076,7 +4086,7 @@ int LoadApplications(void)
 
 		gptActions[i].bActive=GetConfigBoolValue(p,"active",FALSE,TRUE);
 		gptActions[i].bAutoLock=GetConfigBoolValue(p,"autoLock",FALSE,TRUE);
-		gptActions[i].bAutoPublish=GetConfigBoolValue(p,"autoPublish",FALSE,TRUE);
+		//gptActions[i].bAutoPublish=GetConfigBoolValue(p,"autoPublish",FALSE,TRUE);
 
 		// gptActions[i].bConfigOK=GetConfigBoolValue(p,"configOK",FALSE); // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 		gptActions[i].bConfigSent=GetConfigBoolValue(p,"configSent",FALSE,TRUE);
@@ -4320,7 +4330,7 @@ int SaveApplications(void)
 			sprintf_s(szWithIdPwd,sizeof(szWithIdPwd),"%d",gptActions[i].iWithIdPwd);
 		// le plus beau sprintf de ma carrière... en espérant que le buffer soit assez grand ;-(
 		sprintf_s(tmpBuf,sizeof(tmpBuf),
-			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nautoPublish=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\nSSO=%s\r\n", //pwdChange=%s\r\n",
+			"\r\n[%s]\r\nId=%d\r\ncategoryId=%d\r\ntitle=%s\r\nURL=%s\r\nidName=%s\r\nidValue=%s\r\npwdName=%s\r\npwdValue=%s\r\nvalidateName=%s\r\ntype=%s\r\nactive=%s\r\nautoLock=%s\r\nconfigSent=%s\r\nuseKBSim=%s\r\nKBSimValue=%s\r\nfullPathName=%s\r\nlastUpload=%s\r\naddAccount=%s\r\nbWithIdPwd=%s\r\npwdGroup=%d\r\nSSO=%s\r\n", //pwdChange=%s\r\n",
 			gptActions[i].szApplication,
 			gptActions[i].iConfigId,
 			gptActions[i].iCategoryId,
@@ -4335,7 +4345,7 @@ int SaveApplications(void)
 			szType,
 			gptActions[i].bActive?"YES":"NO",
 			gptActions[i].bAutoLock?"YES":"NO",
-			gptActions[i].bAutoPublish?"YES":"NO",
+			// gptActions[i].bAutoPublish?"YES":"NO",
 			// gptActions[i].bConfigOK?"YES":"NO", // 0.90B1 : on ne gère plus l'état OK car plus de remontée auto
 			gptActions[i].bConfigSent?"YES":"NO",
 			gptActions[i].bKBSim?"YES":"NO",
@@ -4670,7 +4680,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					LaunchSelectedApp(w);
 					break;
 				case MENU_PUBLISH:
-					UploadConfig(w,"1");
+					UploadConfig(w,"1","0"); // upload sur le domaine "1" avec domainAutoPublish="0" (pas le choix...)
 					EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),FALSE); // ISSUE#114 (upload sauvegarde donc il faut griser Apply)
 					break;
 				case MENU_PUBLISH_TO:

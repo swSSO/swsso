@@ -33,6 +33,8 @@
 // - ajout de la colonne autoPublish
 // VERSION INTERNE : 6.5.2
 // - ajout fonction getconfig 
+// VERSION INTERNE : 6.5.3
+// - autoPublish maintenant lié au domaine et non directement à la config
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
@@ -67,7 +69,7 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 	$columns="typeapp,".$param_title.",".$param_url.",id1Name,pwdName,id2Name,id2Type,id3Name,".
 			"id3Type,id4Name,id4Type,validateName,bKBSim,szKBSim,".
 			$param_szName.",".$param_szFullPathName.",categId,"._TABLE_PREFIX_."categ.label,".
-			_TABLE_PREFIX_."config.id,lastModified,active,"._TABLE_PREFIX_."configs_domains.domainId,pwdGroup,autoLock,autoPublish";
+			_TABLE_PREFIX_."config.id,lastModified,active,"._TABLE_PREFIX_."configs_domains.domainId,pwdGroup,autoLock";
 			
 	if (_ENCRYPT_=="TRUE")
 	{
@@ -111,7 +113,7 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 		else if ($var_old=="1" && ($var_new=="0" || $var_mod=="0"))
 			$conditions=$conditions." AND active=0 ";
 		else if ($var_autoPublish=="1")
-			$conditions=$conditions." AND active=1 AND autoPublish=1 ";
+			$conditions=$conditions." AND active=1 AND configs_domains.domainAutoPublish=1 ";
 		
 		$conditions=$conditions."AND config.id=configs_domains.configId ";
 		// ISSUE#125  : lorsque GetModifiedConfigsAtStart=1 et GetNewConfigsAtStart=0, seules les configurations modifiées devraient être mises à jour)
@@ -226,13 +228,12 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 			echo "<domainId><![CDATA[".$ligne[21]."]]></domainId>\n";
 			echo "<pwdGroup><![CDATA[".$ligne[22]."]]></pwdGroup>\n";
 			echo "<autoLock><![CDATA[".$ligne[23]."]]></autoLock>\n";
-			echo "<autoPublish><![CDATA[".$ligne[24]."]]></autoPublish>\n";
-			if (isset($ligne[25])) echo "<withIdPwd><![CDATA[".$ligne[25]."]]></withIdPwd>\n";
-			if (isset($ligne[26])) echo "<id1Value><![CDATA[".$ligne[26]."]]></id1Value>\n";
-			if (isset($ligne[27])) echo "<id2Value><![CDATA[".$ligne[27]."]]></id2Value>\n";
-			if (isset($ligne[28])) echo "<id3Value><![CDATA[".$ligne[28]."]]></id3Value>\n";
-			if (isset($ligne[29])) echo "<id4Value><![CDATA[".$ligne[29]."]]></id4Value>\n";
-			if (isset($ligne[30])) echo "<pwdValue><![CDATA[".$ligne[30]."]]></pwdValue>\n";
+			if (isset($ligne[24])) echo "<withIdPwd><![CDATA[".$ligne[24]."]]></withIdPwd>\n";
+			if (isset($ligne[25])) echo "<id1Value><![CDATA[".$ligne[25]."]]></id1Value>\n";
+			if (isset($ligne[26])) echo "<id2Value><![CDATA[".$ligne[26]."]]></id2Value>\n";
+			if (isset($ligne[27])) echo "<id3Value><![CDATA[".$ligne[27]."]]></id3Value>\n";
+			if (isset($ligne[28])) echo "<id4Value><![CDATA[".$ligne[28]."]]></id4Value>\n";
+			if (isset($ligne[29])) echo "<pwdValue><![CDATA[".$ligne[29]."]]></pwdValue>\n";
 			echo "</app>\n";
 			$i++;
 		}
@@ -290,7 +291,7 @@ function showAll($active,$domain,$title,$export)
 	{
 		$szRequest="select config.id,categId,categ.label,".$szDomainField.",".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
 				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
-				   ",lastModified,pwdGroup,autoLock,autoPublish,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
+				   ",lastModified,pwdGroup,autoLock,withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.
 				   ",".$param_id4Value.",".$param_pwdValue.
 				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ".$szDomainTable." where active=".$active." AND categId=categ.id ".
 				   $szWhere." group by id order by id";
@@ -299,7 +300,7 @@ function showAll($active,$domain,$title,$export)
 	{
 		$szRequest="select config.id,categId,categ.label,".$szDomainField.",".$param_szName.",".$param_title.",".$param_url.",typeapp,bKBSim,id1Name,pwdName,".
 				   "validateName,szKBSim,id2Name,id2Type,id3Name,id3Type,id4Name,id4Type,".$param_szFullPathName.
-				   ",lastModified,pwdGroup,autoLock,autoPublish".
+				   ",lastModified,pwdGroup,autoLock".
 				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ".$szDomainTable." where active=".$active." AND categId=categ.id ".
 				   $szWhere." group by id order by id";
 	}
@@ -340,7 +341,6 @@ function showAll($active,$domain,$title,$export)
 		echo "<th>lastModified</th>";
 		echo "<th>pwdGroup</th>";
 		echo "<th>autoLock</th>";
-		echo "<th>autoPublish</th>";
 		if (_ENCRYPT_=="TRUE")
 		{
 			echo "<th>withIdPwd</th>";
@@ -362,7 +362,7 @@ function showAll($active,$domain,$title,$export)
 			header('Content-Disposition: attachement; filename="swsso-config-archivees.csv";');
 		$header="Id."._SEPARATOR_."CategId."._SEPARATOR_."CategName."._SEPARATOR_."Domaine"._SEPARATOR_."Nom"._SEPARATOR_."Titre"._SEPARATOR_."URL"._SEPARATOR_."Type"._SEPARATOR_."KBSim?"._SEPARATOR_.
 				"Champ id."._SEPARATOR_."Champ mdp"._SEPARATOR_."Validation"._SEPARATOR_."Saisie clavier"._SEPARATOR_."Nom Id2"._SEPARATOR_."Type Id2"._SEPARATOR_."Nom Id3"._SEPARATOR_."Type Id3"._SEPARATOR_.
-				"Nom Id4"._SEPARATOR_."Type Id4"._SEPARATOR_."FullPathName"._SEPARATOR_."LastModified"._SEPARATOR_."PwdGroup"._SEPARATOR_."AutoLock"._SEPARATOR_."AutoPublish";
+				"Nom Id4"._SEPARATOR_."Type Id4"._SEPARATOR_."FullPathName"._SEPARATOR_."LastModified"._SEPARATOR_."PwdGroup"._SEPARATOR_."AutoLock";
 		if (_ENCRYPT_=="TRUE")
 		{		
 			$header=$header._SEPARATOR_."withIdPwd"._SEPARATOR_."id1Value"._SEPARATOR_."id2Value"._SEPARATOR_."id3Value"._SEPARATOR_."id4Value"._SEPARATOR_."pwdValue";
@@ -429,15 +429,14 @@ function showAll($active,$domain,$title,$export)
 			if ($ligne[20]!="") echo "<td>".utf8_encode($ligne[20])."</td>"; else echo "<td align=center>-</td>";   // lastModified
 			if ($ligne[21]!="") echo "<td>".utf8_encode($ligne[21])."</td>"; else echo "<td align=center>-</td>";   // pwdGroup
 			if ($ligne[22]!="") echo "<td>".utf8_encode($ligne[22])."</td>"; else echo "<td align=center>-</td>";   // autoLock
-			if ($ligne[23]!="") echo "<td>".utf8_encode($ligne[23])."</td>"; else echo "<td align=center>-</td>";   // autoPublish
 			if (_ENCRYPT_=="TRUE")
 			{
-				if ($ligne[24]!="") echo "<td>".utf8_encode($ligne[24])."</td>"; else echo "<td align=center>-</td>";   // withIdPwd
-				if ($ligne[25]!="") echo "<td>".utf8_encode($ligne[25])."</td>"; else echo "<td align=center>-</td>";   // id1Value
-				if ($ligne[26]!="") echo "<td>".utf8_encode($ligne[26])."</td>"; else echo "<td align=center>-</td>";   // id2Value
-				if ($ligne[27]!="") echo "<td>".utf8_encode($ligne[27])."</td>"; else echo "<td align=center>-</td>";   // id3Value
-				if ($ligne[28]!="") echo "<td>".utf8_encode($ligne[28])."</td>"; else echo "<td align=center>-</td>";   // id4Value
-				if ($ligne[29]!="") echo "<td>".utf8_encode($ligne[29])."</td>"; else echo "<td align=center>-</td>";   // pwdValue
+				if ($ligne[23]!="") echo "<td>".utf8_encode($ligne[23])."</td>"; else echo "<td align=center>-</td>";   // withIdPwd
+				if ($ligne[24]!="") echo "<td>".utf8_encode($ligne[24])."</td>"; else echo "<td align=center>-</td>";   // id1Value
+				if ($ligne[25]!="") echo "<td>".utf8_encode($ligne[25])."</td>"; else echo "<td align=center>-</td>";   // id2Value
+				if ($ligne[26]!="") echo "<td>".utf8_encode($ligne[26])."</td>"; else echo "<td align=center>-</td>";   // id3Value
+				if ($ligne[27]!="") echo "<td>".utf8_encode($ligne[27])."</td>"; else echo "<td align=center>-</td>";   // id4Value
+				if ($ligne[28]!="") echo "<td>".utf8_encode($ligne[28])."</td>"; else echo "<td align=center>-</td>";   // pwdValue
 			}
 			echo "</tr>";
 		}

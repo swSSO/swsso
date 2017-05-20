@@ -372,7 +372,7 @@ int GetConfigDomains(int iConfigId,T_CONFIGS_DOMAIN *pgtabDomain)
 			{
 				StoreNodeValue(pgtabDomain[rc].szDomainLabel,sizeof(pgtabDomain[rc].szDomainLabel),pChildElement);
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"autoPublish")) // si absent, valorisé à FALSE puisque tableau des domaines initialisé à 0 avant l'appel
+			else if (CompareBSTRtoSZ(bstrNodeName,"domainAutoPublish")) // si absent, valorisé à FALSE puisque tableau des domaines initialisé à 0 avant l'appel
 			{
 				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
 				pgtabDomain[rc].bAutoPublish=atoi(tmp);
