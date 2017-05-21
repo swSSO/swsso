@@ -404,13 +404,15 @@ else if ($_GET['action']=="putconfig")
 		$var_autoPubList="";
 		if ($var_domainAutoPublish!="") 
 			$var_autoPubList = explode(",",$var_domainAutoPublish); // client 1.15+
+		
 		$szRequest="";
 		if ($var_autoPubList!="") // client 1.15+
 			$szRequest="insert into "._TABLE_PREFIX_."configs_domains (configId,domainId,domainAutoPublish) values ";
 		else // client 1.14-
 			$szRequest="insert into "._TABLE_PREFIX_."configs_domains (configId,domainId) values ";
-		for ($i=0;$i<count($var_domainsList)-1;$i++)
+		for ($i=0;$i<count($var_domainsList);$i++)
 		{
+			if ($var_domainsList[$i]=="") continue;
 			if ($i!=0)
 				$szRequest=$szRequest.",";
 			if ($var_autoPubList!="") // client 1.15+

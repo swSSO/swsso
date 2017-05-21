@@ -34,6 +34,7 @@ include('sessions.php');
 // 
 //-----------------------------------------------------------------------------
 // VERSION INTERNE : 6.5.2
+// VERSION INTERNE : 6.5.3
 //------------------------------------------------------------------------------
 
 if (!isAdminAuthorized())
@@ -47,7 +48,7 @@ if (!isset($_GET['action']))
 	exit();
 }
 
-$title="<title>swSSO - Serveur de configuration (v6.5)</title>";
+$title="<title>swSSO - Serveur de configuration (v6.5.3)</title>";
 
 // ------------------------------------------------------------
 // showall : génère une page html avec l'ensemble des configs actives
