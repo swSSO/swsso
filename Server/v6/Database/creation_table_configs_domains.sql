@@ -32,5 +32,5 @@
 CREATE TABLE IF NOT EXISTS `configs_domains` (
   `configId` int(11) NOT NULL,
   `domainId` int(11) NOT NULL,
-  `autoPublish` tinyint (1) DEFAULT '0'
+  `domainAutoPublish` tinyint (1) DEFAULT '0'
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
