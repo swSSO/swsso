@@ -195,7 +195,9 @@ static void CALLBACK TimerProc(HWND w,UINT msg,UINT idEvent,DWORD dwTime)
 		}
 	}
 
-	if (gbSSOActif) 
+	// ISSUE#351
+	// if (gbSSOActif) 
+	if (!gbAdmin && gbSSOActif) 
 	{
 		guiNbWindows=0;
 		guiNbVisibleWindows=0;
@@ -2659,7 +2661,8 @@ askpwd:
 		}
 	}
 
-	if (!gbAdmin)
+	// ISSUE#351 : le fait de ne pas activer le timer faisait que l'evt de changement de mdp windows n'était pas capté !
+	// if (!gbAdmin)
 	{
 		if (LaunchTimer()!=0)
 		{
