@@ -331,6 +331,75 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// FillDomainConfigs()
+//-----------------------------------------------------------------------------
+// Remplit la liste des configurations rattachées au domaine
+//-----------------------------------------------------------------------------
+void FillDomainConfigs(HWND w,int iDomainId)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	T_DOMAIN_CONFIGS *ptabDomainConfigs=NULL;
+	int i,iNbConfigs,index;
+	LVITEM lvi;
+	HCURSOR hCursorOld=NULL;
+	hCursorOld=SetCursor(ghCursorWait);
+	char szBuf10[10+1];
+
+	ListView_DeleteAllItems(GetDlgItem(w,LV_DOMAIN_CONFIGS));
+
+	ptabDomainConfigs=(T_DOMAIN_CONFIGS*)malloc(sizeof(T_DOMAIN_CONFIGS)*giMaxConfigs);
+	if (ptabDomainConfigs==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeof(T_DOMAIN_CONFIGS)*giMaxConfigs)); goto end; }
+
+	ZeroMemory(ptabDomainConfigs,sizeof(T_DOMAIN_CONFIGS)*giMaxConfigs);
+
+	iNbConfigs=GetDomainConfigsAutoPublish(iDomainId,ptabDomainConfigs);
+	if (iNbConfigs==0) goto end;
+
+	lvi.mask=LVIF_TEXT ;
+	for (i=0;i<iNbConfigs;i++)
+	{
+		lvi.iItem=i;
+		lvi.iSubItem=0;
+		sprintf_s(szBuf10,sizeof(szBuf10),"%d",ptabDomainConfigs[i].iConfigId); // id
+		lvi.pszText=szBuf10;
+		// trouve la config associée à cet id
+		index=GetConfigIndex(ptabDomainConfigs[i].iConfigId);
+		if (index!=-1) // non trouvée (WTF !?)
+		{
+			ListView_InsertItem(GetDlgItem(w,LV_DOMAIN_CONFIGS),&lvi);
+			ListView_SetItemText(GetDlgItem(w,LV_DOMAIN_CONFIGS),i,1,gptActions[index].szApplication);
+			switch (gptActions[i].iType)
+			{
+				case WEBSSO:
+				case XEBSSO:
+					strcpy_s(szBuf10,sizeof(szBuf10),"Web");
+					break;
+				case WINSSO:
+				case XINSSO:
+					strcpy_s(szBuf10,sizeof(szBuf10),"App");
+					break;
+				case POPSSO:
+					strcpy_s(szBuf10,sizeof(szBuf10),"Popup");
+					break;
+				case UNK:
+				default:
+					strcpy_s(szBuf10,sizeof(szBuf10),"?");
+			}
+			ListView_SetItemText(GetDlgItem(w,LV_DOMAIN_CONFIGS),i,2,szBuf10);
+			sprintf_s(szBuf10,sizeof(szBuf10),"%d",gptActions[i].iPwdGroup);
+			ListView_SetItemText(GetDlgItem(w,LV_DOMAIN_CONFIGS),i,3,szBuf10);
+			ListView_SetItemText(GetDlgItem(w,LV_DOMAIN_CONFIGS),i,4,ptabDomainConfigs[i].bAutoPublish?GetString(IDS_YES):GetString(IDS_NO));
+		}
+	}
+
+end:
+	if (hCursorOld!=NULL) SetCursor(hCursorOld);
+	if (ptabDomainConfigs!=NULL) free (ptabDomainConfigs);
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+
+//-----------------------------------------------------------------------------
 // PublishToOnInitDialog()
 //-----------------------------------------------------------------------------
 // WM_INIT_DIALOG de la fenêtre de publication vers les domaines
@@ -1038,6 +1107,26 @@ static void SaveWindowPos(HWND w)
 end:
 	StoreIniEncryptedHash(); // ISSUE#164
 	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+//-----------------------------------------------------------------------------
+// GetConfigIndex()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+int GetConfigIndex(int id)
+{
+	TRACE((TRACE_ENTER,_F_, "id=%d",id));
+	int rc=-1;
+	int i;
+
+	for (i=0;i<giNbActions;i++)
+	{
+		if (gptActions[i].iConfigId==id) { rc=i; goto end;}
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
 }
 
 //-----------------------------------------------------------------------------
@@ -3321,6 +3410,28 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 
 	if (gbAdmin) { SetTextBold(w,TX_MODE_ADMIN); ShowWindow(GetDlgItem(w,TX_MODE_ADMIN),SW_SHOW); }
 
+	// Création des colonnes de la liste des domaines (mode admin only)
+	if (gbAdmin)
+	{
+		ListView_SetExtendedListViewStyle(GetDlgItem(w,LV_DOMAIN_CONFIGS),LVS_EX_FULLROWSELECT);
+		LVCOLUMN lvc;
+		lvc.mask= LVCF_TEXT | LVCF_SUBITEM;
+		lvc.iSubItem = 0;
+		lvc.pszText = "Id";
+		ListView_InsertColumn(GetDlgItem(w,LV_DOMAIN_CONFIGS),0,&lvc);
+		lvc.iSubItem = 1;
+		lvc.pszText = "Label";
+		ListView_InsertColumn(GetDlgItem(w,LV_DOMAIN_CONFIGS),1,&lvc);
+		lvc.iSubItem = 2;
+		lvc.pszText = "Type";
+		ListView_InsertColumn(GetDlgItem(w,LV_DOMAIN_CONFIGS),2,&lvc);
+		lvc.iSubItem = 3;
+		lvc.pszText = "Pwd";
+		ListView_InsertColumn(GetDlgItem(w,LV_DOMAIN_CONFIGS),3,&lvc);
+		lvc.iSubItem = 4;
+		lvc.pszText = "Auto";
+		ListView_InsertColumn(GetDlgItem(w,LV_DOMAIN_CONFIGS),4,&lvc);
+	}
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -3399,13 +3510,26 @@ static void MoveControls(HWND w,HWND wToRefresh)
 	{
 		ShowWindow(GetDlgItem(w,TV_DOMAINS),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TV_APPLICATIONS),NULL,20,40+yOffset,rect.right*2/5-20,rect.bottom-85,SWP_NOZORDER|SWP_SHOWWINDOW);
+		if (gbAdmin) ShowWindow(GetDlgItem(w,LV_DOMAIN_CONFIGS),SW_HIDE);
 	}
 	else // onglet sélectionné = domains
 	{
 		ShowWindow(GetDlgItem(w,TV_APPLICATIONS),SW_HIDE);
 		SetWindowPos(GetDlgItem(w,TV_DOMAINS),NULL,20,40+yOffset,rect.right*2/5-20,rect.bottom-85,SWP_NOZORDER|SWP_SHOWWINDOW);
+		if (gbAdmin) 
+		{
+			RECT lvRect;
+			SetWindowPos(GetDlgItem(w,LV_DOMAIN_CONFIGS),NULL,rect.right*2/5+15,30+yOffset,rect.right*3/5-20,rect.bottom-100,SWP_NOZORDER);
+			GetWindowRect(GetDlgItem(w,LV_DOMAIN_CONFIGS),&lvRect);
+			ListView_SetColumnWidth(GetDlgItem(w,LV_DOMAIN_CONFIGS),0,40);
+			ListView_SetColumnWidth(GetDlgItem(w,LV_DOMAIN_CONFIGS),1,(lvRect.right-lvRect.left)-194);
+			ListView_SetColumnWidth(GetDlgItem(w,LV_DOMAIN_CONFIGS),2,50);
+			ListView_SetColumnWidth(GetDlgItem(w,LV_DOMAIN_CONFIGS),3,50);
+			ListView_SetColumnWidth(GetDlgItem(w,LV_DOMAIN_CONFIGS),4,50);
+			ShowWindow(GetDlgItem(w,LV_DOMAIN_CONFIGS),SW_SHOW);
+		}
 	}
-
+	
 	// TabControl haut droite (identifiants et mot de passe)
 	SetWindowPos(GetDlgItem(w,TAB_IDPWD),NULL,rect.right*2/5+15,10+yOffset,rect.right*3/5-20,rect.bottom*1/3-20,SWP_NOZORDER);
 	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_IDPWD))==0) // onglet sélectionné = identifiant et mot de passe
@@ -5083,6 +5207,13 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							{
 								wsprintf(buf2048,"%s [%d]",gtabDomains[iDomain].szDomainLabel,gtabDomains[iDomain].iDomainId);
 								SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
+								FillDomainConfigs(w,gtabDomains[iDomain].iDomainId);
+							}
+							else
+							{
+								wsprintf(buf2048,"%s [%d]",gtabDomains[0].szDomainLabel,gtabDomains[0].iDomainId);
+								SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
+								FillDomainConfigs(w,gtabDomains[0].iDomainId);
 							}
 						}
 					}

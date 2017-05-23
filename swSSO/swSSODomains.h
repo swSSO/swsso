@@ -37,7 +37,7 @@ typedef struct
 	int iDomainId;
 	char szDomainLabel[LEN_DOMAIN+1];
 }
-T_DOMAIN;
+T_DOMAIN; // liste des domaines
 
 typedef struct 
 {
@@ -45,7 +45,14 @@ typedef struct
 	char szDomainLabel[LEN_DOMAIN+1];
 	BOOL bAutoPublish;
 }
-T_CONFIGS_DOMAIN;
+T_CONFIGS_DOMAIN; // liste des domaines de publication d'une configuration
+
+typedef struct 
+{
+	int iConfigId;
+	BOOL bAutoPublish;
+}
+T_DOMAIN_CONFIGS; // liste des configurations publiées sur un domaine
 
 #define MAX_DOMAINS 100
 
@@ -54,6 +61,7 @@ extern char gszDomainLabel[LEN_DOMAIN+1];
 
 int GetAllDomains(T_DOMAIN *pgtabDomain);
 int GetConfigDomains(int iConfigId,T_CONFIGS_DOMAIN *pgtabDomain);
+int GetDomainConfigsAutoPublish(int iDomainId,T_DOMAIN_CONFIGS *pgtabConfig);
 
 void GetDomainLabel(int iDomainId);
 int SelectDomain(void);

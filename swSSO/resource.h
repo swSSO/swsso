@@ -236,6 +236,7 @@
 #define CK_AD_PWD                       40028
 #define IDS_MENU_RENOMMER               40028
 #define IDS_COMBOIDTYPE1                40029
+#define LV_DOMAIN_CONFIGS               40029
 #define IDS_COMBOIDTYPE2                40030
 #define IMG_AUTO_PUBLISH                40030
 #define IDS_NON_CLASSE                  40031

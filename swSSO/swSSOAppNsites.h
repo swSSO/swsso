@@ -144,6 +144,7 @@ BOOL IsApplicationNameUnique(int iAction,char *pszApplication);
 BOOL IsCategoryNameUnique(int iCategory,char *pszCategory);
 void GenerateCategoryName(int iCategory,char *pszProposition);
 void GenerateApplicationName(int iAction,char *pszProposition);
+int GetConfigIndex(int id);
 int GetCategoryIndex(int id);
 int BackupAppsNcategs(void);
 void ShowApplicationDetails(HWND w,int iAction);

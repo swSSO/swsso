@@ -407,6 +407,107 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// GetDomainConfigsAutoPublish()
+//-----------------------------------------------------------------------------
+// Retourne les configurations rattachées au domaine, avec le statut
+// d'autopublish pour ce domaine
+//-----------------------------------------------------------------------------
+// Retour : nb de configs lues, 0 si aucun (y/c si erreur de lecture)
+//-----------------------------------------------------------------------------
+int GetDomainConfigsAutoPublish(int iDomainId,T_DOMAIN_CONFIGS *pgtabConfig)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=0;
+	char szParams[512+1];
+	char *pszResult=NULL;
+	BSTR bstrXML=NULL;
+	HRESULT hr;
+	IXMLDOMDocument *pDoc=NULL;
+	IXMLDOMNode		*pRoot=NULL;
+	IXMLDOMNode		*pNode=NULL;
+	IXMLDOMNode		*pChildApp=NULL;
+	IXMLDOMNode		*pChildElement=NULL;
+	IXMLDOMNode		*pNextChildApp=NULL;
+	IXMLDOMNode		*pNextChildElement=NULL;
+	VARIANT_BOOL	vbXMLLoaded=VARIANT_FALSE;
+	DWORD dwStatusCode;
+	BSTR bstrNodeName=NULL;
+	char tmp[10];
+
+	// requete le serveur pour obtenir la liste des configs du domaine et leur statut d'autopublish
+	sprintf_s(szParams,sizeof(szParams),"?action=getdomainconfigsautopublish&domainId=%d",iDomainId);
+	TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",szParams));
+	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
+						  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
+						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,NULL,0,&dwStatusCode);
+	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
+	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
+	bstrXML=GetBSTRFromSZ(pszResult);
+	if (bstrXML==NULL) goto end;
+
+	// analyse le contenu XML retourné
+	hr = CoCreateInstance(CLSID_DOMDocument30, NULL, CLSCTX_INPROC_SERVER, IID_IXMLDOMDocument,(void**)&pDoc);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(IID_IXMLDOMDocument)=0x%08lx",hr)); goto end; }
+	hr = pDoc->loadXML(bstrXML,&vbXMLLoaded);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML()=0x%08lx",hr)); goto end; }
+	if (vbXMLLoaded==VARIANT_FALSE) { TRACE((TRACE_ERROR,_F_,"pXMLDoc->loadXML() returned FALSE")); goto end; }
+	hr = pDoc->QueryInterface(IID_IXMLDOMNode, (void **)&pRoot);
+	if (FAILED(hr))	{ TRACE((TRACE_ERROR,_F_,"pXMLDoc->QueryInterface(IID_IXMLDOMNode)=0x%08lx",hr)); goto end;	}
+	hr=pRoot->get_firstChild(&pNode);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pRoot->get_firstChild(&pNode)")); goto end; }
+	hr=pNode->get_firstChild(&pChildApp);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildApp)")); goto end; }
+	while (pChildApp!=NULL) 
+	{
+		TRACE((TRACE_DEBUG,_F_,"<config>"));
+		hr=pChildApp->get_firstChild(&pChildElement);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pNode->get_firstChild(&pChildElement)")); goto end; }
+		while (pChildElement!=NULL) 
+		{
+			hr=pChildElement->get_nodeName(&bstrNodeName);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeName()")); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"<%S>",bstrNodeName));
+			
+			if (CompareBSTRtoSZ(bstrNodeName,"id")) 
+			{
+				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
+				pgtabConfig[rc].iConfigId=atoi(tmp);
+			}
+			else if (CompareBSTRtoSZ(bstrNodeName,"domainAutoPublish")) // si absent, valorisé à FALSE puisque tableau des domaines initialisé à 0 avant l'appel
+			{
+				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
+				pgtabConfig[rc].bAutoPublish=atoi(tmp);
+			}
+			// rechercher ses frères et soeurs
+			pChildElement->get_nextSibling(&pNextChildElement);
+			pChildElement->Release();
+			pChildElement=pNextChildElement;
+		} // while(pChild!=NULL)
+		// rechercher ses frères et soeurs
+		pChildApp->get_nextSibling(&pNextChildApp);
+		pChildApp->Release();
+		pChildApp=pNextChildApp;
+		TRACE((TRACE_DEBUG,_F_,"</config>"));
+		rc++;
+	} // while(pNode!=NULL)
+	pgtabConfig[rc].iConfigId=-1;
+
+#ifdef TRACES_ACTIVEES
+	int trace_i;
+	for (trace_i=0;trace_i<rc-1;trace_i++)
+	{
+		TRACE((TRACE_INFO,_F_,"Config[%d] id=%d domainAutoPublish=%d",trace_i,pgtabConfig[trace_i].iConfigId,pgtabConfig[trace_i].bAutoPublish));
+	}
+#endif
+end:
+	if (pszResult!=NULL) free(pszResult);
+	if (bstrXML!=NULL) SysFreeString(bstrXML);
+	if (bstrNodeName!=NULL) SysFreeString(bstrNodeName);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
 // ReadDomainLabel()
 //-----------------------------------------------------------------------------
 // Lit le libellé du domaine de l'utilisateur dans la clé de registre indiquée
