@@ -48,6 +48,7 @@ include('sessions.php');
 // - ajout de la colonne autoPublish dans configs_domains
 // - modification de la fonction getconfigdomains
 // - modification de la fonction getconfigautopublish
+// - ajout de la fonction getdomainconfigsautopublish
 //------------------------------------------------------------------------------
 
 $swssoVersion="000:0000"; // "000:0000" désactive le contrôle de version côté client
@@ -505,7 +506,8 @@ else if ($_GET['action']=="getconfigdomains")
 	if (!$cnx) return;
 	
 	// récupération des paramètres passés dans l'URL
-    $var_configId=utf8_decode(myaddslashes($_GET['configId']));
+	$var_configId="-1";
+	if (isset($_GET["configId"])) $var_configId=utf8_decode(myaddslashes($_GET['configId']));
 	
 	$szRequest= "select "._TABLE_PREFIX_."configs_domains.domainId,"._TABLE_PREFIX_."domains.label,"._TABLE_PREFIX_."configs_domains.domainAutoPublish ".
 			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."domains where ".
@@ -547,7 +549,7 @@ else if ($_GET['action']=="getdomainconfigs")
 	if (!$cnx) return;
 	
 	// récupération des paramètres passés dans l'URL
-    $var_domainId=utf8_decode(myaddslashes($_GET['domainId']));
+	$var_domainId="-1";	if (isset($_GET["domainId"])) $var_domainId=utf8_decode(myaddslashes($_GET['domainId']));
 
 	$conditions="";
 	if ($var_domainId!=-1) $conditions="and (domainId=1 or domainId=".$var_domainId.")";
@@ -570,6 +572,50 @@ else if ($_GET['action']=="getdomainconfigs")
 		{
 			echo $ligne[0].",";
 		}
+	}
+	dbClose($cnx);
+}
+// ------------------------------------------------------------
+// getdomainconfigsautopublish
+// ------------------------------------------------------------
+else if ($_GET['action']=="getdomainconfigsautopublish")
+{
+	if (!isClientReadAuthorized()) return;
+	
+	$cnx=dbConnect();
+	if (!$cnx) return;
+	
+	// récupération des paramètres passés dans l'URL
+	$var_domainId="-1";	if (isset($_GET["domainId"])) $var_domainId=utf8_decode(myaddslashes($_GET['domainId']));
+	
+	$conditions="";
+	if ($var_domainId!=-1) $conditions="and domainId=".$var_domainId;
+
+	$szRequest="select "._TABLE_PREFIX_."config.id, configs_domains.domainAutoPublish ".
+			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."config where ".
+			"active=1 ".$conditions." and configId="._TABLE_PREFIX_."config.id order by "._TABLE_PREFIX_."config.id ASC";
+	if (isset($_GET["debug"])) echo $szRequest;
+	$req=mysql_query($szRequest,$cnx);
+	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+
+	header("Content-type: text/xml; charset=UTF-8");
+	if(mysql_num_rows($req)==0) 
+	{
+		echo "<configs>NOT FOUND</configs>";
+	}
+	else
+	{
+		echo "<configs>\n";
+		$i=0;
+		while($ligne=mysql_fetch_row($req))
+		{
+			echo "<config num=\"".$i."\">\n";
+			echo "<id><![CDATA[".$ligne[0]."]]></id>\n";
+			echo "<domainAutoPublish><![CDATA[".$ligne[1]."]]></domainAutoPublish>\n";
+			echo "</config>\n";
+			$i++;
+		}
+		echo "</configs>";
 	}
 	dbClose($cnx);
 }
