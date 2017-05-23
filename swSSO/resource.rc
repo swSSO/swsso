@@ -215,7 +215,7 @@ BEGIN
     LTEXT           "This application belongs to a password group. Any password change for this username will be applied on all configurations belonging to this group (same highlight color).",TX_INFO_PWD_GROUP,345,92,691,8,NOT WS_VISIBLE
     ICON            "",IMG_AUTO_PUBLISH,379,287,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
     LTEXT           "This configuration will not sign you in automatically, but it's a safe place to store your logins and passwords.",TX_COFFRE,212,282,206,18
-    CONTROL         "",LV_DOMAIN_CONFIGS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,199,15,174,137
+    CONTROL         "",LV_DOMAIN_CONFIGS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,199,15,174,137
 END
 
 IDD_CHALLENGE DIALOGEX 0, 0, 325, 245
@@ -1167,7 +1167,7 @@ BEGIN
     LTEXT           "Cette application appartient à un groupement de mot de passe. Le changement de mot de passe de cet identifiant sera également réalisé dans tous vos enregistrements de ce groupe (surlignés de la même couleur).",TX_INFO_PWD_GROUP,345,92,691,8,NOT WS_VISIBLE
     ICON            "",IMG_AUTO_PUBLISH,377,286,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
     LTEXT           "Ce type de configuration ne réalise pas d'authentification automatique, mais vous permet de mémoriser des identifiants et mots de passe de façon sécurisée.",TX_COFFRE,213,278,204,24
-    CONTROL         "",LV_DOMAIN_CONFIGS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,199,15,174,137
+    CONTROL         "",LV_DOMAIN_CONFIGS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,199,15,174,137
 END
 
 IDD_CHALLENGE DIALOG 0, 0, 325, 245
