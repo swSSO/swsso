@@ -355,7 +355,7 @@ void FillDomainConfigs(HWND w,int iDomainId)
 	iNbConfigs=GetDomainConfigsAutoPublish(iDomainId,ptabDomainConfigs);
 	if (iNbConfigs==0) goto end;
 
-	lvi.mask=LVIF_TEXT ;
+	lvi.mask=LVIF_TEXT | LVIF_PARAM;
 	for (i=0;i<iNbConfigs;i++)
 	{
 		lvi.iItem=i;
@@ -366,6 +366,7 @@ void FillDomainConfigs(HWND w,int iDomainId)
 		index=GetConfigIndex(ptabDomainConfigs[i].iConfigId);
 		if (index!=-1) // non trouvée (WTF !?)
 		{
+			lvi.lParam=index;
 			ListView_InsertItem(GetDlgItem(w,LV_DOMAIN_CONFIGS),&lvi);
 			ListView_SetItemText(GetDlgItem(w,LV_DOMAIN_CONFIGS),i,1,gptActions[index].szApplication);
 			switch (gptActions[i].iType)
@@ -5133,6 +5134,26 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						ShowWindow(GetDlgItem(w,TAB_IDPWD),SW_SHOW);
 						ShowWindow(GetDlgItem(w,TAB_CONFIG),SW_SHOW);
 					}
+					// ISSUE#348
+					if (gbAdmin && TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==1)
+					{
+						HTREEITEM hItem;
+						int iDomain;
+						hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
+						iDomain=TVItemGetLParam(w,hItem);
+						if (iDomain!=-1) 
+						{
+							wsprintf(buf2048,"%s [%d]",gtabDomains[iDomain].szDomainLabel,gtabDomains[iDomain].iDomainId);
+							SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
+							FillDomainConfigs(w,gtabDomains[iDomain].iDomainId);
+						}
+						else
+						{
+							wsprintf(buf2048,"%s [%d]",gtabDomains[0].szDomainLabel,gtabDomains[0].iDomainId);
+							SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
+							FillDomainConfigs(w,gtabDomains[0].iDomainId);
+						}
+					}
 					break;
 				case TVN_SELCHANGED:
 					if (wp==TV_APPLICATIONS && !gbEffacementEnCours && !gbAjoutDeCompteEnCours)
@@ -5411,6 +5432,18 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					{
 						TVActivateSelectedAppOrCateg(w,ACTIVATE_TOGGLE);
 						if (!gbIsChanging) EnableWindow(GetDlgItem(w,IDAPPLY),TRUE); // ISSUE#114
+					}
+					else if (wp==LV_DOMAIN_CONFIGS && gbAdmin) // double clic sur la liste des configs d'un domaine
+					{
+						LVITEM lvi;
+						lvi.mask=LVIF_PARAM;
+						lvi.iItem=((NMITEMACTIVATE*)lp)->iItem;
+						ListView_GetItem(GetDlgItem(w,LV_DOMAIN_CONFIGS),&lvi);
+						if (lvi.lParam!=-1) // config trouvée, on l'affiche dans l'onglet configs
+						{
+							TabCtrl_SetCurSel(GetDlgItem(w,TAB_APPLICATIONS),0);
+							TVSelectItemFromLParam(gwAppNsites,TYPE_APPLICATION,lvi.lParam);
+						}
 					}
 					break;
 				case NM_RCLICK: 
