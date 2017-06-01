@@ -112,9 +112,9 @@ end:
 		{
 			MessageBox(w,GetString(IDS_SERVER_ADMIN_LOCKED),"swSSO",MB_ICONEXCLAMATION);
 		}
-		else // erreur inconnue
+		else // erreur inconnue, peut-être parce que le serveur n'a pas encore migré, on n'affiche pas d'erreur
 		{
-			MessageBox(w,gszErrorServerNotAvailable,"swSSO",MB_ICONEXCLAMATION);
+			// MessageBox(w,gszErrorServerNotAvailable,"swSSO",MB_ICONEXCLAMATION);
 		}
 	}
 	if (hCursorOld!=NULL) SetCursor(hCursorOld);
