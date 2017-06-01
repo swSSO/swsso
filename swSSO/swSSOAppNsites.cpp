@@ -345,6 +345,8 @@ void FillDomainConfigs(HWND w,int iDomainId)
 	hCursorOld=SetCursor(ghCursorWait);
 	char szBuf10[10+1];
 
+	if (TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==0) goto end;
+
 	ListView_DeleteAllItems(GetDlgItem(w,LV_DOMAIN_CONFIGS));
 
 	ptabDomainConfigs=(T_DOMAIN_CONFIGS*)malloc(sizeof(T_DOMAIN_CONFIGS)*giMaxConfigs);
@@ -3432,6 +3434,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 		lvc.iSubItem = 4;
 		lvc.pszText = "Auto";
 		ListView_InsertColumn(GetDlgItem(w,LV_DOMAIN_CONFIGS),4,&lvc);
+		//gbLVDomainConfigsCreated=TRUE;
 	}
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
@@ -5133,10 +5136,12 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					{
 						ShowWindow(GetDlgItem(w,TAB_IDPWD),SW_SHOW);
 						ShowWindow(GetDlgItem(w,TAB_CONFIG),SW_SHOW);
+						SetFocus(GetDlgItem(w,TAB_APPLICATIONS));
 					}
 					// ISSUE#348
 					if (gbAdmin && TabCtrl_GetCurSel(GetDlgItem(w,TAB_APPLICATIONS))==1)
 					{
+						SetFocus(GetDlgItem(w,TAB_APPLICATIONS));
 						HTREEITEM hItem;
 						int iDomain;
 						hItem=TreeView_GetSelection(GetDlgItem(w,TV_DOMAINS));
@@ -5441,7 +5446,8 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						ListView_GetItem(GetDlgItem(w,LV_DOMAIN_CONFIGS),&lvi);
 						if (lvi.lParam!=-1) // config trouvée, on l'affiche dans l'onglet configs
 						{
-							TabCtrl_SetCurSel(GetDlgItem(w,TAB_APPLICATIONS),0);
+							TabCtrl_SetCurSel(GetDlgItem(gwAppNsites,TAB_APPLICATIONS),0);
+							TVSelectItemFromLParam(gwAppNsites,TYPE_CATEGORY,0); // bidouille pour bien refraichir l'affichage
 							TVSelectItemFromLParam(gwAppNsites,TYPE_APPLICATION,lvi.lParam);
 						}
 					}
