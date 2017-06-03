@@ -1,1 +1,0 @@
-ALTER TABLE `config` ADD `autoLock` tinyint (1) DEFAULT '1';

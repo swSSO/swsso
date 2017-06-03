@@ -4,7 +4,7 @@
 -- 
 --        SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 -- 
---                 Copyright (C) 2004-2015 - Sylvain WERDEFROY
+--                 Copyright (C) 2004-2017 - Sylvain WERDEFROY
 -- 
 -- 							 http://www.swsso.fr
 --                    
@@ -29,13 +29,4 @@
 --  
 -- ------------------------------------------------------------------------------
 
-DROP TABLE STATS;
-
-CREATE TABLE IF NOT EXISTS `stats` (
-  `shausername` varchar(40) NOT NULL,
-  `logindate` varchar(8) NOT NULL,
-  `nconfigs` int(11) NOT NULL,
-  `nsso` int(11) NOT NULL,
-  `nenrolled` int(11) NOT NULL,
-  `computername` varchar(40) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+ALTER TABLE `config` DROP domainId
