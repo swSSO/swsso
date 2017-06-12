@@ -17,8 +17,9 @@
 //  You should have received a copy of the GNU General Public License
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.5.3
+// VERSION INTERNE : 6.5.3 (.1)
 // - Nouvelles fonctions de gestion des sessions admin
+// .1 : corrections de notices php
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
@@ -31,6 +32,7 @@ function checkPwd($id,$pwd)
 	$cnx=sqliConnect();	if (!$cnx) return;
 	$szRequest="select userpwd,userlocked from "._TABLE_PREFIX_."admins where userid=?";
 	$stmt = mysqli_stmt_init($cnx);
+	$fetch=NULL;
 	if (mysqli_stmt_prepare($stmt,$szRequest))
 	{
 		mysqli_stmt_bind_param($stmt,"s",$id);
@@ -60,6 +62,7 @@ function login($id,$pwd)
 		$cnx=sqliConnect();	if (!$cnx) return;
 		$szRequest="select userrole from "._TABLE_PREFIX_."admins where userid=?";
 		$stmt=mysqli_stmt_init($cnx);
+		$fetch=NULL;
 		if (mysqli_stmt_prepare($stmt,$szRequest))
 		{
 			mysqli_stmt_bind_param($stmt,"s",$id);
@@ -153,7 +156,7 @@ function isSuperAdminAuthorized()
 // ------------------------------------------------------------
 function createUser($id,$pwd,$role,$firstname,$lastname)
 {
-	// TODO
+	$rc=-1;
 	
 	// vérif des rôles
 	if ($role!="admin" && $role!="superadmin") return -1;
@@ -186,6 +189,7 @@ function createUser($id,$pwd,$role,$firstname,$lastname)
 // ------------------------------------------------------------
 function lockUser($id,$locked)
 {
+	$rc=-1;
 	$cnx=sqliConnect(); if (!$cnx) return -1;
 	
 	$szRequest="update "._TABLE_PREFIX_."admins set userlocked=? where userid=?";
@@ -211,6 +215,7 @@ function lockUser($id,$locked)
 // ------------------------------------------------------------
 function resetPwd($id,$pwd)
 {
+	$rc=-1;
 	$cnx=sqliConnect(); if (!$cnx) return -1;
 	
 	$pwdHash=password_hash($pwd,PASSWORD_DEFAULT);
@@ -238,9 +243,11 @@ function resetPwd($id,$pwd)
 // ------------------------------------------------------------
 function countSuperadmin()
 {
-	$cnx=sqliConnect();	if (!$cnx) return;
+	$rc=-1;
+	$cnx=sqliConnect();	if (!$cnx) return -1;
 	$szRequest="select count(*) from "._TABLE_PREFIX_."admins where userrole='superadmin' and userlocked=0";
 	$stmt = mysqli_stmt_init($cnx);
+	$fetch=NULL;
 	if (mysqli_stmt_prepare($stmt,$szRequest))
 	{
 		mysqli_stmt_execute($stmt);
