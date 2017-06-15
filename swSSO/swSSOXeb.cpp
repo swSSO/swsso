@@ -666,7 +666,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 					}
 					if (bstrValue==NULL || FAILED(hr))
 					{
-						KBSimWeb(ptSuivi->w,TRUE,100,pszPassword,TRUE,iAction,iBrowser,ptSuivi,vtChild);
+						KBSimWeb(ptSuivi->w,TRUE,100,pszPassword,TRUE,iAction,iBrowser,ptSuivi->pTextFields[ptSuivi->iPwdIndex],vtChild);
 					}
 					if (bstrValue!=NULL)
 					{

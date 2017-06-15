@@ -197,7 +197,7 @@ BOOL CheckIfURLStillOK(HWND w,int iAction,int iBrowser,IAccessible *pInAccessibl
 // ----------------------------------------------------------------------------------
 // KBSimWeb
 // ----------------------------------------------------------------------------------
-int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,int iBrowser,T_SUIVI_ACCESSIBLE *ptSuivi,VARIANT vtChild)
+int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,int iBrowser,IAccessible *pTextField,VARIANT vtChild)
 {
 	UNREFERENCED_PARAMETER(bPwd); 
 	TRACE((TRACE_ENTER,_F_, "bErase=%d iTempo=%d",bErase,iTempo));
@@ -251,7 +251,10 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
 
 		if (i%4==0) { if (!CheckIfURLStillOK(w,iAction,iBrowser,pAccessible,(pAccessible==NULL),&pAccessible)) goto end; }
-		if (bPwd && ptSuivi!=NULL) ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+		// if (bPwd && ptSuivi!=NULL) ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+		// ISSUE#353 : applique la méthode à tous les champs (pas seulement le mot de passe)
+		pTextField->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+
 		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
@@ -346,7 +349,7 @@ int PutAccValueWeb(HWND w,IAccessible *pAccessible,VARIANT index,const char *szV
 	}
 	if (bstrValue==NULL || FAILED(hr))
 	{
-		if (KBSimWeb(w,TRUE,100,GetComputedValue(szValue),FALSE,iAction,iBrowser,NULL,vtNone)!=0) goto end; // 1.09B1 : bErase à TRUE toujours
+		if (KBSimWeb(w,TRUE,100,GetComputedValue(szValue),FALSE,iAction,iBrowser,pAccessible,vtNone)!=0) goto end; // 1.09B1 : bErase à TRUE toujours
 	}
 	rc=0;
 end:
