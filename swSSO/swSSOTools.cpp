@@ -332,22 +332,6 @@ char *HTTPRequestOneServer(const char *pszServer,			// [in] FQDN du serveur (www
 		dwLenResult+=dwDownloaded;
     } while (dwSize>0);
 
-	// TEST POUR THIERRY : supprime ef bb bf si présent en début de réponse
-	if (dwLenResult>3)
-	{
-		if (pszResult[0]==0xEF && pszResult[1]==0xBB && pszResult[2]==0xBF)
-		{
-			TRACE((TRACE_INFO,_F_,"Sequence ef bb bf detectee, on la supprime"));
-			char *pszResult2=NULL;
-			dwLenResult=dwLenResult-3;
-			pszResult2=(char*)malloc(dwLenResult+1);
-			if (pszResult2==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwLenResult+1)); goto end; }
-			memcpy(pszResult2,pszResult+3,dwLenResult+1);
-			free(pszResult);
-			pszResult=pszResult2;
-		}
-	}
-
 	WinHttpQueryHeaders(hRequest,WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,NULL,pdwStatusCode,&dwStatusCodeSize,NULL);
 	TRACE((TRACE_INFO,_F_,"dwStatusCode=%d",*pdwStatusCode));
 	
