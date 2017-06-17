@@ -253,8 +253,11 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		if (i%4==0) { if (!CheckIfURLStillOK(w,iAction,iBrowser,pAccessible,(pAccessible==NULL),&pAccessible)) goto end; }
 		// if (bPwd && ptSuivi!=NULL) ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
 		// ISSUE#353 : applique la méthode à tous les champs (pas seulement le mot de passe)
-		pTextField->accSelect(SELFLAG_TAKEFOCUS,vtChild);
-
+		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
+		if (iBrowser==BROWSER_CHROME)
+			ChromeAccSelect(w,pTextField);
+		else
+			pTextField->accSelect(SELFLAG_TAKEFOCUS,vtChild);
 		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);

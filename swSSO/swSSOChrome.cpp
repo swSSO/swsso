@@ -576,3 +576,50 @@ end:
 	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",pszURL));
 	return pszURL;
 }
+
+// ----------------------------------------------------------------------------------
+// ChromeAccSelect()
+// ----------------------------------------------------------------------------------
+// ISSUE#266, un peu revu en 1.15B5
+// Grosse bidouille nécessaire car si le focus est dans la barre d'URL, la fonction
+// accSelect() ne fonctionne pas pour sélectionner les champs ID ou PWD, mais retourne
+// quand même S_OK ! Incident ouvert sur chromium (533830) qui ne semble pas prêt
+// d'être corrigé.
+// Du coup la bidouille consiste à vérifier si la barre d'URL a le focus et si c'est 
+// le cas, à tabuler pour sortir de la barre d'URL, à mettre le focus sur le champ
+// souhaité et vérifier que le focus est bien là !
+// ----------------------------------------------------------------------------------
+void ChromeAccSelect(HWND w,IAccessible *pTextField)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	VARIANT vtSelf;
+	VARIANT vtURLBarState;
+	HRESULT hr;
+	int iAntiLoop=0;
+	VARIANT vtState;
+
+	if (gpAccessibleChromeURL==NULL) goto end;
+	
+	vtSelf.vt=VT_I4;
+	vtSelf.lVal=CHILDID_SELF;
+	hr=gpAccessibleChromeURL->get_accState(vtSelf,&vtURLBarState);
+	TRACE((TRACE_DEBUG,_F_,"get_accState() vtURLBarState.lVal=0x%08lx",vtURLBarState.lVal));
+	if (vtURLBarState.lVal & STATE_SYSTEM_FOCUSED) // Damned, la barre d'URL a le focus !
+	{
+		vtState.lVal=0;
+		while ((!(vtState.lVal & STATE_SYSTEM_FOCUSED)) && iAntiLoop <10)
+		{
+			TRACE((TRACE_INFO,_F_,"BIDOUILLE BARRE URL CHROME #%d",iAntiLoop)); // on tabule jusqu'à mettre le focus sur champ id1 ou pwd
+			KBSimEx(w,"[TAB]","","","","","");
+			Sleep(10);
+			hr=pTextField->accSelect(SELFLAG_TAKEFOCUS,vtSelf);
+			TRACE((TRACE_DEBUG,_F_,"accSelect()=0x%08lx",hr));
+			Sleep(10);
+			hr=pTextField->get_accState(vtSelf,&vtState);
+			TRACE((TRACE_DEBUG,_F_,"get_accState()=0x%08lx vtState.lVal=0x%08lx",hr,vtState.lVal));
+			iAntiLoop++;
+		}
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_,""));
+}

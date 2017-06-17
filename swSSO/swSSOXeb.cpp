@@ -564,49 +564,6 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		TRACE((TRACE_INFO,_F_,"Verifications OK, demarrage des saisies (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
 		SetForegroundWindow(ptSuivi->w);
 		
-		// ISSUE#266 : Bidouille contournement incident ouvert sur chromium : 533830
-		if (iBrowser==BROWSER_CHROME && gpAccessibleChromeURL!=NULL)
-		{
-			VARIANT vtSelf;
-			VARIANT vtURLBarState;
-			vtSelf.vt=VT_I4;
-			vtSelf.lVal=CHILDID_SELF;
-			hr=gpAccessibleChromeURL->get_accState(vtSelf,&vtURLBarState);
-			TRACE((TRACE_DEBUG,_F_,"get_accState() vtURLBarState.lVal=0x%08lx",vtURLBarState.lVal));
-			if (vtURLBarState.lVal & STATE_SYSTEM_FOCUSED)
-			{
-				TRACE((TRACE_INFO,_F_,"BIDOUILLE BARRE URL CHROME !")); // on tabule jusqu'à mettre le focus sur champ id1 ou pwd
-				KBSimEx(w,"[TAB]","","","","","");
-				int iAntiLoop=0;
-				VARIANT vtIdOrPwdState;
-				vtIdOrPwdState.lVal=0;
-				while ((!(vtIdOrPwdState.lVal & STATE_SYSTEM_FOCUSED)) && iAntiLoop <10)
-				{
-					KBSimEx(w,"[TAB]","","","","","");
-					Sleep(10);
-					if (iId1Index>=0)
-					{
-						hr=ptSuivi->pTextFields[iId1Index]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
-						TRACE((TRACE_DEBUG,_F_,"accSelect(id1)=0x%08lx",hr));
-						hr=ptSuivi->pTextFields[iId1Index]->get_accState(vtSelf,&vtIdOrPwdState);
-						TRACE((TRACE_DEBUG,_F_,"get_accState(id1)=0x%08lx vtId1State.lVal=0x%08lx",hr,vtIdOrPwdState.lVal));
-					}
-					else if (ptSuivi->iPwdIndex!=-1)
-					{
-						hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
-						TRACE((TRACE_DEBUG,_F_,"accSelect(pwd)=0x%08lx",hr));
-						hr=ptSuivi->pTextFields[ptSuivi->iPwdIndex]->get_accState(vtSelf,&vtIdOrPwdState);
-						TRACE((TRACE_DEBUG,_F_,"get_accState(pwd)=0x%08lx vtId1State.lVal=0x%08lx",hr,vtIdOrPwdState.lVal));
-					}
-					else // tant pis, cas à peu près impossible, on sort
-					{
-						break;
-					}
-					iAntiLoop++;
-				}
-			}
-		}
-		// fin bidouille chrome
 		if (iId1Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId1Index],vtChild,gptActions[ptSuivi->iAction].szId1Value,iAction,iBrowser);
 		if (iId2Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,gptActions[ptSuivi->iAction].szId2Value,iAction,iBrowser);
 		if (iId3Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,gptActions[ptSuivi->iAction].szId3Value,iAction,iBrowser);
