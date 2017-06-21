@@ -77,10 +77,13 @@ char *GetString(UINT uiString)
 // ----------------------------------------------------------------------------------
 BSTR GetBSTRFromSZ(const char *sz)
 {
-	TRACE((TRACE_ENTER,_F_, "%s",sz));
+	TRACE((TRACE_ENTER,_F_,""));
 	WCHAR *pwc=NULL;
 	int rc,sizeofpwc;
 	BSTR bstr=NULL;
+	
+	// Trace à activer en debug uniquement car peut contenir un mot de passe
+	// TRACE((TRACE_DEBUG,_F_, "%s",sz));
 
 	// premier appel pour connaitre taille à allouer (le 0 de fin de chaine est inclus)
 	sizeofpwc=MultiByteToWideChar(CP_ACP,0,sz,-1,NULL,0);
@@ -112,9 +115,12 @@ end:
 // ----------------------------------------------------------------------------------
 char *GetSZFromBSTR(BSTR bstr)
 {
-	TRACE((TRACE_ENTER,_F_, "%S",bstr));
+	TRACE((TRACE_ENTER,_F_,""));
 	int len;
 	char *rc=NULL;
+
+	// Trace à activer en debug uniquement car peut contenir un mot de passe
+	// TRACE((TRACE_ENTER,_F_, "%S",bstr));
 	len=SysStringLen(bstr);
 	rc=(char*)malloc(len+1);
 	if (rc==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",len+1)); goto end; }

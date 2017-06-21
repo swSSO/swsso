@@ -597,7 +597,7 @@ void ChromeAccSelect(HWND w,IAccessible *pTextField)
 	HRESULT hr;
 	int iAntiLoop=0;
 	VARIANT vtState;
-
+	
 	if (gpAccessibleChromeURL==NULL) goto end;
 	
 	vtSelf.vt=VT_I4;

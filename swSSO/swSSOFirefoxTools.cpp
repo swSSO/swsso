@@ -233,6 +233,16 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 	}
 	for (i=0;i<len;i++)
 	{
+		if (i%4==0) { if (!CheckIfURLStillOK(w,iAction,iBrowser,pAccessible,(pAccessible==NULL),&pAccessible)) goto end; }
+		// if (bPwd && ptSuivi!=NULL) ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+		// ISSUE#353 : applique la méthode à tous les champs (pas seulement le mot de passe)
+		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
+		if (iBrowser==BROWSER_CHROME)
+			ChromeAccSelect(w,pTextField);
+		else
+			pTextField->accSelect(SELFLAG_TAKEFOCUS,vtChild);
+		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
+
 		wKeyScan=VkKeyScan(sz[i]);
 		hiVk=HIBYTE(wKeyScan);
 		loVk=LOBYTE(wKeyScan);
@@ -250,15 +260,6 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0); }
 		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
 
-		if (i%4==0) { if (!CheckIfURLStillOK(w,iAction,iBrowser,pAccessible,(pAccessible==NULL),&pAccessible)) goto end; }
-		// if (bPwd && ptSuivi!=NULL) ptSuivi->pTextFields[ptSuivi->iPwdIndex]->accSelect(SELFLAG_TAKEFOCUS,vtChild);
-		// ISSUE#353 : applique la méthode à tous les champs (pas seulement le mot de passe)
-		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
-		if (iBrowser==BROWSER_CHROME)
-			ChromeAccSelect(w,pTextField);
-		else
-			pTextField->accSelect(SELFLAG_TAKEFOCUS,vtChild);
-		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
 		
