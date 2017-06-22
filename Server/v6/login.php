@@ -17,7 +17,8 @@
 //  You should have received a copy of the GNU General Public License
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.5.3
+// VERSION INTERNE : 6.5.3 (.1)
+// .1 : ajout du suffixe oublié dans la redirection vers la page d'admin
 //------------------------------------------------------------------------------
 include('variables.php');
 include('util.php');
@@ -47,7 +48,7 @@ if (!empty($_POST))
 			}
 			if (isAdminAuthorized())
 			{
-				header('Location: ./admin.php?action=menu');
+				header('Location: ./admin.php?action=menu'._MENUSUFFIX_);
 				exit();
 			}
 			$message="Utilisateur non autorisé";
