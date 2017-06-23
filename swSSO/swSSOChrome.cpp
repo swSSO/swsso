@@ -597,19 +597,33 @@ void ChromeAccSelect(HWND w,IAccessible *pTextField)
 	HRESULT hr;
 	int iAntiLoop=0;
 	VARIANT vtState;
-	
-	if (gpAccessibleChromeURL==NULL) goto end;
-	
+
 	vtSelf.vt=VT_I4;
 	vtSelf.lVal=CHILDID_SELF;
+
+	// on commence déjà par (essayer de) mettre le focus sur le champ
+	hr=pTextField->accSelect(SELFLAG_TAKEFOCUS,vtSelf);
+	TRACE((TRACE_DEBUG,_F_,"accSelect()=0x%08lx",hr));
+
+	// si on n'a pas le pAccessible de la barre d'URL, on ne peut rien faire d'autre
+	if (gpAccessibleChromeURL==NULL) 
+	{
+		TRACE((TRACE_INFO,_F_,"gpAccessibleChromeURL=NULL"));
+		goto end;
+	}
+	
+	// vérifie si la barre d'URL a le focus
 	hr=gpAccessibleChromeURL->get_accState(vtSelf,&vtURLBarState);
 	TRACE((TRACE_DEBUG,_F_,"get_accState() vtURLBarState.lVal=0x%08lx",vtURLBarState.lVal));
-	if (vtURLBarState.lVal & STATE_SYSTEM_FOCUSED) // Damned, la barre d'URL a le focus !
+
+	// Damned, la barre d'URL a le focus !
+	if (vtURLBarState.lVal & STATE_SYSTEM_FOCUSED) 
 	{
 		vtState.lVal=0;
 		while ((!(vtState.lVal & STATE_SYSTEM_FOCUSED)) && iAntiLoop <10)
 		{
-			TRACE((TRACE_INFO,_F_,"BIDOUILLE BARRE URL CHROME #%d",iAntiLoop)); // on tabule jusqu'à mettre le focus sur champ id1 ou pwd
+			// on tabule jusqu'à réussir à mettre le focus sur champ id1 ou pwd
+			TRACE((TRACE_INFO,_F_,"BIDOUILLE BARRE URL CHROME #%d",iAntiLoop)); 
 			KBSimEx(w,"[TAB]","","","","","");
 			Sleep(10);
 			hr=pTextField->accSelect(SELFLAG_TAKEFOCUS,vtSelf);
