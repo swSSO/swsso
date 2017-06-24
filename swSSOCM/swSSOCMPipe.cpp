@@ -152,7 +152,7 @@ int swPipeWrite(char *bufRequest,int lenRequest)
 	while (hPipe==INVALID_HANDLE_VALUE)
 	{
 		TRACE((TRACE_ERROR,_F_,"CreateNamedPipe()=%d (SVC pas prêt - essai %d)",GetLastError(),iNbTry));
-		if (iNbTry > 30)
+		if (iNbTry > 60) // passage de 30 à 60 en 1.15
 		{
 			swLogEvent(EVENTLOG_ERROR_TYPE,MSG_SERVICE_NOT_STARTED,NULL,NULL,NULL);
 			goto end;
