@@ -23,17 +23,17 @@
 /*----------------------------------------------------------------------------------------------
 VARIABLES DE CONNEXION A LA BASE DE DONNEES
 ----------------------------------------------------------------------------------------------*/
-define("_HOST_","localhost");			// Nom du serveur hebergeant la base de donnees
-define("_DB_","swsso"); 				// Nom de la base de données
-define("_USER_","root");			// Utilisateur MySQL
+define("_HOST_","");			// Nom du serveur hebergeant la base de donnees
+define("_DB_",""); 				// Nom de la base de données
+define("_USER_","");			// Utilisateur MySQL
 define("_PWD_","");				// Mot de passe utilisateur MySQL
 define("_TABLE_PREFIX_",""); 	// Préfixe à utiliser pour les tables
 
 /*----------------------------------------------------------------------------------------------
 CHIFFREMENT DES COLONNES titre, url, szName et szFullPathName
 ----------------------------------------------------------------------------------------------*/
-define("_ENCRYPT_","FALSE"); 	// TRUE | FALSE (chiffre / ne chiffre pas)
-define("_AESPWD_","");			// Mot de passe pour chiffrement
+define("_ENCRYPT_","TRUE"); 	// TRUE | FALSE (chiffre / ne chiffre pas)
+define("_AESPWD_","ChangeMe!");	// Mot de passe pour chiffrement
 
 /*----------------------------------------------------------------------------------------------
 OPTIONS
