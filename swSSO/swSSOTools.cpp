@@ -1563,6 +1563,26 @@ end:
 	return rc;
 }
 
+void ReplaceStr(char *pszSource, int sizeofSource,char *pszToReplace, char *pszReplaceWith)
+{
+	TRACE((TRACE_ENTER,_F_, "pszSource=%s pszToReplace=%s pszReplace=%s",pszSource,pszToReplace,pszReplaceWith));
+	char buffer[UNLEN+1];
+	char *p;
+
+	p=strstr(pszSource,pszToReplace);
+	if (p==NULL) goto end;
+
+	strncpy_s(buffer,sizeof(buffer),pszSource,p-pszSource);
+	buffer[p-pszSource]=0;
+	UNREFERENCED_PARAMETER(sizeofSource);
+	sprintf_s(buffer+(p-pszSource),sizeof(buffer)-(p-pszSource),"%s%s",pszReplaceWith,p+strlen(pszToReplace));
+	strcpy_s(pszSource,sizeofSource,buffer);
+
+end:
+	TRACE((TRACE_LEAVE,_F_, "pszSource=%s",pszSource));
+	return;
+}
+
 //-----------------------------------------------------------------------------
 // GetComputedValue() - 0.93B1
 //-----------------------------------------------------------------------------
@@ -1578,46 +1598,65 @@ char *GetComputedValue(const char *szValue)
 	int len;
 	int rc;
 	char szCopyOfValue[LEN_ID+1];
-
+	char szEnvVariableName[50+1];
+	char szEnvVariableNameWithMarks[50+2+1];
+	char szEnvVariableValue[100+1];
+	char *p1,*p2;
+	BOOL bFini=FALSE;
+	
 	// par défaut, retourne la valeur fournie en paramètre
 	strcpy_s(gszComputedValue,sizeof(gszComputedValue),szValue);
 
 	len=strlen(szValue);
 	if (len>LEN_ID) { TRACE((TRACE_ERROR,_F_,"len(%s)=%d > %d",szValue,len,LEN_ID)); }
 
-	if (len>2)
+	// ISSUE#355
+	// 1) Commence par remplacer les mots clés swSSO : %UPPER_USERNAME% et %LOWER_USERNAME% (%USERNAME% est une vairable d'environnement standard !)
+	if (strstr(gszComputedValue,"%UPPER_USERNAME%")!=NULL)
 	{
-		if (szValue[0]=='%' && szValue[len-1]=='%')
+		char szUpperUserName[UNLEN+1];
+		int i;
+		int lenUserName=strlen(gszUserName);
+		for (i=0;i<=lenUserName;i++) { szUpperUserName[i]=(char)toupper(gszUserName[i]); }
+		ReplaceStr(gszComputedValue,sizeof(gszComputedValue),"%UPPER_USERNAME%",szUpperUserName);
+	}
+	if (strstr(gszComputedValue,"%LOWER_USERNAME%")!=NULL)
+	{
+		char szLowerUserName[UNLEN+1];
+		int i;
+		int lenUserName=strlen(gszUserName);
+		for (i=0;i<=lenUserName;i++) { szLowerUserName[i]=(char)tolower(gszUserName[i]); }
+		ReplaceStr(gszComputedValue,sizeof(gszComputedValue),"%LOWER_USERNAME%",szLowerUserName);
+	}
+	
+	// 2) Remplace ensuite les variables d'environnement
+	while (!bFini)
+	{
+		p1=strchr(gszComputedValue,'%');
+		if (p1==NULL)
 		{
-			// ISSUE#261 : expand spécial pour %USERNAME%
-			if (strcmp(szValue,"%USERNAME%")==0)
+			bFini=TRUE;
+		}
+		else
+		{
+			p2=strchr(p1+1,'%');
+			if (p2!=NULL) // on a une variable d'environnement entre p1+1 et p2-1
 			{
-				strcpy_s(gszComputedValue,sizeof(szCopyOfValue),gszUserName);
-			}
-			else if (strcmp(szValue,"%UPPER_USERNAME%")==0)
-			{
-				int i;
-				int lenUserName=strlen(gszUserName);
-				for (i=0;i<=lenUserName;i++) { gszComputedValue[i]=(char)toupper(gszUserName[i]); }
-			}
-			else if (strcmp(szValue,"%LOWER_USERNAME%")==0)
-			{
-				int i;
-				int lenUserName=strlen(gszUserName);
-				for (i=0;i<=lenUserName;i++) { gszComputedValue[i]=(char)tolower(gszUserName[i]); }
-			}
-			else
-			{
-				strncpy_s(szCopyOfValue,sizeof(szCopyOfValue),szValue+1,len-2);
-				rc=GetEnvironmentVariable(szCopyOfValue,gszComputedValue,sizeof(gszComputedValue));
-				if (rc==0)
+				strncpy_s(szEnvVariableNameWithMarks,sizeof(szEnvVariableNameWithMarks),p1,p2-p1+1);
+				strncpy_s(szEnvVariableName,sizeof(szEnvVariableName),p1+1,p2-p1-1);
+				rc=GetEnvironmentVariable(szEnvVariableName,szEnvVariableValue,sizeof(szEnvVariableValue));
+				if (rc==0) // non trouvée, on ne touche à rien 
 				{ 
-					TRACE((TRACE_ERROR,_F_,"GetEnvironmentVariable(%s)=%d",szCopyOfValue,GetLastError()));
-					// Echec, gszComputedValue a déjà été initialisée donc on ne fait rien de plus
+					TRACE((TRACE_INFO,_F_,"GetEnvironmentVariable(%s)=%d",szCopyOfValue,GetLastError()));
+				}
+				else
+				{
+					ReplaceStr(gszComputedValue,sizeof(gszComputedValue),szEnvVariableNameWithMarks,szEnvVariableValue);
 				}
 			}
 		}
 	}
+
 	TRACE((TRACE_LEAVE,_F_, "gszComputedValue=%s",gszComputedValue));
 	return gszComputedValue;
 }
