@@ -1601,7 +1601,7 @@ char *GetComputedValue(const char *szValue)
 	char szEnvVariableName[50+1];
 	char szEnvVariableNameWithMarks[50+2+1];
 	char szEnvVariableValue[100+1];
-	char *p1,*p2;
+	char *p,*p1,*p2;
 	BOOL bFini=FALSE;
 	
 	// par défaut, retourne la valeur fournie en paramètre
@@ -1630,15 +1630,17 @@ char *GetComputedValue(const char *szValue)
 	}
 	
 	// 2) Remplace ensuite les variables d'environnement
+	p=gszComputedValue;
 	while (!bFini)
 	{
-		p1=strchr(gszComputedValue,'%');
+		p1=strchr(p,'%');
 		if (p1==NULL)
 		{
 			bFini=TRUE;
 		}
 		else
 		{
+			p=p1+1;
 			p2=strchr(p1+1,'%');
 			if (p2!=NULL) // on a une variable d'environnement entre p1+1 et p2-1
 			{
