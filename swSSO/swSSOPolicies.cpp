@@ -167,6 +167,7 @@ BOOL gbGetAutoPublishedConfigsAtStart;			// 1.14 - ISSUE#310
 char gszAskThisAppMessage[1024+1];				// 1.14 - ISSUE#319
 int	giWebServiceTimeout=8;						// 1.14 - ISSUE#329
 int	giWebServiceTimeout2=8;						// 1.14 - ISSUE#329
+BOOL gbUseSquareForManagedConfigs=TRUE;			// 1.16 - ISSUE#338
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -630,6 +631,10 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_WEBSERVICE_TIMEOUT2,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) giWebServiceTimeout2=(int)dwValue; 
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_USE_SQUARE_FOR_MANAGED_CONFIGS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbUseSquareForManagedConfigs=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -971,7 +976,8 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gszAskThisAppMessage=%s"				,gszAskThisAppMessage));
 	TRACE((TRACE_INFO,_F_,"giWebServiceTimeout=%d"				,giWebServiceTimeout));
 	TRACE((TRACE_INFO,_F_,"giWebServiceTimeout2=%d"				,giWebServiceTimeout2));
-
+	TRACE((TRACE_INFO,_F_,"gbUseSquareForManagedConfigs=%d"		,gbUseSquareForManagedConfigs));
+	
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
 	for (i=0;i<giNbExcludedWindows;i++)

@@ -2170,6 +2170,7 @@ void TVUpdateItemState(HWND w, HTREEITEM hItem,int iAction)
 	TRACE((TRACE_ENTER,_F_, ""));
 	
 	TVITEMEX itemex;
+	int imageIndex;
 
 	itemex.mask=TVIF_STATE;
 	itemex.stateMask=TVIS_STATEIMAGEMASK;
@@ -2187,7 +2188,12 @@ void TVUpdateItemState(HWND w, HTREEITEM hItem,int iAction)
 		//   que l'utilisateur a autorisé la remontée des configs
 		// - en vert tout cout si l'action est marquée comme envoyée au serveur OU
 		//   que l'utilisateur n'a pas autorisé les remontées (ni manuelles ni automatiques)
-		itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2);
+
+		// ISSUE#338
+		// itemex.state=INDEXTOSTATEIMAGEMASK(gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2);
+		imageIndex=gptActions[iAction].bActive?((gptActions[iAction].bConfigSent || !gbInternetManualPutConfig)?1:3):2;
+		if (!gbAdmin && gbUseSquareForManagedConfigs && gptActions[iAction].iConfigId!=0) imageIndex+=5;
+		itemex.state=INDEXTOSTATEIMAGEMASK(imageIndex);
 	}
 	if (gptActions[iAction].bError) // la config est en erreur : si on trouve un id ou un mdp c'est que l'utilisateur l'a réparée donc on supprime ce statut
 	{
