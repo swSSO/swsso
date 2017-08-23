@@ -141,7 +141,8 @@ static void ParseFrame(IHTMLDocument2 *pHTMLDocument2,LPARAM lp)
 		
 		// si formulaire à valider (=non vide + pas ENTER), on cherche le formulaire dans la page HTML, sinon on passe à la suite
 		//if (lenFormName!=0 && strcmp(szFormName,gcszEnter)!=0) : 0.89 : on accepte les simulations de frappe complexes
-		if (lenFormName!=0 && *szFormName!='[')
+		// ISSUE#357 - 1.16B3 : si le nom du formulaire est [SANSNOM], il ne faut pas confondre avec une simulation de frappe
+		if (lenFormName!=0 && (*szFormName!='[' || strcmp(szFormName,gcszFormNoName2)==0))
 		{
 			hr=pIDispatch->QueryInterface(IID_IHTMLFormElement,(void **)&pForm);
 			TRACE((TRACE_DEBUG,_F_,"pIDispatch->QueryInterface(IID_IHTMLFormElement(%d)=0x%08lx",l,hr));
