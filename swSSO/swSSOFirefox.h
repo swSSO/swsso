@@ -39,3 +39,10 @@ extern const char gcszMozillaClassName[];
 extern const char gcszMozillaContentClassName[];
 extern const char gcszMozillaUIClassName[];
 extern const char gcszMozillaDialogClassName[];
+
+typedef struct
+{
+	IAccessible *pContent;
+} T_SEARCH_DOC;
+
+void SearchWebDocument(char *paramszTab,IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc);

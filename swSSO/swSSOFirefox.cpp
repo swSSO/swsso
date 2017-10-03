@@ -436,6 +436,89 @@ static int CALLBACK FirefoxEnumChildProc(HWND w, LPARAM lp)
 }
 #endif
 
+
+// ----------------------------------------------------------------------------------
+// SearchWebDocument() [attention, fonction récursive]
+// ----------------------------------------------------------------------------------
+// Parcours récursif de la fenêtre et de ses objets "accessibles". On s'arrête sur le 
+// premier champ document pour obtenir l'URL -- ajoutée pour ISSUE#358
+// ----------------------------------------------------------------------------------
+// [in] w 
+// [in] pAccessible 
+// ----------------------------------------------------------------------------------
+#ifdef TRACES_ACTIVEES
+void SearchWebDocument(char *paramszTab,IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
+#else
+void SearchWebDocument(IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
+#endif
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	HRESULT hr;
+	long lCount;
+	VARIANT* pArray = NULL;
+	IAccessible *pChild=NULL;
+	VARIANT vtChild;
+	VARIANT vtState,vtRole;
+	long returnCount,l;
+
+#ifdef TRACES_ACTIVEES
+	char szTab[200];
+	strcpy_s(szTab,sizeof(szTab),paramszTab);
+	if (strlen(szTab)<sizeof(szTab)-5) strcat_s(szTab,sizeof(szTab),"  ");
+#endif
+	
+	hr=pAccessible->get_accChildCount(&lCount);
+	if (FAILED(hr)) goto end;
+	TRACE((TRACE_DEBUG,_F_,"%sget_accChildCount()==%ld",szTab,lCount));
+
+	if (lCount==0) { TRACE((TRACE_INFO,_F_,"%sPas de fils",szTab)); goto end; }
+
+	pArray = new VARIANT[lCount];
+	hr = AccessibleChildren(pAccessible, 0L, lCount, pArray, &returnCount);
+	if (FAILED(hr))
+	{
+		TRACE((TRACE_DEBUG,_F_,"%sAccessibleChildren()=0x%08lx",szTab,hr));
+	}
+	else
+	{
+		TRACE((TRACE_DEBUG,_F_,"%sAccessibleChildren() returnCount=%d",szTab,returnCount));
+		for (l=0;l<lCount;l++)
+		{
+			VARIANT *pVarCurrent = &pArray[l];
+			VariantInit(&vtRole);
+			VariantInit(&vtState);
+			pChild=NULL;
+
+			TRACE((TRACE_DEBUG,_F_,"%s --------------------------------- l=%ld vt=%d lVal=0x%08lx",szTab,l,pVarCurrent->vt,pVarCurrent->lVal));
+			if (pVarCurrent->vt!=VT_DISPATCH) goto suivant;
+			if (pVarCurrent->lVal==NULL) goto suivant; // ISSUE#80 0.96B2 
+			((IDispatch*)(pVarCurrent->lVal))->QueryInterface(IID_IAccessible, (void**) &pChild);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"%sQueryInterface(IID_IAccessible)=0x%08lx",szTab,hr)); goto suivant; }
+			TRACE((TRACE_DEBUG,_F_,"%sQueryInterface(IID_IAccessible)=0x%08lx -> pChild=0x%08lx",szTab,hr,pChild));
+			
+			vtChild.vt=VT_I4;
+			vtChild.lVal=CHILDID_SELF;
+			hr=pChild->get_accRole(vtChild,&vtRole);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
+			TRACE((TRACE_DEBUG,_F_,"%sget_accRole() vtRole.lVal=0x%08lx",szTab,vtRole.lVal));
+			
+			if (vtRole.lVal == ROLE_SYSTEM_DOCUMENT) // trouvé !
+			{
+				ptSearchDoc->pContent=pChild;
+				ptSearchDoc->pContent->AddRef();
+			}
+			else
+			{
+				SearchWebDocument(szTab,pChild,ptSearchDoc);
+			}
+suivant:
+			if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
+		} // for
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
 //*****************************************************************************
 //                             FONCTIONS PUBLIQUES
 //*****************************************************************************
@@ -466,7 +549,10 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 	VARIANT vtMe;
 	vtMe.vt=VT_I4;
 	vtMe.lVal=CHILDID_SELF;
+	VARIANT vtResult;
 
+	T_SEARCH_DOC tSearchDoc;
+	
 	UNREFERENCED_PARAMETER(iBrowser);
 
 	if (pInAccessible!=NULL) // cool, l'appelant a fourni le pAccessible en entrée, on va gagner du temps
@@ -478,45 +564,49 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 	{
 		hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
 		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
-		
-		VARIANT vtResult;
-		hr=pAccessible->accNavigate(0x1009,vtMe,&vtResult); // NAVRELATION_EMBEDS = 0x1009
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr)); goto end; }
-		TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS) vtEnd=0x%08lx",vtResult.lVal));
-
-		if (vtResult.vt!=VT_DISPATCH) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) is not VT_DISPATCH")); goto end; }
-		pIDispatch=(IDispatch*)vtResult.lVal;
-		if (pIDispatch==NULL) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) pIDispatch=NULL")); goto end; }
-
-		// ISSUE#60 : pServiceProvider->QueryService(refguid,IID_ISimpleDOMDocument) provoque un plantage avec FF4 sous WIN7
-		//            J'utilise donc un nouveau moyen pour récupérer l'URL du document, décrit ici : http://www.mozilla.org/access/windows/at-apis
-		// hr=pIDispatch->QueryInterface(IID_IServiceProvider, (void**)&pServiceProvider);
-		// if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IServiceProvider)=0x%08lx",hr));	goto end; }	
-		// TRACE((TRACE_DEBUG,_F_,"pIDispatch->QueryInterface() -> OK"));
-		// hr=pServiceProvider->QueryService(refguid,IID_ISimpleDOMDocument, (void**) &pSimpleDOMDocument);
-		// if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryService(IID_ISimpleDOMDocument)=0x%08lx",hr));	goto end; }	
-		// TRACE((TRACE_DEBUG,_F_,"pServiceProvider->QueryService(IID_ISimpleDOMDocument) -> OK"));
-		// Lit l'URL
-		// hr = pSimpleDOMDocument->get_URL(&bstrURL); 
-		// if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pSimpleDOMDocument->get_URL()=0x%08lx",hr));	goto end; }
-
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pContent);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
 	
-		hr=pContent->get_accRole(vtMe,&vtResult);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accRole()=0x%08lx",hr)); goto end; }
-		if (vtResult.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole() : vtResult.lVal=%ld",vtResult.lVal)); goto end; }
-
-		// ISSUE#72 (0.95) : maintenant que Firefox indique bien que le chargement de la page n'est pas terminé,
-		//                   on attend patiemment avant de lancer le SSO.
-		// 0.97 : on ne le fait que si bWaitReady (et notamment on ne le fait pas dans le cas des popups cf. ISSUE#87)
-		if (bWaitReady)
+		hr=pAccessible->accNavigate(0x1009,vtMe,&vtResult); // NAVRELATION_EMBEDS = 0x1009
+		if (hr==S_OK) // ISSUE#358 -- cette méthode ne fonctionne plus à partir de Firefox 56, mais on la conserve pour les anciennes versions
 		{
-			hr=pContent->get_accState(vtMe,&vtResult);
-			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accState()=0x%08lx",hr)); goto end; }
-			if (vtResult.lVal & STATE_SYSTEM_BUSY) { TRACE((TRACE_ERROR,_F_,"get_accState() : STATE_SYSTEM_BUSY, on verra plus tard !")); goto end; }
+			TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS) vtEnd=0x%08lx",vtResult.lVal));
+			if (vtResult.vt!=VT_DISPATCH) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) is not VT_DISPATCH")); goto end; }
+			pIDispatch=(IDispatch*)vtResult.lVal;
+			if (pIDispatch==NULL) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) pIDispatch=NULL")); goto end; }
+
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pContent);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	
+			hr=pContent->get_accRole(vtMe,&vtResult);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accRole()=0x%08lx",hr)); goto end; }
+			if (vtResult.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole() : vtResult.lVal=%ld",vtResult.lVal)); goto end; }
+
+		}
+		else // ISSUE#358
+		{
+			// Parcourt l'ensemble de la page à la recherche de l'objet document
+			tSearchDoc.pContent=NULL;
+#ifdef TRACES_ACTIVEES
+			SearchWebDocument("",pAccessible,&tSearchDoc);
+#else
+			SearchWebDocument(pAccessible,&tSearchDoc);
+#endif		
+			if (tSearchDoc.pContent==NULL)
+			{
+				TRACE((TRACE_ERROR,_F_,"SearchWebDocument n'a pas trouvé l'objet document...")); goto end;
+			}
+			pContent=tSearchDoc.pContent;
 		}
 	}
+	// ISSUE#72 (0.95) : maintenant que Firefox indique bien que le chargement de la page n'est pas terminé,
+	//                   on attend patiemment avant de lancer le SSO.
+	// 0.97 : on ne le fait que si bWaitReady (et notamment on ne le fait pas dans le cas des popups cf. ISSUE#87)
+	if (bWaitReady)
+	{
+		hr=pContent->get_accState(vtMe,&vtResult);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accState()=0x%08lx",hr)); goto end; }
+		if (vtResult.lVal & STATE_SYSTEM_BUSY) { TRACE((TRACE_ERROR,_F_,"get_accState() : STATE_SYSTEM_BUSY, on verra plus tard !")); goto end; }
+	}
+
 	hr=pContent->get_accValue(vtMe,&bstrURL);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accValue()=0x%08lx",hr)); goto end; }
 

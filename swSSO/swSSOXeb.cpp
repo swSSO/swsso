@@ -349,6 +349,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 	int iId4Index;
 	IAccessible *pNiveau0=NULL,*pChildNiveau1=NULL, *pChildNiveau2=NULL;
 	int iNbTry;
+	T_SEARCH_DOC tSearchDoc;
 	
 	// ISSUE#39 : important, initialisation pour que le pointer iAccessible soit à NULL sinon le release provoque plantage !
 	ZeroMemory(&tSuivi,sizeof(T_SUIVI_ACCESSIBLE));
@@ -448,14 +449,32 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		vtStart.vt=VT_I4;
 		vtStart.lVal=CHILDID_SELF;
 		hr=pTopAccessible->accNavigate(0x1009,vtStart,&vtResult); // NAVRELATION_EMBEDS = 0x1009
-		pTopAccessible->Release();pTopAccessible=NULL;
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr)); goto end; }
-		TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS) vtEnd=%ld",vtResult.lVal));
-		if (vtResult.vt!=VT_DISPATCH) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) is not VT_DISPATCH")); goto end; }
-		pIDispatch=(IDispatch*)vtResult.lVal;
-		if (pIDispatch==NULL) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) pIDispatch=NULL")); goto end; }
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pAccessible);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }	
+		if (hr==S_OK) // ISSUE#358 (OK seulement avant Firefox 56)
+		{
+			pTopAccessible->Release();pTopAccessible=NULL;
+			TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS) vtEnd=%ld",vtResult.lVal));
+			if (vtResult.vt!=VT_DISPATCH) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) is not VT_DISPATCH")); goto end; }
+			pIDispatch=(IDispatch*)vtResult.lVal;
+			if (pIDispatch==NULL) { TRACE((TRACE_ERROR,_F_,"accNavigate(NAVRELATION_EMBEDS) pIDispatch=NULL")); goto end; }
+			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pAccessible);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }	
+		}
+		else // ISSUE#358
+		{
+			// Parcourt l'ensemble de la page à la recherche de l'objet document
+			tSearchDoc.pContent=NULL;
+#ifdef TRACES_ACTIVEES
+			SearchWebDocument("",pTopAccessible,&tSearchDoc);
+#else
+			SearchWebDocument(pAccessible,&tSearchDoc);
+#endif		
+			pTopAccessible->Release();pTopAccessible=NULL;
+			if (tSearchDoc.pContent==NULL)
+			{
+				TRACE((TRACE_ERROR,_F_,"SearchWebDocument n'a pas trouvé l'objet document...")); goto end;
+			}
+			pAccessible=tSearchDoc.pContent;
+		}	
 	}
 	else if (iBrowser==BROWSER_XIN) // test XIN
 	{
