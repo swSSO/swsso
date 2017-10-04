@@ -323,6 +323,9 @@ char *GetW7PopupURL(HWND w)
 
 	// énumère les childs et récupère le libellé du dernier child de type texte
 	// suite à ISSUE#78 et ISSUE#228 cela semble être la meilleure solution
+	// Suite à ISSUE#356, il ne faut pas rechercher le dernier champ statique car si caps lock est activée, 
+	// c'est le warning affiché dans la fenêtre qui remonte et non pas l'URL. 
+	// Il faut donc trouver le dernier champ statique AVANT la liste des comptes / champs de login/mdp (=ROLE_SYSTEM_LISTITEM)
 	vtSelf.vt=VT_I4;
 	vtSelf.lVal=CHILDID_SELF;
 	for (i=1;i<=lCount;i++) // inutile de commencer à 0, c'est CHILDID_SELF
@@ -357,8 +360,14 @@ char *GetW7PopupURL(HWND w)
 				goto end;
 			}
 		}
+		else if (vtRole.lVal==ROLE_SYSTEM_LISTITEM) // trouvé la liste des comptes, on sort, l'URL était avant (ISSUE#356)
+		{
+			TRACE((TRACE_INFO,_F_,"vtRole.lVal=ROLE_SYSTEM_LISTITEM, on arrête la recherche de l'URL"));
+			goto suite; // oui, j'aime bien le goto suite, c'est pratique (OK, je sais, c'est mal, mais j'ai pas le temps)
+		}
 		if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
 	}
+suite:
 	if (bstrName!=NULL)
 	{
 		pszURL=GetSZFromBSTR(bstrName);
