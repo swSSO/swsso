@@ -523,7 +523,7 @@ BEGIN
     LTEXT           "Configuration file:",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,55,262,18
     LTEXT           "License",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.17 BETA 1 (10/4/2017)",TX_ABOUT,47,12,120,8
+    LTEXT           "Version 1.17 (10/6/2017)",TX_ABOUT,47,12,120,8
     LTEXT           "Portal:",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -1447,7 +1447,7 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.17 BETA 1 (04/10/2017)",TX_ABOUT,47,12,120,8
+    LTEXT           "Version 1.17 (06/10/2017)",TX_ABOUT,47,12,120,8
     LTEXT           "Portail :",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1

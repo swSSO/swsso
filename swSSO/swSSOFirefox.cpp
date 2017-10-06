@@ -467,6 +467,8 @@ void SearchWebDocument(IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
 	if (strlen(szTab)<sizeof(szTab)-5) strcat_s(szTab,sizeof(szTab),"  ");
 #endif
 	
+	if (ptSearchDoc->pContent!=NULL)  { TRACE((TRACE_DEBUG,_F_,"%sOn remonte...",szTab)); goto end; }
+
 	hr=pAccessible->get_accChildCount(&lCount);
 	if (FAILED(hr)) goto end;
 	TRACE((TRACE_DEBUG,_F_,"%sget_accChildCount()==%ld",szTab,lCount));
@@ -489,7 +491,9 @@ void SearchWebDocument(IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
 			VariantInit(&vtState);
 			pChild=NULL;
 
-			TRACE((TRACE_DEBUG,_F_,"%s --------------------------------- l=%ld vt=%d lVal=0x%08lx",szTab,l,pVarCurrent->vt,pVarCurrent->lVal));
+			if (ptSearchDoc->pContent!=NULL)  { TRACE((TRACE_DEBUG,_F_,"%sOn sort de la boucle...",szTab)); goto end; }
+
+			TRACE((TRACE_DEBUG,_F_,"%s ---------------------LEVEL=%d l=%ld vt=%d lVal=0x%08lx",szTab,ptSearchDoc->iLevel,l,pVarCurrent->vt,pVarCurrent->lVal));
 			if (pVarCurrent->vt!=VT_DISPATCH) goto suivant;
 			if (pVarCurrent->lVal==NULL) goto suivant; // ISSUE#80 0.96B2 
 			((IDispatch*)(pVarCurrent->lVal))->QueryInterface(IID_IAccessible, (void**) &pChild);
@@ -504,11 +508,14 @@ void SearchWebDocument(IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
 			
 			if (vtRole.lVal == ROLE_SYSTEM_DOCUMENT) // trouvé !
 			{
+				TRACE((TRACE_DEBUG,_F_,"%sDOCUMENT TROUVE",szTab)); 
 				ptSearchDoc->pContent=pChild;
-				ptSearchDoc->pContent->AddRef();
+				// ptSearchDoc->pContent->AddRef(); pas besoin de AddRef puisqu'il ne sera pas releasé grace au goto end
+				goto end;
 			}
-			else
+			else if (ptSearchDoc->iLevel!=0 || vtRole.lVal == ROLE_SYSTEM_GROUPING) // 1.17 FIX 1 : optimisation, on ne cherche au niveau d'en dessous que dans le cas d'un élément groupé
 			{
+				ptSearchDoc->iLevel++;
 				SearchWebDocument(szTab,pChild,ptSearchDoc);
 			}
 suivant:
@@ -516,6 +523,7 @@ suivant:
 		} // for
 	}
 end:
+	ptSearchDoc->iLevel--;
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -552,7 +560,7 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 	VARIANT vtResult;
 
 	T_SEARCH_DOC tSearchDoc;
-	
+		
 	UNREFERENCED_PARAMETER(iBrowser);
 
 	if (pInAccessible!=NULL) // cool, l'appelant a fourni le pAccessible en entrée, on va gagner du temps
@@ -585,6 +593,7 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 		{
 			// Parcourt l'ensemble de la page à la recherche de l'objet document
 			tSearchDoc.pContent=NULL;
+			tSearchDoc.iLevel=0;
 #ifdef TRACES_ACTIVEES
 			SearchWebDocument("",pAccessible,&tSearchDoc);
 #else
