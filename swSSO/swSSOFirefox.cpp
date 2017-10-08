@@ -505,13 +505,20 @@ void SearchWebDocument(IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
 			hr=pChild->get_accRole(vtChild,&vtRole);
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
 			TRACE((TRACE_DEBUG,_F_,"%sget_accRole() vtRole.lVal=0x%08lx",szTab,vtRole.lVal));
+
+			hr=pChild->get_accState(vtChild,&vtState);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState()=0x%08lx",hr)); goto suivant; }
+			TRACE((TRACE_DEBUG,_F_,"%sget_accState() vtState.lVal=0x%08lx",szTab,vtState.lVal));
 			
-			if (vtRole.lVal == ROLE_SYSTEM_DOCUMENT) // trouvé !
+			if (vtRole.lVal == ROLE_SYSTEM_DOCUMENT)
 			{
-				TRACE((TRACE_DEBUG,_F_,"%sDOCUMENT TROUVE",szTab)); 
-				ptSearchDoc->pContent=pChild;
-				// ptSearchDoc->pContent->AddRef(); pas besoin de AddRef puisqu'il ne sera pas releasé grace au goto end
-				goto end;
+				if (!(vtState.lVal & STATE_SYSTEM_INVISIBLE)) // trouvé ! 1.17 FIX 1 (élimine les onglets autres que celui visible !)
+				{
+					TRACE((TRACE_DEBUG,_F_,"%sDOCUMENT TROUVE",szTab)); 
+					ptSearchDoc->pContent=pChild;
+					// ptSearchDoc->pContent->AddRef(); pas besoin de AddRef puisqu'il ne sera pas releasé grace au goto end
+					goto end;
+				}
 			}
 			else if (ptSearchDoc->iLevel!=0 || vtRole.lVal == ROLE_SYSTEM_GROUPING) // 1.17 FIX 1 : optimisation, on ne cherche au niveau d'en dessous que dans le cas d'un élément groupé
 			{
