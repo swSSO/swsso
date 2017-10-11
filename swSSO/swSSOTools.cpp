@@ -115,7 +115,7 @@ end:
 // ----------------------------------------------------------------------------------
 char *GetSZFromBSTR(BSTR bstr)
 {
-	TRACE((TRACE_ENTER,_F_,""));
+	//TRACE((TRACE_ENTER,_F_,""));
 	int len;
 	char *rc=NULL;
 
@@ -129,7 +129,7 @@ char *GetSZFromBSTR(BSTR bstr)
 end:
 	// Trace à activer en debug uniquement car peut contenir un mot de passe
 	// TRACE((TRACE_DEBUG,_F_, "%s",rc));
-	TRACE((TRACE_LEAVE,_F_,""));
+	//TRACE((TRACE_LEAVE,_F_,""));
 	return rc;
 }
 

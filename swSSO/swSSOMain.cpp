@@ -840,6 +840,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			{
 				iBrowser=BROWSER_IE;
 				pszURL=GetIEURL(w,TRUE);
+				//pszURL=GetEdgeURL(w,NULL,FALSE,NULL,0,TRUE); TEST POUR EDGE WINDOWS 10 CREATORS UPDATE ET +
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto suite; }
 			}
 			else // autre ??
