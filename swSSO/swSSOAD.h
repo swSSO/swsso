@@ -36,6 +36,6 @@ int GetUserDomainAndComputer(void);
 int GetLastADPwdChange2(char *pszLastADPwdChange2,DWORD dwSizeofszLastADPwdChange2);
 int AskADPwd(BOOL bWarningIfNoADPwd);
 int CheckADPwdChange();
-char *GetDecryptedPwd(char *szPwdEncryptedValue);
+char *GetDecryptedPwd(char *szPwdEncryptedValue,BOOL bDecryptADPassword);
 BOOL CheckUserInOU(void);
 int GetADPassword(void);

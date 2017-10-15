@@ -147,7 +147,7 @@ static int CALLBACK WinEnumChildProc(HWND w, LPARAM lp)
 		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 		{
 			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue,TRUE);
 			if (pszPassword!=NULL) 
 			{
 				// 0.85B6
@@ -294,7 +294,7 @@ void FillFirefoxPopupFields(HWND w,int iAction,IAccessible *pAccessible)
 				if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 				{
 					//char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-					char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+					char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue,TRUE);
 					if (pszPassword!=NULL) 
 					{
 						//TRACE((TRACE_PWD,_F_,"Champ %d Saisie pwd : '%s'",l,pszPassword));
@@ -338,7 +338,7 @@ end:
 		SetForegroundWindow(w);
 		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 		{
-			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue,TRUE);
 			if (pszPassword!=NULL) 
 			{
 				KBSim(w,TRUE,100,pszPassword,TRUE);
@@ -564,7 +564,7 @@ trouve:
 	rc=W7PopupSetTabOnField(w,(iLevel==2)?pChildL1:pChildL2,iIndexPwd);
 	if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 	{
-		char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+		char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue,TRUE);
 		if (pszPassword!=NULL) 
 		{
 			//TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
@@ -666,7 +666,7 @@ int FillW10PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 			{
 				if ((*gptActions[iAction].szPwdEncryptedValue!=0))
 				{
-					char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+					char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue,TRUE);
 					if (pszPassword!=NULL) 
 					{
 						BSTR bstrValue=GetBSTRFromSZ(pszPassword);

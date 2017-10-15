@@ -4179,7 +4179,7 @@ int LoadApplications(void)
 		GetPrivateProfileString(p,"pwdName","",gptActions[i].szPwdName,sizeof(gptActions[i].szPwdName),gszCfgFile);
 		// 0.50
 		// 0.65B3 on ne déchiffre plus qu'à l'utilisation !
-		// 1.14 mais il faut essayer quand même pour voir si la config n'est pas pourrie
+		// 1.14 mais il faut essayer quand même pour voir si la config n'est pas pourrie : a introduit le bug ISSUE#361 !
 		GetPrivateProfileString(p,"pwdValue","",gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),gszCfgFile);
 		if (*gptActions[i].szPwdEncryptedValue==0) 
 		{
@@ -4187,7 +4187,9 @@ int LoadApplications(void)
 		}
 		else if (strlen(gptActions[i].szPwdEncryptedValue)==LEN_ENCRYPTED_AES256)
 		{
-			char *psz=GetDecryptedPwd(gptActions[i].szPwdEncryptedValue);
+			// ISSUE#361 : ne cherche pas à déchiffrer le mdp Windows déjà parce qu'on n'en a pas besoin 
+			// et surtout parce qu'on ne peut pas encore puisqu'on n'a pas appelé GetADPassword() à ce stade.
+			char *psz=GetDecryptedPwd(gptActions[i].szPwdEncryptedValue,FALSE); 
 			if (psz!=NULL) 
 			{ 
 				SecureZeroMemory(psz,strlen(psz)); // on n'en a pas besoin, on le supprime tout de suite

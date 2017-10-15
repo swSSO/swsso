@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="117";	// 101 = 1.01
-const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1183";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 HWND gwChooseConfig=NULL;
@@ -310,7 +310,7 @@ int KBSimSSO(HWND w, int iAction)
 	if ((*gptActions[iAction].szPwdEncryptedValue!=0)) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 	{
 		// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-		char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+		char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue,TRUE);
 		if (pszPassword!=NULL) 
 		{
 			strcpy_s(szDecryptedPassword,sizeof(szDecryptedPassword),pszPassword);

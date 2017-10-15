@@ -2649,7 +2649,7 @@ int ChangeWindowsPwd(void)
 			// ISSUE#342 : répercute le changement de mot de passe sur le serveur
 			if (gbAdmin)
 			{
-				char *pszADPassword=GetDecryptedPwd(gszEncryptedADPwd);
+				char *pszADPassword=GetDecryptedPwd(gszEncryptedADPwd,TRUE);
 				if (pszADPassword!=NULL) 
 				{
 					ServerAdminSetPassword(NULL,pszADPassword);

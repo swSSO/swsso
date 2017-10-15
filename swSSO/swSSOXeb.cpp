@@ -629,7 +629,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			if ((*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0))
 			{
 				//char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
-				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
+				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue,TRUE);
 				if (pszPassword!=NULL) 
 				{
 					// 1.09B2 : essaie de faire put_accValue avant de se rabattre sur la simulation de frappe
@@ -663,7 +663,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			// ISSUE#101 suite : on autorise aussi le mot de passe sinon c'est naze...
 			char szDecryptedPassword[LEN_PWD+1];
 			// char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
-			char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
+			char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue,TRUE);
 			if (pszPassword!=NULL) 
 			{
 				strcpy_s(szDecryptedPassword,sizeof(szDecryptedPassword),pszPassword);

@@ -48,8 +48,9 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	char bufRequest[1024];
 	int lenRequest=0;
 	char szLogonDomainName[DOMAIN_LEN];
-	int lenUserName,lenLogonDomainName;
-	char *p=NULL;
+	// int lenUserName;
+	int lenLogonDomainName;
+	// char *p=NULL;
 	
 	// Récupération des authentifiants en fonction de la méthode d'authent
 	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
@@ -91,11 +92,12 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	ret=WideCharToMultiByte(CP_ACP,0,usUserName.Buffer,usUserName.Length/2,szUserName,sizeof(szUserName),NULL,NULL);
 	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usUserName)=%d",GetLastError())); goto end; }
 	// ISSUE#346 : si utilisateur de forme SPN, on tronque pour ne garder que le username
+	// ISSUE#360 : ne tronque plus, on retrouve les utilisateurs par leur SID et le nom complet user@domaine est nécessaire pour faire le LookupAccountName
 	TRACE((TRACE_DEBUG,_F_,"szUserName=%s",szUserName));
-	p=strchr(szUserName,'@');
-	if (p!=NULL) *p=0;
-	lenUserName=(int)strlen(szUserName);
-	TRACE((TRACE_DEBUG,_F_,"szUserName (apres troncage eventuel)=%s",szUserName));
+	// p=strchr(szUserName,'@');
+	// if (p!=NULL) *p=0;
+	// lenUserName=(int)strlen(szUserName);
+	// TRACE((TRACE_DEBUG,_F_,"szUserName (apres troncage eventuel)=%s",szUserName));
 	// mot de passe
 	TRACE((TRACE_DEBUG,_F_,"usPassword.MaximumLength=%d",usPassword.MaximumLength));
 	ret=WideCharToMultiByte(CP_ACP,0,usPassword.Buffer,usPassword.Length/2,bufPassword,sizeof(bufPassword),NULL,NULL);

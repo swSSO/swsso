@@ -719,7 +719,7 @@ int SSOWeb(HWND w,int iAction,HWND w2)
 		if ((*gptActions[iAction].szPwdEncryptedValue!=0)) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 		{
 			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
+			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue,TRUE);
 			if (pszPassword!=NULL) 
 			{
 				MultiByteToWideChar(CP_ACP,0,pszPassword,-1,wcTmp,sizeof(wcTmp));

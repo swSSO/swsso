@@ -442,7 +442,7 @@ end:
 //-----------------------------------------------------------------------------
 // Déchiffre le mot de passe. Si valeur=%ADPASSWORD%, renvoie le mdp AD déchiffré
 //-----------------------------------------------------------------------------
-char *GetDecryptedPwd(char *szPwdEncryptedValue)
+char *GetDecryptedPwd(char *szPwdEncryptedValue,BOOL bDecryptADPassword)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	char *ret=NULL;
@@ -452,7 +452,7 @@ char *GetDecryptedPwd(char *szPwdEncryptedValue)
 	pszPassword=swCryptDecryptString(szPwdEncryptedValue,ghKey1);
 	if (pszPassword!=NULL) 
 	{
-		if (strcmp(pszPassword,"%ADPASSWORD%")==0)
+		if (bDecryptADPassword && strcmp(pszPassword,"%ADPASSWORD%")==0) // ISSUE#361
 		{
 			TRACE((TRACE_DEBUG,_F_,"%%ADPASSWORD%% giPwdProtection=%d",giPwdProtection));
 			pszADPassword=swCryptDecryptString(gszEncryptedADPwd,ghKey1);

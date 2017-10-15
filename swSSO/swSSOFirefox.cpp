@@ -295,7 +295,7 @@ static void DoDOMAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_FIREFOX *ptS
 			if ((*gptActions[ptSuivi->iAction].szPwdEncryptedValue!=0)) 
 			{
 				// char *pszPassword=swCryptDecryptString(gptActions[ptSuivi->iAction].szPwdEncryptedValue,ghKey1);
-				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue);
+				char *pszPassword=GetDecryptedPwd(gptActions[ptSuivi->iAction].szPwdEncryptedValue,TRUE);
 				if (pszPassword!=NULL) 
 				{
 					KBSim(ptSuivi->w,TRUE,200,pszPassword,TRUE);				
