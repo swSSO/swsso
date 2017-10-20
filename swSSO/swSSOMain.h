@@ -98,6 +98,7 @@ extern SID *gpSid;
 extern char *gpszRDN;
 extern char gszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
 extern char gszUserName[UNLEN+1];
+extern char gszUPN[UNLEN+1];
 
 extern int giTimer;
 

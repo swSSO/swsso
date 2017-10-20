@@ -55,6 +55,8 @@
 #include <Iads.h>
 #include <Adshlp.h>
 #include <TlHelp32.h>
+#define SECURITY_WIN32
+#include <Security.h>
 
 #include "resource.h"
 #include "swSSOTrace.h"

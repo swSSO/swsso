@@ -50,6 +50,7 @@ int GetUserDomainAndComputer(void)
 	SID_NAME_USE eUse;
 	DWORD lenComputerName;
 	DWORD lenUserName;
+	DWORD lenUPN;
 	int rc=-1;
 
 	// ComputerName
@@ -64,6 +65,13 @@ int GetUserDomainAndComputer(void)
 	if (!GetUserName(gszUserName,&lenUserName))
 	{
 		TRACE((TRACE_ERROR,_F_,"GetUserName(%d)",GetLastError())); goto end;
+	}
+	// UPN
+	lenUPN=sizeof(gszUPN); 
+	if (!GetUserNameEx(NameUserPrincipal,gszUPN,&lenUPN))
+	{
+		TRACE((TRACE_INFO,_F_,"GetUserNameEx(NameUserPrincipal)=%d",GetLastError())); 
+		*gszUPN=0;
 	}
 
 	// détermine le SID de l'utilisateur courant et récupère le nom de domaine
@@ -90,6 +98,7 @@ end:
 	return rc;
 
 }
+
 
 //-----------------------------------------------------------------------------
 // GetLastADPwdChange2()

@@ -161,7 +161,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Winhttp.lib;Wtsapi32.lib;Comctl32.lib;Crypt32.lib;Oleacc.lib;msxml2.lib;Adsiid.lib;Activeds.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Winhttp.lib;Wtsapi32.lib;Secur32.lib;Comctl32.lib;Crypt32.lib;Oleacc.lib;msxml2.lib;Adsiid.lib;Activeds.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>

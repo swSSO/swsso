@@ -40,7 +40,7 @@ HANDLE ghPipe=INVALID_HANDLE_VALUE;
 #define PWD_LEN 256
 #define USER_LEN 256	// limite officielle
 #define DOMAIN_LEN 256	// limite à moi...
-#define SID_LEN 128     // limite à moi
+#define UPN_LEN 256     // limite à moi
 
 typedef struct
 {
@@ -54,8 +54,8 @@ typedef struct
 	BOOL bPasswordOldStored;
 	// PSKS (Password Salt + Key Salt)
 	T_SALT Salts;
-	// SID
-	char szSID[SID_LEN];
+	// ISSUE#360
+	char szUPN[UPN_LEN];
 } T_USER_DATA;
 
 T_USER_DATA gUserData[100]; // max 100 user sur le poste de travail, après on explose...
@@ -121,54 +121,12 @@ end:
 	return rc;
 }
 
-//-----------------------------------------------------------------------------
-// swGetSID()
-//-----------------------------------------------------------------------------
-// Retourne l'index de l'utilisateur dans la table gUserData ou -1 si non trouvé
-// BufRequest est de la forme : xxxxxxxxx:domain(len=256):username(len=256):xxxxxxxxx
-// iOffset pointe ici -------------------^
-//-----------------------------------------------------------------------------
-char *swGetSID(char *pszUserName)
-{
-	TRACE((TRACE_ENTER,_F_,""));
-	DWORD cbRDN,cbSid;
-	SID_NAME_USE eUse;
-	SID *pSid=NULL;
-	char *pszRDN=NULL;
-	char *pszSid=NULL;
-	
-	cbSid=0;
-	cbRDN=0;
-	LookupAccountName(NULL,pszUserName,NULL,&cbSid,NULL,&cbRDN,&eUse); // pas de test d'erreur, car la fonction échoue forcément
-	if (GetLastError()!=ERROR_INSUFFICIENT_BUFFER)
-	{
-		TRACE((TRACE_ERROR,_F_,"LookupAccountName[1](%s)=%d",pszUserName,GetLastError()));
-		goto end;
-	}
-	pSid=(SID *)malloc(cbSid); if (pSid==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",cbSid)); goto end; }
-	pszRDN=(char *)malloc(cbRDN); if (pszRDN==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",cbRDN)); goto end; }
-	if(!LookupAccountName(NULL,pszUserName,pSid,&cbSid,pszRDN,&cbRDN,&eUse))
-	{
-		TRACE((TRACE_ERROR,_F_,"LookupAccountName[2](%s)=%d",pszUserName,GetLastError()));
-		goto end;
-	}
-	if (!ConvertSidToStringSid(pSid,&pszSid))
-	{
-		TRACE((TRACE_ERROR,_F_,"ConvertSidToStringSid()=%d",GetLastError()));
-		goto end;
-	}
-end:
-	if (pSid!=NULL) free(pSid);
-	if (pszRDN!=NULL) free(pszRDN);
-	TRACE((TRACE_LEAVE,_F_,"pszSid=%s",pszSid));
-	return pszSid;
-}
 
 //-----------------------------------------------------------------------------
 // swGetUserDataIndex()
 //-----------------------------------------------------------------------------
 // Retourne l'index de l'utilisateur dans la table gUserData ou -1 si non trouvé
-// BufRequest est de la forme : xxxxxxxxx:domain(len=256):username(len=256):xxxxxxxxx
+// BufRequest est de la forme : xxxxxxxxxdomain(len=256)username(len=256)upn(len=256)xxxxxxxxx
 // iOffset pointe ici -------------------^
 //-----------------------------------------------------------------------------
 int swGetUserDataIndex(const char *BufRequest,int iOffset)
@@ -176,25 +134,31 @@ int swGetUserDataIndex(const char *BufRequest,int iOffset)
 	TRACE((TRACE_ENTER,_F_,""));
 	int rc=-1;
 	int i;
-	char *pszUserName,*pszLogonDomainName;
+	char *pszUserName,*pszLogonDomainName,*pszUPN;
 	char szShortLogonDomainName[DOMAIN_LEN];
 	char *p;
-	char *pszSID=NULL;
+	char szEmptyString[1]="";
+	
 	pszLogonDomainName=(char*)BufRequest+iOffset;
-	pszUserName=(char*)BufRequest+iOffset+USER_LEN;
+	pszUserName=(char*)BufRequest+iOffset+DOMAIN_LEN;
+	pszUPN=szEmptyString;
+	if (memcmp(BufRequest,"V03:",4)==0) // on a en plus l'UPN
+	{
+		pszUPN=(char*)BufRequest+iOffset+DOMAIN_LEN+USER_LEN;
+	}
 
 	// ISSUE#360
-	TRACE((TRACE_DEBUG,_F_,"pszUserName=%s",pszUserName));
+	TRACE((TRACE_DEBUG,_F_,"Recherche    : szUserName=%s szLogonDomainName=%s szUPN=%s",pszUserName,pszLogonDomainName,pszUPN));
 	TRACE((TRACE_DEBUG,_F_,"LISTE DES %d UTILISATEURS CONNUS :",giMaxUserDataIndex));
 #ifdef TRACES_ACTIVEES
 	for (i=0;i<giMaxUserDataIndex;i++)
 	{
-		TRACE((TRACE_DEBUG,_F_,"gUserData[%d] : szUserName=%s SID=%s",i,gUserData[i].szUserName,gUserData[i].szSID));
+		TRACE((TRACE_DEBUG,_F_,"gUserData[%d] : szUserName=%s szLogonDomainName=%s szUPN=%s",i,gUserData[i].szUserName,gUserData[i].szLogonDomainName,gUserData[i].szUPN));
 	}
 #endif
 	for (i=0;i<giMaxUserDataIndex;i++)
 	{
-		TRACE((TRACE_DEBUG,_F_,"pszUserName=%s gUserData[%d] : szUserName=%s SID=%s",pszUserName,i,gUserData[i].szUserName,gUserData[i].szSID));
+		// Commence par rechercher par nom + domaine
 		// ISSUE#346
 		strcpy_s(szShortLogonDomainName,DOMAIN_LEN,gUserData[i].szLogonDomainName);
 		p=strchr(szShortLogonDomainName,'.');
@@ -204,31 +168,45 @@ int swGetUserDataIndex(const char *BufRequest,int iOffset)
 			(*gUserData[i].szLogonDomainName==0 || _stricmp(pszLogonDomainName,gUserData[i].szLogonDomainName)==0 || _stricmp(pszLogonDomainName,szShortLogonDomainName)==0)) // ISSUE#346
 		{
 			TRACE((TRACE_INFO,_F_,"Trouvé par son nom %s\\%s index %d",pszLogonDomainName,pszUserName,i));
+			if (*pszUPN!=0 && *gUserData[i].szUPN==0) // UPN fourni et non encore stocké
+			{
+				TRACE((TRACE_INFO,_F_,"On complete avec l'UPN fourni : %s",pszUPN));
+				strcpy_s(gUserData[i].szUPN,UPN_LEN,pszUPN);
+				CharUpper(gUserData[i].szUPN);
+			}
 			rc=i;
 			goto end;
 		}
 	}
-	if (rc==-1) // pas trouvé, recherche par SID
+	// pas trouvé... si on n'a pas d'UPN, on s'arrête là
+	if (*pszUPN==0) { TRACE((TRACE_ERROR,_F_,"Non trouvé par son nom %s\\%s et pas d'UPN fourni",pszLogonDomainName,pszUserName)); goto end; }
+	// nouvelle recherche sur l'UPN
+	for (i=0;i<giMaxUserDataIndex;i++)
 	{
-		pszSID=swGetSID(pszUserName);
-		if (pszSID==NULL) goto end;
-		for (i=0;i<giMaxUserDataIndex;i++)
+		if (_stricmp(pszUPN,gUserData[i].szUPN)==0)
 		{
-			TRACE((TRACE_DEBUG,_F_,"pszUserName=%s gUserData[%d] : szUserName=%s SID=%s",pszUserName,i,gUserData[i].szUserName,gUserData[i].szSID));
-			if (_stricmp(pszSID,gUserData[i].szSID)==0)
+			TRACE((TRACE_INFO,_F_,"Trouvé par son UPN %s index %d",pszUPN,i));
+			if (*pszUserName!=0)
 			{
-				TRACE((TRACE_INFO,_F_,"Trouvé par son SID, on va mettre à jour les infos Domaine et UserName"));
-				TRACE((TRACE_INFO,_F_,"Avant : gUserData[%d] : szLogonDomainName=%s szUserName=%s",i,gUserData[i].szLogonDomainName,gUserData[i].szUserName));
-				memcpy(gUserData[i].szLogonDomainName,pszLogonDomainName,DOMAIN_LEN);
-				memcpy(gUserData[i].szUserName,pszUserName,USER_LEN);
-				TRACE((TRACE_INFO,_F_,"Après : gUserData[%d] : szLogonDomainName=%s szUserName=%s",i,gUserData[i].szLogonDomainName,gUserData[i].szUserName));
- 				rc=i;
-				goto end;
+				TRACE((TRACE_INFO,_F_,"On complete avec le UserName fourni : %s",pszUserName));
+				strcpy_s(gUserData[i].szUPN,UPN_LEN,pszUserName);
+				CharUpper(gUserData[i].szUPN);
 			}
+			if (*pszLogonDomainName!=0)
+			{
+				TRACE((TRACE_INFO,_F_,"On complete avec le LogonDomainName fourni : %s",pszLogonDomainName));
+				strcpy_s(gUserData[i].szLogonDomainName,DOMAIN_LEN,pszLogonDomainName);
+				CharUpper(gUserData[i].szLogonDomainName);
+			}
+ 			rc=i;
+			goto end;
 		}
 	}
 end:
-	if (pszSID!=NULL) LocalFree(pszSID); 
+	if (rc!=-1)
+	{
+		TRACE((TRACE_DEBUG,_F_,"gUserData[%d] : szUserName=%s szLogonDomainName=%s szUPN=%s",rc,gUserData[rc].szUserName,gUserData[rc].szLogonDomainName,gUserData[rc].szUPN));		
+	}
 	TRACE((TRACE_LEAVE,_F_,"rc=0x%08lx",rc));
 	return rc;
 }
@@ -441,16 +419,20 @@ end:
 // swWaitForMessage()
 //-----------------------------------------------------------------------------
 // Attend un message et le traite. Commandes supportées :
+// v1.18+ (pour ISSUE#360) :
+// V03:PUTPASS:domain(256octets)username(256octets)UPN(256octets)password(256octets) (chiffré par CryptProtectMemory avec flag CRYPTPROTECTMEMORY_CROSS_PROCESS)
+// V03:PUTPSKS:domain(256octets)username(256octets)UPN(256octets)PwdSalt(64octets)KeySalt(64octets) > demande à SVC de stocker PwdSalt et KeySalt
+//                                                                                                  > et fait le matching domain\username vs UPN
 // 1.13+ :
 // V02:NEWVERS > demande si nouvelle version > retourne YES ou NO
 // 1.08+ :
 // V02:GETPASS:domain(256octets)username(256octets) > demande à SVC de fournir le mot de passe Windows (chiffré par PHKD)
 // 1.08- :
-// V02:PUTPASS:domain(256octets)username(256octets)password(256octets) (chiffré par CryptProtectMemory avec flag CRYPTPROTECTMEMORY_CROSS_PROCESS)
 // V02:GETPHKD:CUR:domain(256octets)username(256octets) > demande à SVC de fournir le KeyData courant
 // V02:GETPHKD:OLD:domain(256octets)username(256octets) > demande à SVC de fournir le KeyData précédent (si chgt de mdp par exemple)
 // V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets) > demande à SVC de stocker PwdSalt et KeySalt
 // Ne sont plus supportées :
+// V02:PUTPASS:domain(256octets)username(256octets)password(256octets) (chiffré par CryptProtectMemory avec flag CRYPTPROTECTMEMORY_CROSS_PROCESS)
 // V01:PUTPHKD:PwdHash(32octets)KeyData(32octets) > demande à SVC de stocker PwdHash et KeyData 
 // V01:PUTPASS:password(256octets)(chiffré par CryptProtectMemory avec flag CRYPTPROTECTMEMORY_SAME_LOGON)
 // V01:GETPHKD:CUR > demande à SVC de fournir le KeyData courant
@@ -462,7 +444,7 @@ end:
 int swWaitForMessage()
 {
 	int rc=-1;
-	char bufRequest[1024];
+	char bufRequest[1280];
 	char bufResponse[1024];
 	char szEventName[1024];
 	int lenResponse;
@@ -515,10 +497,10 @@ int swWaitForMessage()
 	}
 	else // Analyse la requête
 	{
-		if (memcmp(bufRequest,"V02:",4)==0)
+		if (memcmp(bufRequest,"V03:",4)==0)
 		{
 			//-------------------------------------------------------------------------------------------------------------
-			if (memcmp(bufRequest+4,"PUTPASS:",8)==0) // Format = V01:PUTPASS:domain(256octets)username(256octets)password(256 octets, chiffré)
+			if (memcmp(bufRequest+4,"PUTPASS:",8)==0) // Format = V03:PUTPASS:domain(256octets)username(256octets)UPN(256octets)password(256 octets, chiffré)
 			//-------------------------------------------------------------------------------------------------------------
 			{
 				// nouveau en 1.12B3 : regarde si l'appel vient de mpnotifier ou d'un module swsso autorisé par hash
@@ -529,36 +511,28 @@ int swWaitForMessage()
 				}
 				else
 				{
-					if (cbRead!=12+DOMAIN_LEN+USER_LEN+PWD_LEN)
+					if (cbRead!=12+DOMAIN_LEN+USER_LEN+UPN_LEN+PWD_LEN)
 					{
-						TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+DOMAIN_LEN+USER_LEN+PWD_LEN));
+						TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+DOMAIN_LEN+USER_LEN+UPN_LEN+PWD_LEN));
 						strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
 						lenResponse=strlen(bufResponse);
 					}
 					else
 					{
-						char szUserName[USER_LEN];
-						memcpy(szUserName,bufRequest+12+DOMAIN_LEN,USER_LEN);
-						CharUpper(szUserName);
 						iUserDataIndex=swGetUserDataIndex(bufRequest,12);
 						if (iUserDataIndex==-1) // utilisateur non connu, on le crée
 						{
-							char *pszSid=NULL;
-							TRACE((TRACE_INFO,_F_,"Utilisateur %s pas encore connu, on le crée",szUserName));
-							pszSid=swGetSID(szUserName);
+							TRACE((TRACE_INFO,_F_,"Utilisateur pas encore connu, on le crée"));
 							iUserDataIndex=giMaxUserDataIndex;
 							memcpy(gUserData[iUserDataIndex].szLogonDomainName,bufRequest+12,DOMAIN_LEN);
 							memcpy(gUserData[iUserDataIndex].szUserName,bufRequest+12+DOMAIN_LEN,USER_LEN);
+							memcpy(gUserData[iUserDataIndex].szUPN,bufRequest+12+DOMAIN_LEN+USER_LEN,UPN_LEN);
 							// ISSUE#247 : passage du username en majuscule pour éviter les pb de différences de casse (vu avec POA Sophos)
 							CharUpper(gUserData[iUserDataIndex].szUserName);
-							if (pszSid!=NULL) 
-							{
-								strcpy_s(gUserData[iUserDataIndex].szSID,SID_LEN,pszSid);
-								LocalFree(pszSid);
-							}
+							CharUpper(gUserData[iUserDataIndex].szUPN);
 							TRACE((TRACE_INFO,_F_,"gUserData[%d].szLogonDomainName=%s",iUserDataIndex,gUserData[iUserDataIndex].szLogonDomainName));
 							TRACE((TRACE_INFO,_F_,"gUserData[%d].szUserName=%s",iUserDataIndex,gUserData[iUserDataIndex].szUserName));
-							TRACE((TRACE_INFO,_F_,"gUserData[%d].szSID=%s",iUserDataIndex,gUserData[iUserDataIndex].szSID));
+							TRACE((TRACE_INFO,_F_,"gUserData[%d].szUPN=%s",iUserDataIndex,gUserData[iUserDataIndex].szUPN));
 							giMaxUserDataIndex++;
 						}
 						TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
@@ -591,19 +565,22 @@ int swWaitForMessage()
 							// Si swSSO est lancé, envoie un message pour signaler le nouveau mot de passe pour cet utilisateur
 							// ISSUE#346 - sprintf_s(szEventName,"Global\\swsso-pwdchange-%s-%s",gUserData[iUserDataIndex].szLogonDomainName,gUserData[iUserDataIndex].szUserName);
 							// ISSUE#360 - sprintf_s(szEventName,"Global\\swsso-pwdchange-%s",gUserData[iUserDataIndex].szUserName);
-							sprintf_s(szEventName,"Global\\swsso-pwdchange-%s",szUserName);
-							hEvent=OpenEvent(EVENT_MODIFY_STATE,FALSE,szEventName);
-							if (hEvent==NULL)
+							if (*gUserData[iUserDataIndex].szUserName!=0) // username non vide : on envoie l'evt, sinon ca veut dire que swSSO pas lancé donc pas d'event
 							{
-								TRACE((TRACE_ERROR,_F_,"swSSO pas lancé (OpenEvent(%s)=%ld)",szEventName,GetLastError()));
-							}
-							else
-							{
-								TRACE((TRACE_DEBUG,_F_,"hEvent=0x%08lx",hEvent));
-								brc=SetEvent(hEvent);
-								TRACE((TRACE_DEBUG,_F_,"SetEvent=%d",brc));
-								CloseHandle(hEvent);
-								hEvent=NULL;
+								sprintf_s(szEventName,"Global\\swsso-pwdchange-%s",gUserData[iUserDataIndex].szUserName);
+								hEvent=OpenEvent(EVENT_MODIFY_STATE,FALSE,szEventName);
+								if (hEvent==NULL)
+								{
+									TRACE((TRACE_ERROR,_F_,"swSSO pas lancé (OpenEvent(%s)=%ld)",szEventName,GetLastError()));
+								}
+								else
+								{
+									TRACE((TRACE_DEBUG,_F_,"hEvent=0x%08lx",hEvent));
+									brc=SetEvent(hEvent);
+									TRACE((TRACE_DEBUG,_F_,"SetEvent=%d",brc));
+									CloseHandle(hEvent);
+									hEvent=NULL;
+								}
 							}
 						}
 						// Réponse
@@ -613,7 +590,52 @@ int swWaitForMessage()
 				}
 			}
 			//-------------------------------------------------------------------------------------------------------------
-			else if (memcmp(bufRequest+4,"GETPHKD:",8)==0) // Format = V01:GETPHKD:CUR:domain(256octets)username(256octets) ou V01:GETPHKD:OLD:domain(256octets)username(256octets)
+			else if (memcmp(bufRequest+4,"PUTPSKS:",8)==0) // V03:PUTPSKS:domain(256octets)username(256octets)UPN(256octets)PwdSalt(64octets)KeySalt(64octets)
+			//-------------------------------------------------------------------------------------------------------------
+			{
+				if (cbRead!=12+DOMAIN_LEN+USER_LEN+UPN_LEN+PBKDF2_SALT_LEN*2)
+				{
+					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",12+DOMAIN_LEN+USER_LEN+UPN_LEN+PBKDF2_SALT_LEN*2));
+					strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
+					lenResponse=strlen(bufResponse);
+				}
+				else
+				{
+					iUserDataIndex=swGetUserDataIndex(bufRequest,12);
+					if (iUserDataIndex==-1) // utilisateur non connu, erreur !
+					{
+						TRACE((TRACE_ERROR,_F_,"Unknown user"));
+						strcpy_s(bufResponse,sizeof(bufResponse),"UNKNOWN_USER");
+						lenResponse=strlen(bufResponse);
+					}
+					else
+					{
+						// stocke les sels
+						memcpy(gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,bufRequest+12+DOMAIN_LEN+USER_LEN,PBKDF2_SALT_LEN);
+						memcpy(gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,PBKDF2_SALT_LEN);
+						gUserData[iUserDataIndex].Salts.bPBKDF2PwdSaltReady=TRUE;
+						gUserData[iUserDataIndex].Salts.bPBKDF2KeySaltReady=TRUE;
+						TRACE_BUFFER((TRACE_DEBUG,_F_,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,"gUserData[%d].Salts.bufPBKDF2PwdSalt",iUserDataIndex));
+						TRACE_BUFFER((TRACE_DEBUG,_F_,gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,"gUserData[%d].Salts.bufPBKDF2KeySalt",iUserDataIndex));
+						// Réponse
+						strcpy_s(bufResponse,sizeof(bufResponse),"OK");
+						lenResponse=strlen(bufResponse);
+					}	
+				}
+			}
+			//-------------------------------------------------------------------------------------------------------------
+			else
+			//-------------------------------------------------------------------------------------------------------------
+			{
+				TRACE((TRACE_ERROR,_F_,"Mot clé inconnu"));
+				strcpy_s(bufResponse,sizeof(bufResponse),"BADREQUEST");
+				lenResponse=strlen(bufResponse);
+			}
+		}
+		else if (memcmp(bufRequest,"V02:",4)==0)
+		{
+			//-------------------------------------------------------------------------------------------------------------
+			if (memcmp(bufRequest+4,"GETPHKD:",8)==0) // Format = V02:GETPHKD:CUR:domain(256octets)username(256octets) ou V01:GETPHKD:OLD:domain(256octets)username(256octets)
 			//-------------------------------------------------------------------------------------------------------------
 			{
 				// Vérifie que l'appelant est autorisé
@@ -685,12 +707,12 @@ int swWaitForMessage()
 				}
 			}
 			//-------------------------------------------------------------------------------------------------------------
-			else if (memcmp(bufRequest+4,"PUTPSKS:",8)==0) // V01:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
+			else if (memcmp(bufRequest+4,"PUTPSKS:",8)==0) // V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
 			//-------------------------------------------------------------------------------------------------------------
 			{
 				if (cbRead!=12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2)
 				{
-					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+PBKDF2_SALT_LEN*2));
+					TRACE((TRACE_ERROR,_F_,"cbRead=%ld, attendu %d",cbRead,12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2));
 					strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
 					lenResponse=strlen(bufResponse);
 				}
@@ -839,3 +861,45 @@ void swDestroyPipe(void)
 	if (ghPipe!=INVALID_HANDLE_VALUE) CloseHandle(ghPipe);
 	TRACE((TRACE_LEAVE,_F_,""));
 }
+
+#if 0
+//-----------------------------------------------------------------------------
+// swGetSID()
+//-----------------------------------------------------------------------------
+char *swGetSID(char *pszUserName)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	DWORD cbRDN,cbSid;
+	SID_NAME_USE eUse;
+	SID *pSid=NULL;
+	char *pszRDN=NULL;
+	char *pszSid=NULL;
+	
+	cbSid=0;
+	cbRDN=0;
+	LookupAccountName(NULL,pszUserName,NULL,&cbSid,NULL,&cbRDN,&eUse); // pas de test d'erreur, car la fonction échoue forcément
+	if (GetLastError()!=ERROR_INSUFFICIENT_BUFFER)
+	{
+		TRACE((TRACE_ERROR,_F_,"LookupAccountName[1](%s)=%d",pszUserName,GetLastError()));
+		goto end;
+	}
+	pSid=(SID *)malloc(cbSid); if (pSid==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",cbSid)); goto end; }
+	pszRDN=(char *)malloc(cbRDN); if (pszRDN==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",cbRDN)); goto end; }
+	if(!LookupAccountName(NULL,pszUserName,pSid,&cbSid,pszRDN,&cbRDN,&eUse))
+	{
+		TRACE((TRACE_ERROR,_F_,"LookupAccountName[2](%s)=%d",pszUserName,GetLastError()));
+		goto end;
+	}
+	if (!ConvertSidToStringSid(pSid,&pszSid))
+	{
+		TRACE((TRACE_ERROR,_F_,"ConvertSidToStringSid()=%d",GetLastError()));
+		goto end;
+	}
+end:
+	if (pSid!=NULL) free(pSid);
+	if (pszRDN!=NULL) free(pszRDN);
+	TRACE((TRACE_LEAVE,_F_,"pszSid=%s",pszSid));
+	return pszSid;
+}
+
+#endif

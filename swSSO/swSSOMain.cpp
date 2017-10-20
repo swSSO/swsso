@@ -112,6 +112,7 @@ SID *gpSid=NULL;
 char *gpszRDN=NULL;
 char gszComputerName[MAX_COMPUTERNAME_LENGTH+1]="";
 char gszUserName[UNLEN+1]="";
+char gszUPN[UNLEN+1]="";
 
 char gcszK1[]="11111111";
 

@@ -45,12 +45,12 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	UNICODE_STRING usUserName,usPassword,usLogonDomainName;
 	char szUserName[USER_LEN];
 	char bufPassword[PWD_LEN];
-	char bufRequest[1024];
+	char bufRequest[1280];
 	int lenRequest=0;
 	char szLogonDomainName[DOMAIN_LEN];
 	// int lenUserName;
 	int lenLogonDomainName;
-	// char *p=NULL;
+	char *p=NULL;
 	
 	// Récupération des authentifiants en fonction de la méthode d'authent
 	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
@@ -88,16 +88,11 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 		if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usLogonDomainName)=%d",GetLastError())); goto end; }
 		lenLogonDomainName=(int)strlen(szLogonDomainName);
 	}
+	TRACE((TRACE_DEBUG,_F_,"szLogonDomainName=%s",szLogonDomainName));
 	// utilisateur
 	ret=WideCharToMultiByte(CP_ACP,0,usUserName.Buffer,usUserName.Length/2,szUserName,sizeof(szUserName),NULL,NULL);
 	if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usUserName)=%d",GetLastError())); goto end; }
-	// ISSUE#346 : si utilisateur de forme SPN, on tronque pour ne garder que le username
-	// ISSUE#360 : ne tronque plus, on retrouve les utilisateurs par leur SID et le nom complet user@domaine est nécessaire pour faire le LookupAccountName
 	TRACE((TRACE_DEBUG,_F_,"szUserName=%s",szUserName));
-	// p=strchr(szUserName,'@');
-	// if (p!=NULL) *p=0;
-	// lenUserName=(int)strlen(szUserName);
-	// TRACE((TRACE_DEBUG,_F_,"szUserName (apres troncage eventuel)=%s",szUserName));
 	// mot de passe
 	TRACE((TRACE_DEBUG,_F_,"usPassword.MaximumLength=%d",usPassword.MaximumLength));
 	ret=WideCharToMultiByte(CP_ACP,0,usPassword.Buffer,usPassword.Length/2,bufPassword,sizeof(bufPassword),NULL,NULL);
@@ -112,14 +107,24 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	//             et à réception le service rechiffrera avec CRYPTPROTECTMEMORY_SAME_PROCESS
 	if (swProtectMemory(bufPassword,sizeof(bufPassword),CRYPTPROTECTMEMORY_CROSS_PROCESS)!=0) goto end;
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)bufPassword,PWD_LEN,"bufPassword"));
-	// Construit la requête à envoyer à swSSOSVC : V02:PUTPASS:domain(256octets)username(256octets)password(256octets)
+	// Construit la requête à envoyer à swSSOSVC : 
+	// Avant     : V02:PUTPASS:domain(256octets)username(256octets)password(256octets)
+	// ISSUE#360 : V03:PUTPASS:domain(256octets)username(256octets)UPN(256octets)password(256octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:PUTPASS:",12);
-	memcpy(bufRequest+12,szLogonDomainName,strlen(szLogonDomainName)+1);
-	memcpy(bufRequest+12+DOMAIN_LEN,szUserName,strlen(szUserName)+1);
-	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,bufPassword,PWD_LEN);
-	lenRequest=12+DOMAIN_LEN+USER_LEN+PWD_LEN;
+	memcpy(bufRequest,"V03:PUTPASS:",12);
+	memcpy(bufRequest+12,szLogonDomainName,lenLogonDomainName+1);
+	p=strchr(szUserName,'@');
+	if (p!=NULL && lenLogonDomainName==0) // ISSUE#360 : domaine vide et @ dans le username, c'est un UPN
+	{
+		memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,szUserName,strlen(szUserName)+1);
+	}
+	else // sinon c'est un samaccountname
+	{
+		memcpy(bufRequest+12+DOMAIN_LEN,szUserName,strlen(szUserName)+1);
+	}
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN*2,bufPassword,PWD_LEN);
+	lenRequest=12+DOMAIN_LEN+USER_LEN*2+PWD_LEN;
 
 	// Envoie la requête
 	rc=swPipeWrite(bufRequest,lenRequest);

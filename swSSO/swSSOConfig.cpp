@@ -1897,7 +1897,7 @@ int InitWindowsSSO(void)
 	int rc=-1;
 	
 	BYTE AESKeyData[AES256_KEY_LEN];
-	char bufRequest[1024];
+	char bufRequest[1280];
 	char bufResponse[1024];
 	DWORD dwLenResponse;
 	char szPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
@@ -1905,15 +1905,16 @@ int InitWindowsSSO(void)
 	// Génère les sels PSKS
 	if (swGenPBKDF2Salt()!=0) goto end;
 
-	// Envoie les sels à swSSOSVC : V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
+	// Envoie les sels à swSSOSVC : V03:PUTPSKS:domain(256octets)username(256octets)UPN(256octets)PwdSalt(64octets)KeySalt(64octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:PUTPSKS:",12);
+	memcpy(bufRequest,"V03:PUTPSKS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
-	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
-	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gszUPN,strlen(gszUPN)+1);
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN*2,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN*2+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
+	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN*2+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
 	}
@@ -1963,7 +1964,7 @@ int MigrationWindowsSSO(void)
 	int rc=-1;
 	
 	BYTE AESKeyData[AES256_KEY_LEN];
-	char bufRequest[1024];
+	char bufRequest[1280];
 	char bufResponse[1024];
 	DWORD dwLenResponse;
 	char szKey[20+MAX_COMPUTERNAME_LENGTH+UNLEN+1]="";
@@ -1971,15 +1972,16 @@ int MigrationWindowsSSO(void)
 	// Lecture des sels
 	if (swReadPBKDF2Salt()!=0) goto end;
 
-	// Envoie les sels à swSSOSVC : V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
+	// Envoie les sels à swSSOSVC : V03:PUTPSKS:domain(256octets)username(256octets)UPN(256octets)PwdSalt(64octets)KeySalt(64octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:PUTPSKS:",12);
+	memcpy(bufRequest,"V03:PUTPSKS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
-	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
-	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gszUPN,strlen(gszUPN)+1);
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN*2,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN*2+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
+	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN*2+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
 	}
@@ -2052,15 +2054,16 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	// Lecture des sels
 	if (swReadPBKDF2Salt()!=0) goto end;
 
-	// Envoie les sels à swSSOSVC : V02:PUTPSKS:domain(256octets)username(256octets)PwdSalt(64octets)KeySalt(64octets)
+	// Envoie les sels à swSSOSVC : V03:PUTPSKS:domain(256octets)username(256octets)UPN(256octets)PwdSalt(64octets)KeySalt(64octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:PUTPSKS:",12);
+	memcpy(bufRequest,"V03:PUTPSKS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
-	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
-	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gszUPN,strlen(gszUPN)+1);
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN*2,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN);
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN*2+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
+	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN*2+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
 		bMustReboot=TRUE;
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
