@@ -101,7 +101,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Winhttp.lib;Wtsapi32.lib;Comctl32.lib;Crypt32.lib;Oleacc.lib;msxml2.lib;Adsiid.lib;Activeds.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Secur32.lib;Winhttp.lib;Wtsapi32.lib;Comctl32.lib;Crypt32.lib;Oleacc.lib;msxml2.lib;Adsiid.lib;Activeds.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>

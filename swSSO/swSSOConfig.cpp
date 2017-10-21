@@ -2044,7 +2044,7 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	BYTE AESKeyData[AES256_KEY_LEN];
-	char bufRequest[1024];
+	char bufRequest[1280];
 	char bufResponse[1024];
 	DWORD dwLenResponse;
 	int rc=-1;
@@ -2099,7 +2099,7 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 		// ISSUE#156 : pour y voir plus clair dans les traces
 		SecureZeroMemory(bufRequest,sizeof(bufRequest));
 		memcpy(bufRequest,"V02:GETPHKD:OLD:",16);
-		memcpy(bufRequest+16,gpszRDN,DOMAIN_LEN);
+		memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
 		memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,USER_LEN);
 		if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 		{

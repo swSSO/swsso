@@ -537,8 +537,8 @@ int swWaitForMessage()
 						}
 						TRACE((TRACE_INFO,_F_,"iUserDataIndex=%d",iUserDataIndex));
 						// extrait le mdp de la requête dans une variable temporaire effacée de manière sécurisée à la fin de la fonction
-						memcpy(tmpBufPwd,bufRequest+12+DOMAIN_LEN+USER_LEN,PWD_LEN);
-						// ISSUE#156 : on ne calcule plus le PKHD tout de suite, on le fait maintenant systématiquement quand on recoit un GETPKHD
+						memcpy(tmpBufPwd,bufRequest+12+DOMAIN_LEN+USER_LEN+UPN_LEN,PWD_LEN);
+						// ISSUE#156 : on ne calcule plus le PKHD tout de suite, on le fait maintenant systématiquement quand on recoit un GETPHKD
 						//             comme ça on est sûr d'être à jour à la fois du mot de passe et des sels. Et ça simplifie le code.
 						// ISSUE#156 : on déchiffre le mot de passe reçu qui est chiffré avec CRYPTPROTECTMEMORY_CROSS_PROCESS
 						//             pour le rechiffrer avec CRYPTPROTECTMEMORY_SAME_PROCESS
@@ -577,7 +577,7 @@ int swWaitForMessage()
 								{
 									TRACE((TRACE_DEBUG,_F_,"hEvent=0x%08lx",hEvent));
 									brc=SetEvent(hEvent);
-									TRACE((TRACE_DEBUG,_F_,"SetEvent=%d",brc));
+									TRACE((TRACE_DEBUG,_F_,"SetEvent(%s)=%d",szEventName,brc));
 									CloseHandle(hEvent);
 									hEvent=NULL;
 								}
@@ -611,8 +611,8 @@ int swWaitForMessage()
 					else
 					{
 						// stocke les sels
-						memcpy(gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,bufRequest+12+DOMAIN_LEN+USER_LEN,PBKDF2_SALT_LEN);
-						memcpy(gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,bufRequest+12+DOMAIN_LEN+USER_LEN+PBKDF2_SALT_LEN,PBKDF2_SALT_LEN);
+						memcpy(gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,bufRequest+12+DOMAIN_LEN+USER_LEN+UPN_LEN,PBKDF2_SALT_LEN);
+						memcpy(gUserData[iUserDataIndex].Salts.bufPBKDF2KeySalt,bufRequest+12+DOMAIN_LEN+USER_LEN+UPN_LEN+PBKDF2_SALT_LEN,PBKDF2_SALT_LEN);
 						gUserData[iUserDataIndex].Salts.bPBKDF2PwdSaltReady=TRUE;
 						gUserData[iUserDataIndex].Salts.bPBKDF2KeySaltReady=TRUE;
 						TRACE_BUFFER((TRACE_DEBUG,_F_,gUserData[iUserDataIndex].Salts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,"gUserData[%d].Salts.bufPBKDF2PwdSalt",iUserDataIndex));
@@ -635,7 +635,7 @@ int swWaitForMessage()
 		else if (memcmp(bufRequest,"V02:",4)==0)
 		{
 			//-------------------------------------------------------------------------------------------------------------
-			if (memcmp(bufRequest+4,"GETPHKD:",8)==0) // Format = V02:GETPHKD:CUR:domain(256octets)username(256octets) ou V01:GETPHKD:OLD:domain(256octets)username(256octets)
+			if (memcmp(bufRequest+4,"GETPHKD:",8)==0) // Format = V02:GETPHKD:CUR:domain(256octets)username(256octets) ou V02:GETPHKD:OLD:domain(256octets)username(256octets)
 			//-------------------------------------------------------------------------------------------------------------
 			{
 				// Vérifie que l'appelant est autorisé
