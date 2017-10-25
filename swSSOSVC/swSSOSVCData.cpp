@@ -189,8 +189,8 @@ int swGetUserDataIndex(const char *BufRequest,int iOffset)
 			if (*pszUserName!=0)
 			{
 				TRACE((TRACE_INFO,_F_,"On complete avec le UserName fourni : %s",pszUserName));
-				strcpy_s(gUserData[i].szUPN,UPN_LEN,pszUserName);
-				CharUpper(gUserData[i].szUPN);
+				strcpy_s(gUserData[i].szUserName,UPN_LEN,pszUserName);
+				CharUpper(gUserData[i].szUserName);
 			}
 			if (*pszLogonDomainName!=0)
 			{
