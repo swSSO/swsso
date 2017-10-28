@@ -58,7 +58,7 @@ typedef struct
 	char szUPN[UPN_LEN];
 } T_USER_DATA;
 
-T_USER_DATA gUserData[100]; // max 100 user sur le poste de travail, après on explose...
+T_USER_DATA gUserData[200]; // ISSUE#368 : max 200 users au lieu de 100 (pour environnements virtualisés)
 int giMaxUserDataIndex=0;
 #define REGKEY_SVC					"SOFTWARE\\swSSO\\SVC"
 #define REGVALUE_SWSSO_CLIENT		"swSSOClient" 
