@@ -98,7 +98,7 @@ void WINAPI ServiceMain()
 
 	ghSvcStopEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
                         
-	swInitData();
+	swServiceInit();
 	if (swCryptInit()!=0) goto end;
 	if (swCreatePipe()!=0) goto end;
 	if (swProtectMemoryInit()!=0) goto end;
@@ -143,6 +143,7 @@ void WINAPI ServiceMain()
     }
 end:
 	swProtectMemoryTerm();
+	swServiceTerm();
 	swCryptTerm();
 	if (ghSvcStopEvent!=NULL) CloseHandle(ghSvcStopEvent);
 	TRACE((TRACE_LEAVE,_F_,""));

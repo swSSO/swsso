@@ -48,7 +48,8 @@ int Install(void);
 int Uninstall(void);
 
 // swSSOSVCData
-void swInitData(void);
+void swServiceInit(void);
+void swServiceTerm(void);
 int swWaitForMessage(void);
 int swCreatePipe(void);
 void swDestroyPipe(void);

@@ -70,15 +70,40 @@ char gszHash_swSSOMigration[256+1];
 
 BOOL gbNewVersion=FALSE; // ISSUE#307 : le flag passe à TRUE lorsque swSSOMigration appelle PUTPASS. Ensuite, il est retourné à swSSO.exe sur appel de
 
+// ISSUE#369 : chargement dynamique de la fonction GetNamedPipeClientProcessId qui n'est disponible que sur Vista/2008+
+typedef BOOL (WINAPI *GETNAMEDPIPECLIENTPROCESSID)(HANDLE Pipe,PULONG ClientProcessId);
+HMODULE ghLibKernel32=NULL;
+GETNAMEDPIPECLIENTPROCESSID glpfnGetNamedPipeClientProcessId=NULL;
+
 //-----------------------------------------------------------------------------
-// swInitData()
+// swServiceInit()
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-void swInitData(void)
+void swServiceInit(void)
 {
 	TRACE((TRACE_ENTER,_F_,""));
 	SecureZeroMemory(gUserData,sizeof(gUserData));
+	// ISSUE#369
+	ghLibKernel32=LoadLibrary("Kernel32.dll");
+	if (ghLibKernel32==NULL) { TRACE((TRACE_ERROR,_F_,"Kernel32(Crypt32.dll)=%ld",GetLastError())); goto end; }
+	glpfnGetNamedPipeClientProcessId=(GETNAMEDPIPECLIENTPROCESSID)GetProcAddress(ghLibKernel32,"GetNamedPipeClientProcessId");
+	TRACE((TRACE_DEBUG,_F_,"glpfnGetNamedPipeClientProcessId=%08lx",glpfnGetNamedPipeClientProcessId));
+end:
+	TRACE((TRACE_LEAVE,_F_,""));
+}
+
+//-----------------------------------------------------------------------------
+// swServiceTerm()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void swServiceTerm(void)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	// ISSUE#369
+	glpfnGetNamedPipeClientProcessId=NULL;
+	if (ghLibKernel32!=NULL) { FreeLibrary(ghLibKernel32); ghLibKernel32=NULL; }
 	TRACE((TRACE_LEAVE,_F_,""));
 }
 
