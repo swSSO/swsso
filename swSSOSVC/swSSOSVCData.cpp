@@ -88,7 +88,7 @@ void swServiceInit(void)
 	ghLibKernel32=LoadLibrary("Kernel32.dll");
 	if (ghLibKernel32==NULL) { TRACE((TRACE_ERROR,_F_,"Kernel32(Crypt32.dll)=%ld",GetLastError())); goto end; }
 	glpfnGetNamedPipeClientProcessId=(GETNAMEDPIPECLIENTPROCESSID)GetProcAddress(ghLibKernel32,"GetNamedPipeClientProcessId");
-	TRACE((TRACE_DEBUG,_F_,"glpfnGetNamedPipeClientProcessId=%08lx",glpfnGetNamedPipeClientProcessId));
+	TRACE((TRACE_DEBUG,_F_,"glpfnGetNamedPipeClientProcessId=0x%08lx",glpfnGetNamedPipeClientProcessId));
 end:
 	TRACE((TRACE_LEAVE,_F_,""));
 }
@@ -349,7 +349,9 @@ BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 	char szCallingProcess[MAX_PATH];
 	unsigned char bufHashValue[32]; // SHA-256 = 32 octets
 	char szBufHashValue[32*2+1]; // hash en hexadecimal
-	
+
+	if (ulClientProcessId==0xFFFFFFFF) { TRACE((TRACE_INFO,_F_,"ulClientProcessId=0xFFFFFFFF")); rc=TRUE; goto end; }
+
 	// Récupère le chemin complet du process
 	hCallingProcess=OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ulClientProcessId);
 	if (hCallingProcess==NULL) { TRACE((TRACE_ERROR,_F_,"OpenProcess(%d)=%d",ulClientProcessId,GetLastError())); goto end; }
@@ -404,6 +406,8 @@ BOOL IsCallingProcessMPNotifier(unsigned long ulClientProcessId)
 	char szSystemDirectory[MAX_PATH];		  // c:\windows\system32
 	char szAllowedName[MAX_PATH];			  // \windows\system32\mpnotify.exe
 	DWORD len,lenAllowedName,lenCallingProcessImageName;
+
+	if (ulClientProcessId==0xFFFFFFFF) { TRACE((TRACE_INFO,_F_,"ulClientProcessId=0xFFFFFFFF")); rc=TRUE; goto end; }
 
 	// Récupère le chemin complet du process
 	hCallingProcess=OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ulClientProcessId);
@@ -503,8 +507,15 @@ int swWaitForMessage()
 	}
 
 	// Récupère le processid du process connecté au pipe
-	brc=GetNamedPipeClientProcessId(ghPipe,&ulClientProcessId);
-	if (!brc) {	TRACE((TRACE_ERROR,_F_,"GetNamedPipeClientProcessId()=%d",GetLastError())); goto end; }
+	if (glpfnGetNamedPipeClientProcessId!=NULL)
+	{
+		brc=glpfnGetNamedPipeClientProcessId(ghPipe,&ulClientProcessId);
+		if (!brc) {	TRACE((TRACE_ERROR,_F_,"glpfnGetNamedPipeClientProcessId()=%d",GetLastError())); goto end; }
+	}
+	else
+	{
+		ulClientProcessId=0xFFFFFFFF;
+	}
 	TRACE((TRACE_INFO,_F_,"ulClientProcessId=%ld",ulClientProcessId));
 
 	// Lit la requête
