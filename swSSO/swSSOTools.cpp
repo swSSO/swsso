@@ -2393,3 +2393,36 @@ end:
   if (hProcess!=NULL) CloseHandle(hProcess);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
+
+//-----------------------------------------------------------------------------
+// GenerateNewPassword()
+//-----------------------------------------------------------------------------
+// Génère un nouveau mot de passe en fonction de la politique configurée en base de registre
+//-----------------------------------------------------------------------------
+// [in] pszPolicy : chaine de type %RANDOMxx%, où xx est la référence de la politique de mot de passe en base de registre
+// [out] pszNewPassword
+//-----------------------------------------------------------------------------
+int GenerateNewPassword(char *pszNewPassword,char *pszPolicy)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szPolicyId[2+1];
+	int iPolicyId=0;
+
+	// Récupère l'identifiant de la politique de mot de passe à appliquer
+	if (strlen(pszPolicy)!=strlen("%RANDOMxx%")) { TRACE((TRACE_ERROR,_F_,"Format politique incorrect : %s",pszPolicy)); goto end; }
+	szPolicyId[0]=pszPolicy[7];
+	szPolicyId[1]=pszPolicy[8];
+	szPolicyId[2]=0;
+	iPolicyId=atoi(szPolicyId);
+	if (iPolicyId<=0) { TRACE((TRACE_ERROR,_F_,"Identifiant politique incorrect : %s",szPolicyId)); goto end; }
+	// Vérifie que la politique est bien renseignée en base de registre
+	if (!gptNewPasswordPolicies[iPolicyId].isDefined) { TRACE((TRACE_ERROR,_F_,"Politique %d non configurée en base de registre",szPolicyId)); goto end; }
+	
+	swGenerateRandomPwd(pszNewPassword,gptNewPasswordPolicies[iPolicyId].MaxLength,PWDTYPE_ALPHA|PWDTYPE_NUM);
+
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}

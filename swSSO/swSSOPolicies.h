@@ -391,6 +391,7 @@ extern char gszPastePwd_Text[];
 // FONCTIONS PUBLIQUES
 void LoadPolicies(void);
 void LoadGlobalOrDomainPolicies(char *pcszDomain);
+void LoadNewPasswordPolicies(void);
 BOOL IsPasswordPolicyCompliant(const char *szPwd);
 
 //-----------------------------------------------------------------------------
@@ -401,3 +402,33 @@ BOOL IsPasswordPolicyCompliant(const char *szPwd);
 #define MAX_COLORS			25   
 extern COLORREF gtabPwdGroupColors[MAX_COLORS];
 extern int		giNbPwdGroupColors;
+
+//-----------------------------------------------------------------------------
+#define REGKEY_NEW_PASSWORD_POLICY "SOFTWARE\\swSSO\\NewPasswordPolicies\\%02d"
+//-----------------------------------------------------------------------------
+#define REGVALUE_NEW_PASSWORD_POLICY_MINLENGTH					"MinLength"
+#define REGVALUE_NEW_PASSWORD_POLICY_MAXLENGTH					"MaxLength"
+#define REGVALUE_NEW_PASSWORD_POLICY_MINUPPERCASE				"MinUpperCase"
+#define REGVALUE_NEW_PASSWORD_POLICY_MINLOWERCASE				"MinLowerCase"
+#define REGVALUE_NEW_PASSWORD_POLICY_MINNUMBERS					"MinNumbers"
+#define REGVALUE_NEW_PASSWORD_POLICY_MINSPECIALCHARS			"MinSpecialChars"
+#define REGVALUE_NEW_PASSWORD_POLICY_MAXCOMMONCHARS				"MaxCommonChars"
+#define REGVALUE_NEW_PASSWORD_POLICY_MAXCONSECUTIVECOMMONCHARS	"MaxConsecutiveCommonChars"
+#define REGVALUE_NEW_PASSWORD_POLICY_IDMAXCOMMONCHARS			"IdMaxCommonChars"
+
+typedef struct
+{
+	BOOL isDefined;
+	int MinLength;
+	int MaxLength;
+	int MinUpperCase;
+	int MinLowerCase;
+	int MinNumbers;
+	int MinSpecialsChars;
+	int MaxCommonChars;
+	int MaxConsecutiveCommonChars;
+	int IdMaxCommonChars;
+
+} T_NEW_PASSWORD_POLICY;
+
+extern T_NEW_PASSWORD_POLICY gptNewPasswordPolicies[];

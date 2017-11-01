@@ -214,6 +214,9 @@ int giNbPwdGroupColors;
 
 char gszPastePwd_Text[100];
 
+// REGKEY_REGKEY_NEW_PASSWORD_POLICY
+T_NEW_PASSWORD_POLICY gptNewPasswordPolicies[100];
+
 //-----------------------------------------------------------------------------
 // LoadPolicies()
 //-----------------------------------------------------------------------------
@@ -863,6 +866,11 @@ void LoadPolicies(void)
 suite:;
 	}
 	giNbPwdGroupColors=max(giNbPwdGroupColors,5);
+	//--------------------------------------------------------------
+	// NEW PASSWORD POLICY
+	//--------------------------------------------------------------
+	LoadNewPasswordPolicies();
+	
 #ifdef TRACES_ACTIVEES
 	int i;
 	if (gbAdmin)
@@ -1029,6 +1037,74 @@ end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
+//-----------------------------------------------------------------------------
+// LoadNewPasswordPolicies()
+//-----------------------------------------------------------------------------
+// Charge les politiques de mot de passe 
+//-----------------------------------------------------------------------------
+void LoadNewPasswordPolicies()
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc;
+	HKEY hKey=NULL;
+	char szKey[128+1];
+	DWORD dwValue,dwValueSize,dwValueType;
+	int i;
+
+	for (i=1;i<100;i++)
+	{
+		sprintf_s(szKey,sizeof(szKey),REGKEY_NEW_PASSWORD_POLICY,i);
+		rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,szKey,0,KEY_READ,&hKey);
+		if (rc==ERROR_SUCCESS)
+		{
+			TRACE((TRACE_INFO,_F_,"Lecture NewPasswordPolicy(%d)",i));
+			gptNewPasswordPolicies[i].isDefined=TRUE;
+		
+			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MINLENGTH,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MinLength=(BOOL)dwValue; 
+
+			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MAXLENGTH,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MaxLength=(BOOL)dwValue; 
+
+			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MINUPPERCASE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MinUpperCase=(BOOL)dwValue; 
+
+			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MINLOWERCASE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MinLowerCase=(BOOL)dwValue; 
+
+			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MINNUMBERS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MinNumbers=(BOOL)dwValue; 
+
+			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MINSPECIALCHARS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MinSpecialsChars=(BOOL)dwValue; 
+
+			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MAXCOMMONCHARS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MaxCommonChars=(BOOL)dwValue; 
+
+			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MAXCONSECUTIVECOMMONCHARS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MaxConsecutiveCommonChars=(BOOL)dwValue; 
+
+			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_IDMAXCOMMONCHARS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].IdMaxCommonChars=(BOOL)dwValue; 
+
+			RegCloseKey(hKey);
+		}
+		else
+		{
+			gptNewPasswordPolicies[i].isDefined=FALSE;
+		}
+	}
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
 //-----------------------------------------------------------------------------
 // LoadGlobalOrDomainPolicies()
 //-----------------------------------------------------------------------------

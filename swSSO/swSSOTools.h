@@ -132,6 +132,8 @@ int CheckIniHash();
 BOOL CheckIfQuitMessage(UINT msg);
 void KillswSSO(void);
 
+int GenerateNewPassword(char *pszNewPassword,char *pszPolicy);
+
 // comme RESEDIT est un peu merdique et me change la taille du séparateur quand il a envie
 // cette macro (à positionner dans WM_INITDIALOG) le replace correctement !
 #define MACRO_SET_SEPARATOR { RECT rectSeparator; GetClientRect(w,&rectSeparator); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,50,rectSeparator.right+1,2,FALSE); }
