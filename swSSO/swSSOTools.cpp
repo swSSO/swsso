@@ -2394,6 +2394,11 @@ end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
+const char gcszUpperCase[]="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const char gcszLowerCase[]="abcdefghijklmnopqrstuvwxyz";
+const char gcszNumbers[]="1234567890";
+const char gcszSpecialChars[]="&'(-_)=+}]{[,?;.:/!*$";
+
 //-----------------------------------------------------------------------------
 // GenerateNewPassword()
 //-----------------------------------------------------------------------------
@@ -2408,6 +2413,16 @@ int GenerateNewPassword(char *pszNewPassword,char *pszPolicy)
 	int rc=-1;
 	char szPolicyId[2+1];
 	int iPolicyId=0;
+	char szCharSet[100]="";
+	int tiCountCharSet[100];
+	int iLenCharSet=0;
+	int i;
+	BYTE alea;
+	int iPwdLen;
+	BYTE *pBuf=NULL;
+	BOOL bNewPasswordCompliant=FALSE;
+	int iIndexCharSet;
+	int iNbConsecutiveChars;
 
 	// Récupère l'identifiant de la politique de mot de passe à appliquer
 	if (strlen(pszPolicy)!=strlen("%RANDOMxx%")) { TRACE((TRACE_ERROR,_F_,"Format politique incorrect : %s",pszPolicy)); goto end; }
@@ -2418,11 +2433,66 @@ int GenerateNewPassword(char *pszNewPassword,char *pszPolicy)
 	if (iPolicyId<=0) { TRACE((TRACE_ERROR,_F_,"Identifiant politique incorrect : %s",szPolicyId)); goto end; }
 	// Vérifie que la politique est bien renseignée en base de registre
 	if (!gptNewPasswordPolicies[iPolicyId].isDefined) { TRACE((TRACE_ERROR,_F_,"Politique %d non configurée en base de registre",szPolicyId)); goto end; }
-	
-	swGenerateRandomPwd(pszNewPassword,gptNewPasswordPolicies[iPolicyId].MaxLength,PWDTYPE_ALPHA|PWDTYPE_NUM);
-
+	// Constitue le jeu de caractères
+	if (gptNewPasswordPolicies[iPolicyId].MinUpperCase>0) strcat_s(szCharSet,sizeof(szCharSet),gcszUpperCase); 
+	if (gptNewPasswordPolicies[iPolicyId].MinLowerCase>0) strcat_s(szCharSet,sizeof(szCharSet),gcszLowerCase); 
+	if (gptNewPasswordPolicies[iPolicyId].MinNumbers>0) strcat_s(szCharSet,sizeof(szCharSet),gcszNumbers); 
+	if (gptNewPasswordPolicies[iPolicyId].MinSpecialChars>0) strcat_s(szCharSet,sizeof(szCharSet),gcszSpecialChars);
+	iLenCharSet=strlen(szCharSet);
+	TRACE((TRACE_DEBUG,_F_,"szCharSet=%s",szCharSet));
+	// Tire au sort la longueur du mot de passe
+	if (!CryptGenRandom(ghProv,1,&alea)) { TRACE((TRACE_ERROR,_F_,"CryptGenRandom()=0x%08lx",GetLastError())); goto end; }
+	iPwdLen=gptNewPasswordPolicies[iPolicyId].MinLength+(alea%(gptNewPasswordPolicies[iPolicyId].MaxLength-gptNewPasswordPolicies[iPolicyId].MinLength+1));
+	TRACE((TRACE_DEBUG,_F_,"iPwdLen=%d",iPwdLen));
+	// Construit le mot de passe
+	pBuf=(BYTE*)malloc(iPwdLen);
+	if (pBuf==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",iPwdLen)); goto end; }
+	// réessaie jusqu'à trouver un mot de passe conforme à la politique
+	while (!bNewPasswordCompliant)
+	{
+		// génère l'aléa
+		if (!CryptGenRandom(ghProv,iPwdLen,pBuf)) { TRACE((TRACE_ERROR,_F_,"CryptGenRandom()=0x%08lx",GetLastError())); goto end; }
+		// reset des compteurs de doublons
+		SecureZeroMemory(&tiCountCharSet,sizeof(tiCountCharSet));
+		iNbConsecutiveChars=0;
+		// remplit le mot de passe
+		for (i=0;i<iPwdLen;i++)	
+		{
+			iIndexCharSet=pBuf[i]%iLenCharSet;
+			// vérifie que le nombre de caractères identiques consécutifs n'est pas dépassé
+			if (i>0 && pszNewPassword[i-1]==szCharSet[iIndexCharSet])
+			{
+				iNbConsecutiveChars++;
+				if (iNbConsecutiveChars>gptNewPasswordPolicies[iPolicyId].MaxConsecutiveCommonChars)
+				{
+					iIndexCharSet++;
+					if (iIndexCharSet==iLenCharSet) iIndexCharSet=0;
+				}			
+			}
+			// vérifie que le nombre total de caractères identiques n'est pas dépassé
+			while (tiCountCharSet[iIndexCharSet] >= gptNewPasswordPolicies[iPolicyId].MaxCommonChars) 
+			{
+				iIndexCharSet++;
+				if (iIndexCharSet==iLenCharSet) iIndexCharSet=0;
+			}
+			tiCountCharSet[iIndexCharSet]++;
+			pszNewPassword[i]=szCharSet[iIndexCharSet];
+		}
+		pszNewPassword[iPwdLen]=0;
+		// vérifie la conformité à la politique
+		bNewPasswordCompliant=TRUE;
+		if (GetNbCharsInString(pszNewPassword,SEARCHTYPE_UPPERCASE)<gptNewPasswordPolicies[iPolicyId].MinUpperCase) bNewPasswordCompliant=FALSE;
+		if (GetNbCharsInString(pszNewPassword,SEARCHTYPE_LOWERCASE)<gptNewPasswordPolicies[iPolicyId].MinLowerCase) bNewPasswordCompliant=FALSE;
+		if (GetNbCharsInString(pszNewPassword,SEARCHTYPE_NUMBERS)<gptNewPasswordPolicies[iPolicyId].MinNumbers) bNewPasswordCompliant=FALSE;
+		if (GetNbCharsInString(pszNewPassword,SEARCHTYPE_SPECIALCHARS)<gptNewPasswordPolicies[iPolicyId].MinSpecialChars) bNewPasswordCompliant=FALSE;
+		if (gptNewPasswordPolicies[iPolicyId].IdMaxCommonChars>0)
+		{
+			if (!CheckCommonChars(pszNewPassword,gszUserName,gptNewPasswordPolicies[iPolicyId].IdMaxCommonChars)) bNewPasswordCompliant=FALSE;
+		}
+	}
 	rc=0;
 end:
+	if (pBuf!=NULL) free(pBuf);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }

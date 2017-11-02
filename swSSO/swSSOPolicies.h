@@ -393,6 +393,13 @@ void LoadPolicies(void);
 void LoadGlobalOrDomainPolicies(char *pcszDomain);
 void LoadNewPasswordPolicies(void);
 BOOL IsPasswordPolicyCompliant(const char *szPwd);
+#define SEARCHTYPE_LETTERS		1
+#define SEARCHTYPE_UPPERCASE	2
+#define SEARCHTYPE_LOWERCASE	3
+#define SEARCHTYPE_NUMBERS		4
+#define SEARCHTYPE_SPECIALCHARS	5
+int GetNbCharsInString(const char *s,int iSearchType);
+BOOL CheckCommonChars(const char *szPwd,const char *szUserName,int iPwdPolicy_IdMaxCommonChars);
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PWDGROUP_COLORS "SOFTWARE\\swSSO\\PwdGroupColors"
@@ -424,7 +431,7 @@ typedef struct
 	int MinUpperCase;
 	int MinLowerCase;
 	int MinNumbers;
-	int MinSpecialsChars;
+	int MinSpecialChars;
 	int MaxCommonChars;
 	int MaxConsecutiveCommonChars;
 	int IdMaxCommonChars;

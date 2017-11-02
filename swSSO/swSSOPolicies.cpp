@@ -1027,11 +1027,43 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"giRecoveryKeyId_ChangeValue=%d",giRecoveryKeyId_ChangeValue));
 	TRACE((TRACE_INFO,_F_,"REGKEY_HOTKEY ---------"));
 	TRACE((TRACE_INFO,_F_,"gszPastePwd_Text=%s",gszPastePwd_Text));
+	TRACE((TRACE_INFO,_F_,"PWDGROUP_COLORS ---------"));
 	for (i=0;i<giNbPwdGroupColors;i++)
 	{
 		TRACE((TRACE_INFO,_F_,"PwdGroupColor[%d]=0x%08lx",i,gtabPwdGroupColors[i]));
 	}
-
+	TRACE((TRACE_INFO,_F_,"NEW_PASSWORD_POLICY ---------"));
+	for (i=1;i<99;i++)
+	{
+		if (gptNewPasswordPolicies[i].isDefined)
+		{
+			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].MinLength=%d",i,gptNewPasswordPolicies[i].MinLength));
+			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].MaxLength=%d",i,gptNewPasswordPolicies[i].MaxLength));
+			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].MinUpperCase=%d",i,gptNewPasswordPolicies[i].MinUpperCase));
+			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].MinLowerCase=%d",i,gptNewPasswordPolicies[i].MinLowerCase));
+			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].MinNumbers=%d",i,gptNewPasswordPolicies[i].MinNumbers));
+			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].MinSpecialChars=%d",i,gptNewPasswordPolicies[i].MinSpecialChars));
+			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].MaxCommonChars=%d",i,gptNewPasswordPolicies[i].MaxCommonChars));
+			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].MaxConsecutiveCommonChars=%d",i,gptNewPasswordPolicies[i].MaxConsecutiveCommonChars));
+			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].IdMaxCommonChars=%d",i,gptNewPasswordPolicies[i].IdMaxCommonChars));
+		}
+	}
+	// test de la génaration aléatoire de longueur de mot de passe
+	/*
+	for (i=0;i<50;i++)
+	{
+		BYTE alea;
+		int iPwdLen;
+		if (!CryptGenRandom(ghProv,1,&alea)) {	TRACE((TRACE_ERROR,_F_,"CryptGenRandom()=0x%08lx",GetLastError())); goto end; }
+		iPwdLen=gptNewPasswordPolicies[7].MinLength+(alea%(gptNewPasswordPolicies[7].MaxLength-gptNewPasswordPolicies[7].MinLength+1));
+		TRACE((TRACE_INFO,_F_,"alea=%d len=%d",alea,iPwdLen));
+	}*/
+	char test[51]="";
+	for (i=0;i<50;i++)
+	{	
+		GenerateNewPassword(test,"%RANDOM07%");
+		TRACE((TRACE_INFO,_F_,"%s",test));
+	}
 #endif
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -1063,10 +1095,12 @@ void LoadNewPasswordPolicies()
 			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MINLENGTH,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MinLength=(BOOL)dwValue; 
+			if (gptNewPasswordPolicies[i].MinLength>LEN_PWD) gptNewPasswordPolicies[i].MinLength=LEN_PWD;
 
 			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MAXLENGTH,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MaxLength=(BOOL)dwValue; 
+			if (gptNewPasswordPolicies[i].MaxLength>LEN_PWD) gptNewPasswordPolicies[i].MaxLength=LEN_PWD;
 
 			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MINUPPERCASE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
@@ -1082,7 +1116,7 @@ void LoadNewPasswordPolicies()
 
 			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MINSPECIALCHARS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MinSpecialsChars=(BOOL)dwValue; 
+			if (rc==ERROR_SUCCESS) gptNewPasswordPolicies[i].MinSpecialChars=(BOOL)dwValue; 
 
 			dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 			rc=RegQueryValueEx(hKey,REGVALUE_NEW_PASSWORD_POLICY_MAXCOMMONCHARS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
@@ -1382,11 +1416,6 @@ end:
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
-#define SEARCHTYPE_LETTERS		1
-#define SEARCHTYPE_UPPERCASE	2
-#define SEARCHTYPE_LOWERCASE	3
-#define SEARCHTYPE_NUMBERS		4
-#define SEARCHTYPE_SPECIALCHARS	5
 
 //-----------------------------------------------------------------------------
 // GetNbCharsInString()
@@ -1437,14 +1466,14 @@ BOOL CheckCommonChars(const char *szPwd,const char *szUserName,int iPwdPolicy_Id
 	char szExtract[50+1];
 	unsigned int i;
 
-	TRACE((TRACE_DEBUG,_F_,"szPwd=%s szUserName=%s giPwdPolicy_IdMaxCommonChars=%d",szPwd,szUserName, iPwdPolicy_IdMaxCommonChars));
+	// TRACE((TRACE_PWD,_F_,"szPwd=%s szUserName=%s giPwdPolicy_IdMaxCommonChars=%d",szPwd,szUserName, iPwdPolicy_IdMaxCommonChars));
 	if (iPwdPolicy_IdMaxCommonChars>30) goto end;
 
 	for (i=0;i<strlen(szUserName)- iPwdPolicy_IdMaxCommonChars +1;i++)
 	{
 		memcpy(szExtract,szUserName+i, iPwdPolicy_IdMaxCommonChars);
 		szExtract[iPwdPolicy_IdMaxCommonChars]=0;
-		TRACE((TRACE_DEBUG,_F_,"Look for szExtract=%s in pwd=%s",szExtract,szPwd));
+		// TRACE((TRACE_PWD,_F_,"Look for szExtract=%s in pwd=%s",szExtract,szPwd));
 
 		//if (strstr(szPwd,szExtract)!=NULL) { rc=FALSE; goto end; }
 		//0.85B6 : comparaison non case-sensitive !

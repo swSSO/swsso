@@ -817,7 +817,7 @@ void swGenerateRandomPwd(char *pszPwd,int iPwdLen,int iPwdType)
 	for (i=0;i<iPwdLen;i++)
 	{
 		pszPwd[i]=szCharSet[pBuf[i]%iLenCharSet];
-		TRACE((TRACE_DEBUG,_F_,"pszPwd[%d]=%c",i,pszPwd[i]));
+		//TRACE((TRACE_PWD,_F_,"pszPwd[%d]=%c",i,pszPwd[i]));
 	}
 	pszPwd[iPwdLen]=0;
 	
