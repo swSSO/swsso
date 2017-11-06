@@ -1048,7 +1048,7 @@ suite:;
 			TRACE((TRACE_INFO,_F_,"gptNewPasswordPolicies[%02d].IdMaxCommonChars=%d",i,gptNewPasswordPolicies[i].IdMaxCommonChars));
 		}
 	}
-	// test de la génaration aléatoire de longueur de mot de passe
+	// test de la génération aléatoire de longueur de mot de passe
 	/*
 	for (i=0;i<50;i++)
 	{
@@ -1058,12 +1058,15 @@ suite:;
 		iPwdLen=gptNewPasswordPolicies[7].MinLength+(alea%(gptNewPasswordPolicies[7].MaxLength-gptNewPasswordPolicies[7].MinLength+1));
 		TRACE((TRACE_INFO,_F_,"alea=%d len=%d",alea,iPwdLen));
 	}*/
+	// test de la génération aléatoire de mot de passe
+	/*
 	char test[51]="";
 	for (i=0;i<50;i++)
 	{	
 		GenerateNewPassword(test,"%RANDOM07%");
 		TRACE((TRACE_INFO,_F_,"%s",test));
 	}
+	*/
 #endif
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
