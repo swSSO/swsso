@@ -351,7 +351,7 @@ int swCryptInit()
 			TRACE((TRACE_ERROR,_F_,"CryptAcquireContext(MS_ENH_RSA_AES_PROV_XP | PROV_RSA_AES | CRYPT_NEWKEYSET)=0x%08lx",dwLastError)); 
 		}
 	}
-	else if (dwLastError==NTE_BAD_FLAGS) // ISSUE#362 : profil mandatory, il faut faire avec CRYPT_VERIFYCONTEXT
+	else if (dwLastError==NTE_BAD_FLAGS || dwLastError==NTE_TEMPORARY_PROFILE) // ISSUE#362 : profil mandatory, il faut faire avec CRYPT_VERIFYCONTEXT
 	{
 		brc=CryptAcquireContext(&ghProv,NULL,MS_ENH_RSA_AES_PROV,PROV_RSA_AES,CRYPT_VERIFYCONTEXT);
 		if (brc) { rc=0; goto end; }
