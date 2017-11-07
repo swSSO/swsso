@@ -351,6 +351,8 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 	int iNbTry;
 	T_SEARCH_DOC tSearchDoc;
 	char szNewPassword[LEN_PWD+1];
+	char *p2=NULL;
+	char *p3=NULL;
 	
 	// ISSUE#39 : important, initialisation pour que le pointer iAccessible soit à NULL sinon le release provoque plantage !
 	ZeroMemory(&tSuivi,sizeof(T_SUIVI_ACCESSIBLE));
@@ -587,52 +589,13 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		if (iId1Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId1Index],vtChild,gptActions[ptSuivi->iAction].szId1Value,iAction,iBrowser);
 
 		// ISSUE#367 : si ID2 et ID3 contiennent une chaine de type %RANDOMxx%, c'est une page de changement de mot de passe
-		char *p2=NULL;
-		char *p3=NULL;
 		p2=strstr(gptActions[ptSuivi->iAction].szId2Value,"%RANDOM");
 		p3=strstr(gptActions[ptSuivi->iAction].szId3Value,"%RANDOM");
-		if (p2!=NULL && p3!=NULL)
-		{
-			// génère un mot de passe aléatoire en fonction de la politique
-			if (GenerateNewPassword(szNewPassword,gptActions[ptSuivi->iAction].szId2Value)!=0) goto end; 
-			// saisit le mot de passe défini dans les 2 champs
-			if (iId2Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,szNewPassword,iAction,iBrowser);
-			if (iId3Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,szNewPassword,iAction,iBrowser);
-			// sauvegarde le mot de passe défini dans les configurations du même password group
-			if (gptActions[ptSuivi->iAction].iPwdGroup!=-1)
-			{
-				TRACE((TRACE_DEBUG,_F_,"Changement mot de passe groupé induit par config %s",gptActions[ptSuivi->iAction].szApplication));
-				char *pszEncryptedPassword;
-				for (i=0;i<giNbActions;i++)
-				{
-					if (i==ptSuivi->iAction) continue; // ne le renseigne pas dans la configuration de changement de mot de passe
-					if (gptActions[i].iPwdGroup==gptActions[ptSuivi->iAction].iPwdGroup)
-						/* TODO
-						   Pour l'instant on fait bete et méchant : on réplique le mot de passe dans tout le pwdGroup
-						   Il faudrait plutôt récupérer l'identifiant de la configuration utilisée pour le login et 
-						   ne propager le mot de passe que sur les configurations utilisant cet identifiant
-						&&
-						(*gptActions[i].szId1Value!=0) && (*gptActions[iAction].szId1Value!=0) && // nouvelle condition ISSUE#235
-						(_stricmp(gptActions[i].szId1Value,gptActions[iAction].szId1Value)==0))    // nouvelle condition ISSUE#235 
-						*/
-					{
-						TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli %s induit par config %s",gptActions[i].szApplication,gptActions[ptSuivi->iAction].szApplication));
-						pszEncryptedPassword=swCryptEncryptString(szNewPassword,ghKey1);
-						if (pszEncryptedPassword==NULL) goto end;
-						strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
-						free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
-						pszEncryptedPassword=NULL;
-					}
-				}
-			}
-			SecureZeroMemory(szNewPassword,sizeof(szNewPassword));
-		}
-		else
+		if (p2==NULL || p3==NULL)
 		{
 			if (iId2Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,gptActions[ptSuivi->iAction].szId2Value,iAction,iBrowser);
 			if (iId3Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,gptActions[ptSuivi->iAction].szId3Value,iAction,iBrowser);
 		}
-
 		if (iId4Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId4Index],vtChild,gptActions[ptSuivi->iAction].szId4Value,iAction,iBrowser);
 		
 		// Mdp
@@ -700,6 +663,42 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 					free(pszPassword);
 				}
 			}
+		}
+		if (p2!=NULL && p3!=NULL)
+		{
+			// génère un mot de passe aléatoire en fonction de la politique
+			if (GenerateNewPassword(szNewPassword,gptActions[ptSuivi->iAction].szId2Value)!=0) goto end; 
+			// saisit le mot de passe défini dans les 2 champs
+			if (iId2Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,szNewPassword,iAction,iBrowser);
+			if (iId3Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,szNewPassword,iAction,iBrowser);
+			// sauvegarde le mot de passe défini dans les configurations du même password group
+			if (gptActions[ptSuivi->iAction].iPwdGroup!=-1)
+			{
+				TRACE((TRACE_DEBUG,_F_,"Changement mot de passe groupé induit par config %s",gptActions[ptSuivi->iAction].szApplication));
+				char *pszEncryptedPassword;
+				for (i=0;i<giNbActions;i++)
+				{
+					if (i==ptSuivi->iAction && *gptActions[i].szPwdEncryptedValue==0) continue; // ne le renseigne pas dans la configuration de changement de mot de passe si le mot de passe est vide
+					if (gptActions[i].iPwdGroup==gptActions[ptSuivi->iAction].iPwdGroup)
+						/* TODO
+						   Pour l'instant on fait bete et méchant : on réplique le mot de passe dans tout le pwdGroup
+						   Il faudrait plutôt récupérer l'identifiant de la configuration utilisée pour le login et 
+						   ne propager le mot de passe que sur les configurations utilisant cet identifiant
+						&&
+						(*gptActions[i].szId1Value!=0) && (*gptActions[iAction].szId1Value!=0) && // nouvelle condition ISSUE#235
+						(_stricmp(gptActions[i].szId1Value,gptActions[iAction].szId1Value)==0))    // nouvelle condition ISSUE#235 
+						*/
+					{
+						TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli %s induit par config %s",gptActions[i].szApplication,gptActions[ptSuivi->iAction].szApplication));
+						pszEncryptedPassword=swCryptEncryptString(szNewPassword,ghKey1);
+						if (pszEncryptedPassword==NULL) goto end;
+						strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
+						free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
+						pszEncryptedPassword=NULL;
+					}
+				}
+			}
+			SecureZeroMemory(szNewPassword,sizeof(szNewPassword));
 		}
 		// Validation si demandée
 		if (*gptActions[ptSuivi->iAction].szValidateName!=0)

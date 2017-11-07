@@ -921,15 +921,29 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (*szPassword!=0) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 					{
 						pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
-						// 0.85B9 : remplacement de memset(szPassword,0,strlen(szPassword)); 
 						SecureZeroMemory(szPassword,strlen(szPassword));
 						if (pszEncryptedPassword!=NULL)
 						{
 							strcpy_s(gptActions[params->iAction].szPwdEncryptedValue,sizeof(gptActions[params->iAction].szPwdEncryptedValue),pszEncryptedPassword);
+							// NEW pour ISSUE#367 : replique le mot de passe sur toutes les configs du password group, uniquement si password group >= 20
+							if (gptActions[params->iAction].iPwdGroup >= 20)
+							{
+								for (int i=0;i<giNbActions;i++)
+								{
+									if (i==params->iAction) continue; 
+									if (gptActions[i].iPwdGroup==gptActions[params->iAction].iPwdGroup)
+									{
+										TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli %s induit par config %s",gptActions[i].szApplication,gptActions[params->iAction].szApplication));
+										strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
+									}
+								}
+							}
 							free(pszEncryptedPassword); // 0.85B9 !
 						}
-						else 
+						else
+						{
 							*gptActions[params->iAction].szPwdEncryptedValue=0;
+						}
 					}
 					else
 					{
