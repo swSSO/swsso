@@ -185,6 +185,7 @@
     <ClCompile Include="swSSOCM.cpp" />
     <ClCompile Include="swSSOCMPipe.cpp" />
     <ClCompile Include="swSSOLogs.cpp" />
+    <ClCompile Include="swSSOPolicies.cpp" />
     <ClCompile Include="swSSOProtectMemory.cpp" />
     <ClCompile Include="swSSOTrace.cpp" />
   </ItemGroup>
@@ -193,6 +194,7 @@
     <ClInclude Include="swSSOCM.h" />
     <ClInclude Include="swSSOLogMessages.h" />
     <ClInclude Include="swSSOLogs.h" />
+    <ClInclude Include="swSSOPolicies.h" />
     <ClInclude Include="swSSOProtectMemory.h" />
     <ClInclude Include="swSSOTrace.h" />
     <ClInclude Include="targetver.h" />

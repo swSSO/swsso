@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -28,35 +28,43 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 // 
 //-----------------------------------------------------------------------------
+// swSSOPolicies.cpp
+//-----------------------------------------------------------------------------
 
 #include "stdafx.h"
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-					 )
+int giServiceTimeOut=60;
+
+//-----------------------------------------------------------------------------
+// LoadPolicies()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void LoadPolicies(void)
 {
-	UNREFERENCED_PARAMETER(hModule);
-	UNREFERENCED_PARAMETER(ul_reason_for_call);
-	UNREFERENCED_PARAMETER(lpReserved);
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc;
+	HKEY hKey=NULL;
+	DWORD dwValue,dwValueSize,dwValueType;
 
-	switch (ul_reason_for_call)
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,REGKEY_CM,0,KEY_READ,&hKey);
+	if (rc==ERROR_SUCCESS)
 	{
-		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
-			TRACE_OPEN();
-			TRACE((TRACE_ENTER,_F_,"ATTACH"));
-			LoadPolicies(); // ISSUE#370
-			TRACE((TRACE_LEAVE,_F_,"ATTACH"));
-			break;
-		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH:
-			TRACE((TRACE_ENTER,_F_,"DETACH"));
-			
-			TRACE((TRACE_LEAVE,_F_,"DETACH"));
-			TRACE_CLOSE();
-			break;
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SERVICE_TIMEOUT,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giServiceTimeOut=(int)dwValue; 
+		else
+		{
+			TRACE((TRACE_INFO,_F_,"RegQueryValueEx()=%d",rc));
+		}
+		RegCloseKey(hKey);
 	}
-	return TRUE;
+	else
+	{
+		TRACE((TRACE_INFO,_F_,"RegOpenKeyEx()=%d",rc));
+	}
+#ifdef TRACES_ACTIVEES
+	TRACE((TRACE_INFO,_F_,"giServiceTimeOut=%d",giServiceTimeOut));
+#endif
+	TRACE((TRACE_LEAVE,_F_, ""));
 }
-

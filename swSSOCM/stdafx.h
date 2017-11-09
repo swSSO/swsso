@@ -52,6 +52,7 @@
 #include "swSSOProtectMemory.h"
 #include "swSSOLogs.h"
 #include "swSSOLogMessages.h"
+#include "swSSOPolicies.h"
 
 // swSSOCMPipe
 int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo);

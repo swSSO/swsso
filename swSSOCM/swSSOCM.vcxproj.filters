@@ -36,6 +36,9 @@
     <ClCompile Include="swSSOLogs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="swSSOPolicies.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="swSSOLogs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOPolicies.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
