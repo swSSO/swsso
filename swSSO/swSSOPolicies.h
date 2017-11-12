@@ -95,6 +95,8 @@
 #define REGVALUE_ENABLEOPTION_VIEWSERVERINFOS		"ViewServerInfos"
 // ISSUE#337
 #define REGVALUE_SHOW_SYSTRAY_ICON					"ShowSystrayIcon"
+// ISSUE#363
+#define REGVALUE_SHOW_ADDITIONAL_IDS				"ShowAdditionalIds"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -155,6 +157,8 @@ extern BOOL gbShowMenu_PutInSafeBox;
 extern BOOL gbEnableOption_ViewServerInfos;
 // ISSUE#337
 extern BOOL gbShowSystrayIcon;
+// ISSUE#363
+extern BOOL gbEnableOption_ShowAdditionalIds;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"

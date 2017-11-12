@@ -3304,13 +3304,18 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	}
 	tcItem.pszText = GetString(IDS_TAB_IDPWD1); // "Identifiant et mot de passe"; 
 	TabCtrl_InsertItem(GetDlgItem(w,TAB_IDPWD),0,&tcItem);
-	tcItem.pszText = GetString(IDS_TAB_IDPWD2); // "Identifiants complémentaires"; 
-	TabCtrl_InsertItem(GetDlgItem(w,TAB_IDPWD),1,&tcItem);
+	if (gbEnableOption_ShowAdditionalIds) // ISSUE#363
+	{
+		tcItem.pszText = GetString(IDS_TAB_IDPWD2); // "Identifiants complémentaires"; 
+		TabCtrl_InsertItem(GetDlgItem(w,TAB_IDPWD),1,&tcItem);
+	}
 	tcItem.pszText = GetString(IDS_TAB_CONFIG1); // "Configuration"; 
 	TabCtrl_InsertItem(GetDlgItem(w,TAB_CONFIG),0,&tcItem);
-	tcItem.pszText = GetString(IDS_TAB_CONFIG2); // "Champs complémentaires"; 
-	TabCtrl_InsertItem(GetDlgItem(w,TAB_CONFIG),1,&tcItem);
-
+	if (gbEnableOption_ShowAdditionalIds) // ISSUE#363
+	{
+		tcItem.pszText = GetString(IDS_TAB_CONFIG2); // "Champs complémentaires"; 
+		TabCtrl_InsertItem(GetDlgItem(w,TAB_CONFIG),1,&tcItem);
+	}
 	if (!gbShowMenu_LaunchApp)
 	{
 		ShowWindow(GetDlgItem(w,TX_LANCEMENT),SW_HIDE);
