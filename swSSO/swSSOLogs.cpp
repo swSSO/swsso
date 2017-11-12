@@ -222,9 +222,9 @@ int swStat(void)
 
 		// SHA1(USERNAME);date dernière connexion réussie AAAAMMJJ;nb applis actives;nbsssoréalisés;nb applis actives enrôlées depuis le serveur
 		len=wsprintf(buf2048,"%s;%04d%02d%02d;%d;%d;%d;%s",
-			szHashValue,
+			(giStat & 0x10)?gszUserName:szHashValue,
 			(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
-			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer,szTruncatedComputerName); 
+			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer,(giStat & 0x10)?gszComputerName:szTruncatedComputerName); 
 		if (!WriteFile(hfStat,buf2048,len,&dw,NULL))
 		{
 			TRACE((TRACE_ERROR,_F_,"WriteFile(%s,%ld)=%d",szFilename,len,GetLastError()));
@@ -234,9 +234,9 @@ int swStat(void)
 	if (giStat & 2) // stat upload
 	{
 		sprintf_s(buf2048,sizeof(buf2048),"?action=uploadstats&shausername=%s&logindate=%04d%02d%02d&nconfigs=%d&nsso=%d&nenrolled=%d&computername=%s",
-			szHashValue,
+			(giStat & 0x10)?gszUserName:szHashValue,
 			(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
-			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer,szTruncatedComputerName); 
+			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer,(giStat & 0x10)?gszComputerName:szTruncatedComputerName); 
 		TRACE((TRACE_INFO,_F_,"Requete HTTP : %s",buf2048));
 		pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
 							  gszServerAddress2,giServerPort2,gbServerHTTPS2,gszWebServiceAddress2,
