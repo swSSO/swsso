@@ -2135,18 +2135,23 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		}
 		goto end;
 	}
-	
-	// si pas de .ini passé en paramètre, on cherche dans le rép courant
-	if (*lpCmdLine==0) 
+
+	// ISSUE#364 : lecture en priorité du chemin du .ini en base de registre
+	LoadIniPathNamePolicy();
+	if (*gpszIniPathName!=0)
 	{
-		len=GetCurrentDirectory(_MAX_PATH-10,gszCfgFile);
+		ExpandFileName(gpszIniPathName,gszCfgFile,_SW_MAX_PATH+1);
+	}
+	else if (*lpCmdLine==0) // si pas de .ini passé en paramètre, on cherche dans le rép courant
+	{
+		len=GetCurrentDirectory(_SW_MAX_PATH-10,gszCfgFile);
 		if (len==0) { iError=-1; goto end; }
 		if (gszCfgFile[len-1]!='\\') { gszCfgFile[len]='\\'; len++; }
-		strcpy_s(gszCfgFile+len,_MAX_PATH+1,"swSSO.ini");
+		strcpy_s(gszCfgFile+len,_SW_MAX_PATH+1,"swSSO.ini");
 	}
-	else
+	else // sinon utilie le chemin passé en paramètre
 	{
-		ExpandFileName(lpCmdLine,gszCfgFile,_MAX_PATH+1); // ISSUE#104 et ISSUE#109
+		ExpandFileName(lpCmdLine,gszCfgFile,_SW_MAX_PATH+1); // ISSUE#104 et ISSUE#109
 	}
 	// Pas simple de le faire plus tôt... ce veut dire que si des messages sont affichés avant 
 	// ils seront dans la langue de l'OS et pas dans la langue choisie par l'utilisateur

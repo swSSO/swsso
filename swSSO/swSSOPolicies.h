@@ -251,6 +251,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_WEBSERVICE_TIMEOUT					"WebServiceTimeout"
 #define REGVALUE_WEBSERVICE_TIMEOUT2				"WebServiceTimeout2"
 #define REGVALUE_USE_SQUARE_FOR_MANAGED_CONFIGS		"UseSquareForManagedConfigs"
+#define REGVALUE_INI_PATHNAME						"IniPathName"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -316,6 +317,7 @@ extern char gszAskThisAppMessage[];			// 1.14 - ISSUE#319
 extern int	giWebServiceTimeout;			// 1.14 - ISSUE#329
 extern int	giWebServiceTimeout2;			// 1.14 - ISSUE#329
 extern BOOL gbUseSquareForManagedConfigs;	// 1.16 - ISSUE#338
+extern char gpszIniPathName[];				// 1.18 - ISSUE#364
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"
@@ -393,6 +395,7 @@ extern int  giRecoveryKeyId_ChangeValue;				// 1.14
 extern char gszPastePwd_Text[];
 
 // FONCTIONS PUBLIQUES
+void LoadIniPathNamePolicy(void); // doit être lu très tôt, je crée cette fonction pour éviter d'étudier le risque d'un déplacement de l'appel à LoadPolicies
 void LoadPolicies(void);
 void LoadGlobalOrDomainPolicies(char *pcszDomain);
 void LoadNewPasswordPolicies(void);

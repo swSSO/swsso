@@ -31,6 +31,7 @@
 // swSSOConfig.h
 //-----------------------------------------------------------------------------
 
+#define _SW_MAX_PATH 1024 // 1.18
 
 int GetConfigHeader();
 int ShowConfig(void);

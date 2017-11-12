@@ -171,6 +171,7 @@ char gszAskThisAppMessage[1024+1];				// 1.14 - ISSUE#319
 int	giWebServiceTimeout=8;						// 1.14 - ISSUE#329
 int	giWebServiceTimeout2=8;						// 1.14 - ISSUE#329
 BOOL gbUseSquareForManagedConfigs=TRUE;			// 1.16 - ISSUE#338
+char gpszIniPathName[_SW_MAX_PATH+1];			// 1.18 - ISSUE#364
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -220,6 +221,38 @@ char gszPastePwd_Text[100];
 // REGKEY_REGKEY_NEW_PASSWORD_POLICY
 T_NEW_PASSWORD_POLICY gptNewPasswordPolicies[100];
 
+
+//-----------------------------------------------------------------------------
+// LoadIniPathNamePolicy()
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void LoadIniPathNamePolicy(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc;
+	HKEY hKey=NULL;
+	char szValue[1024+1];
+	DWORD dwValueSize,dwValueType;
+
+	//--------------------------------------------------------------
+	// ENTERPRISE OPTIONS
+	//--------------------------------------------------------------
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,gbAdmin?REGKEY_ENTERPRISE_OPTIONS_ADMIN:REGKEY_ENTERPRISE_OPTIONS,0,KEY_READ,&hKey);
+	if (rc==ERROR_SUCCESS)
+	{
+		dwValueType=REG_SZ;
+		dwValueSize=sizeof(szValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_INI_PATHNAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 	strcpy_s(gpszIniPathName,sizeof(gpszIniPathName),szValue);
+
+		RegCloseKey(hKey);
+	}
+	TRACE((TRACE_INFO,_F_,"ENTERPRISE OPTIONS ---------"));
+	TRACE((TRACE_INFO,_F_,"gpszIniPathName=%s"					,gpszIniPathName));
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
 //-----------------------------------------------------------------------------
 // LoadPolicies()
 //-----------------------------------------------------------------------------
@@ -245,6 +278,7 @@ void LoadPolicies(void)
 	strcpy_s(gszErrorServerConfigNotFound,sizeof(gszErrorServerConfigNotFound),GetString(IDS_CONFIG_NOT_FOUND));
 	strcpy_s(gszErrorServerTitleConfigNotFound,sizeof(gszErrorServerTitleConfigNotFound),GetString(IDS_SUBTITLE_CONFIG_NOT_FOUND));
 	*gszAskThisAppMessage=0;
+	*gpszIniPathName=0;
 	*gszLogFileName=0;
 	*gszWelcomeMessage=0;
 	*gszPastePwd_Text=0;

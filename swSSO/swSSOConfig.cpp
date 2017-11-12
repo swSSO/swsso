@@ -36,7 +36,7 @@
 #include "stdafx.h"
 
 // globales globales ;-)
-char gszCfgFile[_MAX_PATH+1];
+char gszCfgFile[_SW_MAX_PATH+1];
 char gszCfgVersion[5+1];
 BOOL gbSessionLock=TRUE;     // 0.63B4 : true si verrouillage sur suspension de session windows
 char gszCfgPortal[_MAX_PATH+1];
