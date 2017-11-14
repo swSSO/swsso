@@ -2460,22 +2460,28 @@ int GenerateNewPassword(char *pszNewPassword,char *pszPolicy)
 		{
 			iIndexCharSet=pBuf[i]%iLenCharSet;
 			// vérifie que le nombre de caractères identiques consécutifs n'est pas dépassé
-			if (i>0 && pszNewPassword[i-1]==szCharSet[iIndexCharSet])
+			if (gptNewPasswordPolicies[iPolicyId].MaxConsecutiveCommonChars>0)
 			{
-				iNbConsecutiveChars++;
-				if (iNbConsecutiveChars>gptNewPasswordPolicies[iPolicyId].MaxConsecutiveCommonChars)
+				if (i>0 && pszNewPassword[i-1]==szCharSet[iIndexCharSet])
+				{
+					iNbConsecutiveChars++;
+					if (iNbConsecutiveChars>gptNewPasswordPolicies[iPolicyId].MaxConsecutiveCommonChars)
+					{
+						iIndexCharSet++;
+						if (iIndexCharSet==iLenCharSet) iIndexCharSet=0;
+					}			
+				}
+			}
+			// vérifie que le nombre total de caractères identiques n'est pas dépassé
+			if (gptNewPasswordPolicies[iPolicyId].MaxCommonChars>0)
+			{
+				while (tiCountCharSet[iIndexCharSet] >= gptNewPasswordPolicies[iPolicyId].MaxCommonChars) 
 				{
 					iIndexCharSet++;
 					if (iIndexCharSet==iLenCharSet) iIndexCharSet=0;
-				}			
+				}
+				tiCountCharSet[iIndexCharSet]++;
 			}
-			// vérifie que le nombre total de caractères identiques n'est pas dépassé
-			while (tiCountCharSet[iIndexCharSet] >= gptNewPasswordPolicies[iPolicyId].MaxCommonChars) 
-			{
-				iIndexCharSet++;
-				if (iIndexCharSet==iLenCharSet) iIndexCharSet=0;
-			}
-			tiCountCharSet[iIndexCharSet]++;
 			pszNewPassword[i]=szCharSet[iIndexCharSet];
 		}
 		pszNewPassword[iPwdLen]=0;
