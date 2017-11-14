@@ -2153,26 +2153,28 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	{
 		ExpandFileName(lpCmdLine,gszCfgFile,_SW_MAX_PATH+1); // ISSUE#104 et ISSUE#109
 	}
-	// ISSUE#365 : teste le chemin du fichier .ini. Si erreur différente de "fichier non trouvé", 
-	// on suppose que c'est un pb d'accès réseau et on sort
-	HANDLE hfTest;
-	hfTest=CreateFile(gszCfgFile,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
-	if (hfTest==INVALID_HANDLE_VALUE)
+	if (gbExitIfNetworkUnavailable)
 	{
-		DWORD dwError=GetLastError();
-		TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",gszCfgFile,dwError));
-		if (dwError!=ERROR_FILE_NOT_FOUND && dwError!=ERROR_PATH_NOT_FOUND)
+		// ISSUE#365 : teste le chemin du fichier .ini. Si erreur différente de "fichier non trouvé", 
+		// on suppose que c'est un pb d'accès réseau et on sort
+		HANDLE hfTest;
+		hfTest=CreateFile(gszCfgFile,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
+		if (hfTest==INVALID_HANDLE_VALUE)
 		{
-			TRACE((TRACE_ERROR,_F_,"Chemin d'accès au .ini introuvable (problème réseau ?), on quitte sans message"));
-			iError=-9;
-			goto end;
+			DWORD dwError=GetLastError();
+			TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",gszCfgFile,dwError));
+			if (dwError!=ERROR_FILE_NOT_FOUND && dwError!=ERROR_PATH_NOT_FOUND)
+			{
+				TRACE((TRACE_ERROR,_F_,"Chemin d'accès au .ini introuvable (problème réseau ?), on quitte sans message"));
+				iError=-9;
+				goto end;
+			}
+		}
+		else
+		{
+			CloseHandle(hfTest);
 		}
 	}
-	else
-	{
-		CloseHandle(hfTest);
-	}
-
 	// Pas simple de le faire plus tôt... ce veut dire que si des messages sont affichés avant 
 	// ils seront dans la langue de l'OS et pas dans la langue choisie par l'utilisateur
 	GetOSLanguage(); // récupère la langue de l'OS
