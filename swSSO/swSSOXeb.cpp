@@ -452,6 +452,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		vtStart.vt=VT_I4;
 		vtStart.lVal=CHILDID_SELF;
 		hr=pTopAccessible->accNavigate(0x1009,vtStart,&vtResult); // NAVRELATION_EMBEDS = 0x1009
+		TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr));
 		if (hr==S_OK) // ISSUE#358 (OK seulement avant Firefox 56)
 		{
 			pTopAccessible->Release();pTopAccessible=NULL;

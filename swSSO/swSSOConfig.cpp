@@ -4946,6 +4946,7 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 	}
 	else if (strcmp(szClassName,gcszMozillaClassName)==0) // FIREFOX4
 	{
+		SetForegroundWindow(w); // nécessaire pour ISSUE#371
 		pszURL=GetFirefoxURL(w,NULL,FALSE,NULL,BROWSER_FIREFOX4,TRUE);
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Firefox4+ non trouvee")); goto end; }
 		iType=UNK; // permet de récupérer les configs WEB ou XEB 

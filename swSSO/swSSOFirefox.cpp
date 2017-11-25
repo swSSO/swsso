@@ -512,7 +512,15 @@ void SearchWebDocument(IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
 			
 			if (vtRole.lVal == ROLE_SYSTEM_DOCUMENT)
 			{
-				if (!(vtState.lVal & STATE_SYSTEM_INVISIBLE)) // trouvé ! 1.17 FIX 1 (élimine les onglets autres que celui visible !)
+				if (vtState.lVal & STATE_SYSTEM_INVISIBLE)
+				{
+					TRACE((TRACE_DEBUG,_F_,"%STATE_SYSTEM_INVISIBLE => pas le bon onglet, on passe",szTab)); 
+				}
+				else if (!(vtState.lVal & STATE_SYSTEM_FOCUSED)) // nouveau en 1.19B1 pour ISSUE#371
+				{
+					TRACE((TRACE_DEBUG,_F_,"%!STATE_SYSTEM_FOCUSED => pas le bon onglet, on passe",szTab)); 
+				}
+				else // trouvé ! (élimine les onglets autres que celui visible !)
 				{
 					TRACE((TRACE_DEBUG,_F_,"%sDOCUMENT TROUVE",szTab)); 
 					ptSearchDoc->pContent=pChild;
@@ -581,6 +589,7 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
 	
 		hr=pAccessible->accNavigate(0x1009,vtMe,&vtResult); // NAVRELATION_EMBEDS = 0x1009
+		TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr));
 		if (hr==S_OK) // ISSUE#358 -- cette méthode ne fonctionne plus à partir de Firefox 56, mais on la conserve pour les anciennes versions
 		{
 			TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS) vtEnd=0x%08lx",vtResult.lVal));
