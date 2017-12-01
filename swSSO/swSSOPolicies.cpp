@@ -234,7 +234,7 @@ void LoadIniPathNamePolicy(void)
 	int rc;
 	HKEY hKey=NULL;
 	char szValue[1024+1];
-	DWORD dwValueSize,dwValueType;
+	DWORD dwValue,dwValueSize,dwValueType;
 
 	//--------------------------------------------------------------
 	// ENTERPRISE OPTIONS
@@ -247,10 +247,16 @@ void LoadIniPathNamePolicy(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_INI_PATHNAME,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) 	strcpy_s(gpszIniPathName,sizeof(gpszIniPathName),szValue);
 
+		// ISSUE#372 : lecture de la clé déplacée depuis la fonction LoadPolicies()
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_EXIT_IF_NETWORK_UNAVAILABLE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbExitIfNetworkUnavailable=(BOOL)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	TRACE((TRACE_INFO,_F_,"ENTERPRISE OPTIONS ---------"));
 	TRACE((TRACE_INFO,_F_,"gpszIniPathName=%s"					,gpszIniPathName));
+	TRACE((TRACE_INFO,_F_,"gbExitIfNetworkUnavailable=%d"		,gbExitIfNetworkUnavailable));
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
 
@@ -676,10 +682,6 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_USE_SQUARE_FOR_MANAGED_CONFIGS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbUseSquareForManagedConfigs=(BOOL)dwValue; 
 
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_EXIT_IF_NETWORK_UNAVAILABLE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbExitIfNetworkUnavailable=(BOOL)dwValue; 
-
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -1028,7 +1030,6 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"giWebServiceTimeout=%d"				,giWebServiceTimeout));
 	TRACE((TRACE_INFO,_F_,"giWebServiceTimeout2=%d"				,giWebServiceTimeout2));
 	TRACE((TRACE_INFO,_F_,"gbUseSquareForManagedConfigs=%d"		,gbUseSquareForManagedConfigs));
-	TRACE((TRACE_INFO,_F_,"gbExitIfNetworkUnavailable=%d"		,gbExitIfNetworkUnavailable));
 	
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));
