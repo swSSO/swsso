@@ -448,12 +448,18 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pTopAccessible);
 		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
 		
-		VARIANT vtStart,vtResult;
-		vtStart.vt=VT_I4;
-		vtStart.lVal=CHILDID_SELF;
-		hr=pTopAccessible->accNavigate(0x1009,vtStart,&vtResult); // NAVRELATION_EMBEDS = 0x1009
-		TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr));
-		if (hr==S_OK) // ISSUE#358 (OK seulement avant Firefox 56)
+		VARIANT vtMe,vtResult;
+		vtMe.vt=VT_I4;
+		vtMe.lVal=CHILDID_SELF;
+		
+		for (int j=0;j<3;j++) // ISSUE#371 : cf. échanges avec Jamie, un échec au 1er appel est normal, on tente 3 fois (marche seulement avec FF 58b6+)
+		{
+			hr=pTopAccessible->accNavigate(0x1009,vtMe,&vtResult); // NAVRELATION_EMBEDS = 0x1009
+			TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr));
+			if (hr==S_OK) break;
+			Sleep(1);
+		}
+		if (hr==S_OK) // ISSUE#358 -- cette méthode ne fonctionne plus à partir de Firefox 56, mais on la conserve pour les anciennes versions
 		{
 			pTopAccessible->Release();pTopAccessible=NULL;
 			TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS) vtEnd=%ld",vtResult.lVal));
@@ -467,6 +473,8 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		{
 			// Parcourt l'ensemble de la page à la recherche de l'objet document
 			tSearchDoc.pContent=NULL;
+			tSearchDoc.iLevel=0;
+
 #ifdef TRACES_ACTIVEES
 			SearchWebDocument("",pTopAccessible,&tSearchDoc);
 #else

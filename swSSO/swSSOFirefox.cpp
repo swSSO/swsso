@@ -460,7 +460,7 @@ void SearchWebDocument(IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
 	VARIANT vtChild;
 	VARIANT vtState,vtRole;
 	long returnCount,l;
-
+	
 #ifdef TRACES_ACTIVEES
 	char szTab[200];
 	strcpy_s(szTab,sizeof(szTab),paramszTab);
@@ -484,7 +484,7 @@ void SearchWebDocument(IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
 	else
 	{
 		TRACE((TRACE_DEBUG,_F_,"%sAccessibleChildren() returnCount=%d",szTab,returnCount));
-		for (l=0;l<lCount;l++)
+		for (l=lCount-1;l>=0;l--) // il est plutôt vers la fin donc j'optimise !
 		{
 			VARIANT *pVarCurrent = &pArray[l];
 			VariantInit(&vtRole);
@@ -503,33 +503,29 @@ void SearchWebDocument(IAccessible *pAccessible,T_SEARCH_DOC *ptSearchDoc)
 			vtChild.vt=VT_I4;
 			vtChild.lVal=CHILDID_SELF;
 			hr=pChild->get_accRole(vtChild,&vtRole);
-			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"%sget_accRole()=0x%08lx",szTab,hr)); goto suivant; }
 			TRACE((TRACE_DEBUG,_F_,"%sget_accRole() vtRole.lVal=0x%08lx",szTab,vtRole.lVal));
 
 			hr=pChild->get_accState(vtChild,&vtState);
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accState()=0x%08lx",hr)); goto suivant; }
 			TRACE((TRACE_DEBUG,_F_,"%sget_accState() vtState.lVal=0x%08lx",szTab,vtState.lVal));
 			
-			if (vtRole.lVal == ROLE_SYSTEM_DOCUMENT)
+			if (vtState.lVal & STATE_SYSTEM_OFFSCREEN)
 			{
-				if (vtState.lVal & STATE_SYSTEM_INVISIBLE)
-				{
-					TRACE((TRACE_DEBUG,_F_,"%STATE_SYSTEM_INVISIBLE => pas le bon onglet, on passe",szTab)); 
-				}
-				else if (!(vtState.lVal & STATE_SYSTEM_FOCUSED)) // nouveau en 1.19B1 pour ISSUE#371
-				{
-					TRACE((TRACE_DEBUG,_F_,"%!STATE_SYSTEM_FOCUSED => pas le bon onglet, on passe",szTab)); 
-				}
-				else // trouvé ! (élimine les onglets autres que celui visible !)
-				{
-					TRACE((TRACE_DEBUG,_F_,"%sDOCUMENT TROUVE",szTab)); 
-					ptSearchDoc->pContent=pChild;
-					// ptSearchDoc->pContent->AddRef(); pas besoin de AddRef puisqu'il ne sera pas releasé grace au goto end
-					goto end;
-				}
+				TRACE((TRACE_DEBUG,_F_,"%sSTATE_SYSTEM_OFFSCREEN => on passe",szTab)); 
+				goto suivant;
 			}
-			else if (ptSearchDoc->iLevel!=0 || vtRole.lVal == ROLE_SYSTEM_GROUPING) // 1.17 FIX 1 : optimisation, on ne cherche au niveau d'en dessous que dans le cas d'un élément groupé
+
+			if (vtRole.lVal == ROLE_SYSTEM_DOCUMENT) 
 			{
+				TRACE((TRACE_DEBUG,_F_,"%sDOCUMENT TROUVE",szTab)); 
+				ptSearchDoc->pContent=pChild;
+				// ptSearchDoc->pContent->AddRef(); pas besoin de AddRef puisqu'il ne sera pas releasé grace au goto end
+				goto end;
+			}
+			else if (ptSearchDoc->iLevel!=0 || vtRole.lVal == ROLE_SYSTEM_GROUPING) // 1.17 FIX 1 : optimisation, on ne cherche au niveau d'en dessous que dans le cas d'un groupement (le document est dans un groupement)
+			{
+				TRACE((TRACE_DEBUG,_F_,"%sGroupement : on descend voir plus bas",szTab));
 				ptSearchDoc->iLevel++;
 				SearchWebDocument(szTab,pChild,ptSearchDoc);
 			}
@@ -592,7 +588,7 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 			hr=pAccessible->accNavigate(0x1009,vtMe,&vtResult); // NAVRELATION_EMBEDS = 0x1009
 			TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr));
 			if (hr==S_OK) break;
-			Sleep(500);
+			Sleep(1);
 		}
 		if (hr==S_OK) // ISSUE#358 -- cette méthode ne fonctionne plus à partir de Firefox 56, mais on la conserve pour les anciennes versions
 		{
@@ -611,9 +607,10 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 		}
 		else // ISSUE#358
 		{
-			// Parcourt l'ensemble de la page à la recherche de l'objet document
+			// Parcourt l'ensemble de la page à la recherche de l'objet document portant le même titre que la page (pour trouver le bon onglet)
 			tSearchDoc.pContent=NULL;
 			tSearchDoc.iLevel=0;
+
 #ifdef TRACES_ACTIVEES
 			SearchWebDocument("",pAccessible,&tSearchDoc);
 #else
