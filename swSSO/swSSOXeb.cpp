@@ -182,8 +182,9 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
 			TRACE((TRACE_DEBUG,_F_,"%sget_accRole() vtRole.lVal=0x%08lx",szTab,vtRole.lVal));
 			
-			// ISSUE#373 : recherche un texte dans la page
-			if (*(gptActions[ptSuivi->iAction].szId4Value)!=0 && (vtRole.lVal & ROLE_SYSTEM_TEXT))
+			// ISSUE#373 : recherche un texte dans la page : pour éviter les régressions sur les rares configurations qui utilisent éventuellement le 4ème identifiant,
+			//             on ne considère szId4Value comme un texte à rechercher que s'il n'y a pas une configuration szId4Name définie
+			if (*(gptActions[ptSuivi->iAction].szId4Value)!=0 && *(gptActions[ptSuivi->iAction].szId4Name)==0 && (vtRole.lVal & ROLE_SYSTEM_TEXT))
 			{
 				hr=pChild->get_accName(vtChild,&bstrName);
 				if (hr==S_OK) 
@@ -349,7 +350,7 @@ end:
 // SSO commun aux navigateurs implémentant l'interface IAccessible
 // Utilise forcément la méthode de configuration simplifiée
 // ----------------------------------------------------------------------------------
-// [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur)
+// [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur),-3 (libellé szId4Value non trouvé)
 // ----------------------------------------------------------------------------------
 int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 {
@@ -589,7 +590,15 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		ptSuivi=&tSuivi;
 		vtChild.vt=VT_I4;
 		vtChild.lVal=CHILDID_SELF;
-		
+
+		// ISSUE#373
+		if (*(gptActions[ptSuivi->iAction].szId4Value)!=0 && *(gptActions[ptSuivi->iAction].szId4Name)==0 && !(ptSuivi->bLabelFound))
+		{
+			TRACE((TRACE_ERROR,_F_,"Texte non trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Value));
+			rc=-3;
+			goto end;
+		}
+
 		// 0.93B1 / ISSUE#40 : avant de démarrer les saisies, il faut vérifier qu'on a trouvé tous les champs attendus
 		// En effet, comme on ne cherche plus les champs par leurs noms, on peut provoquer des mises au premier plan intempestives
 		// de la fenêtre du navigateur si le titre et l'URL ne permettent pas de reconnaitre la page de login de manière certaine
@@ -612,13 +621,6 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			goto end;
 		}
 		
-		// ISSUE#373
-		if (*(gptActions[ptSuivi->iAction].szId4Value)!=0 && !(ptSuivi->bLabelFound))
-		{
-			TRACE((TRACE_ERROR,_F_,"Texte non trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Value));
-			goto end;
-		}
-
 		// Vérification OK, on peut mettre la fenêtre au premier plan et démarrer les saisies 
 		TRACE((TRACE_INFO,_F_,"Verifications OK, demarrage des saisies (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
 		SetForegroundWindow(ptSuivi->w);

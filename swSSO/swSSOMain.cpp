@@ -1271,6 +1271,12 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 						gptActions[i].iWaitFor=WAIT_IF_BAD_URL;
 						TRACE((TRACE_INFO,_F_,"URL différente de celle attendue, prochain essai dans %d secondes",WAIT_IF_BAD_URL));
 					}
+					else if (rc==-3) // SSO abandonné car libelle szId4Value non trouvé dans la page
+					{
+						gptActions[i].iNbEssais=0;
+						gptActions[i].iWaitFor=WAIT_IF_LABEL_NOT_FOUND;
+						TRACE((TRACE_INFO,_F_,"Libelle %s non trouvé dans la page, prochain essai dans %d secondes",gptActions[i].szId4Value,WAIT_IF_LABEL_NOT_FOUND));
+					}
 					else // SSO raté, erreur inattendue ou plus probablement champs non trouvés
 					{
 						// Deux cas de figure... comment les différencier ???

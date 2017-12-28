@@ -3,8 +3,8 @@
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1 VERSIONINFO
-    FILEVERSION     1,1,9,3
-    PRODUCTVERSION  1,1,9,3
+    FILEVERSION     1,1,9,4
+    PRODUCTVERSION  1,1,9,4
     FILEOS          VOS_UNKNOWN
     FILETYPE        VFT_UNKNOWN
     FILESUBTYPE     VFT2_UNKNOWN
@@ -17,7 +17,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
         {
             VALUE "FileVersion", "1.19"
             VALUE "ProductVersion", "1.19"
-            VALUE "LegalCopyright", "Copyright 2004-2017"
+            VALUE "LegalCopyright", "Copyright 2004-2018"
             VALUE "Comments", ""
             VALUE "CompanyName", "Sylvain WERDEFROY"
 #ifdef TRACES_ACTIVEES
