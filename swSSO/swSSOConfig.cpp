@@ -361,7 +361,15 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					}
 					break;
 				case PB_RESET:
-					//TODO
+					if (MessageBox(NULL,GetString(IDS_CONFIRM_RESET),"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES)
+					{
+						// suppression de toutes les configurations
+						giNbActions=0;
+						giNbCategories=1;
+						SaveApplications();
+						// réinitialisation depuis le serveur
+						RefreshRights(TRUE,TRUE);
+					}
 					break;
 			}
 			break;

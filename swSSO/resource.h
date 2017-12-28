@@ -43,7 +43,6 @@
 #define IDC_CURSOR_HAND                 1003
 #define IDC_SEP_SECURITE                1003
 #define TB_LANCEMENT                    1003
-#define IDC_SEP_STATISTIQUES2           1003
 #define IDC_SEP_COFFRE                  1003
 #define IDC_SEP_AUTORISATIONS           1004
 #define TX_SERVER2                      1004
@@ -433,6 +432,7 @@
 #define IDS_SERVER_ADMIN_LOGIN_KO       42043
 #define IDS_YES                         42044
 #define IDS_NO                          42045
+#define IDS_CONFIRM_RESET               42046
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005
