@@ -43,6 +43,8 @@
 #define IDC_CURSOR_HAND                 1003
 #define IDC_SEP_SECURITE                1003
 #define TB_LANCEMENT                    1003
+#define IDC_SEP_STATISTIQUES2           1003
+#define IDC_SEP_COFFRE                  1003
 #define IDC_SEP_AUTORISATIONS           1004
 #define TX_SERVER2                      1004
 #define IDC_SEP_PROXY                   1005
@@ -105,6 +107,7 @@
 #define PB_PARCOURIR                    1072
 #define PB_LICENCE                      1073
 #define TB_OLD_PWD                      1074
+#define PB_RESET                        1074
 #define TX_ID2_ID                       1075
 #define CK_SAVE                         1076
 #define TB_NEW_PWD1                     1077

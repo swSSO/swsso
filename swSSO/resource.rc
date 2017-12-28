@@ -22,7 +22,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutre resources
+// Neutral resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -85,12 +85,12 @@ IDI_SYSTRAY_INACTIVE    ICON                    "SystrayInactive.ico"
 
 1                       RT_MANIFEST             ".\\manifest.xml"
 
-#endif    // Neutre resources
+#endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Anglais resources
+// English resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
@@ -502,38 +502,41 @@ BEGIN
     LTEXT           "Before beginning, you must define a master password. It will be used to protect all your web sites and applications passwords. Choose a strong password, but don't forget it, there is no way to recover it!",TX_FRAME1,10,40,266,32,NOT WS_GROUP
 END
 
-PSP_ABOUT DIALOGEX 0, 0, 338, 214
+PSP_ABOUT DIALOGEX 0, 0, 339, 229
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "About swSSO"
 FONT 8, "Tahoma", 400, 0, 0x0
 BEGIN
     PUSHBUTTON      "&License",PB_LICENCE,280,56,50,14
-    PUSHBUTTON      "&Browse",PB_PARCOURIR,280,118,50,14
-    PUSHBUTTON      "&Open",PB_OUVRIR,280,149,50,14
-    EDITTEXT        TX_PORTAL,99,122,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    EDITTEXT        TX_CONFIGFILE,99,153,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&Browse",PB_PARCOURIR,280,116,50,14
+    PUSHBUTTON      "&Open",PB_OUVRIR,280,147,50,14
+    EDITTEXT        TX_PORTAL,99,120,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT        TX_CONFIGFILE,99,151,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     LTEXT           "Copyright © 2004-2017 - Sylvain Werdefroy",-1,47,24,155,10
-    LTEXT           "Statistics",TX_STATISTIQUES,7,168,31,10
-    LTEXT           "Number of connections:",-1,17,182,77,8
-    LTEXT           "0",TX_NBSSO,101,182,230,8
+    LTEXT           "Statistics",TX_STATISTIQUES,7,196,31,10
+    LTEXT           "Number of connections:",-1,17,210,77,8
+    LTEXT           "0",TX_NBSSO,101,210,230,8
     CTEXT           "https://www.swsso.com",TX_URL,206,16,95,10,0,WS_EX_TRANSPARENT
-    LTEXT           "Informations",TX_INFORMATIONS,7,78,44,11
-    LTEXT           "Encryption:",-1,17,137,79,8
-    LTEXT           "???",TX_PWDENCRYPTED,101,137,171,8
-    LTEXT           "Configuration file:",TX_CONFIGFILE2,17,153,81,8
+    LTEXT           "Informations",TX_INFORMATIONS,7,77,44,11
+    LTEXT           "Encryption:",-1,17,135,79,8
+    LTEXT           "???",TX_PWDENCRYPTED,101,135,171,8
+    LTEXT           "Configuration file:",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,55,262,18
-    LTEXT           "License",TX_LICENCE,7,41,28,11
+    LTEXT           "License",TX_LICENCE,7,40,28,11
     LTEXT           "1.19b4 (12/25/2017)",TX_ABOUT,47,12,154,8
-    LTEXT           "Portal:",TX_PORTAL2,17,122,42,8
+    LTEXT           "Portal:",TX_PORTAL2,17,120,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
-    CONTROL         "",IDC_SEP_STATISTIQUES,"Static",SS_ETCHEDHORZ,43,172,253,1
-    LTEXT           "Number of applications:",-1,17,197,76,8
-    LTEXT           "0",TX_NBAPP,101,197,230,8
-    LTEXT           "swSSO server:",TX_SERVER2,17,93,48,8
-    EDITTEXT        TX_SERVER,99,93,230,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Domain:",TX_SERVER1,18,107,27,8
-    LTEXT           "Aucun",TX_DOMAIN,101,107,174,8
+    CONTROL         "",IDC_SEP_STATISTIQUES,"Static",SS_ETCHEDHORZ,43,201,252,1
+    LTEXT           "Number of applications:",-1,17,181,76,8
+    LTEXT           "0",TX_NBAPP,101,181,230,8
+    LTEXT           "swSSO server:",TX_SERVER2,17,91,48,8
+    EDITTEXT        TX_SERVER,99,91,230,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    LTEXT           "Domain:",TX_SERVER1,18,105,27,8
+    LTEXT           "Aucun",TX_DOMAIN,101,105,174,8
+    PUSHBUTTON      "&Reset",PB_RESET,280,178,50,14
+    LTEXT           "Safebox content",TX_COFFRE,7,166,56,10
+    CONTROL         "",IDC_SEP_COFFRE,"Static",SS_ETCHEDHORZ,67,171,255,1
 END
 
 PSP_BROWSER DIALOGEX 0, 0, 338, 214
@@ -690,6 +693,8 @@ BEGIN
 
     PSP_ABOUT, DIALOG
     BEGIN
+        RIGHTMARGIN, 338
+        BOTTOMMARGIN, 223
     END
 
     PSP_BROWSER, DIALOG
@@ -1042,12 +1047,12 @@ BEGIN
     IDS_NO                  "No"
 END
 
-#endif    // Anglais resources
+#endif    // English resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Français resources
+// French resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
@@ -1431,38 +1436,41 @@ BEGIN
     LTEXT           "Vous devez définir un mot de passe qui sera utilisé pour protéger vos informations de connexion à vos sites et applications. Choisissez un mot de passe complexe, mais surtout ne le perdez pas, il n'existe aucun moyen pour le récupérer !",TX_FRAME1,10,40,268,32,NOT WS_GROUP
 END
 
-PSP_ABOUT DIALOGEX 0, 0, 338, 214
+PSP_ABOUT DIALOGEX 0, 0, 339, 229
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "A propos de swSSO"
 FONT 8, "Tahoma", 400, 0, 0x0
 BEGIN
     PUSHBUTTON      "&Licence",PB_LICENCE,280,56,50,14
-    PUSHBUTTON      "&Parcourir",PB_PARCOURIR,280,118,50,14
-    PUSHBUTTON      "&Ouvrir",PB_OUVRIR,280,149,50,14
-    EDITTEXT        TX_PORTAL,99,122,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    EDITTEXT        TX_CONFIGFILE,99,153,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&Parcourir",PB_PARCOURIR,280,116,50,14
+    PUSHBUTTON      "&Ouvrir",PB_OUVRIR,280,147,50,14
+    EDITTEXT        TX_PORTAL,99,120,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT        TX_CONFIGFILE,99,151,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     LTEXT           "Copyright © 2004-2017 - Sylvain Werdefroy",-1,47,24,155,10
-    LTEXT           "Statistiques",TX_STATISTIQUES,7,168,41,10
-    LTEXT           "Nombre de SSO réalisés :",-1,17,182,82,8
-    LTEXT           "0",TX_NBSSO,101,182,230,8
+    LTEXT           "Statistiques",TX_STATISTIQUES,7,196,41,10
+    LTEXT           "Nombre de SSO réalisés :",-1,17,210,82,8
+    LTEXT           "0",TX_NBSSO,99,210,230,8
     CTEXT           "https://www.swsso.fr",TX_URL,206,16,95,10,0,WS_EX_TRANSPARENT
-    LTEXT           "Informations",TX_INFORMATIONS,7,78,44,11
-    LTEXT           "Algorithme chiffrement :",-1,17,137,79,8
-    LTEXT           "???",TX_PWDENCRYPTED,101,137,171,8
-    LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,153,81,8
+    LTEXT           "Informations",TX_INFORMATIONS,7,77,44,11
+    LTEXT           "Algorithme chiffrement :",-1,17,135,79,8
+    LTEXT           "???",TX_PWDENCRYPTED,101,135,171,8
+    LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
-    LTEXT           "Licence",TX_LICENCE,7,41,28,11
+    LTEXT           "Licence",TX_LICENCE,7,40,28,11
     LTEXT           "1.19b4 (25/12/2017)",TX_ABOUT,47,12,157,8
-    LTEXT           "Portail :",TX_PORTAL2,17,122,42,8
+    LTEXT           "Portail :",TX_PORTAL2,17,120,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
-    CONTROL         "",IDC_SEP_STATISTIQUES,"Static",SS_ETCHEDHORZ,49,172,247,1
-    LTEXT           "Applications actives :",-1,17,197,68,8
-    LTEXT           "0",TX_NBAPP,101,197,230,8
-    LTEXT           "Serveur swSSO :",TX_SERVER2,17,93,55,8
-    EDITTEXT        TX_SERVER,99,93,230,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Domaine :",TX_SERVER1,18,107,33,8
-    LTEXT           "Aucun",TX_DOMAIN,101,107,174,8
+    CONTROL         "",IDC_SEP_STATISTIQUES,"Static",SS_ETCHEDHORZ,51,201,246,1
+    LTEXT           "Applications actives :",-1,17,180,68,8
+    LTEXT           "0",TX_NBAPP,99,180,88,8
+    LTEXT           "Serveur swSSO :",TX_SERVER2,17,91,55,8
+    EDITTEXT        TX_SERVER,99,91,230,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    LTEXT           "Domaine :",TX_SERVER1,18,105,33,8
+    LTEXT           "Aucun",TX_DOMAIN,101,105,174,8
+    PUSHBUTTON      "&Réinitialiser",PB_RESET,280,178,50,14
+    LTEXT           "Contenu du coffre",TX_COFFRE,7,166,63,10
+    CONTROL         "",IDC_SEP_COFFRE,"Static",SS_ETCHEDHORZ,71,171,246,1
 END
 
 PSP_BROWSER DIALOG 0, 0, 338, 214
@@ -1595,6 +1603,8 @@ BEGIN
 
     PSP_ABOUT, DIALOG
     BEGIN
+        RIGHTMARGIN, 331
+        BOTTOMMARGIN, 222
     END
 
     PSP_INTERNET, DIALOG
@@ -1970,12 +1980,12 @@ BEGIN
     IDS_NO                  "Non"
 END
 
-#endif    // Français resources
+#endif    // French resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Français (France) resources
+// French (France) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
@@ -2014,7 +2024,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Français (France) resources
+#endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

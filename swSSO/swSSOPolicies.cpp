@@ -98,7 +98,8 @@ BOOL gbEnableOption_ViewServerInfos=TRUE;
 BOOL gbShowSystrayIcon=TRUE;
 // ISSUE#363
 BOOL gbEnableOption_ShowAdditionalIds=TRUE;
-
+// ISSUE#374
+BOOL gbEnableOption_Reset=FALSE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=8;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
@@ -964,6 +965,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_ViewServerInfos=%d",gbEnableOption_ViewServerInfos));
 	TRACE((TRACE_INFO,_F_,"gbShowSystrayIcon=%d"			,gbShowSystrayIcon));
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowAdditionalIds=%d",gbEnableOption_ShowAdditionalIds));
+	TRACE((TRACE_INFO,_F_,"gbEnableOption_Reset=%d"			,gbEnableOption_Reset));
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
@@ -1407,6 +1409,12 @@ void LoadGlobalOrDomainPolicies(char *pcszDomain)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_SHOW_ADDITIONAL_IDS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbEnableOption_ShowAdditionalIds=(BOOL)dwValue; 
+
+		// ISSUE#374
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_RESET,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbEnableOption_Reset=(BOOL)dwValue; 
+
 
 		RegCloseKey(hKey);
 	}

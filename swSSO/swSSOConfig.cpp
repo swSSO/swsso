@@ -171,6 +171,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			if (!gbEnableOption_ViewIni) { ShowWindow(GetDlgItem(w,TX_CONFIGFILE),SW_HIDE); ShowWindow(GetDlgItem(w,TX_CONFIGFILE2),SW_HIDE); }
 			if (!gbEnableOption_OpenIni) ShowWindow(GetDlgItem(w,PB_OUVRIR),SW_HIDE);
 			if (!gbEnableOption_Portal)  ShowWindow(GetDlgItem(w,PB_PARCOURIR),SW_HIDE);
+			if (!gbEnableOption_Reset)  ShowWindow(GetDlgItem(w,PB_RESET),SW_HIDE);
 
 			if (giDomainId==-1)
 				SetWindowText(GetDlgItem(w,TX_DOMAIN),"Tous");
@@ -233,6 +234,8 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				SetWindowPos(GetDlgItem(w,IDC_SEP_INFORMATIONS),NULL,0,0,rectBouton.right-rectSeparator.left,2,SWP_NOMOVE);
 				GetWindowRect(GetDlgItem(w,IDC_SEP_STATISTIQUES),&rectSeparator);
 				SetWindowPos(GetDlgItem(w,IDC_SEP_STATISTIQUES),NULL,0,0,rectBouton.right-rectSeparator.left,2,SWP_NOMOVE);
+				GetWindowRect(GetDlgItem(w,IDC_SEP_COFFRE),&rectSeparator);
+				SetWindowPos(GetDlgItem(w,IDC_SEP_COFFRE),NULL,0,0,rectBouton.right-rectSeparator.left,2,SWP_NOMOVE);
 			}
 			rc=FALSE;
 			break;
@@ -242,6 +245,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			ctrlID=GetDlgCtrlID((HWND)lp);
 			switch(ctrlID)
 			{
+				case TX_COFFRE:
 				case TX_STATISTIQUES:
 				case TX_INFORMATIONS:
 				case TX_LICENCE:
@@ -355,6 +359,9 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						SavePortal();
 						PropSheet_Changed(gwPropertySheet,w);
 					}
+					break;
+				case PB_RESET:
+					//TODO
 					break;
 			}
 			break;

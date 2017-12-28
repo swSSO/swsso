@@ -97,6 +97,8 @@
 #define REGVALUE_SHOW_SYSTRAY_ICON					"ShowSystrayIcon"
 // ISSUE#363
 #define REGVALUE_SHOW_ADDITIONAL_IDS				"ShowAdditionalIds"
+// ISSUE#374
+#define REGVALUE_ENABLEOPTION_RESET					"ShowResetButton"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -159,6 +161,8 @@ extern BOOL gbEnableOption_ViewServerInfos;
 extern BOOL gbShowSystrayIcon;
 // ISSUE#363
 extern BOOL gbEnableOption_ShowAdditionalIds;
+// ISSUE#374
+extern BOOL gbEnableOption_Reset;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"
