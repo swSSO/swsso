@@ -46,6 +46,7 @@ typedef struct
 	char szClassName[128+1]; // classe de fenêtre recherchée
 	char szExclude[128+1]; // classe de fenêtre à exclure : si trouvée, on arrête l'énum avec retour null
 	int iBrowser; // ISSUE#279
+	BOOL bLabelFound; // ISSUE#373
 } T_SUIVI_ACCESSIBLE;
 
 int SSOWebAccessible(HWND w,int iAction,int iBrowser);

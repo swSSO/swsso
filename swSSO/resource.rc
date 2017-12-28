@@ -22,7 +22,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutral resources
+// Neutre resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -85,12 +85,12 @@ IDI_SYSTRAY_INACTIVE    ICON                    "SystrayInactive.ico"
 
 1                       RT_MANIFEST             ".\\manifest.xml"
 
-#endif    // Neutral resources
+#endif    // Neutre resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English resources
+// Anglais resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
@@ -523,7 +523,7 @@ BEGIN
     LTEXT           "Configuration file:",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,55,262,18
     LTEXT           "License",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.19 BETA 3 (12/17/2017)",TX_ABOUT,47,12,120,8
+    LTEXT           "1.19b3 (12/17/2017) - Christmas Edition",TX_ABOUT,47,12,154,8
     LTEXT           "Portal:",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -746,6 +746,11 @@ BEGIN
 END
 
 IDD_APPNSITES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+PSP_ABOUT AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -1037,12 +1042,12 @@ BEGIN
     IDS_NO                  "No"
 END
 
-#endif    // English resources
+#endif    // Anglais resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// French resources
+// Français resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
@@ -1447,7 +1452,7 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,153,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,41,28,11
-    LTEXT           "Version 1.19 BETA 3 (17/12/2017)",TX_ABOUT,47,12,120,8
+    LTEXT           "1.19b3 (17/12/2017) - Christmas Edition",TX_ABOUT,47,12,157,8
     LTEXT           "Portail :",TX_PORTAL2,17,122,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -1657,6 +1662,11 @@ BEGIN
 END
 
 IDD_PUBLISH_TO AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+PSP_ABOUT AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -1960,12 +1970,12 @@ BEGIN
     IDS_NO                  "Non"
 END
 
-#endif    // French resources
+#endif    // Français resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// French (France) resources
+// Français (France) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
@@ -2004,7 +2014,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // French (France) resources
+#endif    // Français (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

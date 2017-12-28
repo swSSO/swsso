@@ -115,6 +115,8 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 	long l,lCount;
 	long returnCount;
 	VARIANT* pArray = NULL;
+	BSTR bstrName=NULL;
+	char *pszName=NULL;
 	
 #ifdef TRACES_ACTIVEES
 	char szTab[200];
@@ -180,10 +182,26 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
 			TRACE((TRACE_DEBUG,_F_,"%sget_accRole() vtRole.lVal=0x%08lx",szTab,vtRole.lVal));
 			
-			//hr=pChild->get_accName(vtChild,&bstrName);
-			//if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accName()=0x%08lx",hr)); goto suivant; }
-			//TRACE((TRACE_DEBUG,_F_,"%sget_accName() name=%S",szTab,bstrName));
-			
+			// ISSUE#373 : recherche un texte dans la page
+			if (*(gptActions[ptSuivi->iAction].szId4Value)!=0 && (vtRole.lVal & ROLE_SYSTEM_TEXT))
+			{
+				hr=pChild->get_accName(vtChild,&bstrName);
+				if (hr==S_OK) 
+				{ 
+					pszName=GetSZFromBSTR(bstrName);
+					TRACE((TRACE_DEBUG,_F_,"%sget_accName() name=%s",szTab,pszName));
+					if (pszName!=NULL)
+					{
+						if (swStringMatch(pszName,gptActions[ptSuivi->iAction].szId4Value))
+						{
+							ptSuivi->bLabelFound=TRUE;
+							TRACE((TRACE_DEBUG,_F_,"Texte trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Value));
+						}
+						free(pszName); pszName=NULL;
+					}
+					SysFreeString(bstrName); bstrName=NULL;
+				}
+			}			
 			// Reconnaissance du champ mot de passe : Nième champ ayant pour role et state les valeurs suivantes :
 			// - Role = ROLE_SYSTEM_TEXT
 			// - State = (STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_FOCUSED) & STATE_SYSTEM_PROTECTED
@@ -274,6 +292,8 @@ suivant:
 	}
 	
 end:
+	SysFreeString(bstrName);
+	if (pszName!=NULL) free (pszName);
 	if (pArray!=NULL) delete[] pArray;
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
@@ -555,6 +575,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 	tSuivi.iPwdIndex=-1;
 	tSuivi.iNbPwdFound=0;
 	tSuivi.iBrowser=iBrowser; // ISSUE#279
+	tSuivi.bLabelFound=FALSE;
 
 #ifdef TRACES_ACTIVEES
 	DoWebAccessible("",w,pAccessible,&tSuivi);
@@ -591,6 +612,13 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			goto end;
 		}
 		
+		// ISSUE#373
+		if (*(gptActions[ptSuivi->iAction].szId4Value)!=0 && !(ptSuivi->bLabelFound))
+		{
+			TRACE((TRACE_ERROR,_F_,"Texte non trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Value));
+			goto end;
+		}
+
 		// Vérification OK, on peut mettre la fenêtre au premier plan et démarrer les saisies 
 		TRACE((TRACE_INFO,_F_,"Verifications OK, demarrage des saisies (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
 		SetForegroundWindow(ptSuivi->w);
