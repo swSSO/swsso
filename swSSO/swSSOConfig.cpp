@@ -3401,9 +3401,34 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds,char *
 	else if (gptActions[iAction].iType==POPSSO)	strcpy_s(szType,sizeof(szType),"POP");
 	else strcpy_s(szType,sizeof(szType),"UNK");
 
-	if (*gptActions[iAction].szId2Name!=0) strcpy_s(szId2Type,sizeof(szId2Type),gptActions[iAction].id2Type==EDIT?"EDIT":"COMBO");
-	if (*gptActions[iAction].szId3Name!=0) strcpy_s(szId3Type,sizeof(szId3Type),gptActions[iAction].id3Type==EDIT?"EDIT":"COMBO");
-	if (*gptActions[iAction].szId4Name!=0) strcpy_s(szId4Type,sizeof(szId4Type),gptActions[iAction].id4Type==EDIT?"EDIT":"COMBO");
+	if (*gptActions[iAction].szId2Name!=0)
+	{
+		switch (gptActions[iAction].id2Type)
+		{
+			case EDIT:		  strcpy_s(szId2Type,sizeof(szId2Type),"EDIT"); break;
+			case COMBO:		  strcpy_s(szId2Type,sizeof(szId2Type),"COMBO"); break;
+			default:		  strcpy_s(szId2Type,sizeof(szId2Type),"UNK");
+		}
+	}
+	if (*gptActions[iAction].szId3Name!=0)
+	{
+		switch (gptActions[iAction].id3Type)
+		{
+			case EDIT:		  strcpy_s(szId3Type,sizeof(szId3Type),"EDIT"); break;
+			case COMBO:		  strcpy_s(szId3Type,sizeof(szId3Type),"COMBO"); break;
+			default:		  strcpy_s(szId3Type,sizeof(szId3Type),"UNK");
+		}
+	}
+	if (*gptActions[iAction].szId4Name!=0)
+	{
+		switch (gptActions[iAction].id4Type)
+		{
+			case EDIT:		  strcpy_s(szId4Type,sizeof(szId4Type),"EDIT"); break;
+			case COMBO:		  strcpy_s(szId4Type,sizeof(szId4Type),"COMBO"); break;
+			case CHECK_LABEL: strcpy_s(szId4Type,sizeof(szId4Type),"CHECK"); break;
+			default:		  strcpy_s(szId4Type,sizeof(szId4Type),"UNK");
+		}
+	}
 
 	//0.87 : encodage des paramètres URL et titre (BUG#60)
 	pszEncodedURL=HTTPEncodeParam(gptActions[iAction].szURL);
@@ -3922,6 +3947,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					{
 						if (strcmp(tmp,"EDIT")==0) gptActions[ptiActions[i]].id2Type=EDIT;
 						else if (strcmp(tmp,"COMBO")==0) gptActions[ptiActions[i]].id2Type=COMBO;
+						else gptActions[ptiActions[i]].id2Type=0;
 						TRACE((TRACE_DEBUG,_F_, "id2Type=%d",gptActions[ptiActions[i]].id2Type));
 					}
 				}
@@ -3945,6 +3971,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					{
 						if (strcmp(tmp,"EDIT")==0) gptActions[ptiActions[i]].id3Type=EDIT;
 						else if (strcmp(tmp,"COMBO")==0) gptActions[ptiActions[i]].id3Type=COMBO;
+						else gptActions[ptiActions[i]].id3Type=0;
 						TRACE((TRACE_DEBUG,_F_, "id3Type=%d",gptActions[ptiActions[i]].id3Type));
 					}
 				}
@@ -3969,7 +3996,10 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					{
 						if (strcmp(tmp,"EDIT")==0) gptActions[ptiActions[i]].id4Type=EDIT;
 						else if (strcmp(tmp,"COMBO")==0) gptActions[ptiActions[i]].id4Type=COMBO;
+						else if (strcmp(tmp,"CHECK")==0) gptActions[ptiActions[i]].id4Type=CHECK_LABEL;
+						else gptActions[ptiActions[i]].id4Type=0;
 						TRACE((TRACE_DEBUG,_F_, "id4Type=%d",gptActions[ptiActions[i]].id4Type));
+						if (gptActions[ptiActions[i]].id4Type==CHECK_LABEL) gbDontAskId4=TRUE;
 					}
 				}
 			}

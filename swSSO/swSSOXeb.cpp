@@ -182,9 +182,8 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accRole()=0x%08lx",hr)); goto suivant; }
 			TRACE((TRACE_DEBUG,_F_,"%sget_accRole() vtRole.lVal=0x%08lx",szTab,vtRole.lVal));
 			
-			// ISSUE#373 : recherche un texte dans la page : pour éviter les régressions sur les rares configurations qui utilisent éventuellement le 4ème identifiant,
-			//             on ne considère szId4Value comme un texte à rechercher que s'il n'y a pas une configuration szId4Name définie
-			if (*(gptActions[ptSuivi->iAction].szId4Value)!=0 && *(gptActions[ptSuivi->iAction].szId4Name)==0 && (vtRole.lVal & ROLE_SYSTEM_TEXT))
+			// ISSUE#373 : recherche un texte dans la page
+			if (gptActions[ptSuivi->iAction].id4Type==CHECK_LABEL && *(gptActions[ptSuivi->iAction].szId4Name)!=0 && (vtRole.lVal & ROLE_SYSTEM_TEXT))
 			{
 				hr=pChild->get_accName(vtChild,&bstrName);
 				if (hr==S_OK) 
@@ -193,10 +192,10 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 					TRACE((TRACE_DEBUG,_F_,"%sget_accName() name=%s",szTab,pszName));
 					if (pszName!=NULL)
 					{
-						if (swStringMatch(pszName,gptActions[ptSuivi->iAction].szId4Value))
+						if (swStringMatch(pszName,gptActions[ptSuivi->iAction].szId4Name))
 						{
 							ptSuivi->bLabelFound=TRUE;
-							TRACE((TRACE_DEBUG,_F_,"Texte trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Value));
+							TRACE((TRACE_DEBUG,_F_,"Texte trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Name));
 						}
 						free(pszName); pszName=NULL;
 					}
@@ -592,9 +591,9 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		vtChild.lVal=CHILDID_SELF;
 
 		// ISSUE#373
-		if (*(gptActions[ptSuivi->iAction].szId4Value)!=0 && *(gptActions[ptSuivi->iAction].szId4Name)==0 && !(ptSuivi->bLabelFound))
+		if (gptActions[ptSuivi->iAction].id4Type==CHECK_LABEL && *(gptActions[ptSuivi->iAction].szId4Name)!=0 && !(ptSuivi->bLabelFound))
 		{
-			TRACE((TRACE_ERROR,_F_,"Texte non trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Value));
+			TRACE((TRACE_ERROR,_F_,"Texte non trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Name));
 			rc=-3;
 			goto end;
 		}
@@ -614,7 +613,14 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 		iId1Index=GetAbsolutePos(gptActions[ptSuivi->iAction].szId1Name,gptActions[ptSuivi->iAction].szPwdName,ptSuivi->iPwdIndex,ptSuivi);
 		iId2Index=GetAbsolutePos(gptActions[ptSuivi->iAction].szId2Name,gptActions[ptSuivi->iAction].szPwdName,ptSuivi->iPwdIndex,ptSuivi);
 		iId3Index=GetAbsolutePos(gptActions[ptSuivi->iAction].szId3Name,gptActions[ptSuivi->iAction].szPwdName,ptSuivi->iPwdIndex,ptSuivi);
-		iId4Index=GetAbsolutePos(gptActions[ptSuivi->iAction].szId4Name,gptActions[ptSuivi->iAction].szPwdName,ptSuivi->iPwdIndex,ptSuivi);
+		if (gptActions[ptSuivi->iAction].id4Type==CHECK_LABEL)
+		{
+			iId4Index=-2;
+		}
+		else
+		{
+			iId4Index=GetAbsolutePos(gptActions[ptSuivi->iAction].szId4Name,gptActions[ptSuivi->iAction].szPwdName,ptSuivi->iPwdIndex,ptSuivi);
+		}
 		if (iId1Index==-1 || iId2Index==-1 || iId3Index==-1 || iId4Index==-1)
 		{
 			TRACE((TRACE_ERROR,_F_,"Au moins un des champs n'a pas ete trouve => le SSO ne sera pas execute"));

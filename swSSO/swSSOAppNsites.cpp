@@ -2093,7 +2093,7 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 		gbDontAskId=(*gptActions[iAction].szId1Name==0);
 		gbDontAskId2=(*gptActions[iAction].szId2Name==0);
 		gbDontAskId3=(*gptActions[iAction].szId3Name==0);
-		gbDontAskId4=(*gptActions[iAction].szId4Name==0);
+		gbDontAskId4=(*gptActions[iAction].szId4Name==0 || gptActions[iAction].id4Type==CHECK_LABEL);
 		gbDontAskPwd=(*gptActions[iAction].szPwdName==0);
 		if (gptActions[iAction].iType==POPSSO) { gbDontAskId=FALSE; gbDontAskPwd=FALSE; }
 		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),w,IdAndPwdDialogProc,(LPARAM)&params)!=IDOK) // l'utilisateur a annulé
@@ -3340,6 +3340,7 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	SendMessage(GetDlgItem(w,CB_ID4_TYPE),CB_ADDSTRING,0,(LPARAM)"");
 	SendMessage(GetDlgItem(w,CB_ID4_TYPE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_COMBOIDTYPE1));
 	SendMessage(GetDlgItem(w,CB_ID4_TYPE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_COMBOIDTYPE2));
+	SendMessage(GetDlgItem(w,CB_ID4_TYPE),CB_ADDSTRING,0,(LPARAM)GetString(IDS_COMBOIDTYPE3));
 
 	// Limitation de la longueur des champs de saisie
 	SendMessage(GetDlgItem(w,TB_ID),EM_LIMITTEXT,LEN_ID,0);
@@ -3991,6 +3992,7 @@ int LoadApplicationIdX(char *szSection,int x, char *szIdName,int sizeofIdName,
 		GetPrivateProfileString(szSection,szItem,"",szIdType,sizeof(szIdType),gszCfgFile);
 		if (strcmp(szIdType,"EDIT")==0)			*idType=EDIT;
 		else if (strcmp(szIdType,"COMBO")==0)	*idType=COMBO;
+		else if (strcmp(szIdType,"CHECK")==0)	*idType=CHECK_LABEL;
 		else if (*szIdType==0)					*idType=0;
 		else { TRACE((TRACE_ERROR,_F_, "id%dType (%s) : %s",x,szSection,szIdType)); goto end; }
 
@@ -4010,6 +4012,17 @@ int LoadApplicationIdX(char *szSection,int x, char *szIdName,int sizeofIdName,
 		}
 		TRACE((TRACE_DEBUG,_F_,"id%dName=%s | id%dValue=%s | id%dType=%d",x,szIdName,x,szIdValue,x,*idType));
 	}
+	else // ISSUE#373 : obligé quand même de lire le type car si c'est un check label la value est forcément vide...
+	{
+		sprintf_s(szItem,sizeof(szItem),"id%dType",x);	
+		GetPrivateProfileString(szSection,szItem,"",szIdType,sizeof(szIdType),gszCfgFile);
+		if (strcmp(szIdType,"CHECK")==0) 
+		{
+			*idType=CHECK_LABEL;
+			sprintf_s(szItem,sizeof(szItem),"id%dName",x); 	
+			GetPrivateProfileString(szSection,szItem,"",szIdName,sizeofIdName,gszCfgFile);
+		}
+	}
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -4027,7 +4040,7 @@ int SaveApplicationIdX(HANDLE hf,int x,const char *szIdName,const char *szIdValu
 	DWORD dw;
 	char tmpBuf[2048];
 	char szIdEncryptedValue[LEN_ENCRYPTED_AES256+1];
-	char szIdType[10+1]; // NONE | EDIT | COMBO
+	char szIdType[10+1]; // NONE | EDIT | COMBO | CHECK
 
 	// chiffrement de l'identifiant sauf si vide
 	if (*szIdValue==0)
@@ -4052,6 +4065,7 @@ int SaveApplicationIdX(HANDLE hf,int x,const char *szIdName,const char *szIdValu
 	{
 		if (idType==EDIT) strcpy_s(szIdType,"EDIT");
 		else if (idType==COMBO) strcpy_s(szIdType,"COMBO");
+		else if (idType==CHECK_LABEL) strcpy_s(szIdType,"CHECK");
 		else *szIdType=0;
 
 		sprintf_s(tmpBuf,sizeof(tmpBuf),

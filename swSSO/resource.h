@@ -376,6 +376,7 @@
 #define IDS_ADMIN_PWD_STORE_OK          40152
 #define IDS_CLOSE_APPNSITES_FIRST       40153
 #define IDM_SWUNDO                      40154
+#define IDS_COMBOIDTYPE3                40154
 #define IDM_SWCUT                       40155
 #define IDM_SWCOPY                      40156
 #define IDM_SWPASTE                     40157

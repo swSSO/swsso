@@ -57,6 +57,7 @@
 
 #define EDIT   1
 #define COMBO  2
+#define CHECK_LABEL 3
 
 #define WAIT_IF_SSO_OK 120
 #define WAIT_IF_BAD_URL 5

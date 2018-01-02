@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="118";	// 101 = 1.01
-const char gcszCurrentBeta[]="1193";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1194";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 HWND gwChooseConfig=NULL;
@@ -1087,7 +1087,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				if (*gptActions[i].szId1Name!=0 && *gptActions[i].szId1Value==0) gbDontAskId=FALSE;
 				if (*gptActions[i].szId2Name!=0 && *gptActions[i].szId2Value==0) gbDontAskId2=FALSE;
 				if (*gptActions[i].szId3Name!=0 && *gptActions[i].szId3Value==0) gbDontAskId3=FALSE;
-				if (*gptActions[i].szId4Name!=0 && *gptActions[i].szId4Value==0) gbDontAskId4=FALSE;
+				if (*gptActions[i].szId4Name!=0 && gptActions[i].id4Type!=CHECK_LABEL && *gptActions[i].szId4Value==0) gbDontAskId4=FALSE;
 				if (*gptActions[i].szPwdName!=0 && *gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
 			}
 			// cas des popups (0.92 - ISSUE#7)

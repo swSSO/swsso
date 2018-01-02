@@ -735,7 +735,7 @@ int SSOFirefox(HWND w,int iAction,int iBrowser)
 	if (*(gptActions[iAction].szId1Name)!=0) tSuivi.iSuivi++;
 	if (*(gptActions[iAction].szId2Name)!=0) tSuivi.iSuivi++; // 0.66 gestion du 2nd identifiant
 	if (*(gptActions[iAction].szId3Name)!=0) tSuivi.iSuivi++; // 0.80 gestion 3ème identifiant
-	if (*(gptActions[iAction].szId4Name)!=0) tSuivi.iSuivi++; // 0.80 gestion 4ème identifiant
+	if (*(gptActions[iAction].szId4Name)!=0 && gptActions[iAction].id4Type!=CHECK_LABEL) tSuivi.iSuivi++; // 0.80 gestion 4ème identifiant
 	if (*(gptActions[iAction].szPwdName)!=0) tSuivi.iSuivi++;
 	if (*(gptActions[iAction].szValidateName)!=0) tSuivi.iSuivi++;
 

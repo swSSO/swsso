@@ -696,7 +696,7 @@ int SSOWeb(HWND w,int iAction,HWND w2)
 		TRACE((TRACE_DEBUG,_F_,"bstrId3Name=%S",bstrId3Name));
 	}
 
-	if (*(gptActions[iAction].szId4Name)!=0) // un champ id4 à remplir
+	if (*(gptActions[iAction].szId4Name)!=0 && gptActions[iAction].id4Type!=CHECK_LABEL) // un champ id4 à remplir
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ id4 et valeur

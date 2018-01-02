@@ -134,7 +134,7 @@ static int CALLBACK WinEnumChildProc(HWND w, LPARAM lp)
 		if (WinFillControl(w,atoi(gptActions[iAction].szId3Name),GetComputedValue(gptActions[iAction].szId3Value),gptActions[iAction].id3Type)==0)
 			((T_SUIVI_ACTION*)lp)->iSuivi++;
 	}
-	if (*gptActions[iAction].szId4Name!=0) 
+	if (*gptActions[iAction].szId4Name!=0 && gptActions[iAction].id4Type!=CHECK_LABEL) 
 	{
 		if (WinFillControl(w,atoi(gptActions[iAction].szId4Name),GetComputedValue(gptActions[iAction].szId4Value),gptActions[iAction].id4Type)==0)
 			((T_SUIVI_ACTION*)lp)->iSuivi++;
@@ -850,16 +850,16 @@ int SSOWindows(HWND w,int iAction,int iPopupType)
 		strcpy_s(gptActions[iAction].szValidateName,sizeof(gptActions[iAction].szValidateName),"1");
 	}
 	TRACE((TRACE_DEBUG,_F_,"szId1Name=%s",gptActions[iAction].szId1Name));
-	TRACE((TRACE_DEBUG,_F_,"szId2Name=%s",gptActions[iAction].szId2Name));
-	TRACE((TRACE_DEBUG,_F_,"szId3Name=%s",gptActions[iAction].szId3Name));
-	TRACE((TRACE_DEBUG,_F_,"szId4Name=%s",gptActions[iAction].szId4Name));
+	TRACE((TRACE_DEBUG,_F_,"szId2Name=%s (type=%d)",gptActions[iAction].szId2Name,gptActions[iAction].id2Type));
+	TRACE((TRACE_DEBUG,_F_,"szId3Name=%s (type=%d)",gptActions[iAction].szId3Name,gptActions[iAction].id3Type));
+	TRACE((TRACE_DEBUG,_F_,"szId4Name=%s (type=%d)",gptActions[iAction].szId4Name,gptActions[iAction].id4Type));
 	TRACE((TRACE_DEBUG,_F_,"szPwdName=%s",gptActions[iAction].szPwdName));
 	
 	if (*(gptActions[iAction].szId1Name)==0) tSuiviAction.iSuivi--;
 	if (*(gptActions[iAction].szPwdName)==0) tSuiviAction.iSuivi--;
 	if (*(gptActions[iAction].szId2Name)==0) tSuiviAction.iSuivi--;
 	if (*(gptActions[iAction].szId3Name)==0) tSuiviAction.iSuivi--;
-	if (*(gptActions[iAction].szId4Name)==0) tSuiviAction.iSuivi--;
+	if (*(gptActions[iAction].szId4Name)==0 || gptActions[iAction].id4Type==CHECK_LABEL) tSuiviAction.iSuivi--;
 	
 	TRACE((TRACE_DEBUG,_F_,"tSuiviAction.iSuivi=%d",tSuiviAction.iSuivi));
 	

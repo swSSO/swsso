@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="./swsso.xsl"?>
+<swsso>
+	<app>
+		<categoryLabel>Non classé</categoryLabel>
+		<categoryIndex>0</categoryIndex>
+		<categoryId>0</categoryId>
+		<label>swSSO - Démonstration (connexion)</label>
+		<url><![CDATA[https://www.swsso.fr/demo/]]></url>
+		<title><![CDATA[swSSO - Démonstration (connexion)*]]></title>
+	</app>
+</swsso>
