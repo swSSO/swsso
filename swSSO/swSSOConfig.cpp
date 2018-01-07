@@ -3075,7 +3075,7 @@ void SavePortal()
 {
 	TRACE((TRACE_ENTER,_F_,"%s",gszCfgPortal));
 	FILE *hf=NULL;
-	char szTmpURL[128+1];
+	char szTmpURL[LEN_URL+1]; // ISSUE#375
 	char szCategoryIndex[8+1];
 	int iCategory;
 	int lenURL;

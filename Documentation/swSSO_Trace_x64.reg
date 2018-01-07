@@ -1,0 +1,18 @@
+Windows Registry Editor Version 5.00 
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\swSSO\]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\swSSO\Trace]
+"Filesize"=dword:00000100
+"Filename"="c:\\temp\\swssotrace.txt"
+"Level"=dword:00000005
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\swSSO\TraceSVC]
+"Filesize"=dword:00000100
+"Filename"="c:\\temp\\swssotraceSVC.txt"
+"Level"=dword:00000005
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\swSSO\TraceCM]
+"Filesize"=dword:00000100
+"Filename"="c:\\temp\\swssotraceCM.txt"
+"Level"=dword:00000005
