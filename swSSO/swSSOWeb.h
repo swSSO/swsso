@@ -36,7 +36,5 @@ extern UINT guiHTMLGetObjectMsg;
 extern const char gcszFormNoName1[];
 extern const char gcszFormNoName2[];
 
-int SSOWeb(HWND w,int iAction,HWND w2);
-int SSOMaxthon(HWND w,int iAction);
-// int SSOWebInit();   // 1.12B3-TI-TIE4
-// void SSOWebTerm();  // 1.12B3-TI-TIE4
+int SSOWeb(HWND w,int *piAction,HWND w2);
+int SSOMaxthon(HWND w,int *piAction);

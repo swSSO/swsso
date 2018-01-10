@@ -633,6 +633,91 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// AskMissingValues()
+//-----------------------------------------------------------------------------
+// Nouvelle fonction en 1.19 pour reprendre tout le code qui demande à l'utilisateur
+// les informations identifiant(s) et mot de passe éventuellement manquantes
+//-----------------------------------------------------------------------------
+// i = index de l'action dans gptActions
+//-----------------------------------------------------------------------------
+int AskMissingValues(HWND w,int i,int iPopupType)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+
+	//0.91 : vérifie que chaque champ identifiant et mot de passe déclaré a bien une valeur associée
+	//       sinon demande les valeurs manquantes à l'utilisateur !
+	//0.92 : correction ISSUE#7 : le cas des popup qui ont toujours id et pwd mais pas de chaque champ 
+	//		 identifiant et mot de passe déclaré n'était pas traité !
+	gbDontAskId=TRUE;
+	gbDontAskId2=TRUE;
+	gbDontAskId3=TRUE;
+	gbDontAskId4=TRUE;
+	gbDontAskPwd=TRUE;
+
+	// 0.93 : logs
+	// ISSUE#127 : déplacé + loin, une fois qu'on a réussi le SSO
+	// swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
+
+	if (gptActions[i].bKBSim && gptActions[i].szKBSim[0]!=0) // simulation de frappe clavier
+	{
+		if (strnistr(gptActions[i].szKBSim,"[ID]",-1)!=NULL &&  *gptActions[i].szId1Value==0) gbDontAskId=FALSE;
+		if (strnistr(gptActions[i].szKBSim,"[ID2]",-1)!=NULL && *gptActions[i].szId2Value==0) gbDontAskId2=FALSE;
+		if (strnistr(gptActions[i].szKBSim,"[ID3]",-1)!=NULL && *gptActions[i].szId3Value==0) gbDontAskId3=FALSE;
+		if (strnistr(gptActions[i].szKBSim,"[ID4]",-1)!=NULL && *gptActions[i].szId4Value==0) gbDontAskId4=FALSE;
+		if (strnistr(gptActions[i].szKBSim,"[PWD]",-1)!=NULL && *gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
+	}
+	else // SSO normal
+	{
+		if (*gptActions[i].szId1Name!=0 && *gptActions[i].szId1Value==0) gbDontAskId=FALSE;
+		if (*gptActions[i].szId2Name!=0 && *gptActions[i].szId2Value==0) gbDontAskId2=FALSE;
+		if (*gptActions[i].szId3Name!=0 && *gptActions[i].szId3Value==0) gbDontAskId3=FALSE;
+		if (*gptActions[i].szId4Name!=0 && gptActions[i].id4Type!=CHECK_LABEL && *gptActions[i].szId4Value==0) gbDontAskId4=FALSE;
+		if (*gptActions[i].szPwdName!=0 && *gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
+	}
+	// cas des popups (0.92 - ISSUE#7)
+	if (gptActions[i].iType==POPSSO) 
+	{
+		if (*gptActions[i].szId1Value==0) gbDontAskId=FALSE;
+		if (*gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
+	}
+			
+	// s'il y a au moins un champ non renseigné, afficher la fenêtre de saisie
+	if (!gbDontAskId || !gbDontAskId2 || !gbDontAskId3 || !gbDontAskId4 || !gbDontAskPwd)
+	{
+		T_IDANDPWDDIALOG params;
+		params.bCenter=TRUE;
+		params.iAction=i;
+		params.iTitle=IDS_IDANDPWDTITLE_MISSING;
+		wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_MISSING),gptActions[i].szApplication);
+					
+		// ISSUE#334
+		// if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),HWND_DESKTOP,IdAndPwdDialogProc,(LPARAM)&params)==IDOK)
+		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),w,IdAndPwdDialogProc,(LPARAM)&params)==IDOK) 
+		{
+			gwIdAndPwdDialogProc=NULL;
+			SaveApplications();
+		}
+		else
+		{
+			gwIdAndPwdDialogProc=NULL;
+			// l'utilisateur a annulé, on marque la config en WAIT_ONE_MINUTE comme ça on ne fait pas 
+			// le SSO tout de suite
+			time(&gptActions[i].tLastSSO);
+			gptActions[i].wLastSSO=w;
+			LastDetect_AddOrUpdateWindow(w,iPopupType);
+			gptActions[i].iWaitFor=WAIT_ONE_MINUTE;
+			TRACE((TRACE_DEBUG,_F_,"gptActions(%d).iWaitFor=WAIT_ONE_MINUTE",i));
+			goto end;
+		}
+	}
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
 // EnumWindowsProc()
 //-----------------------------------------------------------------------------
 // Callback d'énumération de fenêtres présentes sur le bureau et déclenchement
@@ -787,7 +872,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		else if (gptActions[i].iType==XINSSO)
 		{
 		}
-		else if (gptActions[i].iType==WEBSSO || gptActions[i].iType==WEBPWD || gptActions[i].iType==XEBSSO) // action WEB, il faut vérifier que l'URL matche
+		else if (gptActions[i].iType==WEBSSO || gptActions[i].iType==XEBSSO) // action WEB, il faut vérifier que l'URL matche
 		{
 			if (strcmp(szClassName,"IEFrame")==0 || // IE
 				strcmp(szClassName,"#32770")==0 ||  // Network Connect
@@ -894,7 +979,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		TRACE((TRACE_DEBUG,_F_,"tLastSSOOnThisWindow        =%ld (time du dernier SSO sur cette fenêtre)",tLastSSOOnThisWindow));
 		TRACE((TRACE_DEBUG,_F_,"tNow-tLastSSOOnThisWindow	=%ld (nb secondes depuis dernier SSO sur cette fenêtre)",tNow-tLastSSOOnThisWindow));
 
-		if (gptActions[i].iType==WEBSSO || gptActions[i].iType==WEBPWD || gptActions[i].iType==XEBSSO || 
+		if (gptActions[i].iType==WEBSSO || gptActions[i].iType==XEBSSO || 
 			(gptActions[i].iType==POPSSO && iPopupType==POPUP_CHROME)) // cas particulier : la popup chrome n'est pas une fenêtre comme les autres popup
 		{
 			// si tLastSSOOnThisWindow==1 => handle inconnu donc jamais traité => on fait le SSO, sinon :
@@ -1058,85 +1143,15 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			KillTimer(NULL,giTimer); giTimer=0;
 
 			//0.91 : fait choisir l'appli à l'utilisateur si plusieurs matchent (gestion du multicomptes)
-			if (ChooseConfig(w,&i)!=0) goto end;
-			
-			//0.91 : vérifie que chaque champ identifiant et mot de passe déclaré a bien une valeur associée
-			//       sinon demande les valeurs manquantes à l'utilisateur !
-			//0.92 : correction ISSUE#7 : le cas des popup qui ont toujours id et pwd mais pas de chaque champ 
-			//		 identifiant et mot de passe déclaré n'était pas traité !
-			gbDontAskId=TRUE;
-			gbDontAskId2=TRUE;
-			gbDontAskId3=TRUE;
-			gbDontAskId4=TRUE;
-			gbDontAskPwd=TRUE;
+			//1.19 : déplacement plus tard, une fois qu'on est sur qu'on est sur la bonne page (à cause du filtre textuel ISSUE#373)
+			// if (ChooseConfig(w,&i)!=0) goto end;
 
-			// 0.93 : logs
-			// ISSUE#127 : déplacé + loin, une fois qu'on a réussi le SSO
-			// swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_SECONDARY_LOGIN_SUCCESS,gptActions[i].szApplication,gptActions[i].szId1Value,NULL,i);
-
-			if (gptActions[i].bKBSim && gptActions[i].szKBSim[0]!=0) // simulation de frappe clavier
-			{
-				if (strnistr(gptActions[i].szKBSim,"[ID]",-1)!=NULL &&  *gptActions[i].szId1Value==0) gbDontAskId=FALSE;
-				if (strnistr(gptActions[i].szKBSim,"[ID2]",-1)!=NULL && *gptActions[i].szId2Value==0) gbDontAskId2=FALSE;
-				if (strnistr(gptActions[i].szKBSim,"[ID3]",-1)!=NULL && *gptActions[i].szId3Value==0) gbDontAskId3=FALSE;
-				if (strnistr(gptActions[i].szKBSim,"[ID4]",-1)!=NULL && *gptActions[i].szId4Value==0) gbDontAskId4=FALSE;
-				if (strnistr(gptActions[i].szKBSim,"[PWD]",-1)!=NULL && *gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
-			}
-			else // SSO normal
-			{
-				if (*gptActions[i].szId1Name!=0 && *gptActions[i].szId1Value==0) gbDontAskId=FALSE;
-				if (*gptActions[i].szId2Name!=0 && *gptActions[i].szId2Value==0) gbDontAskId2=FALSE;
-				if (*gptActions[i].szId3Name!=0 && *gptActions[i].szId3Value==0) gbDontAskId3=FALSE;
-				if (*gptActions[i].szId4Name!=0 && gptActions[i].id4Type!=CHECK_LABEL && *gptActions[i].szId4Value==0) gbDontAskId4=FALSE;
-				if (*gptActions[i].szPwdName!=0 && *gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
-			}
-			// cas des popups (0.92 - ISSUE#7)
-			if (gptActions[i].iType==POPSSO) 
-			{
-				if (*gptActions[i].szId1Value==0) gbDontAskId=FALSE;
-				if (*gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
-			}
-			
-			// s'il y a au moins un champ non renseigné, afficher la fenêtre de saisie
-			//if (!gbDontAskId || !gbDontAskId2 || !gbDontAskId3 || !gbDontAskId4 || !gbDontAskPwd)
-			if ((gptActions[i].iType!=WEBPWD) && (!gbDontAskId || !gbDontAskId2 || !gbDontAskId3 || !gbDontAskId4 || !gbDontAskPwd))
-			{
-				T_IDANDPWDDIALOG params;
-				params.bCenter=TRUE;
-				params.iAction=i;
-				params.iTitle=IDS_IDANDPWDTITLE_MISSING;
-				wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_MISSING),gptActions[i].szApplication);
-					
-				// ISSUE#334
-				// if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),HWND_DESKTOP,IdAndPwdDialogProc,(LPARAM)&params)==IDOK)
-				if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),w,IdAndPwdDialogProc,(LPARAM)&params)==IDOK) 
-				{
-					gwIdAndPwdDialogProc=NULL;
-					SaveApplications();
-				}
-				else
-				{
-					gwIdAndPwdDialogProc=NULL;
-					// l'utilisateur a annulé, on marque la config en WAIT_ONE_MINUTE comme ça on ne fait pas 
-					// le SSO tout de suite -> repositionne tLastDetect et wLastDetect 
-					//time(&gptActions[i].tLastDetect);
-					//gptActions[i].wLastDetect=w;
-					time(&gptActions[i].tLastSSO);
-					gptActions[i].wLastSSO=w;
-					LastDetect_AddOrUpdateWindow(w,iPopupType);
-					gptActions[i].iWaitFor=WAIT_ONE_MINUTE;
-					TRACE((TRACE_DEBUG,_F_,"gptActions(%d).iWaitFor=WAIT_ONE_MINUTE",i));
-					goto end;
-				}
-			}
-			
+			//1.19 : déplacement du code vers une nouvelle fonction, qui sera appelée plus tard, 
+			// une fois qu'on est sur qu'on est sur la bonne page (à cause du filtre textuel ISSUE#373)
+			// if (AskMissingValues(w,i,iPopupType)!=0) goto end;
+						
 			//0.89 : indépendamment du type (WIN, POP ou WEB), si c'est de la simulation de frappe clavier, on y va !
-			//       et ensuite on termine sans uploader la config (comme on n'a aucun moyen de savoir
-			//       si le SSO a fonctionné, c'est préférable de laisser l'utilisateur juger et remonter
-			//		 manuellement la configuration le cas échéant
-			// ISSUE#61 / 0.93 : on ne traite les popup W7 en simulation de frappe, marche pas avec IE9 ou W7 SP1 ?
-			// if (iPopupType==POPUP_W7 || iPopupType==POPUP_CHROME) 
-			if (iPopupType==POPUP_CHROME) // 0.92 : on traite les popup W7 en simulation de frappe ça marche très bien
+			if (iPopupType==POPUP_CHROME)
 			{
 				gptActions[i].bKBSim=TRUE;
 				strcpy_s(gptActions[i].szKBSim,LEN_KBSIM+1,"[40][ID][40][TAB][40][PWD][40][ENTER]");
@@ -1144,18 +1159,13 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			if (gptActions[i].bKBSim && gptActions[i].szKBSim[0]!=0)
 			{
 				TRACE((TRACE_INFO,_F_,"SSO en mode simulation de frappe clavier"));
-				// if (gptActions[i].iType==POPSSO && iPopupType==POPUP_CHROME)
-				// KBSimSSO(wReal,i);
-				// else
+				if (ChooseConfig(w,&i)!=0) goto end;
+				if (AskMissingValues(w,i,iPopupType)!=0) goto end;
 				KBSimSSO(w,i);
-				// repositionne tLastDetect et wLastDetect
-				//time(&gptActions[i].tLastDetect);
-				//gptActions[i].wLastDetect=w;
 				time(&gptActions[i].tLastSSO);
 				gptActions[i].wLastSSO=w;
 				LastDetect_AddOrUpdateWindow(w,iPopupType);
 				if (_strnicmp(gptActions[i].szKBSim,"[WAIT]",strlen("[WAIT]"))==0) gptActions[i].bWaitForUserAction=TRUE;
-				//goto suite; // 0.90
 				// ISSUE#61 / 0.93 : on ne traite plus les popup W7 en simulation de frappe, marche pas avec IE9 ou W7 SP1 ?
 				// if (iPopupType==POPUP_W7 || iPopupType==POPUP_CHROME) { gptActions[i].bKBSim=FALSE; *(gptActions[i].szKBSim)=0; }
 				if (iPopupType==POPUP_CHROME) { gptActions[i].bKBSim=FALSE; *(gptActions[i].szKBSim)=0; }
@@ -1175,6 +1185,10 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			{
 				case WINSSO: 
 				case POPSSO: 
+					// TODO plus tard : déplacer ces 2 lignes dans SSOWindows
+					if (ChooseConfig(w,&i)!=0) goto end;
+					if (AskMissingValues(w,i,iPopupType)!=0) goto end;
+
 					if (SSOWindows(w,i,iPopupType)==0) // ISSUE#188
 					{
 						time(&gptActions[i].tLastSSO);
@@ -1183,7 +1197,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					}
 					break;
 				case XINSSO: 
-					if (SSOWebAccessible(w,i,BROWSER_XIN)==0)
+					if (SSOWebAccessible(w,&i,BROWSER_XIN)==0)
 					{
 						time(&gptActions[i].tLastSSO);
 						gptActions[i].wLastSSO=w;
@@ -1191,23 +1205,20 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					}
 					break;
 				case WEBSSO: 
-					// pas de break, c'est volontaire !
 				case XEBSSO: 
-					// pas de break, c'est volontaire !
-				case WEBPWD:
 					switch (iBrowser)
 					{
 						case BROWSER_IE:
 							if (gptActions[i].iType==XEBSSO)
-								rc=SSOWebAccessible(w,i,BROWSER_IE);
+								rc=SSOWebAccessible(w,&i,BROWSER_IE);
 							else
-								rc=SSOWeb(w,i,w); 
+								rc=SSOWeb(w,&i,w); 
 							break;
 							break;
 						case BROWSER_FIREFOX3:
 						case BROWSER_FIREFOX4:
 							if (gptActions[i].iType==XEBSSO)
-								rc=SSOWebAccessible(w,i,iBrowser);
+								rc=SSOWebAccessible(w,&i,iBrowser);
 							else
 							{
 								// ISSUE#60 : en attendant d'avoir une réponse de Mozilla, on n'exécute pas les anciennes config 
@@ -1218,15 +1229,15 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 									TRACE((TRACE_INFO,_F_,"Ancienne configuration Firefox + Windows 64 bits : on n'exécute pas !"));
 									rc=0;
 								}
-								else rc=SSOFirefox(w,i,iBrowser); 
+								else rc=SSOFirefox(w,&i,iBrowser); 
 							}
 							break;
 						case BROWSER_MAXTHON:
-							rc=SSOMaxthon(w,i); 
+							rc=SSOMaxthon(w,&i); 
 							break;
 						case BROWSER_CHROME:
 							if (gptActions[i].iType==XEBSSO)
-								rc=SSOWebAccessible(w,i,iBrowser);
+								rc=SSOWebAccessible(w,&i,iBrowser);
 							else
 							{
 								if (giOSBits==OS_64) 
@@ -1234,7 +1245,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 									TRACE((TRACE_INFO,_F_,"Ancienne configuration Chrome + Windows 64 bits : on n'exécute pas !"));
 									rc=0;
 								}
-								else rc=SSOFirefox(w,i,iBrowser); // ISSUE#66 0.94 : chrome a implémenté ISimpleDOM comme Firefox !
+								else rc=SSOFirefox(w,&i,iBrowser); // ISSUE#66 0.94 : chrome a implémenté ISimpleDOM comme Firefox !
 							}
 							break;
 						default:

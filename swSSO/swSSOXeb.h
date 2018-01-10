@@ -49,6 +49,6 @@ typedef struct
 	BOOL bLabelFound; // ISSUE#373
 } T_SUIVI_ACCESSIBLE;
 
-int SSOWebAccessible(HWND w,int iAction,int iBrowser);
+int SSOWebAccessible(HWND w,int *piAction,int iBrowser);
 
 

@@ -381,9 +381,9 @@ end:
 // ----------------------------------------------------------------------------------
 // [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur),-3 (libellé szId4Value non trouvé)
 // ----------------------------------------------------------------------------------
-int SSOWebAccessible(HWND w,int iAction,int iBrowser)
+int SSOWebAccessible(HWND w,int *piAction,int iBrowser)
 {
-	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d iBrowser=%d",w,iAction,iBrowser));
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx *piAction=%d iBrowser=%d",w,*piAction,iBrowser));
 	int rc=-1;
 	IAccessible *pAccessible=NULL;
 	IAccessible *pTopAccessible=NULL;
@@ -599,7 +599,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 
 	ZeroMemory(&tSuivi,sizeof(T_SUIVI_ACCESSIBLE)); // déplacé plus haut, mais laissé ici aussi dans le doute ça coute pas cher.
 	tSuivi.w=w;
-	tSuivi.iAction=iAction;
+	tSuivi.iAction=*piAction;
 	tSuivi.iErreur=0;
 	tSuivi.iLevel=0;
 	tSuivi.iPwdIndex=-1;
@@ -657,21 +657,27 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			goto end;
 		}
 		
-		// Vérification OK, on peut mettre la fenêtre au premier plan et démarrer les saisies 
-		TRACE((TRACE_INFO,_F_,"Verifications OK, demarrage des saisies (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
+		// ISSUE#373 : tout ça était fait dans le main avant, mais il faut le déplacer ici pour ne le demander que si on est sûr d'être sur la bonne page
+		TRACE((TRACE_INFO,_F_,"Verifications OK, demande à l'utilisateur de choisir son compte (si plusieurs) et de renseigner des id (si pas déjà fait)"));
+		if (ChooseConfig(w,piAction)!=0) goto end;
+		if (AskMissingValues(w,*piAction,POPUP_NONE)!=0) goto end;
+		ptSuivi->iAction=*piAction;
+
+		// GO, on peut mettre la fenêtre au premier plan et démarrer les saisies 
+		TRACE((TRACE_INFO,_F_,"Demarrage des saisies (lCount=%d ptSuivi->iTextFieldIndex=%d)",lCount,ptSuivi->iTextFieldIndex));
 		SetForegroundWindow(ptSuivi->w);
 
-		if (iId1Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId1Index],vtChild,gptActions[ptSuivi->iAction].szId1Value,iAction,iBrowser);
+		if (iId1Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId1Index],vtChild,gptActions[ptSuivi->iAction].szId1Value,ptSuivi->iAction,iBrowser);
 
 		// ISSUE#367 : si ID2 et ID3 contiennent une chaine de type %RANDOMxx%, c'est une page de changement de mot de passe
 		p2=strstr(gptActions[ptSuivi->iAction].szId2Value,"%RANDOM");
 		p3=strstr(gptActions[ptSuivi->iAction].szId3Value,"%RANDOM");
 		if (p2==NULL || p3==NULL)
 		{
-			if (iId2Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,gptActions[ptSuivi->iAction].szId2Value,iAction,iBrowser);
-			if (iId3Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,gptActions[ptSuivi->iAction].szId3Value,iAction,iBrowser);
+			if (iId2Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,gptActions[ptSuivi->iAction].szId2Value,ptSuivi->iAction,iBrowser);
+			if (iId3Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,gptActions[ptSuivi->iAction].szId3Value,ptSuivi->iAction,iBrowser);
 		}
-		if (iId4Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId4Index],vtChild,gptActions[ptSuivi->iAction].szId4Value,iAction,iBrowser);
+		if (iId4Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId4Index],vtChild,gptActions[ptSuivi->iAction].szId4Value,ptSuivi->iAction,iBrowser);
 		
 		// Mdp
 		if (ptSuivi->iPwdIndex!=-1)
@@ -727,7 +733,7 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 					}
 					if (bstrValue==NULL || FAILED(hr))
 					{
-						KBSimWeb(ptSuivi->w,TRUE,100,pszPassword,TRUE,iAction,iBrowser,ptSuivi->pTextFields[ptSuivi->iPwdIndex],vtChild);
+						KBSimWeb(ptSuivi->w,TRUE,100,pszPassword,TRUE,ptSuivi->iAction,iBrowser,ptSuivi->pTextFields[ptSuivi->iPwdIndex],vtChild);
 					}
 					if (bstrValue!=NULL)
 					{
@@ -744,8 +750,8 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			// génère un mot de passe aléatoire en fonction de la politique
 			if (GenerateNewPassword(szNewPassword,gptActions[ptSuivi->iAction].szId2Value)!=0) goto end; 
 			// saisit le mot de passe défini dans les 2 champs
-			if (iId2Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,szNewPassword,iAction,iBrowser);
-			if (iId3Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,szNewPassword,iAction,iBrowser);
+			if (iId2Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId2Index],vtChild,szNewPassword,ptSuivi->iAction,iBrowser);
+			if (iId3Index>=0) PutAccValueWeb(ptSuivi->w,ptSuivi->pTextFields[iId3Index],vtChild,szNewPassword,ptSuivi->iAction,iBrowser);
 			// sauvegarde le mot de passe défini dans les configurations du même password group
 			if (gptActions[ptSuivi->iAction].iPwdGroup!=-1)
 			{
@@ -795,12 +801,12 @@ int SSOWebAccessible(HWND w,int iAction,int iBrowser)
 			{
 				*szDecryptedPassword=0;
 			}
-			if (!CheckIfURLStillOK(w,iAction,iBrowser,NULL,FALSE,NULL)) goto end;
+			if (!CheckIfURLStillOK(w,ptSuivi->iAction,iBrowser,NULL,FALSE,NULL)) goto end;
 			KBSimEx(NULL,gptActions[ptSuivi->iAction].szValidateName,
-						 gptActions[iAction].szId1Value,
-						 gptActions[iAction].szId2Value,
-						 gptActions[iAction].szId3Value,
-						 gptActions[iAction].szId4Value,szDecryptedPassword);
+						 gptActions[ptSuivi->iAction].szId1Value,
+						 gptActions[ptSuivi->iAction].szId2Value,
+						 gptActions[ptSuivi->iAction].szId3Value,
+						 gptActions[ptSuivi->iAction].szId4Value,szDecryptedPassword);
 			SecureZeroMemory(szDecryptedPassword,sizeof(szDecryptedPassword));
 		}
 		guiNbWEBSSO++;

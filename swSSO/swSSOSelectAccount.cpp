@@ -171,10 +171,7 @@ void FillTreeViewSelectAccount(HWND w)
 	for (i=0;i<giNbActions;i++) 
 	{
 		if (i==giActionIdPwdAsked) continue; // ISSUE#225
-		if (gptActions[i].iType!=WEBPWD)
-		{
-			hItem=TVSelectAccountAddApplication(w,i); if (hItem==NULL) goto end;
-		}
+		hItem=TVSelectAccountAddApplication(w,i); if (hItem==NULL) goto end;
 	}
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));

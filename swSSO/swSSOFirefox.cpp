@@ -691,7 +691,7 @@ static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
 // ----------------------------------------------------------------------------------
 // [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur), -2=pas la bonne URL
 // ----------------------------------------------------------------------------------
-int SSOFirefox(HWND w,int iAction,int iBrowser)
+int SSOFirefox(HWND w,int *piAction,int iBrowser)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
@@ -723,8 +723,13 @@ int SSOFirefox(HWND w,int iAction,int iBrowser)
 	}
 	else goto end;
 	
+	// ISSUE#373 : tout ça était fait dans le main avant, mais il faut le déplacer ici pour ne le demander que si on est sûr d'être sur la bonne page
+	TRACE((TRACE_INFO,_F_,"Demande à l'utilisateur de choisir son compte (si plusieurs) et de renseigner des id (si pas déjà fait)"));
+	if (ChooseConfig(w,piAction)!=0) goto end;
+	if (AskMissingValues(w,*piAction,POPUP_NONE)!=0) goto end;
+	
 	tSuivi.w=w;
-	tSuivi.iAction=iAction;
+	tSuivi.iAction=*piAction;
 	tSuivi.iSuivi=0;
 	tSuivi.iErreur=0;
 	tSuivi.iLevel=0;
@@ -732,12 +737,12 @@ int SSOFirefox(HWND w,int iAction,int iBrowser)
 	tSuivi.bId3Done=FALSE;
 	tSuivi.bId4Done=FALSE;
 	tSuivi.pPwdAccessible=NULL;
-	if (*(gptActions[iAction].szId1Name)!=0) tSuivi.iSuivi++;
-	if (*(gptActions[iAction].szId2Name)!=0) tSuivi.iSuivi++; // 0.66 gestion du 2nd identifiant
-	if (*(gptActions[iAction].szId3Name)!=0) tSuivi.iSuivi++; // 0.80 gestion 3ème identifiant
-	if (*(gptActions[iAction].szId4Name)!=0 && gptActions[iAction].id4Type!=CHECK_LABEL) tSuivi.iSuivi++; // 0.80 gestion 4ème identifiant
-	if (*(gptActions[iAction].szPwdName)!=0) tSuivi.iSuivi++;
-	if (*(gptActions[iAction].szValidateName)!=0) tSuivi.iSuivi++;
+	if (*(gptActions[*piAction].szId1Name)!=0) tSuivi.iSuivi++;
+	if (*(gptActions[*piAction].szId2Name)!=0) tSuivi.iSuivi++; // 0.66 gestion du 2nd identifiant
+	if (*(gptActions[*piAction].szId3Name)!=0) tSuivi.iSuivi++; // 0.80 gestion 3ème identifiant
+	if (*(gptActions[*piAction].szId4Name)!=0 && gptActions[*piAction].id4Type!=CHECK_LABEL) tSuivi.iSuivi++; // 0.80 gestion 4ème identifiant
+	if (*(gptActions[*piAction].szPwdName)!=0) tSuivi.iSuivi++;
+	if (*(gptActions[*piAction].szValidateName)!=0) tSuivi.iSuivi++;
 
 	TRACE((TRACE_INFO,_F_,"tSuivi.iSuivi=%d",tSuivi.iSuivi));
 	

@@ -147,3 +147,6 @@ extern BOOL gbAdmin;
 extern HBRUSH ghRedBrush;
 
 extern int giNbTranscryptError;
+
+int ChooseConfig(HWND w,int *piAction);
+int AskMissingValues(HWND w,int i,int iPopupType);

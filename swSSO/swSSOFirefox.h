@@ -31,7 +31,7 @@
 // swSSOFirefox.h
 //-----------------------------------------------------------------------------
 
-int SSOFirefox(HWND w,int iAction,int iBrowser);
+int SSOFirefox(HWND w,int *piAction,int iBrowser);
 //char *GetFirefoxURL(HWND w,BOOL bGetAccessible,IAccessible **ppAccessible,int iBrowser,BOOL bWaitReady);
 char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAccessible **ppOutAccessible,int iBrowser,BOOL bWaitReady);
 

@@ -3132,10 +3132,7 @@ void FillTreeView(HWND w)
 	// Ajout des actions
 	for (i=0;i<giNbActions;i++) 
 	{
-		if (gptActions[i].iType!=WEBPWD)
-		{
-			hItem=TVAddApplication(w,i,NULL); if (hItem==NULL) goto end;
-		}
+		hItem=TVAddApplication(w,i,NULL); if (hItem==NULL) goto end;
 	}
 end:
 	TRACE((TRACE_LEAVE,_F_, ""));
@@ -4294,54 +4291,6 @@ int LoadApplications(void)
 			if (*gptActions[i].szId1Value!=0 || *gptActions[i].szPwdEncryptedValue!=0) gptActions[i].bError=FALSE;
 		}
 		gptActions[i].bSafe=!GetConfigBoolValue(p,"SSO",TRUE,FALSE);
-#if 0
-		// 0.9X : gestion des changements de mot de passe sur les pages web
-		if (gptActions[i].bPwdChangeInfos)
-		{
-			TRACE((TRACE_INFO,_F_,"Une page de changement de mot de passe est déclarée pour cette application :"));
-			// PROTO : on crée une config supplémentaire qui ne contient que les éléments pour le changement de mot de passe
-			i++;
-			giNbActions++;
-			ZeroMemory(&gptActions[i],sizeof(T_ACTION));
-			gptActions[i].iType=WEBPWD;
-			// TODO :trouver une bonne solution pour nommer la config supplémentaire (penser à l'ajout après coup... comment faire puisqu'elle ne sera jamais
-			//        juste après...il vaudrait mieux avoir une espèce de pointeur.
-			GetPrivateProfileString("_pwd_change","pwdTitle","",gptActions[i].szTitle,sizeof(gptActions[i].szTitle),gszCfgFile);
-			GetPrivateProfileString("_pwd_change","pwdURL","",gptActions[i].szURL,sizeof(gptActions[i].szURL),gszCfgFile);
-			GetPrivateProfileString("_pwd_change","pwdCurrent","",gptActions[i].szId1Name,sizeof(gptActions[i].szId1Name),gszCfgFile);
-			GetPrivateProfileString("_pwd_change","pwdNew1","",gptActions[i].szId2Name,sizeof(gptActions[i].szId2Name),gszCfgFile);
-			GetPrivateProfileString("_pwd_change","pwdNew2","",gptActions[i].szId3Name,sizeof(gptActions[i].szId3Name),gszCfgFile);
-			gptActions[i].id2Type=EDIT;
-			gptActions[i].id3Type=EDIT;
-			GetPrivateProfileString("_pwd_change","pwdValidate","",gptActions[i].szValidateName,sizeof(gptActions[i].szValidateName),gszCfgFile);
-
-			TRACE((TRACE_INFO,_F_,"pwdTitle   =%s",gptActions[i].szTitle));
-			TRACE((TRACE_INFO,_F_,"pwdURL     =%s",gptActions[i].szURL));
-			TRACE((TRACE_INFO,_F_,"pwdCurrent =%s",gptActions[i].szId1Name));
-			TRACE((TRACE_INFO,_F_,"pwdNew1    =%s",gptActions[i].szId2Name));
-			TRACE((TRACE_INFO,_F_,"pwdNew2    =%s",gptActions[i].szId3Name));
-			TRACE((TRACE_INFO,_F_,"pwdValidate=%s",gptActions[i].szValidateName));
-
-			gptActions[i].iPwdLen=10;
-
-			// reprise des valeurs de la clé mère
-			gptActions[i].bActive=gptActions[i-1].bActive;
-			gptActions[i].bAutoLock=gptActions[i-1].bAutoLock;
-			strcpy_s(gptActions[i].szApplication,sizeof(gptActions[i].szApplication),gptActions[i-1].szApplication);
-			
-			// autres initialisations...
-			gptActions[i].bKBSim=FALSE;
-			gptActions[i].bWaitForUserAction=FALSE;
-			//gptActions[i].tLastDetect=-1;
-			//gptActions[i].wLastDetect=NULL;
-			gptActions[i].tLastSSO=-1;
-			gptActions[i].wLastSSO=NULL;
-			gptActions[i].iWaitFor=giWaitBeforeNewSSO;
-			gptActions[i].bSaved=TRUE;
-			gptActions[i].bPwdChangeInfos=FALSE;
-			gptActions[i].iNbEssais=0;
-		}
-#endif
 suite:
 		while(*p!=0) p++ ;
 		i++;
@@ -4423,22 +4372,6 @@ int SaveApplications(void)
 	for (i=0;i<giNbActions;i++)
 	{
 		TRACE((TRACE_DEBUG,_F_,"Ecriture cle n°%d='%s'",i,gptActions[i].szApplication));
-
-		// si l'action est de type WEBPWD, on ne devrait pas la voir puisqu'elle est 
-		// écrite avec sa config mère (n-1). Si on la voit, ça veut donc dire que sa
-		// config mère n'existe plus : le plus simple SEMBLE être de ne pas la sauvegarder
-		// plutôt que d'essayer de la supprimer en mémoire. J'aime bien cette idée parce
-		// que le code de TVRemoveSelectedAppOrCateg n'est vraiment pas simple et je pense
-		// qu'il vaut mieux éviter d'essayer de le modifier.
-		// Attention quand même, ça veut dire qu'une config fille peut exister en mémoire sans sa mère...
-		// du coup si on veut s'en servir, on va chercher à récupérer le mot de passe
-		// dans la config n-1 qui n'est plus la bonne... 
-		// CONCLUSION : TODO = la supprimer dans TVRemoveSelectedAppOrCateg !
-		if (gptActions[i].iType==WEBPWD) 
-		{
-			TRACE((TRACE_INFO,_F_,"Configuration mère supprimée, on ne sauvegarde pas la configuration fille"));
-			continue;
-		}
 		if (gptActions[i].iType==WINSSO)
 			strcpy_s(szType,sizeof(szType),"WIN");
 		else if (gptActions[i].iType==XINSSO)

@@ -232,18 +232,6 @@ static void ParseFrame(IHTMLDocument2 *pHTMLDocument2,LPARAM lp)
 				if (len==lenId3Name && memcmp(bstr,bstrId3Name,lenId3Name)==0)
 				{
 					Sleep(50);
-					// focus obligatoire sur le champ nouveau mot de passe en mode changement de mot de passe
-					if (gptActions[ptSuivi->iAction].iType==WEBPWD)
-					{
-						hr=pIDispatch->QueryInterface(IID_IHTMLControlElement,(void **)&pPwdField);
-						TRACE((TRACE_DEBUG,_F_,"pIDispatch->QueryInterface(IID_IHTMLControlElement(pwd)=0x%08lx",hr));
-						if (pPwdField!=NULL)
-						{
-							pPwdField->focus();
-							pPwdField->Release();
-							pPwdField=NULL;
-						}
-					}
 					// c'est le champ id3, on le remplit
 					TRACE((TRACE_INFO,_F_,"Champ id3 trouvé   : '%S'",bstr));
 					pItem->put_value(bstrId3Value);
@@ -597,14 +585,9 @@ end:
 // ----------------------------------------------------------------------------------
 // [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur), -2=pas la bonne URL
 //-----------------------------------------------------------------------------
-int SSOWeb(HWND w,int iAction,HWND w2)
+int SSOWeb(HWND w,int *piAction,HWND w2)
 {
-	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d",w,iAction));
-
-	T_SUIVI_IE tSuivi;
-	tSuivi.w=w2;
-	tSuivi.iNbActions=0;
-	tSuivi.iAction=iAction;
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx *piAction=%d",w,*piAction));
 
 	bstrFormName=NULL;
 	bstrId1Name=NULL;
@@ -628,98 +611,86 @@ int SSOWeb(HWND w,int iAction,HWND w2)
 	lenId4Value=0;
 	lenPwdName=0;
 	lenPwdValue=0;
-		
 	int rc=-1;
-	
 	WCHAR wcTmp[255]; //0.80
+	T_SUIVI_IE tSuivi;
+
+	// ISSUE#373 : tout ça était fait dans le main avant, mais il faut le déplacer ici pour ne le demander que si on est sûr d'être sur la bonne page
+	TRACE((TRACE_INFO,_F_,"Demande à l'utilisateur de choisir son compte (si plusieurs) et de renseigner des id (si pas déjà fait)"));
+	if (ChooseConfig(w,piAction)!=0) goto end;
+	if (AskMissingValues(w,*piAction,POPUP_NONE)!=0) goto end;
+
+	tSuivi.w=w2;
+	tSuivi.iNbActions=0;
+	tSuivi.iAction=*piAction;
+
+
 	
 	// recopie de l'URL : TODO pas beau
-	strcpy_s(szURL,sizeof(szURL),gptActions[iAction].szURL);
-	strcpy_s(szFormName,sizeof(szFormName),gptActions[iAction].szValidateName);
+	strcpy_s(szURL,sizeof(szURL),gptActions[*piAction].szURL);
+	strcpy_s(szFormName,sizeof(szFormName),gptActions[*piAction].szValidateName);
 
 	// bstrisation du nom du formulaire
-	bstrFormName=GetBSTRFromSZ(gptActions[iAction].szValidateName); if (bstrFormName==NULL) goto end;
+	bstrFormName=GetBSTRFromSZ(gptActions[*piAction].szValidateName); if (bstrFormName==NULL) goto end;
 	lenFormName= SysStringByteLen(bstrFormName);
 	TRACE((TRACE_DEBUG,_F_,"bstrFormName='%S' lenFormName=%d",bstrFormName,lenFormName));
 
-	if (*(gptActions[iAction].szId1Name)!=0) // un champ id1 à remplir
+	if (*(gptActions[*piAction].szId1Name)!=0) // un champ id1 à remplir
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ id1 et valeur
-		bstrId1Name=GetBSTRFromSZ(gptActions[iAction].szId1Name); if (bstrId1Name==NULL) goto end;
+		bstrId1Name=GetBSTRFromSZ(gptActions[*piAction].szId1Name); if (bstrId1Name==NULL) goto end;
 		lenId1Name= SysStringByteLen(bstrId1Name);
-		if (gptActions[iAction].iType==WEBPWD)
-		{
-			bstrId1Value=GetBSTRFromSZ("aze"); if (bstrId1Value==NULL) goto end;
-		}
-		else
-		{
-			bstrId1Value=GetBSTRFromSZ(GetComputedValue(gptActions[iAction].szId1Value)); if (bstrId1Value==NULL) goto end;
-		}
+		bstrId1Value=GetBSTRFromSZ(GetComputedValue(gptActions[*piAction].szId1Value)); if (bstrId1Value==NULL) goto end;
 		lenId1Value=SysStringByteLen(bstrId1Value);
 		TRACE((TRACE_DEBUG,_F_,"bstrId1Name=%S",bstrId1Name));
 	}
-	if (*(gptActions[iAction].szId2Name)!=0) // un champ id2 à remplir
+	if (*(gptActions[*piAction].szId2Name)!=0) // un champ id2 à remplir
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ id2 et valeur
-		bstrId2Name=GetBSTRFromSZ(gptActions[iAction].szId2Name); if (bstrId2Name==NULL) goto end;
+		bstrId2Name=GetBSTRFromSZ(gptActions[*piAction].szId2Name); if (bstrId2Name==NULL) goto end;
 		lenId2Name= SysStringByteLen(bstrId2Name);
-		if (gptActions[iAction].iType==WEBPWD)
-		{
-			bstrId2Value=GetBSTRFromSZ("azeaze"); if (bstrId2Value==NULL) goto end;
-		}
-		else
-		{
-			bstrId2Value=GetBSTRFromSZ(gptActions[iAction].szId2Value); if (bstrId2Value==NULL) goto end;
-		}
+		bstrId2Value=GetBSTRFromSZ(gptActions[*piAction].szId2Value); if (bstrId2Value==NULL) goto end;
 		lenId2Value=SysStringByteLen(bstrId2Value);
-		id2Type=gptActions[iAction].id2Type;
+		id2Type=gptActions[*piAction].id2Type;
 		TRACE((TRACE_DEBUG,_F_,"bstrId2Name=%S",bstrId2Name));
 	}
-	if (*(gptActions[iAction].szId3Name)!=0) // un champ id3 à remplir
+	if (*(gptActions[*piAction].szId3Name)!=0) // un champ id3 à remplir
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ id3 et valeur
-		bstrId3Name=GetBSTRFromSZ(gptActions[iAction].szId3Name); if (bstrId3Name==NULL) goto end;
+		bstrId3Name=GetBSTRFromSZ(gptActions[*piAction].szId3Name); if (bstrId3Name==NULL) goto end;
 		lenId3Name= SysStringByteLen(bstrId3Name);
-		if (gptActions[iAction].iType==WEBPWD)
-		{
-			bstrId3Value=GetBSTRFromSZ("azeaze"); if (bstrId3Value==NULL) goto end;
-		}
-		else
-		{
-			bstrId3Value=GetBSTRFromSZ(gptActions[iAction].szId3Value); if (bstrId3Value==NULL) goto end;
-		}
+		bstrId3Value=GetBSTRFromSZ(gptActions[*piAction].szId3Value); if (bstrId3Value==NULL) goto end;
 		lenId3Value=SysStringByteLen(bstrId3Value);
-		id3Type=gptActions[iAction].id3Type;
+		id3Type=gptActions[*piAction].id3Type;
 		TRACE((TRACE_DEBUG,_F_,"bstrId3Name=%S",bstrId3Name));
 	}
 
-	if (*(gptActions[iAction].szId4Name)!=0 && gptActions[iAction].id4Type!=CHECK_LABEL) // un champ id4 à remplir
+	if (*(gptActions[*piAction].szId4Name)!=0 && gptActions[*piAction].id4Type!=CHECK_LABEL) // un champ id4 à remplir
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ id4 et valeur
-		bstrId4Name=GetBSTRFromSZ(gptActions[iAction].szId4Name); if (bstrId4Name==NULL) goto end;
+		bstrId4Name=GetBSTRFromSZ(gptActions[*piAction].szId4Name); if (bstrId4Name==NULL) goto end;
 		lenId4Name= SysStringByteLen(bstrId4Name);
-		bstrId4Value=GetBSTRFromSZ(gptActions[iAction].szId4Value); if (bstrId4Value==NULL) goto end;
+		bstrId4Value=GetBSTRFromSZ(gptActions[*piAction].szId4Value); if (bstrId4Value==NULL) goto end;
 		lenId4Value=SysStringByteLen(bstrId4Value);
-		id4Type=gptActions[iAction].id4Type;
+		id4Type=gptActions[*piAction].id4Type;
 		TRACE((TRACE_DEBUG,_F_,"bstrId4Name=%S",bstrId4Name));
 	}
-	if (*(gptActions[iAction].szPwdName)!=0) // un champ PWD à remplir
+	if (*(gptActions[*piAction].szPwdName)!=0) // un champ PWD à remplir
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ PWD et valeur
-		bstrPwdName=GetBSTRFromSZ(gptActions[iAction].szPwdName); if (bstrPwdName==NULL) goto end;
+		bstrPwdName=GetBSTRFromSZ(gptActions[*piAction].szPwdName); if (bstrPwdName==NULL) goto end;
 		lenPwdName= SysStringByteLen(bstrPwdName);
 
 		TRACE((TRACE_DEBUG,_F_,"bstrPwdName=%S",bstrPwdName));
 		
-		if ((*gptActions[iAction].szPwdEncryptedValue!=0)) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
+		if ((*gptActions[*piAction].szPwdEncryptedValue!=0)) // TODO -> CODE A REVOIR PLUS TARD (PAS BEAU SUITE A ISSUE#83)
 		{
-			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue,TRUE);
+			char *pszPassword=GetDecryptedPwd(gptActions[*piAction].szPwdEncryptedValue,TRUE);
 			if (pszPassword!=NULL) 
 			{
 				MultiByteToWideChar(CP_ACP,0,pszPassword,-1,wcTmp,sizeof(wcTmp));
@@ -730,7 +701,7 @@ int SSOWeb(HWND w,int iAction,HWND w2)
 		}
 		else
 		{
-			MultiByteToWideChar(CP_ACP,0,gptActions[iAction].szPwdEncryptedValue,-1,wcTmp,sizeof(wcTmp));
+			MultiByteToWideChar(CP_ACP,0,gptActions[*piAction].szPwdEncryptedValue,-1,wcTmp,sizeof(wcTmp));
 		}
 		bstrPwdValue=SysAllocString(wcTmp);
 		if (bstrPwdValue==NULL) goto end;
@@ -779,9 +750,9 @@ end:
 // la zone de navigation n'est pas sa fille. Il faut donc retrouver la bonne
 // mère puis "simplement" appeler le SSO IE !
 //-----------------------------------------------------------------------------
-int SSOMaxthon(HWND w,int iAction)
+int SSOMaxthon(HWND w,int *piAction)
 {
-	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d",w,iAction));
+	TRACE((TRACE_ENTER,_F_, "w=0x%08lx *piAction=%d",w,*piAction));
 
 	int rc=-1;
 	HWND wMaxthonView;
@@ -792,7 +763,7 @@ int SSOMaxthon(HWND w,int iAction)
 		TRACE((TRACE_ERROR,_F_,"Fenêtre de classe Maxthon2_View non trouvée"));
 		goto end;
 	}
-	rc=SSOWeb(wMaxthonView,iAction,w);
+	rc=SSOWeb(wMaxthonView,piAction,w);
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
