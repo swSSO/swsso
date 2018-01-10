@@ -166,6 +166,33 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 			pChild=NULL;
 				
 			TRACE((TRACE_DEBUG,_F_,"%s --------------------------------- l=%ld vt=%d lVal=0x%08lx",szTab,l,pVarCurrent->vt,pVarCurrent->lVal));
+			
+			if (pVarCurrent->vt==VT_I4) // ISSUE#373 : recherche un texte dans la page (les libellés ne sont pas en VT_DISPATCH)
+			{
+				if (gptActions[ptSuivi->iAction].id4Type==CHECK_LABEL && 
+  				    *(gptActions[ptSuivi->iAction].szId4Name)!=0 &&
+				    !ptSuivi->bLabelFound)
+				{
+					vtChild.vt=VT_I4;
+					vtChild.lVal=pVarCurrent->lVal;
+					hr=pAccessible->get_accName(vtChild,&bstrName);
+					if (hr==S_OK) 
+					{ 
+						pszName=GetSZFromBSTR(bstrName);
+						TRACE((TRACE_DEBUG,_F_,"%sget_accName() name=%s",szTab,pszName));
+						if (pszName!=NULL)
+						{
+							if (swStringMatch(pszName,gptActions[ptSuivi->iAction].szId4Name))
+							{
+								ptSuivi->bLabelFound=TRUE;
+								TRACE((TRACE_DEBUG,_F_,"Texte trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Name));
+							}
+							free(pszName); pszName=NULL;
+						}
+						SysFreeString(bstrName); bstrName=NULL;
+					}
+				}
+			}
 			if (pVarCurrent->vt!=VT_DISPATCH) goto suivant;
 			if (pVarCurrent->lVal==NULL) goto suivant; // ISSUE#80 0.96B2 
 			((IDispatch*)(pVarCurrent->lVal))->QueryInterface(IID_IAccessible, (void**) &pChild);
@@ -183,7 +210,10 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 			TRACE((TRACE_DEBUG,_F_,"%sget_accRole() vtRole.lVal=0x%08lx",szTab,vtRole.lVal));
 			
 			// ISSUE#373 : recherche un texte dans la page
-			if (gptActions[ptSuivi->iAction].id4Type==CHECK_LABEL && *(gptActions[ptSuivi->iAction].szId4Name)!=0 && (vtRole.lVal & ROLE_SYSTEM_TEXT))
+			if (gptActions[ptSuivi->iAction].id4Type==CHECK_LABEL && 
+				*(gptActions[ptSuivi->iAction].szId4Name)!=0 &&
+				!ptSuivi->bLabelFound &&
+				(vtRole.lVal & ROLE_SYSTEM_TEXT))
 			{
 				hr=pChild->get_accName(vtChild,&bstrName);
 				if (hr==S_OK) 
