@@ -627,7 +627,7 @@ end:
 // [in] w2=fenêtre ppale
 // avec IE: w=w2, avec Maxthon w!=w2
 // ----------------------------------------------------------------------------------
-// [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur), -2=pas la bonne URL
+// [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur), -2=pas la bonne URL, -4 annulation utilisateur
 //-----------------------------------------------------------------------------
 int SSOWeb(HWND w,int *piAction,HWND w2)
 {
@@ -661,8 +661,8 @@ int SSOWeb(HWND w,int *piAction,HWND w2)
 
 	// ISSUE#373 : tout ça était fait dans le main avant, mais il faut le déplacer ici pour ne le demander que si on est sûr d'être sur la bonne page
 	TRACE((TRACE_INFO,_F_,"Demande à l'utilisateur de choisir son compte (si plusieurs) et de renseigner des id (si pas déjà fait)"));
-	if (ChooseConfig(w,piAction)!=0) goto end;
-	if (AskMissingValues(w,*piAction,POPUP_NONE)!=0) goto end;
+	if (ChooseConfig(w,piAction)!=0)  { rc=-4; goto end; }
+	if (AskMissingValues(w,*piAction,POPUP_NONE)!=0)  { rc=-4; goto end; }
 
 	tSuivi.w=w2;
 	tSuivi.iNbActions=0;

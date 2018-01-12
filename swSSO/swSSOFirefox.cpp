@@ -689,7 +689,7 @@ static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
 // Principe : trouver la fenetre de contenu, ensuite, on demande un pAccessible et 
 // on recurse.
 // ----------------------------------------------------------------------------------
-// [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur), -2=pas la bonne URL
+// [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur), -2=pas la bonne URL,-4 annulation utilisateur
 // ----------------------------------------------------------------------------------
 int SSOFirefox(HWND w,int *piAction,int iBrowser)
 {
@@ -725,8 +725,8 @@ int SSOFirefox(HWND w,int *piAction,int iBrowser)
 	
 	// ISSUE#373 : tout ça était fait dans le main avant, mais il faut le déplacer ici pour ne le demander que si on est sûr d'être sur la bonne page
 	TRACE((TRACE_INFO,_F_,"Demande à l'utilisateur de choisir son compte (si plusieurs) et de renseigner des id (si pas déjà fait)"));
-	if (ChooseConfig(w,piAction)!=0) goto end;
-	if (AskMissingValues(w,*piAction,POPUP_NONE)!=0) goto end;
+	if (ChooseConfig(w,piAction)!=0)  { rc=-4; goto end; }
+	if (AskMissingValues(w,*piAction,POPUP_NONE)!=0)  { rc=-4; goto end; }
 	
 	tSuivi.w=w;
 	tSuivi.iAction=*piAction;

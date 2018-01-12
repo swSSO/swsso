@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="118";	// 101 = 1.01
-const char gcszCurrentBeta[]="1196";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="117";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 HWND gwChooseConfig=NULL;
@@ -882,9 +882,9 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 			{
 				iBrowser=BROWSER_IE;
 				// ISSUE#376 : remplacement de GetIEURL (qui lit juste l'URL de la page) par CheckIEURL (qui parcours l'ensemble des iframes pour rechercher l'URL)
-				pszURL=CheckIEURL(w,TRUE,i);
 				//pszURL=GetIEURL(w,TRUE);
-				//if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto suite; }
+				pszURL=CheckIEURL(w,TRUE,i);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto suite; }
 			}
 			else if (strcmp(szClassName,gcszMozillaUIClassName)==0) // FF3
 			{
@@ -1289,6 +1289,10 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 						gptActions[i].iNbEssais=0;
 						gptActions[i].iWaitFor=WAIT_IF_LABEL_NOT_FOUND;
 						TRACE((TRACE_INFO,_F_,"Libelle %s non trouvé dans la page, prochain essai dans %d secondes",gptActions[i].szId4Value,WAIT_IF_LABEL_NOT_FOUND));
+					}
+					else if (rc==-4) // SSO annulé par l'utilisateur (dans fenetre choix de config ou saisie des valeurs manquantes)
+					{
+						// iWaitFor a déjà été mis à jour dans ChooseConfig ou AskMissingValues, on ne fait rien de plus
 					}
 					else // SSO raté, erreur inattendue ou plus probablement champs non trouvés
 					{

@@ -117,6 +117,7 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 	VARIANT* pArray = NULL;
 	BSTR bstrName=NULL;
 	char *pszName=NULL;
+	IDispatch *pTempIDispatch=NULL; // correction memory leak en 1.19b7
 	
 #ifdef TRACES_ACTIVEES
 	char szTab[200];
@@ -195,7 +196,8 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 			}
 			if (pVarCurrent->vt!=VT_DISPATCH) goto suivant;
 			if (pVarCurrent->lVal==NULL) goto suivant; // ISSUE#80 0.96B2 
-			((IDispatch*)(pVarCurrent->lVal))->QueryInterface(IID_IAccessible, (void**) &pChild);
+			pTempIDispatch=((IDispatch*)(pVarCurrent->lVal)); // correction memory leak en 1.19b7
+			pTempIDispatch->QueryInterface(IID_IAccessible, (void**) &pChild);
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"%sQueryInterface(IID_IAccessible)=0x%08lx",szTab,hr)); goto suivant; }
 			TRACE((TRACE_DEBUG,_F_,"%sQueryInterface(IID_IAccessible)=0x%08lx -> pChild=0x%08lx",szTab,hr,pChild));
 			
@@ -317,11 +319,14 @@ static void DoWebAccessible(HWND w,IAccessible *pAccessible,T_SUIVI_ACCESSIBLE *
 
 			}
 suivant:
+			if (pTempIDispatch!=NULL)  { pTempIDispatch->Release(); pTempIDispatch=NULL; } // correction memory leak en 1.19b7
 			if (pChild!=NULL) { pChild->Release(); pChild=NULL; }
-		}
+		} // for
 	}
 	
 end:
+	if (pTempIDispatch!=NULL)  { pTempIDispatch->Release(); pTempIDispatch=NULL; } // correction memory leak en 1.19b7
+	if (pChild!=NULL) { pChild->Release(); pChild=NULL; } // ajouté en 1.19b7
 	SysFreeString(bstrName);
 	if (pszName!=NULL) free (pszName);
 	if (pArray!=NULL) delete[] pArray;
@@ -379,7 +384,7 @@ end:
 // SSO commun aux navigateurs implémentant l'interface IAccessible
 // Utilise forcément la méthode de configuration simplifiée
 // ----------------------------------------------------------------------------------
-// [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur),-3 (libellé szId4Value non trouvé)
+// [out] 0=OK, -1=pas réussi (champs non trouvés ou autre erreur),-3 (libellé szId4Value non trouvé), -4 annulation utilisateur
 // ----------------------------------------------------------------------------------
 int SSOWebAccessible(HWND w,int *piAction,int iBrowser)
 {
@@ -659,8 +664,8 @@ int SSOWebAccessible(HWND w,int *piAction,int iBrowser)
 		
 		// ISSUE#373 : tout ça était fait dans le main avant, mais il faut le déplacer ici pour ne le demander que si on est sûr d'être sur la bonne page
 		TRACE((TRACE_INFO,_F_,"Verifications OK, demande à l'utilisateur de choisir son compte (si plusieurs) et de renseigner des id (si pas déjà fait)"));
-		if (ChooseConfig(w,piAction)!=0) goto end;
-		if (AskMissingValues(w,*piAction,POPUP_NONE)!=0) goto end;
+		if (ChooseConfig(w,piAction)!=0) { rc=-4; goto end; }
+		if (AskMissingValues(w,*piAction,POPUP_NONE)!=0) { rc=-4; goto end; }
 		ptSuivi->iAction=*piAction;
 
 		// GO, on peut mettre la fenêtre au premier plan et démarrer les saisies 

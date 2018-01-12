@@ -125,9 +125,9 @@ static int CheckIEFrameURL(IHTMLDocument2 *pHTMLDocument2,T_CHECKURL *ptCheckURL
 	} // while
 end:
 	SysFreeString(bstrURL); 
-	if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
-	if (pIWebBrowser2!=NULL) { pIWebBrowser2->Release(); pIWebBrowser2=NULL; }
-	if (pIUnknown!=NULL) { pIUnknown->Release(); pIUnknown=NULL; }
+	if (pIDispatch!=NULL) pIDispatch->Release(); 
+	if (pIWebBrowser2!=NULL) pIWebBrowser2->Release();
+	if (pIUnknown!=NULL) pIUnknown->Release(); 
 	if (pIEnum!=NULL) pIEnum->Release();
 	if (pIOleContainer!=NULL) pIOleContainer->Release();
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
@@ -185,17 +185,17 @@ static int CALLBACK CheckIEURLEnumChildProc(HWND w, LPARAM lp)
 	ptCheckURL->pszURL=GetSZFromBSTR(bstrURL);
 	if (ptCheckURL->pszURL==NULL) goto end;
 	TRACE((TRACE_DEBUG,_F_,"get_URL()=%s",ptCheckURL->pszURL));
-	// vérifie si elle matche avec la config iAction
-	if (swURLMatch(ptCheckURL->pszURL,gptActions[ptCheckURL->iAction].szURL))
-	{
-		rc=false; // c'est bon, c'est elle, on arrête l'énumération, l'appelant libérera ptCheckURL->pszURL
-		goto end;
-	}
-	// L'URL ne matche pas, avant de chercher dans les éventuelles iframe, on élimine les URLs inutiles
+	// On élimine les URLs inutiles
 	if (_strnicmp(ptCheckURL->pszURL,"res://",6)==0 || _strnicmp(ptCheckURL->pszURL,"about:",6)==0)
 	{
 		TRACE((TRACE_DEBUG,_F_,"%s : on passe à une autre child window !",ptCheckURL->pszURL));
 		free(ptCheckURL->pszURL); ptCheckURL->pszURL=NULL;
+		goto end;
+	}
+	// vérifie si elle matche avec la config iAction
+	if (swURLMatch(ptCheckURL->pszURL,gptActions[ptCheckURL->iAction].szURL))
+	{
+		rc=false; // c'est bon, c'est elle, on arrête l'énumération, l'appelant libérera ptCheckURL->pszURL
 		goto end;
 	}
 	// On libère l'URL trouvée puisqu'elle ne matche avec rien

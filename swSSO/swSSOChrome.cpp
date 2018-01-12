@@ -171,6 +171,7 @@ char *GetChromePopupURL(HWND w)
 end:
 	SysFreeString(bstrURL);
 	if (pIDispatch!=NULL) pIDispatch->Release();
+	if (pNiveau0!=NULL) pNiveau0->Release();
 	if (pChildNiveau1!=NULL) pChildNiveau1->Release();
 	if (pChildNiveau2!=NULL) pChildNiveau2->Release();
 	if (pChildNiveau3!=NULL) pChildNiveau3->Release();
