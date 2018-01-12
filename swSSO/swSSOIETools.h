@@ -38,6 +38,15 @@ typedef struct
 }
 T_GETURL;
 
+typedef struct
+{
+	char *pszURL;
+	BOOL bWaitReady;
+	int iAction;
+}
+T_CHECKURL;
+
+char *CheckIEURL(HWND w, BOOL bWaitReady,int iAction);
 char *GetIEURL(HWND w, BOOL bWaitReady);
 char *GetMaxthonURL(void);
 char *GetIEWindowTitle(void);

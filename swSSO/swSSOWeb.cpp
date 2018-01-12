@@ -450,10 +450,51 @@ static void ParseHTMLDoc2(IHTMLDocument2 *pHTMLDocument2,LPARAM lp)
 
 	T_SUIVI_IE *ptSuivi=(T_SUIVI_IE*)lp;
 
+#if 0
+	// TEST A SUPPRIMER
+	{
+		TRACE((TRACE_INFO,_F_,"TEST get_forms"));
+		long lNbForms;
+		IHTMLElementCollection *pCollection=NULL;
+		hr=pHTMLDocument2->get_forms(&pCollection);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pHTMLDocument2->get_forms()=0x%08lx",hr)); goto end; }
+		hr=pCollection->get_length(&lNbForms);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"IHTMLElementCollection.get_length()=0x%08lx",hr)); goto end; }
+		TRACE((TRACE_INFO,_F_,"lNbForms=%ld",lNbForms)); 
+ 		for (long l=0;l<lNbForms;l++)
+		{
+			VARIANT index;
+			IHTMLFormElement *pFormElement=NULL;
+			IDispatch* pDispatch=NULL;
+			BSTR bstrFormName2=NULL;
+            index.vt=VT_I4;
+            index.lVal=l;
+            pDispatch=NULL;
+			hr=pCollection->item(index,index,&pDispatch);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pCollection->item(%ld)=0x%08lx",l,hr)); goto end; }
+            hr=pDispatch->QueryInterface(IID_IHTMLFormElement,(void**)&pFormElement);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IHTMLFormElement)=0x%08lx",hr)); goto end; }
+			hr=pFormElement->get_name(&bstrFormName2);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pFormElement->get_name()=0x%08lx",hr)); goto end; }
+			if (bstrFormName2!=NULL)
+			{
+				TRACE((TRACE_INFO,_F_,"bstrFormName=%S",bstrFormName2));
+			}
+			if (pDispatch!=NULL) { pDispatch->Release(); pDispatch=NULL; }
+			if (pFormElement!=NULL) { pFormElement->Release(); pFormElement=NULL; }
+			SysFreeString(bstrFormName2);
+			// TODO : faire les libérations en fin de fonction également !!!
+		}
+		if (pCollection!=NULL) { pCollection->Release(); pCollection=NULL; }
+	}
+	// TEST A SUPPRIMER
+#endif
+
  	// on commence par explorer directement le doc (comme avant)
+	
 	ParseFrame(pHTMLDocument2,lp);
 	if (ptSuivi->iNbActions==0) goto end; // c'est bon, on a fini, on sort.
-
+	
 	// c'est ici que tout change dans la manière d'explorer le document
 	// le code s'inspire de la préco Microsoft KB196340
 	hr=pHTMLDocument2->QueryInterface(IID_IOleContainer,(void**)&pIOleContainer);
@@ -549,7 +590,8 @@ static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
 	}
    	TRACE((TRACE_DEBUG,_F_,"ObjectFromLresult(IID_IHTMLDocument2)=%08lx pHTMLDocument2=%08lx",hr,pHTMLDocument2));
 
-	ParseHTMLDoc2(pHTMLDocument2,lp);
+	// 1.19 : je déplace ça après la vérif d'URL, c'est con de le faire avant !
+	// ParseHTMLDoc2(pHTMLDocument2,lp);
 
 	// ISSUE#312 : si la console debug F12 est ouverte, elle apparait en premier dans l'énumération des fenêtres.
 	//             Il faut l'ignorer et continuer l'énumération
@@ -562,6 +604,8 @@ static int CALLBACK WebEnumChildProc(HWND w, LPARAM lp)
 		TRACE((TRACE_DEBUG,_F_,"C'est la fenetre F12, on continue !"));
 		goto end;
 	}
+
+	ParseHTMLDoc2(pHTMLDocument2,lp);
 
 	rc=false; // c'est fait, on arrete l'enum
 end:

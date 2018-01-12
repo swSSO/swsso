@@ -43,14 +43,182 @@ char gcszK4[]="44444444";
 //***********************************************************************************
 
 //-----------------------------------------------------------------------------
-// IEEnumChildProc()
+// CheckIEFrameURL() [attention, fonction récursive]
+//-----------------------------------------------------------------------------
+// IHTMLDocument2 <=================================
+// -> get_URL									   |
+// -> QueryInterface(IID_IOleContainer)            |
+//		-> EnumObjects, puis sur chaque objet :	   |
+// 			-> QueryInterface(IID_IWebBrowser2)    |
+// 				-> get_LocationURL                 |
+// 				-> get_Document ====================
+//-----------------------------------------------------------------------------
+static int CheckIEFrameURL(IHTMLDocument2 *pHTMLDocument2,T_CHECKURL *ptCheckURL)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=true; // true=continuer l'énumération
+	HRESULT hr;
+	BSTR bstrURL=NULL;
+	IOleContainer *pIOleContainer=NULL;
+	IEnumUnknown *pIEnum=NULL;
+	IUnknown *pIUnknown=NULL;
+	IWebBrowser2 *pIWebBrowser2=NULL;
+	IDispatch *pIDispatch=NULL;
+
+	// termine la récursivité dès qu'une URL qui match a été trouvée
+	if (ptCheckURL->pszURL!=NULL) 
+	{ 
+		TRACE((TRACE_DEBUG,_F_,"URL trouvée, on remonte !")); 
+		rc=false;
+		goto end; 
+	}
+
+	// énumération des frames de la page
+	hr=pHTMLDocument2->QueryInterface(IID_IOleContainer,(void**)&pIOleContainer);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pHTMLDocument2->QueryInterface(IID_IOleContainer)=0x%08lx",hr)); goto end; }
+	hr=pIOleContainer->EnumObjects(OLECONTF_EMBEDDINGS,&pIEnum);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pIOleContainer->EnumObjects(OLECONTF_EMBEDDINGS)=0x%08lx",hr)); goto end; }
+	while (!FAILED(pIEnum->Next(1,&pIUnknown,NULL)))
+	{
+		TRACE((TRACE_DEBUG,_F_,"pIEnum->Next() OK, pIUnknown=0x%08lx",pIUnknown));
+		if (pIUnknown==NULL) goto end; // énumération terminée
+		hr=pIUnknown->QueryInterface(IID_IWebBrowser2,(void**)&pIWebBrowser2);
+		if (SUCCEEDED(hr)) 
+		{
+			// lit l'URL du document
+			hr=pIWebBrowser2->get_LocationURL(&bstrURL);
+			if (hr==S_OK && bstrURL!=NULL) 
+			{ 
+				TRACE((TRACE_DEBUG,_F_,"bstrURL=%S",bstrURL));
+				ptCheckURL->pszURL=GetSZFromBSTR(bstrURL);
+				if (ptCheckURL->pszURL==NULL) goto end;
+				TRACE((TRACE_DEBUG,_F_,"pszURL =%s",ptCheckURL->pszURL));
+				// vérifie si elle matche avec la config iAction
+				if (swURLMatch(ptCheckURL->pszURL,gptActions[ptCheckURL->iAction].szURL))
+				{
+					rc=false; // c'est bon, c'est elle, on arrête l'énumération, l'appelant libérera ptCheckURL->pszURL
+					goto end;
+				}
+				// ne matche pas, on libère et on continue...
+				free(ptCheckURL->pszURL); ptCheckURL->pszURL=NULL;
+				SysFreeString(bstrURL); bstrURL=NULL;
+			}
+			// parcours les éventuelles frames du document
+			hr=pIWebBrowser2->get_Document(&pIDispatch);
+			TRACE((TRACE_DEBUG,_F_,"pIWebBrowser2->get_Document()=0x%08lx",hr)); 
+			if (hr==S_OK)
+			{ 
+				IHTMLDocument2 *pHTMLDocument2NextLevel=NULL;
+				hr=pIDispatch->QueryInterface(IID_IHTMLDocument2,(void**)&pHTMLDocument2NextLevel);
+				TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IHTMLDocument2)=0x%08lx",hr));
+				if (hr==S_OK) 
+				{
+					rc=CheckIEFrameURL(pHTMLDocument2NextLevel,ptCheckURL);
+					pHTMLDocument2NextLevel->Release(); pHTMLDocument2NextLevel=NULL;
+					if (rc==false) goto end;
+				}
+			}
+		}
+		if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
+		if (pIWebBrowser2!=NULL) { pIWebBrowser2->Release(); pIWebBrowser2=NULL; }
+		if (pIUnknown!=NULL) { pIUnknown->Release(); pIUnknown=NULL; }
+	} // while
+end:
+	SysFreeString(bstrURL); 
+	if (pIDispatch!=NULL) { pIDispatch->Release(); pIDispatch=NULL; }
+	if (pIWebBrowser2!=NULL) { pIWebBrowser2->Release(); pIWebBrowser2=NULL; }
+	if (pIUnknown!=NULL) { pIUnknown->Release(); pIUnknown=NULL; }
+	if (pIEnum!=NULL) pIEnum->Release();
+	if (pIOleContainer!=NULL) pIOleContainer->Release();
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// CheckIEURLEnumChildProc()
+//-----------------------------------------------------------------------------
+// Enumération des fils de la fenêtre navigateur à la recherche de l'URL 
+// de la page web et des iframes de la page. S'arrête quand une URL matche
+// avec l'action passée en paramètre dans ptCheckURL->iAction
+//-----------------------------------------------------------------------------
+static int CALLBACK CheckIEURLEnumChildProc(HWND w, LPARAM lp)
+{
+	UNREFERENCED_PARAMETER(lp);
+	int rc=true; // true=continuer l'énumération
+	char szClassName[128+1];
+	DWORD dw;
+	HRESULT hr;
+	IHTMLDocument2 *pHTMLDocument2=NULL;
+	BSTR bstrURL=NULL;
+	BSTR bstrState=NULL;
+
+	T_CHECKURL *ptCheckURL=(T_CHECKURL *)lp;
+
+	GetClassName(w,szClassName,sizeof(szClassName));
+	TRACE((TRACE_DEBUG,_F_,"w=0x%08lx class=%s",w,szClassName));
+	if (strcmp(szClassName,"Internet Explorer_Server")!=0) goto end;
+
+	// récupération pointeur sur le document HTML (interface IHTMLDocument2)
+	SendMessageTimeout(w,guiHTMLGetObjectMsg,0L,0L,SMTO_ABORTIFHUNG,1000,&dw);
+	hr=ObjectFromLresult(dw,IID_IHTMLDocument2,0,(void**)&pHTMLDocument2);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"ObjectFromLresult(%d,IID_IHTMLDocument2)=0x%08lx",dw,hr)); goto end; }
+	TRACE((TRACE_DEBUG,_F_,"ObjectFromLresult(IID_IHTMLDocument2)=%08lx pHTMLDocument2=%08lx",hr,pHTMLDocument2));
+
+	// vérifie si la page est chargée
+	if (ptCheckURL->bWaitReady)
+	{
+		hr=pHTMLDocument2->get_readyState(&bstrState);
+		if (FAILED(hr)) 
+		{ 
+			// ca n'a pas marché, pas grave, on continue quand même
+			TRACE((TRACE_ERROR,_F_,"get_readyState=0x%08lx",hr)); 
+		}
+		else
+		{
+			TRACE((TRACE_INFO,_F_,"readyState=%S",bstrState)); 
+			if (!CompareBSTRtoSZ(bstrState,"complete")) { rc=false; goto end; } // pas fini de charger, on arrête
+		}
+	}
+	// récupère l'URL du document chargé
+	hr=pHTMLDocument2->get_URL(&bstrURL);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_URL()=0x%08lx",hr)); goto end; }
+	ptCheckURL->pszURL=GetSZFromBSTR(bstrURL);
+	if (ptCheckURL->pszURL==NULL) goto end;
+	TRACE((TRACE_DEBUG,_F_,"get_URL()=%s",ptCheckURL->pszURL));
+	// vérifie si elle matche avec la config iAction
+	if (swURLMatch(ptCheckURL->pszURL,gptActions[ptCheckURL->iAction].szURL))
+	{
+		rc=false; // c'est bon, c'est elle, on arrête l'énumération, l'appelant libérera ptCheckURL->pszURL
+		goto end;
+	}
+	// L'URL ne matche pas, avant de chercher dans les éventuelles iframe, on élimine les URLs inutiles
+	if (_strnicmp(ptCheckURL->pszURL,"res://",6)==0 || _strnicmp(ptCheckURL->pszURL,"about:",6)==0)
+	{
+		TRACE((TRACE_DEBUG,_F_,"%s : on passe à une autre child window !",ptCheckURL->pszURL));
+		free(ptCheckURL->pszURL); ptCheckURL->pszURL=NULL;
+		goto end;
+	}
+	// On libère l'URL trouvée puisqu'elle ne matche avec rien
+	free(ptCheckURL->pszURL); ptCheckURL->pszURL=NULL;
+	// Inception, on parse les frames
+	rc=CheckIEFrameURL(pHTMLDocument2,ptCheckURL);
+
+end:
+	if (pHTMLDocument2!=NULL) pHTMLDocument2->Release();
+	SysFreeString(bstrState);
+	SysFreeString(bstrURL);
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// GetIEURLEnumChildProc()
 //-----------------------------------------------------------------------------
 // Enumération des fils de la fenêtre navigateur à la recherche 
 // de la barre d'adresse pour vérifier l'URL -> changé en 0.83, voir dans swSSOWeb.cpp
 //-----------------------------------------------------------------------------
 // [in] lp = &psz
 //-----------------------------------------------------------------------------
-static int CALLBACK IEEnumChildProc(HWND w, LPARAM lp)
+static int CALLBACK GetIEURLEnumChildProc(HWND w, LPARAM lp)
 {
 	UNREFERENCED_PARAMETER(lp);
 	int rc=true; // true=continuer l'énumération
@@ -102,15 +270,15 @@ static int CALLBACK IEEnumChildProc(HWND w, LPARAM lp)
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_URL()=0x%08lx",hr)); goto end; }
 	
 	ptGetURL->pszURL=GetSZFromBSTR(bstrURL);
+	if (ptGetURL->pszURL==NULL) goto end;
 	TRACE((TRACE_DEBUG,_F_,"get_URL()=%s",ptGetURL->pszURL));
 
 	// ISSUE#312 : si la console debug F12 est ouverte, elle apparait en premier dans l'énumération des fenêtres.
 	//             Il faut l'ignorer et continuer l'énumération
-	if (_strnicmp(ptGetURL->pszURL,"res://",6)==0)
+	if (_strnicmp(ptGetURL->pszURL,"res://",6)==0 || _strnicmp(ptGetURL->pszURL,"about:",6)==0)
 	{
-		TRACE((TRACE_DEBUG,_F_,"C'est la fenetre F12, on continue !"));
-		free(ptGetURL->pszURL);
-		ptGetURL->pszURL=NULL;
+		TRACE((TRACE_DEBUG,_F_,"%s : on passe à une autre child window !",ptGetURL->pszURL));
+		free(ptGetURL->pszURL); ptGetURL->pszURL=NULL;
 		goto end;
 	}
 	rc=false; // trouvé l'URL, on arrete l'enum
@@ -127,6 +295,28 @@ end:
 //***********************************************************************************
 
 // ----------------------------------------------------------------------------------
+// CheckIEURL()
+// ----------------------------------------------------------------------------------
+// Retourne l'URL qui matche avec la configuration passée en paramètre
+// ----------------------------------------------------------------------------------
+// [out] pszURL (à libérer par l'appelant) ou NULL si erreur
+// ----------------------------------------------------------------------------------
+
+char *CheckIEURL(HWND w, BOOL bWaitReady,int iAction)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	
+	T_CHECKURL tCheckURL;
+	tCheckURL.pszURL=NULL;
+	tCheckURL.bWaitReady=bWaitReady;
+	tCheckURL.iAction=iAction;
+
+	EnumChildWindows(w,CheckIEURLEnumChildProc,(LPARAM)&tCheckURL);
+
+	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",tCheckURL.pszURL));
+	return tCheckURL.pszURL;
+}
+// ----------------------------------------------------------------------------------
 // GetIEURL()
 // ----------------------------------------------------------------------------------
 // Retourne l'URL courante de la fenêtre IE
@@ -142,7 +332,7 @@ char *GetIEURL(HWND w, BOOL bWaitReady)
 	tGetURL.pszURL=NULL;
 	tGetURL.bWaitReady=bWaitReady;
 
-	EnumChildWindows(w,IEEnumChildProc,(LPARAM)&tGetURL);
+	EnumChildWindows(w,GetIEURLEnumChildProc,(LPARAM)&tGetURL);
 
 	TRACE((TRACE_LEAVE,_F_,"pszURL=0x%08lx",tGetURL.pszURL));
 	return tGetURL.pszURL;

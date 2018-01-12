@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="118";	// 101 = 1.01
-const char gcszCurrentBeta[]="1195";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1196";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 HWND gwChooseConfig=NULL;
@@ -881,8 +881,10 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				strcmp(szClassName,"ExploreWClass")==0 || strcmp(szClassName,"CabinetWClass")==0) // Explorateur Windows
 			{
 				iBrowser=BROWSER_IE;
-				pszURL=GetIEURL(w,TRUE);
-				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto suite; }
+				// ISSUE#376 : remplacement de GetIEURL (qui lit juste l'URL de la page) par CheckIEURL (qui parcours l'ensemble des iframes pour rechercher l'URL)
+				pszURL=CheckIEURL(w,TRUE,i);
+				//pszURL=GetIEURL(w,TRUE);
+				//if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto suite; }
 			}
 			else if (strcmp(szClassName,gcszMozillaUIClassName)==0) // FF3
 			{
