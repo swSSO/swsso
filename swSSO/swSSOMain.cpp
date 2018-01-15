@@ -280,7 +280,7 @@ int LaunchTimer(void)
 
 	if (giTimer==0) 
 	{
-		giTimer=SetTimer(NULL,0,500,TimerProc);
+		giTimer=SetTimer(NULL,0,giDetectionFrequency,TimerProc); // ISSUE#379 - timer configurable
 		if (giTimer==0) 
 		{
 #ifdef TRACE_ACTIVEES

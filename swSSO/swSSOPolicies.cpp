@@ -174,6 +174,7 @@ int	giWebServiceTimeout2=8;						// 1.14 - ISSUE#329
 BOOL gbUseSquareForManagedConfigs=TRUE;			// 1.16 - ISSUE#338
 char gpszIniPathName[_SW_MAX_PATH+1];			// 1.18 - ISSUE#364
 int gbExitIfNetworkUnavailable=FALSE;			// 1.18 - ISSUE#365
+int giDetectionFrequency=500;					// 1.19 - ISSUE#379
 
 // REGKEY_EXCLUDEDWINDOWS_OPTIONS (#110)
 char gtabszExcludedWindows[MAX_EXCLUDED_WINDOWS][LEN_EXCLUDED_WINDOW_TITLE+1];
@@ -683,6 +684,10 @@ void LoadPolicies(void)
 		rc=RegQueryValueEx(hKey,REGVALUE_USE_SQUARE_FOR_MANAGED_CONFIGS,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbUseSquareForManagedConfigs=(BOOL)dwValue; 
 
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DETECTION_FREQUENCY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) giDetectionFrequency=(int)dwValue; 
+
 		RegCloseKey(hKey);
 	}
 	//--------------------------------------------------------------
@@ -1032,6 +1037,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"giWebServiceTimeout=%d"				,giWebServiceTimeout));
 	TRACE((TRACE_INFO,_F_,"giWebServiceTimeout2=%d"				,giWebServiceTimeout2));
 	TRACE((TRACE_INFO,_F_,"gbUseSquareForManagedConfigs=%d"		,gbUseSquareForManagedConfigs));
+	TRACE((TRACE_INFO,_F_,"giDetectionFrequency=%d"				,giDetectionFrequency));
 	
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)gpRecoveryKeyValue,gdwRecoveryKeyLen,"gpRecoveryKeyValue :"));
 	TRACE((TRACE_INFO,_F_,"EXCLUDED WINDOWS -----------"));

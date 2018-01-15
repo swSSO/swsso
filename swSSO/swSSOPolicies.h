@@ -257,6 +257,7 @@ extern int giPwdPolicy_MinRules;
 #define REGVALUE_USE_SQUARE_FOR_MANAGED_CONFIGS		"UseSquareForManagedConfigs"
 #define REGVALUE_INI_PATHNAME						"IniPathName"
 #define REGVALUE_EXIT_IF_NETWORK_UNAVAILABLE		"ExitIfNetworkUnavailable"
+#define REGVALUE_DETECTION_FREQUENCY				"DetectionFrequency"
 
 #define LOG_LEVEL_NONE			0 // pas de log
 #define LOG_LEVEL_ERROR			1 // erreurs
@@ -324,6 +325,7 @@ extern int	giWebServiceTimeout2;			// 1.14 - ISSUE#329
 extern BOOL gbUseSquareForManagedConfigs;	// 1.16 - ISSUE#338
 extern char gpszIniPathName[];				// 1.18 - ISSUE#364
 extern int	gbExitIfNetworkUnavailable;		// 1.18 - ISSUE#365
+extern int  giDetectionFrequency;			// 1.19 - ISSUE#379
 
 //-----------------------------------------------------------------------------
 #define REGKEY_EXCLUDEDWINDOWS "SOFTWARE\\swSSO\\ExcludedWindows"
