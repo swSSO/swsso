@@ -551,8 +551,8 @@ int SSOWebAccessible(HWND w,int *piAction,int iBrowser)
 	}
 	else if (iBrowser==BROWSER_EDGE)
 	{
-		// TODO : à revoir parce que c'est très moche...
-		pAccessible=gpEdgeIAccessible;
+		hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
 	}
 	else
 	{

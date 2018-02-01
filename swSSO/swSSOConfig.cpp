@@ -4847,11 +4847,11 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 		// s'agit de proposer une config par défaut la plus aboutie possible
 		// ISSUE#162
 		// if (iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
-		if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
+		if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4 || iBrowser==BROWSER_EDGE) iType=XEBSSO;
 	}
 	gptActions[giNbActions].iType=iType;
 
-	if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4 || iType==XINSSO)
+	if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4 || iBrowser==BROWSER_EDGE || iType==XINSSO)
 	{
 		strcpy_s(gptActions[giNbActions].szId1Name,sizeof(gptActions[giNbActions].szId1Name),"-1");
 		strcpy_s(gptActions[giNbActions].szPwdName,sizeof(gptActions[giNbActions].szPwdName),"1");
@@ -5026,14 +5026,15 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 			iType=POPSSO;
 		}
 	}
-	// ISSUE#287 : prise en compte de EDGE avec Windows 10 anniversaire (1607)
-	else if (strcmp(szClassName,"ApplicationFrameWindow")==0) // EDGE -- se comporte ensuite comme IE, pour les configs simplifiées et les configs normales : MERCI MICROSOFT !! :-)
+	// ISSUE#347
+	else if (strcmp(szClassName,"ApplicationFrameWindow")==0)
 	{
-		// ISSUE#287
-		pszURL=GetIEURL(w,TRUE);
-		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL EDGE non trouvee")); goto end; }
+		IUIAutomationElement *pDocument=NULL;
+		pszURL=GetEdgeURL(w,&pDocument);
+		if (pDocument!=NULL) pDocument->Release(); // on n'en a pas besoin pour la suite, on le jette tout de suite
+		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Edge non trouvee !")); goto end; }
 		iType=UNK; // permet de récupérer les configs WEB ou XEB 
-		iBrowser=BROWSER_IE;
+		iBrowser=BROWSER_EDGE;
 	}
 	// ISSUE#297 : prise en compte des popups de sécurité de Windows 10 anniversaire (dans IE, EDGE, etc.)
 	else if (strcmp(szClassName,"Credential Dialog Xaml Host")==0 &&  
