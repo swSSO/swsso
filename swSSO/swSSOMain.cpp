@@ -39,7 +39,9 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="119";	// 101 = 1.01
-const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1201";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+
+BOOL gbUIAutomation=TRUE ; // 1.20 : travail avec UIA en remplacement de MSAA pour Edge (voire pour tout le reste aussi)
 
 HWND gwMain=NULL;
 HWND gwChooseConfig=NULL;
@@ -145,6 +147,8 @@ int giNbTranscryptError=0;
 BYTE gAESKeyDataPart4[2][AES256_KEY_PART_LEN];
 
 time_t gtLastAskPwd=0;
+
+IUIAutomation *gpIUIAutomation=NULL;
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -741,6 +745,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 	char szMsg[512+1];
 	int lenTitle;
 	int iBrowser=BROWSER_NONE;
+	IUIAutomationElement* pDocument=NULL; // document navigateur
 	
 	guiNbWindows++;
 	// 0.93B4 : fenêtres éventuellement exclues 
@@ -923,13 +928,12 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				// if (pszURL==NULL) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto suite; }
 			}
-			// ISSUE#287 : prise en compte de EDGE avec Windows 10 anniversaire (1607)
-			else if (strcmp(szClassName,"ApplicationFrameWindow")==0) // EDGE -- se comporte ensuite comme IE, pour les configs simplifiées et les configs normales : MERCI MICROSOFT !! :-)
+			// ISSUE#347 : prise en compte de EDGE avec UIA
+			else if (strcmp(szClassName,"ApplicationFrameWindow")==0) 
 			{
-				iBrowser=BROWSER_IE;
-				pszURL=GetIEURL(w,TRUE);
-				//pszURL=GetEdgeURL(w,NULL,FALSE,NULL,0,TRUE); TEST POUR EDGE WINDOWS 10 CREATORS UPDATE ET +
-				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL IE non trouvee : on passe !")); goto suite; }
+				iBrowser=BROWSER_EDGE;
+				pszURL=GetEdgeURL(w,&pDocument);
+				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Edge non trouvee : on passe !")); goto suite; }
 			}
 			else // autre ??
 			{
@@ -1216,7 +1220,6 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 							else
 								rc=SSOWeb(w,&i,w); 
 							break;
-							break;
 						case BROWSER_FIREFOX3:
 						case BROWSER_FIREFOX4:
 							if (gptActions[i].iType==XEBSSO)
@@ -1249,6 +1252,9 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 								}
 								else rc=SSOFirefox(w,&i,iBrowser); // ISSUE#66 0.94 : chrome a implémenté ISimpleDOM comme Firefox !
 							}
+							break;
+						case BROWSER_EDGE:
+							rc=SSOWebUIA(w,&i,iBrowser,pDocument);
 							break;
 						default:
 							rc=-1;
@@ -1344,11 +1350,13 @@ suite:
 		// j'aurais fait ce "goto suite", alors que continue me tendait les bras ?
 		if (pszURL!=NULL) { free(pszURL); pszURL=NULL; }
 		if (pszURL2!=NULL) { free(pszURL2); pszURL2=NULL; }
+		if (pDocument!= NULL) { pDocument->Release(); pDocument=NULL; }
 	}
 end:
-	if (pszChromePopupURL!=NULL) { free(pszChromePopupURL); pszChromePopupURL=NULL; }
-	if (pszURL!=NULL) { free(pszURL); pszURL=NULL; }
-	if (pszURL2!=NULL) { free(pszURL2); pszURL2=NULL; } // 1.12B2-AC-TIE4
+	if (pszChromePopupURL!=NULL) free(pszChromePopupURL); 
+	if (pszURL!=NULL) free(pszURL); 
+	if (pszURL2!=NULL) free(pszURL2); // 1.12B2-AC-TIE4
+	if (pDocument!= NULL) pDocument->Release();
 	return TRUE;
 }
 
@@ -1968,6 +1976,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	
 	int rc;
 	int iError=0; // v0.88 : message d'erreur au démarrage
+	HRESULT hr;
 	MSG msg;
 	int len;
 	int rcSystray=-1;
@@ -2212,6 +2221,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		TRACE((TRACE_ERROR,_F_,"CoInitialize hr=0x%08lx",ghrCoIni));
 		iError=-1;
 		goto end;
+	}
+
+	if (gbUIAutomation)
+	{
+		hr=CoCreateInstance(CLSID_CUIAutomation, NULL,CLSCTX_INPROC_SERVER, IID_IUIAutomation,(LPVOID*)&gpIUIAutomation);
+		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(CLSID_CUIAutomation)=0x%08lx",hr)); goto end; }
 	}
 
 	// récupère username, computername, SID et domaine
@@ -2794,7 +2809,7 @@ end:
 		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_QUIT,NULL,NULL,NULL,NULL,0);
 		if (giStat!=0 && !gbAdmin) swStat(); // 0.99 - ISSUE#106 + ISSUE#244
 	}
-
+	if (gpIUIAutomation!=NULL) gpIUIAutomation->Release();
 	// on libère tout avant de terminer
 	swCryptTerm();
 	//SSOWebTerm(); // 1.12B3-TI-TIE4

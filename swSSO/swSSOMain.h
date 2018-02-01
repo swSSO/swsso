@@ -128,6 +128,7 @@ extern int giOSBits;
 #define BROWSER_MAXTHON		4
 #define BROWSER_CHROME		5
 #define BROWSER_XIN			6
+#define BROWSER_EDGE		7
 
 #define POPUP_NONE			0
 #define POPUP_XP			1
@@ -150,3 +151,5 @@ extern int giNbTranscryptError;
 
 int ChooseConfig(HWND w,int *piAction);
 int AskMissingValues(HWND w,int i,int iPopupType);
+
+extern IUIAutomation *gpIUIAutomation;

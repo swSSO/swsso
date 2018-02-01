@@ -57,6 +57,7 @@
 #include <TlHelp32.h>
 #define SECURITY_WIN32
 #include <Security.h>
+#include <uiautomation.h>
 
 #include "resource.h"
 #include "swSSOTrace.h"
@@ -77,6 +78,7 @@
 #include "swSSOChrome.h"
 #include "swSSOFirefoxTools.h"
 #include "swSSOIETools.h"
+#include "swSSOEdge.h"
 #include "ISimpleDOMNode.h"
 #include "ISimpleDOMDocument.h"
 #include "swSSOLogs.h"

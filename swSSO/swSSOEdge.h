@@ -31,4 +31,6 @@
 // swSSOEdge.h
 //-----------------------------------------------------------------------------
 
-char *GetEdgeURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAccessible **ppOutAccessible,int iBrowser,BOOL bWaitReady);
+extern IAccessible *gpEdgeIAccessible;
+char *GetEdgeURL(HWND w,IUIAutomationElement **ppDocument);
+int SSOWebUIA(HWND w,int *piAction,int iBrowser,IUIAutomationElement *pDocument);
