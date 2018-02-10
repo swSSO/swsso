@@ -583,12 +583,13 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 	{
 		hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
 		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
-		for (int i=0;i<3;i++) // ISSUE#371 : cf. échanges avec Jamie, un échec au 1er appel est normal, on tente 3 fois (marche seulement avec FF 58b6+)
+		hr=pAccessible->accNavigate(0x1009,vtMe,&vtResult); // NAVRELATION_EMBEDS = 0x1009
+		TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr));
+		if (hr!=S_OK) // ISSUE#371 : cf. échanges avec Jamie, un échec au 1er appel est normal, on retente juste 1 fois (OK avec Firefox 59)
 		{
+			Sleep(100); // Sleep(1) pas suffisant
 			hr=pAccessible->accNavigate(0x1009,vtMe,&vtResult); // NAVRELATION_EMBEDS = 0x1009
 			TRACE((TRACE_DEBUG,_F_,"accNavigate(NAVRELATION_EMBEDS)=0x%08lx",hr));
-			if (hr==S_OK) break;
-			Sleep(1);
 		}
 		if (hr==S_OK) // ISSUE#358 -- cette méthode ne fonctionne plus à partir de Firefox 56, mais on la conserve pour les anciennes versions
 		{
@@ -605,7 +606,7 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 			if (vtResult.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole() : vtResult.lVal=%ld",vtResult.lVal)); goto end; }
 
 		}
-		else // ISSUE#358
+		else // Solution de contournement conservée au cas où accNavigate(NAVRELATION_EMBEDS) échoue (cf. ISSUE#358 et ISSUE#371)
 		{
 			// Parcourt l'ensemble de la page à la recherche de l'objet document portant le même titre que la page (pour trouver le bon onglet)
 			tSearchDoc.pContent=NULL;
