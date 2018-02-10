@@ -596,7 +596,7 @@ int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle)
 	int i=0;
 	
 	*w=GetTopWindow(HWND_DESKTOP);
-	while(rc!=0 && *w!=NULL)
+	while (rc!=0 && *w!=NULL)
 	{
 		if (IsWindowVisible(*w))
 		{
@@ -604,7 +604,8 @@ int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle)
 			if (*szTitle!=0) // si titre non vide, le compare à la liste des fenêtres exclues (#110)
 			{
 				rc=0;
-				if (strcmp(szTitle,"swSSO - Lanceur d'applications")==0) // fenêtre exclue
+				if (strcmp(szTitle,"swSSO - Lanceur d'applications")==0 || 
+					strcmp(szTitle,"swSSO - Application launcher")==0) // 1.20b2 : ajout de la traduction...
 				{
 					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
 					rc=-1;
@@ -618,7 +619,16 @@ int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle)
 					}
 				}
 				// ISSUE#143 : exclut la fenêtre gestion des sites et applications
-				if (swStringMatch(szTitle,"swSSO - Gestion des sites et application*")) // fenêtre exclue
+				if (swStringMatch(szTitle,"swSSO - Gestion des sites et application*") ||
+					swStringMatch(szTitle,"swSSO - Web sites and applications manager*")) // 1.20b2 : ajout de la traduction...
+				{
+					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
+					rc=-1;
+				}
+				// ISSUE#347 : exclut les fenêtres techniques de Edge
+				if (strcmp(szTitle,"Microsoft Edge")==0 ||
+					strcmp(szTitle,"Hôte contextuel")==0 ||
+					strcmp(szTitle,"Contextual host")==0)
 				{
 					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
 					rc=-1;

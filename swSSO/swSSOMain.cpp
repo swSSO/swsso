@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="119";	// 101 = 1.01
-const char gcszCurrentBeta[]="1201";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1202";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 BOOL gbUIAutomation=TRUE ; // 1.20 : travail avec UIA en remplacement de MSAA pour Edge (voire pour tout le reste aussi)
 
