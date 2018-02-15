@@ -53,6 +53,8 @@ char *GetEdgeURL(HWND w,IUIAutomationElement **ppDocument)
 	IUIAutomationCondition *pCondition = NULL;				
 	IUIAutomationElement *pEdge = NULL;
 
+	if (gpIUIAutomation==NULL) goto end;
+
 	hr=gpIUIAutomation->ElementFromHandle(w,&pEdge);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"gpIUIAutomation->ElementFromHandle()=0x%08lx",hr)); goto end; }
 	varProp.vt=VT_BSTR;
