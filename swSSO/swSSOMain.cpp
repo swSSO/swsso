@@ -38,8 +38,8 @@
 #include "ISimpleDOMDocument_i.c"
 
 // Un peu de globales...
-const char gcszCurrentVersion[]="119";	// 101 = 1.01
-const char gcszCurrentBeta[]="1203";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentVersion[]="120";	// 101 = 1.01
+const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 BOOL gbUIAutomation=TRUE ; // 1.20 : travail avec UIA en remplacement de MSAA pour Edge (voire pour tout le reste aussi)
 
