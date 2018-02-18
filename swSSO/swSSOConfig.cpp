@@ -65,6 +65,7 @@ char gszEncryptedADPwd[LEN_ENCRYPTED_AES256+1]="";	// 1.03 : valeur du mot de pa
 BOOL gbSSOInternetExplorer=TRUE;		// ISSUE#176
 BOOL gbSSOFirefox=TRUE;					// ISSUE#176
 BOOL gbSSOChrome=TRUE;					// ISSUE#176
+BOOL gbSSOEdge=TRUE;					// 1.20
 BOOL gbShowLaunchAppWithoutCtrl=FALSE;	// ISSUE#254
 int giLanguage=0; // 0=langue de l'OS, 1=FR, 2=EN
 wchar_t gwszDefaultLanguage[256]=L"";
@@ -695,6 +696,7 @@ static int CALLBACK PSPBrowserProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			CheckDlgButton(w,CK_IE,gbSSOInternetExplorer?BST_CHECKED:BST_UNCHECKED);
 			CheckDlgButton(w,CK_FIREFOX,gbSSOFirefox?BST_CHECKED:BST_UNCHECKED);
 			CheckDlgButton(w,CK_CHROME,gbSSOChrome?BST_CHECKED:BST_UNCHECKED);
+			CheckDlgButton(w,CK_EDGE,gbSSOEdge?BST_CHECKED:BST_UNCHECKED);
 			rc=FALSE;
 			break;
 
@@ -725,6 +727,7 @@ static int CALLBACK PSPBrowserProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					gbSSOInternetExplorer=IsDlgButtonChecked(w,CK_IE)==BST_CHECKED?TRUE:FALSE;
 					gbSSOFirefox=IsDlgButtonChecked(w,CK_FIREFOX)==BST_CHECKED?TRUE:FALSE;
 					gbSSOChrome=IsDlgButtonChecked(w,CK_CHROME)==BST_CHECKED?TRUE:FALSE;
+					gbSSOEdge=IsDlgButtonChecked(w,CK_EDGE)==BST_CHECKED?TRUE:FALSE;
 					SaveConfigHeader();
 					PropSheet_UnChanged(gwPropertySheet,w);
 					break;
@@ -1329,6 +1332,7 @@ int GetConfigHeader()
 	gbSSOInternetExplorer=GetConfigBoolValue("swSSO","InternetExplorer",gbSSOInternetExplorer_DefaultValue,TRUE); // ISSUE#176
 	gbSSOFirefox=GetConfigBoolValue("swSSO","Firefox",gbSSOFirefox_DefaultValue,TRUE); // ISSUE#176
 	gbSSOChrome=GetConfigBoolValue("swSSO","Chrome",gbSSOChrome_DefaultValue,TRUE); // ISSUE#176
+	gbSSOEdge=GetConfigBoolValue("swSSO","Edge",gbSSOEdge_DefaultValue,TRUE); // 1.20
 	gbShowLaunchAppWithoutCtrl=GetConfigBoolValue("swSSO","ShowLaunchAppWithoutCtrl",gbShowLaunchAppWithoutCtrl_DefaultValue,TRUE); // ISSUE#254
 	
 	gx=GetPrivateProfileInt("swSSO","x",-1,gszCfgFile);
@@ -1484,6 +1488,12 @@ int GetConfigHeader()
 	{
 		gbSSOChrome=gbSSOChrome_ChangeValue;
 		WritePrivateProfileString("swSSO","Chrome",gbSSOChrome?"YES":"NO",gszCfgFile);
+		bChangeIni=TRUE;
+	}
+	if (gbSSOEdge_ChangeValue!=-1 && gbSSOEdge!=gbSSOEdge_ChangeValue)				
+	{
+		gbSSOEdge=gbSSOEdge_ChangeValue;
+		WritePrivateProfileString("swSSO","Edge",gbSSOEdge?"YES":"NO",gszCfgFile);
 		bChangeIni=TRUE;
 	}
 	if (gbShowLaunchAppWithoutCtrl_ChangeValue!=-1 && gbShowLaunchAppWithoutCtrl!=gbShowLaunchAppWithoutCtrl_ChangeValue) 
@@ -1691,6 +1701,7 @@ int SaveConfigHeader()
 	WritePrivateProfileString("swSSO","InternetExplorer",gbSSOInternetExplorer?"YES":"NO",gszCfgFile);
 	WritePrivateProfileString("swSSO","Firefox",gbSSOFirefox?"YES":"NO",gszCfgFile);
 	WritePrivateProfileString("swSSO","Chrome",gbSSOChrome?"YES":"NO",gszCfgFile);
+	WritePrivateProfileString("swSSO","Edge",gbSSOEdge?"YES":"NO",gszCfgFile);
 	// ISSUE#254
 	WritePrivateProfileString("swSSO","ShowLaunchAppWithoutCtrl",gbShowLaunchAppWithoutCtrl?"YES":"NO",gszCfgFile);
 	sprintf_s(szItem,sizeof(szItem),"%d",giLanguage);

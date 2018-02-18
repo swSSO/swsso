@@ -41,8 +41,6 @@
 const char gcszCurrentVersion[]="120";	// 101 = 1.01
 const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
-BOOL gbUIAutomation=TRUE ; // 1.20 : travail avec UIA en remplacement de MSAA pour Edge (voire pour tout le reste aussi)
-
 HWND gwMain=NULL;
 HWND gwChooseConfig=NULL;
 HINSTANCE ghInstance;
@@ -1137,6 +1135,9 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					case BROWSER_CHROME:
 						bDoSSO=gbSSOChrome;
 						break;
+					case BROWSER_EDGE:
+						bDoSSO=gbSSOEdge;
+						break;
 				}
 			}
 		}
@@ -2223,12 +2224,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		goto end;
 	}
 
-	if (gbUIAutomation)
-	{
-		hr=CoCreateInstance(CLSID_CUIAutomation, NULL,CLSCTX_INPROC_SERVER, IID_IUIAutomation,(LPVOID*)&gpIUIAutomation);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(CLSID_CUIAutomation)=0x%08lx",hr)); gpIUIAutomation=NULL; }
-		// si failed, ne doit pas sortir, on est peut-être sur XP ou 2003...
-	}
+	hr=CoCreateInstance(CLSID_CUIAutomation, NULL,CLSCTX_INPROC_SERVER, IID_IUIAutomation,(LPVOID*)&gpIUIAutomation);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(CLSID_CUIAutomation)=0x%08lx",hr)); gpIUIAutomation=NULL; }
+	// si failed, ne doit pas sortir, on est peut-être sur XP ou 2003...
 
 	// récupère username, computername, SID et domaine
 	if (GetUserDomainAndComputer()!=0) { iError=-1; goto end; }

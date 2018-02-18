@@ -108,6 +108,7 @@ extern BOOL gbDisplayChangeAppPwdDialog ;		// ISSUE#107
 extern BOOL gbSSOInternetExplorer;				// ISSUE#176
 extern BOOL gbSSOFirefox;						// ISSUE#176
 extern BOOL gbSSOChrome;						// ISSUE#176
+extern BOOL gbSSOEdge;							// 1.20
 extern BOOL gbShowLaunchAppWithoutCtrl;	// ISSUE#254
 
 extern int giActionIdPwdAsked;

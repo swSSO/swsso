@@ -191,6 +191,7 @@
 #define TX_BROWSER                      40004
 #define IDS_OLDVERSION                  40005
 #define IMG_TYPE                        40005
+#define CK_EDGE                         40005
 #define IDS_PP_ENCRYPTED                40006
 #define IMG_TITRE                       40006
 #define IDS_DELETE                      40007
@@ -444,7 +445,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        42015
+#define _APS_NEXT_RESOURCE_VALUE        42017
 #define _APS_NEXT_COMMAND_VALUE         44000
 #define _APS_NEXT_CONTROL_VALUE         46007
 #define _APS_NEXT_SYMED_VALUE           48000

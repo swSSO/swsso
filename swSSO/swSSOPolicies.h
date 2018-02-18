@@ -358,6 +358,7 @@ extern int  giNbExcludedWindows;
 #define REGVALUE_DEFAULT_INTERNET_EXPLORER		"InternetExplorer"
 #define REGVALUE_DEFAULT_FIREFOX				"Firefox"
 #define REGVALUE_DEFAULT_CHROME					"Chrome"
+#define REGVALUE_DEFAULT_EDGE					"Edge"
 #define REGVALUE_DEFAULT_SHOW_LAUNCHAPP_WITHOUT_CTRL	"ShowLaunchAppWithoutCtrl"
 // uniquement dans les ChangeIniValues
 #define REGVALUE_CHANGE_RECOVERY_KEY_ID			"RecoveryKeyId"	// ISSUE#323
@@ -376,6 +377,7 @@ extern BOOL gbDisplayChangeAppPwdDialog_DefaultValue;	// 1.04
 extern BOOL gbSSOInternetExplorer_DefaultValue;			// 1.04
 extern BOOL gbSSOFirefox_DefaultValue;					// 1.04
 extern BOOL gbSSOChrome_DefaultValue;					// 1.04
+extern BOOL gbSSOEdge_DefaultValue;						// 1.20
 extern BOOL gbShowLaunchAppWithoutCtrl_DefaultValue;	// 1.08
 
 extern BOOL gbSessionLock_ChangeValue;					// 1.14
@@ -392,6 +394,7 @@ extern BOOL gbDisplayChangeAppPwdDialog_ChangeValue;	// 1.14
 extern BOOL gbSSOInternetExplorer_ChangeValue;			// 1.14
 extern BOOL gbSSOFirefox_ChangeValue;					// 1.14
 extern BOOL gbSSOChrome_ChangeValue;					// 1.14
+extern BOOL gbSSOEdge_ChangeValue;						// 1.20
 extern BOOL gbShowLaunchAppWithoutCtrl_ChangeValue;		// 1.14
 extern int  giRecoveryKeyId_ChangeValue;				// 1.14
 

@@ -195,6 +195,7 @@ BOOL gbDisplayChangeAppPwdDialog_DefaultValue=TRUE;	// 1.04
 BOOL gbSSOInternetExplorer_DefaultValue=TRUE;		// 1.04
 BOOL gbSSOFirefox_DefaultValue=TRUE;				// 1.04
 BOOL gbSSOChrome_DefaultValue=TRUE;					// 1.04
+BOOL gbSSOEdge_DefaultValue=TRUE;					// 1.20
 BOOL gbShowLaunchAppWithoutCtrl_DefaultValue=FALSE;	// 1.08
 
 // REGKEY_CHANGEINIVALUES
@@ -212,6 +213,7 @@ BOOL gbDisplayChangeAppPwdDialog_ChangeValue=-1;	// 1.14
 BOOL gbSSOInternetExplorer_ChangeValue=-1;			// 1.14
 BOOL gbSSOFirefox_ChangeValue=-1;					// 1.14
 BOOL gbSSOChrome_ChangeValue=-1;					// 1.14
+BOOL gbSSOEdge_ChangeValue=-1;						// 1.20
 BOOL gbShowLaunchAppWithoutCtrl_ChangeValue=-1;		// 1.14
 int  giRecoveryKeyId_ChangeValue=-1;				// 1.14
 
@@ -781,6 +783,10 @@ void LoadPolicies(void)
 		if (rc==ERROR_SUCCESS) gbSSOChrome_DefaultValue=(BOOL)dwValue; 
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_EDGE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbSSOEdge_DefaultValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_SHOW_LAUNCHAPP_WITHOUT_CTRL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbShowLaunchAppWithoutCtrl_DefaultValue=(BOOL)dwValue; 
 
@@ -851,6 +857,10 @@ void LoadPolicies(void)
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_CHROME,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbSSOChrome_ChangeValue=(BOOL)dwValue; 
+
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_EDGE,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) gbSSOEdge_ChangeValue=(BOOL)dwValue; 
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_DEFAULT_SHOW_LAUNCHAPP_WITHOUT_CTRL,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
@@ -1060,6 +1070,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbSSOInternetExplorer_DefaultValue=%d",gbSSOInternetExplorer_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"gbSSOFirefox_DefaultValue=%d",gbSSOFirefox_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"gbSSOChrome_DefaultValue=%d",gbSSOChrome_DefaultValue));
+	TRACE((TRACE_INFO,_F_,"gbSSOEdge_DefaultValue=%d",gbSSOEdge_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"gbShowLaunchAppWithoutCtrl_DefaultValue=%d",gbShowLaunchAppWithoutCtrl_DefaultValue));
 	TRACE((TRACE_INFO,_F_,"CHANGE INI VALUES ---------"));
 	TRACE((TRACE_INFO,_F_,"gbSessionLock_ChangeValue=%d",gbSessionLock_ChangeValue));
@@ -1076,6 +1087,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbSSOInternetExplorer_ChangeValue=%d",gbSSOInternetExplorer_ChangeValue));
 	TRACE((TRACE_INFO,_F_,"gbSSOFirefox_ChangeValue=%d",gbSSOFirefox_ChangeValue));
 	TRACE((TRACE_INFO,_F_,"gbSSOChrome_ChangeValue=%d",gbSSOChrome_ChangeValue));
+	TRACE((TRACE_INFO,_F_,"gbSSOEdge_ChangeValue=%d",gbSSOEdge_ChangeValue));
 	TRACE((TRACE_INFO,_F_,"gbShowLaunchAppWithoutCtrl_ChangeValue=%d",gbShowLaunchAppWithoutCtrl_ChangeValue));
 	TRACE((TRACE_INFO,_F_,"giRecoveryKeyId_ChangeValue=%d",giRecoveryKeyId_ChangeValue));
 	TRACE((TRACE_INFO,_F_,"REGKEY_HOTKEY ---------"));

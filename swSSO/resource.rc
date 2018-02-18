@@ -544,12 +544,13 @@ STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Browsers"
 FONT 8, "Tahoma", 0, 0, 0x0
 BEGIN
-    LTEXT           "If you don't want to use swSSO with a brower, uncheck it!",TX_STATIC,17,79,298,10
+    LTEXT           "If you don't want to use swSSO with a brower, uncheck it!",TX_STATIC,17,97,298,10
     CONTROL         "&Chrome",CK_CHROME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,61,45,8
     CONTROL         "",IDC_SEP_SECURITE,"Static",SS_ETCHEDHORZ,77,14,252,1
     LTEXT           "Supported browsers",TX_BROWSER,7,10,66,8
     CONTROL         "&Firefox",CK_FIREFOX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,43,43,8
     CONTROL         "&Internet Explorer",CK_IE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,25,76,8
+    CONTROL         "&Edge",CK_EDGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,79,45,8
 END
 
 PSP_INTERNET DIALOGEX 0, 0, 339, 229
@@ -756,6 +757,11 @@ BEGIN
 END
 
 PSP_ABOUT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+PSP_BROWSER AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -1475,17 +1481,18 @@ BEGIN
     CONTROL         "",IDC_SEP_COFFRE,"Static",SS_ETCHEDHORZ,71,171,246,1
 END
 
-PSP_BROWSER DIALOG 0, 0, 338, 214
+PSP_BROWSER DIALOGEX 0, 0, 338, 214
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Navigateurs"
-FONT 8, "Tahoma"
+FONT 8, "Tahoma", 0, 0, 0x0
 BEGIN
-    LTEXT           "Si vous ne souhaitez pas que swSSO gère les mots de passe pour certains navigateurs, vous pouvez les décocher ici. Sinon, veillez à bien désactiver l'enregistrement des mots de passe dans les options de votre navigateur.",TX_STATIC,17,79,298,30
+    LTEXT           "Si vous ne souhaitez pas que swSSO gère les mots de passe pour certains navigateurs, vous pouvez les décocher ici. Sinon, veillez à bien désactiver l'enregistrement des mots de passe dans les options de votre navigateur.",TX_STATIC,17,96,298,30
     CONTROL         "&Chrome",CK_CHROME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,61,45,8
     CONTROL         "",IDC_SEP_SECURITE,"Static",SS_ETCHEDHORZ,111,14,210,1
     LTEXT           "Navigateurs gérés par swSSO",TX_BROWSER,7,10,96,8
     CONTROL         "&Firefox",CK_FIREFOX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,43,43,8
     CONTROL         "&Internet Explorer",CK_IE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,25,76,8
+    CONTROL         "&Edge",CK_EDGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,79,45,8
 END
 
 PSP_INTERNET DIALOGEX 0, 0, 339, 229
@@ -1609,6 +1616,10 @@ BEGIN
         BOTTOMMARGIN, 222
     END
 
+    PSP_BROWSER, DIALOG
+    BEGIN
+    END
+
     PSP_INTERNET, DIALOG
     BEGIN
         RIGHTMARGIN, 338
@@ -1679,6 +1690,11 @@ BEGIN
 END
 
 PSP_ABOUT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+PSP_BROWSER AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
