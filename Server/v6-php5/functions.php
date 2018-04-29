@@ -1,7 +1,7 @@
 <?php
 //-----------------------------------------------------------------------------
 //                                  swSSO
-//                Copyright (C) 2004-2018 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
 //                https://www.swsso.fr | https://www.swsso.com
 //                             sylvain@swsso.fr
 //-----------------------------------------------------------------------------
@@ -17,7 +17,12 @@
 //  You should have received a copy of the GNU General Public License
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 7.0.0
+// VERSION INTERNE : 6.5.1
+// - ajout de la colonne autoPublish
+// VERSION INTERNE : 6.5.2
+// - ajout fonction getconfig 
+// VERSION INTERNE : 6.5.3
+// - autoPublish maintenant lié au domaine et non directement à la config
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
@@ -59,9 +64,6 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 		$columns=$columns.",withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue;
 	}
 				
-	if (isset($_GET["debug"])) echo $columns;
-	if (isset($_GET["debug"])) echo "new=".$var_new." mod=".$var_mod." old=".$var_old." autoPublish=".$var_autoPublish;
-
 	$conditions="";
 	
 	// si titre vide, c'est une récupération de l'ensemble des configs au démarrage
@@ -164,7 +166,6 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 						"order by typeapp desc, "._TABLE_PREFIX_."config.id desc, lastModified desc LIMIT 1";
 		}
 	}
-	if (isset($_GET["debug"])) echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
@@ -287,7 +288,6 @@ function showAll($active,$domain,$title,$export)
 				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ".$szDomainTable." where active=".$active." AND categId=categ.id ".
 				   $szWhere." group by id order by id";
 	}
-	if (isset($_GET["debug"])) echo $szRequest;
 	$req=mysql_query($szRequest,$cnx);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 	if ($export==0)

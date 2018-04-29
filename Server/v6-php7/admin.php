@@ -17,7 +17,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 7.0.0
+// VERSION INTERNE : 6.7.0 (PHP7)
 //------------------------------------------------------------------------------
 include('variables.php');
 include('util.php');
@@ -35,7 +35,7 @@ if (!isset($_GET['action']))
 	exit();
 }
 
-$title="<title>swSSO - Serveur de configuration (v6.5.3)</title>";
+$title="<title>swSSO - Serveur de configuration</title>";
 
 // ------------------------------------------------------------
 // showall : génère une page html avec l'ensemble des configs actives
@@ -83,8 +83,7 @@ else if ($_GET['action']=="showdomains"._READSUFFIX_)
 // ------------------------------------------------------------
 else if ($_GET['action']=="deletelogs"._WRITESUFFIX_)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return;
 
 	header("Content-type: text/html; charset=UTF-8");
 	echo "<html>";
@@ -93,34 +92,47 @@ else if ($_GET['action']=="deletelogs"._WRITESUFFIX_)
 	echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > <a href=./admin.php?action=menu"._MENUSUFFIX_."&domain=".$var_domain.">Gestion du domaine ".getDomainLabel($cnx,$var_domain)."</a> > Logs</b><br/><br/>";
 	
 	$szRequest="delete from "._TABLE_PREFIX_."logs";
-	if ($var_domain!=0) $szRequest=$szRequest." where domainId='".$var_domain."'";
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+	if ($var_domain!=0) 
+	{
+		$szRequest=$szRequest." where domainId='".$var_domain."'";
+	}
+	$stmt = mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		if ($var_domain!=0) 
+		{
+			mysqli_stmt_bind_param($stmt,"i",$var_domain);
+		}
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);	
+	}
 	echo "<font face=verdana size=2>";
 	echo "Tous les logs ont &eacute;t&eacute; effac&eacute;s.<br/>";
 	echo "</font>";
 	echo "</html>";
-	dbClose($cnx);
+	
+	sqliClose($cnx);
 }
 // ------------------------------------------------------------
 // archiveconfig : archivage d'une configuration
 // ------------------------------------------------------------
 else if ($_GET['action']=="archiveconfig"._WRITESUFFIX_)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return;
 
-	$var_id=utf8_decode(addslashes($_GET['id']));
-	$var_active=utf8_decode(addslashes($_GET['active']));
-	$var_domain=utf8_decode(addslashes($_GET['domain']));
+	if (isset($_GET["id"])) 	$var_id=utf8_decode(addslashes($_GET['id']));
+	if (isset($_GET["active"]))	$var_active=utf8_decode(addslashes($_GET['active']));
+	$var_domain=""; if (isset($_GET["domain"]))	$var_domain=utf8_decode(addslashes($_GET['domain']));
 	
-	$szRequest="update "._TABLE_PREFIX_."config set active=0, lastModified=NOW() where id=".$var_id." AND active=1";    
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-
-	dbClose($cnx);
+	$szRequest="update "._TABLE_PREFIX_."config set active=0, lastModified=NOW() where id=? AND active=1";    
+	$stmt = mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		mysqli_stmt_bind_param($stmt,"i",$var_id);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);	
+	}
+	sqliClose($cnx);
 	showAll($var_active,$var_domain,$title,0);
 }
 // ------------------------------------------------------------
@@ -128,19 +140,21 @@ else if ($_GET['action']=="archiveconfig"._WRITESUFFIX_)
 // ------------------------------------------------------------
 else if ($_GET['action']=="restoreconfig"._WRITESUFFIX_)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return;
 
-	$var_id=utf8_decode(addslashes($_GET['id']));
-	$var_active=utf8_decode(addslashes($_GET['active']));
-	$var_domain=utf8_decode(addslashes($_GET['domain']));
+	if (isset($_GET["id"])) 	$var_id=utf8_decode(addslashes($_GET['id']));
+	if (isset($_GET["active"]))	$var_active=utf8_decode(addslashes($_GET['active']));
+	$var_domain=""; if (isset($_GET["domain"]))	$var_domain=utf8_decode(addslashes($_GET['domain']));
 	
-	$szRequest="update "._TABLE_PREFIX_."config set active=1, lastModified=NOW() where id=".$var_id." AND active=0";    
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-
-	dbClose($cnx);
+	$szRequest="update "._TABLE_PREFIX_."config set active=1, lastModified=NOW() where id=? AND active=0";    
+	$stmt = mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		mysqli_stmt_bind_param($stmt,"i",$var_id);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);	
+	}
+	sqliClose($cnx);
 	showAll($var_active,$var_domain,$title,0);
 }
 // ------------------------------------------------------------
@@ -148,55 +162,38 @@ else if ($_GET['action']=="restoreconfig"._WRITESUFFIX_)
 // ------------------------------------------------------------
 else if ($_GET['action']=="deleteconfig"._WRITESUFFIX_)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
-
-	$var_id=utf8_decode(addslashes($_GET['id']));
-	$var_active=utf8_decode(addslashes($_GET['active']));
-	$var_domain=utf8_decode(addslashes($_GET['domain']));
-	
-	$szRequest="delete from "._TABLE_PREFIX_."config where id=".$var_id." AND active=".$var_active;
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-
-	dbClose($cnx);
+	if (isset($_GET["id"]))
+	{
+		$configId=utf8_decode(addslashes($_GET['id']));
+		deleteConfig($configId);
+	}
+	if (isset($_GET["active"])) $var_active=utf8_decode(addslashes($_GET['active']));
+	$var_domain=""; if (isset($_GET["domain"])) $var_domain=utf8_decode(addslashes($_GET['domain']));
+		
 	showAll($var_active,$var_domain,$title,0);
 }
 // ------------------------------------------------------------
-// deletecateg : suppression définitive d'une configuration
+// deletecateg : suppression définitive d'une catégorie
 // ------------------------------------------------------------
 else if ($_GET['action']=="deletecateg"._WRITESUFFIX_)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
-
-	$var_id=utf8_decode(addslashes($_GET['id']));
-	$var_domain=utf8_decode(addslashes($_GET['domain']));
-
-	$szRequest="delete from "._TABLE_PREFIX_."categ where id=".$var_id;      
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-
-	dbClose($cnx);
+	if (isset($_GET["id"])) 
+	{
+		$categId=utf8_decode(myaddslashes($_GET['id']));
+		deleteCateg($categId);
+	}
 	showCategories($title);
 }
 // ------------------------------------------------------------
-// deletedomain : suppression définitive d'un domain
+// deletedomain : suppression définitive d'un domaine
 // ------------------------------------------------------------
 else if ($_GET['action']=="deletedomain"._WRITESUFFIX_)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
-
-	$var_id=utf8_decode(addslashes($_GET['id']));
-	$szRequest="delete from "._TABLE_PREFIX_."domains where id=".$var_id;      
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-
-	dbClose($cnx);
+	if (isset($_GET["id"])) 
+	{
+		$domainId=utf8_decode(myaddslashes($_GET['id']));
+		deleteDomain($domainId);
+	}
 	showDomains($title);
 }
 // ------------------------------------------------------------
@@ -206,17 +203,16 @@ else if ($_GET['action']=="deleteadminpwd"._WRITESUFFIX_)
 {
 	if (_SHOWRESETPWD_=="TRUE")
 	{
-		$cnx=dbConnect();
-		if (!$cnx) return;
-
+		$cnx=sqliConnect();	if (!$cnx) return;
 		$szRequest="delete from "._TABLE_PREFIX_."adminpwd where pwd!=''";      
-
-		$req=mysql_query($szRequest,$cnx);
-		if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-
+		$stmt = mysqli_stmt_init($cnx);
+		if (mysqli_stmt_prepare($stmt,$szRequest))
+		{
+			mysqli_stmt_execute($stmt);
+			mysqli_stmt_close($stmt);	
+		}
+		sqliClose($cnx);
 		echo "Mot de passe administrateur effac&eacute;.";
-		
-		dbClose($cnx);
 	}
 }
 // ------------------------------------------------------------

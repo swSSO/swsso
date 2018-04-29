@@ -17,7 +17,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 7.0.0
+// VERSION INTERNE : 6.7.0 (PHP7)
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------

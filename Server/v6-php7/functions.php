@@ -1,7 +1,7 @@
 <?php
 //-----------------------------------------------------------------------------
 //                                  swSSO
-//                Copyright (C) 2004-2017 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2018 - Sylvain WERDEFROY
 //                https://www.swsso.fr | https://www.swsso.com
 //                             sylvain@swsso.fr
 //-----------------------------------------------------------------------------
@@ -17,12 +17,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.5.1
-// - ajout de la colonne autoPublish
-// VERSION INTERNE : 6.5.2
-// - ajout fonction getconfig 
-// VERSION INTERNE : 6.5.3
-// - autoPublish maintenant lié au domaine et non directement à la config
+// VERSION INTERNE : 6.7.0 (PHP7)
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
@@ -30,8 +25,7 @@
 // ------------------------------------------------------------
 function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_modifiedSince,$var_type,$var_version,$var_domainId,$var_autoPublish)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return;
 
 		if (_ENCRYPT_=="TRUE")
 	{
@@ -64,9 +58,6 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 		$columns=$columns.",withIdPwd,".$param_id1Value.",".$param_id2Value.",".$param_id3Value.",".$param_id4Value.",".$param_pwdValue;
 	}
 				
-	if (isset($_GET["debug"])) echo $columns;
-	if (isset($_GET["debug"])) echo "new=".$var_new." mod=".$var_mod." old=".$var_old." autoPublish=".$var_autoPublish;
-
 	$conditions="";
 	
 	// si titre vide, c'est une récupération de l'ensemble des configs au démarrage
@@ -169,19 +160,18 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 						"order by typeapp desc, "._TABLE_PREFIX_."config.id desc, lastModified desc LIMIT 1";
 		}
 	}
-	if (isset($_GET["debug"])) echo $szRequest;
-	$req=mysql_query($szRequest,$cnx);
+	$req=mysqli_query($cnx,$szRequest);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 
 	// trace tous les appels et le résultat ne doit pas être bloquant en cas d'erreur
 	if (_LOGS_=="TRUE")
 	{
-		$szLogRequest="insert into "._TABLE_PREFIX_."logs (title,url,result,domainId) values ('".$var_title."','".$var_url."',".mysql_num_rows($req).",'".$var_domainId."')";
-		mysql_query($szLogRequest,$cnx);
+		$szLogRequest="insert into "._TABLE_PREFIX_."logs (title,url,result,domainId) values ('".$var_title."','".$var_url."',".mysqli_num_rows($req).",'".$var_domainId."')";
+		mysqli_query($cnx,$szLogRequest);
 	}
 	 
 	header("Content-type: text/xml; charset=UTF-8");
-	if(mysql_num_rows($req)==0) 
+	if(mysqli_num_rows($req)==0) 
 	{
 		echo "<app>NOT FOUND</app>";
 	}
@@ -189,7 +179,7 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 	{
 		echo "<apps>\n";
 		$i=0;
-		while($ligne=mysql_fetch_row($req))
+		while($ligne=mysqli_fetch_row($req))
 		{
 			echo "<app num=\"".$i."\">\n";
 			echo "<configId>$ligne[18]</configId>\n";
@@ -227,7 +217,7 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 		}
 		echo "</apps>";
 	}
-	dbClose($cnx);
+	sqliClose($cnx);
 }
 
 // ------------------------------------------------------------
@@ -235,8 +225,7 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 // ------------------------------------------------------------
 function showAll($active,$domain,$title,$export)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return;
 
 	if (_ENCRYPT_=="TRUE")
 	{
@@ -292,8 +281,7 @@ function showAll($active,$domain,$title,$export)
 				   " from "._TABLE_PREFIX_."config,"._TABLE_PREFIX_."categ".$szDomainTable." where active=".$active." AND categId=categ.id ".
 				   $szWhere." group by id order by id";
 	}
-	if (isset($_GET["debug"])) echo $szRequest;
-	$req=mysql_query($szRequest,$cnx);
+	$req=mysqli_query($cnx,$szRequest);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 	if ($export==0)
 	{
@@ -359,9 +347,9 @@ function showAll($active,$domain,$title,$export)
 		fputs($csv,$header);
 	}
 	$domainLabel=getDomainLabel($cnx,$domain);
-	for ($i=0;$i<mysql_num_rows($req);$i++)
+	for ($i=0;$i<mysqli_num_rows($req);$i++)
 	{
-		$ligne = mysql_fetch_row($req);
+		$ligne = mysqli_fetch_row($req);
 		if ($export==0)
 		{
 			echo "<tr>";
@@ -388,13 +376,13 @@ function showAll($active,$domain,$title,$export)
 				else
 				{
 					$szRequestDomains="select label,domainId from domains,configs_domains where domains.id=configs_domains.domainId and configs_domains.configId=".$ligne[0]." order by domainId";
-					$reqDomains=mysql_query($szRequestDomains,$cnx);
+					$reqDomains=mysqli_query($cnx,$szRequestDomains);
 					if (!$reqDomains) { dbError($cnx,$szRequestDomains); dbClose($cnx); return; }
 					$szDomainsList="";
-					for ($j=0;$j<mysql_num_rows($reqDomains);$j++)
+					for ($j=0;$j<mysqli_num_rows($reqDomains);$j++)
 					{
 						if ($j!=0) $szDomainsList = $szDomainsList."<br/>";
-						$ligneDomain=mysql_fetch_row($reqDomains);
+						$ligneDomain=mysqli_fetch_row($reqDomains);
 						$szDomainsList = $szDomainsList.$ligneDomain[0]."(".$ligneDomain[1].")";
 					}
 					if ($szDomainsList=="") $szDomainsList="-";
@@ -435,13 +423,13 @@ function showAll($active,$domain,$title,$export)
 				if ($ligne[3]=="-1")
 				{
 					$szRequestDomains="select label,domainId from domains,configs_domains where domains.id=configs_domains.domainId and configs_domains.configId=".$ligne[0]." order by domainId";
-					$reqDomains=mysql_query($szRequestDomains,$cnx);
+					$reqDomains=mysqli_query($cnx,$szRequestDomains);
 					if (!$reqDomains) { dbError($cnx,$szRequestDomains); dbClose($cnx); return; }
 					$szDomainsList="";
-					for ($j=0;$j<mysql_num_rows($reqDomains);$j++)
+					for ($j=0;$j<mysqli_num_rows($reqDomains);$j++)
 					{
 						if ($j!=0) $szDomainsList = $szDomainsList."+";
-						$ligneDomain=mysql_fetch_row($reqDomains);
+						$ligneDomain=mysqli_fetch_row($reqDomains);
 						$szDomainsList = $szDomainsList.$ligneDomain[0]."(".$ligneDomain[1].")";
 					}
 					if ($szDomainsList=="") $szDomainsList="-";
@@ -470,30 +458,35 @@ function showAll($active,$domain,$title,$export)
 	{
 		fclose($csv);
 	}
-	dbClose($cnx);
+	sqliClose($cnx);
 }
 // ------------------------------------------------------------
 // getDomainLabel 
 // ------------------------------------------------------------
-function getDomainLabel($cnx,$id)
+function getDomainLabel($cnx,$domainId)
 {
-	if ($id==0)
+	if ($domainId==0)
 		return "Tous les domaines";
 	else
 	{
 		$bClose=false;
 		if ($cnx==null) 
 		{ 
-			$cnx=dbConnect(); 
-			if (!$cnx) return;
+			$cnx=sqliConnect();	if (!$cnx) return;
 			$bClose=true;
 		}
-		$szRequest="select label from "._TABLE_PREFIX_."domains where id='".$id."'";      
-		$req=mysql_query($szRequest,$cnx);
-		if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-		$ligne = mysql_fetch_row($req);
-		if ($bClose) dbClose($cnx);
-		return utf8_encode($ligne[0]);
+		$szRequest="select label from "._TABLE_PREFIX_."domains where id=?";      
+		$stmt=mysqli_stmt_init($cnx);
+		if (mysqli_stmt_prepare($stmt,$szRequest))
+		{
+			mysqli_stmt_bind_param($stmt,"i",$domainId);
+			mysqli_stmt_execute($stmt);
+			mysqli_stmt_bind_result($stmt,$domainLabel);
+			$fetch=mysqli_stmt_fetch($stmt);
+			mysqli_stmt_close($stmt);
+		}
+		if ($bClose) sqliClose($cnx);
+		return utf8_encode($domainLabel);
 	}
 }
 // ------------------------------------------------------------
@@ -501,8 +494,7 @@ function getDomainLabel($cnx,$id)
 // ------------------------------------------------------------
 function showCategories($title)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return;
 
 	header("Content-type: text/html; charset=UTF-8");
 	echo "<html>";
@@ -510,42 +502,242 @@ function showCategories($title)
 
 	echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > Liste des cat&eacute;gories</b><br/><br/>";
 	
-	$szRequest="select id,label from "._TABLE_PREFIX_."categ order by id";      
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-	echo "<table border=1 style=\"font-family:Verdana; font-size:11px;\">";
-	echo "<tr>";
-	echo "<th>Identifiant</th>";
-	echo "<th>Libell&eacute; de la cat&eacute;gorie</th>";
-	echo "</tr>";
-	for ($i=0;$i<mysql_num_rows($req);$i++)
+	$szRequest="select id,label from "._TABLE_PREFIX_."categ order by id";  
+	$stmt=mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
 	{
-		$ligne = mysql_fetch_row($req);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$categId,$categLabel);
+		echo "<table border=1 style=\"font-family:Verdana; font-size:11px;\">";
 		echo "<tr>";
-		if ($ligne[0]=='0')
-			echo "<td>".utf8_encode($ligne[0])."</td>";
-		else
-			echo "<td><a href=\"./admin.php?action=deletecateg"._WRITESUFFIX_."&id=".$ligne[0]."\" ".
-				" onclick=\"return confirm('Confirmez-vous la suppression de la cat&eacute;gorie ".utf8_encode($ligne[1])." [".$ligne[0]."] ?');\">".$ligne[0]."</a></td>";
-		if ($ligne[1]!="") echo "<td>".utf8_encode($ligne[1])."</td>"; else echo "<td align=center>-</td>"; // label
+		echo "<th>Identifiant</th>";
+		echo "<th>Libell&eacute; de la cat&eacute;gorie</th>";
 		echo "</tr>";
+		while (mysqli_stmt_fetch($stmt))
+		{
+			echo "<tr>";
+			if ($categId=='0')
+				echo "<td>".utf8_encode($categId)."</td>";
+			else
+				echo "<td><a href=\"./admin.php?action=deletecateg"._WRITESUFFIX_."&id=".$categId."\" ".
+					" onclick=\"return confirm('Confirmez-vous la suppression de la cat&eacute;gorie ".utf8_encode($categLabel)." [".$categId."] ?');\">".$categId."</a></td>";
+			if ($categLabel!="") echo "<td>".utf8_encode($categLabel)."</td>"; else echo "<td align=center>-</td>"; // label
+			echo "</tr>";
+		}
+		echo "</table>";
+		echo "<font face=verdana size=2>";
+		echo "<br/>Pour supprimer une cat&eacute;gorie, cliquez sur son identifiant puis validez la confirmation qui vous sera demand&eacute;e.<br/>";
+		echo "<br/><b>ATTENTION : veuillez v&eacute;rifier qu'aucune application n'est rattach&eacute;e &agrave une cat&eacute;gorie avant de la supprimer.</b><br/>";
+		echo "</font>";
+		echo "</html>";
+		mysqli_stmt_close($stmt);
 	}
-	echo "</table>";
-	echo "<font face=verdana size=2>";
-	echo "<br/>Pour supprimer une cat&eacute;gorie, cliquez sur son identifiant puis validez la confirmation qui vous sera demand&eacute;e.<br/>";
-	echo "<br/><b>ATTENTION : veuillez v&eacute;rifier qu'aucune application n'est rattach&eacute;e &agrave une cat&eacute;gorie avant de la supprimer.</b><br/>";
-    echo "</font>";
-	echo "</html>";
-	dbClose($cnx);
+	sqliClose($cnx);
+}
+// ------------------------------------------------------------
+// showDomains 
+// ------------------------------------------------------------
+function showDomains($title)
+{
+	$cnx=sqliConnect();	if (!$cnx) return;
+
+	header("Content-type: text/html; charset=UTF-8");
+	echo "<html>";
+	echo $title;
+
+	echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > Gestion des domaines</b><br/><br/>";
+
+	if (isset($_GET["new"]))
+	{
+		$var_new=utf8_decode(addslashes($_GET['new']));
+		$szRequest="insert into "._TABLE_PREFIX_."domains (label) values (?)";
+
+		$stmt = mysqli_stmt_init($cnx);
+		if (mysqli_stmt_prepare($stmt,$szRequest))
+		{
+			mysqli_stmt_bind_param($stmt,"s",$var_new);
+			mysqli_stmt_execute($stmt);
+			mysqli_stmt_close($stmt);
+		}
+	}
+	
+	$szRequest="select id,label from "._TABLE_PREFIX_."domains order by id";      
+	$stmt=mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$domainId,$domainLabel);
+		echo "<table border=1 style=\"font-family:Verdana; font-size:11px;\">";
+		echo "<tr>";
+		echo "<th>Identifiant</th>";
+		echo "<th>Libell&eacute; du domaine</th>";
+		echo "</tr>";
+		while (mysqli_stmt_fetch($stmt))
+		{
+			echo "<tr>";
+			if ($domainId=='1')
+				echo "<td>".utf8_encode($domainId)."</td>";
+			else
+				echo "<td><a href=\"./admin.php?action=deletedomain"._WRITESUFFIX_."&id=".$domainId."\" ".
+					" onclick=\"return confirm('Confirmez-vous la suppression du domaine ".utf8_encode($domainLabel)." [".$domainId."] ?');\">".$domainId."</a></td>";
+			if ($domainLabel!="") echo "<td>".utf8_encode($domainLabel)."</td>"; else echo "<td align=center>-</td>"; // label
+			echo "</tr>";
+		}
+		echo "</table>";
+		echo "<font face=verdana size=2>";
+		echo "<br/>Pour supprimer un domaine, cliquez sur son identifiant puis validez la confirmation qui vous sera demand&eacute;e.<br/>";
+		echo "<br/>Ajouter un domaine : ";
+		echo "<form method=\"GET\" action=\"./admin.php\">";
+		echo "<input name=\"action\" type=\"hidden\" value=\"showdomains"._MENUSUFFIX_."\"/>";
+		echo "<input name=\"new\" type=\"text\"/>";
+		echo "<input name=\"valider\" type=\"submit\" value=\"OK\"/>";
+		echo "</form>";
+		echo "</font>";
+		echo "</html>";
+		mysqli_stmt_close($stmt);
+	}
+	sqliClose($cnx);
+}
+// ------------------------------------------------------------
+// menuShowDomains
+// ------------------------------------------------------------
+function menuShowDomains()
+{
+	$cnx=sqliConnect();	if (!$cnx) return;
+
+	$szRequest="select id,label from "._TABLE_PREFIX_."domains order by label";      
+	$stmt=mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$domainId,$domainLabel);
+		while (mysqli_stmt_fetch($stmt))
+		{
+			echo "<br>&nbsp;&nbsp;&nbsp;-&nbsp;";
+			echo "<a href=\"./admin.php?action=menu"._MENUSUFFIX_."&domain=".$domainId."\">".utf8_encode($domainLabel)."</a>";
+		}
+		mysqli_stmt_close($stmt);
+	}
+	echo "<br>&nbsp;&nbsp;&nbsp;-&nbsp;";
+	echo "<a href=\"./admin.php?action=menu"._MENUSUFFIX_."&domain=0\">Tous les domaines</a>";
+	
+	sqliClose($cnx);
+}
+// ------------------------------------------------------------
+// exportStats
+// ------------------------------------------------------------
+function exportStats()
+{
+	$cnx=sqliConnect();	if (!$cnx) return;
+
+	$szRequest="select shausername,logindate,nconfigs,nsso,nenrolled,computername from "._TABLE_PREFIX_."stats order by logindate";      
+	$stmt=mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		$csv=fopen('php://output','w');
+		header('Content-Type: application/csv');
+		header('Content-Disposition: attachement; filename="swsso-statistiques.csv";');
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$shausername,$logindate,$nconfigs,$nsso,$nenrolled,$computername);
+		while (mysqli_stmt_fetch($stmt))
+		{
+			fprintf($csv,"%s%c%s%c%d%c%d%c%d%c%s",$shausername,_SEPARATOR_,$logindate,_SEPARATOR_,$nconfigs,_SEPARATOR_,$nsso,_SEPARATOR_,$nenrolled,_SEPARATOR_,$computername);
+		}
+		mysqli_stmt_close($stmt);
+		fclose($csv);
+	}
+	sqliClose($cnx);
+}
+// ------------------------------------------------------------
+// deleteConfig
+// ------------------------------------------------------------
+function deleteConfig($configId)
+{
+	$rc=FALSE;
+	
+	$cnx=sqliConnect();	if (!$cnx) return;
+		
+	// ISSUE#231 : il faut aussi supprimer le lien config - domaines
+	$szRequest="delete from "._TABLE_PREFIX_."configs_domains where configId=?";
+	$stmt = mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		mysqli_stmt_bind_param($stmt,"i",$configId);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);	
+	}
+	
+	$szRequest="delete from "._TABLE_PREFIX_."config where id=?";
+	$stmt = mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		mysqli_stmt_bind_param($stmt,"i",$configId);
+		mysqli_stmt_execute($stmt);
+		if (mysqli_stmt_affected_rows($stmt)>0) $rc=TRUE;
+		mysqli_stmt_close($stmt);	
+	}
+	sqliClose($cnx);
+}
+// ------------------------------------------------------------
+// deleteCateg
+// ------------------------------------------------------------
+function deleteCateg($categId)
+{
+	$rc=FALSE;
+	
+	$cnx=sqliConnect();	if (!$cnx) return;
+	
+	$szRequest="delete from "._TABLE_PREFIX_."categ where id=?";
+	$stmt = mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		mysqli_stmt_bind_param($stmt,"i",$categId);
+		mysqli_stmt_execute($stmt);
+		if (mysqli_stmt_affected_rows($stmt)>0) $rc=TRUE;
+		mysqli_stmt_close($stmt);	
+	}
+	sqliClose($cnx);
+}
+// ------------------------------------------------------------
+// deleteDomain
+// ------------------------------------------------------------
+function deleteDomain($domainId)
+{
+	$rc=FALSE;
+	
+	$cnx=sqliConnect();	if (!$cnx) return;
+	
+	// vérifie qu'aucune config n'est attachée à ce domaine
+	$szRequest="select count(*) from "._TABLE_PREFIX_."configs_domains where domainId=?";
+	$stmt = mysqli_stmt_init($cnx);
+	if (mysqli_stmt_prepare($stmt,$szRequest))
+	{
+		mysqli_stmt_bind_param($stmt,"i",$domainId);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$nbDomains);
+		$fetch=mysqli_stmt_fetch($stmt);
+		mysqli_stmt_close($stmt);	
+	}
+	if ($nbDomains==0) 
+	{
+		$szRequest="delete from "._TABLE_PREFIX_."domains where id=?";
+		$stmt = mysqli_stmt_init($cnx);
+		if (mysqli_stmt_prepare($stmt,$szRequest))
+		{
+			mysqli_stmt_bind_param($stmt,"i",$domainId);
+			mysqli_stmt_execute($stmt);
+			if (mysqli_stmt_affected_rows($stmt)>0) $rc=TRUE;
+			mysqli_stmt_close($stmt);	
+		}
+	}
+	sqliClose($cnx);
 }
 // ------------------------------------------------------------
 // showLogs 
 // ------------------------------------------------------------
 function showLogs($domain,$result,$title)
 {
-	$cnx=dbConnect();
-	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return;
 
 	header("Content-type: text/html; charset=UTF-8");
 	echo "<html>";
@@ -559,7 +751,7 @@ function showLogs($domain,$result,$title)
 	}
 	$szRequest="select horodate,title,url,result,domainId from "._TABLE_PREFIX_."logs ".$szWhere." order by horodate desc";      
 
-	$req=mysql_query($szRequest,$cnx);
+	$req=mysqli_query($cnx,$szRequest);
 	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
 	echo "<table border=1 style=\"font-family:Verdana; font-size:11px;\">";
 	echo "<tr>";
@@ -569,9 +761,9 @@ function showLogs($domain,$result,$title)
 	echo "<th>URL</th>";
 	echo "<th>R&eacute;sultat</th>";
 	echo "</tr>";
-	for ($i=0;$i<mysql_num_rows($req);$i++)
+	for ($i=0;$i<mysqli_num_rows($req);$i++)
 	{
-		$ligne = mysql_fetch_row($req);
+		$ligne = mysqli_fetch_row($req);
 		echo "<tr>";
 		echo "<td>".utf8_encode($ligne[0])."</td>";
 		if ($ligne[4]!="") echo "<td>".utf8_encode($ligne[4])."</td>"; else echo "<td align=center>-</td>";
@@ -582,106 +774,6 @@ function showLogs($domain,$result,$title)
 	}
 	echo "</table>";
 	echo "</html>";
-	dbClose($cnx);
+	sqliClose($cnx);
 }
-// ------------------------------------------------------------
-// showDomains 
-// ------------------------------------------------------------
-function showDomains($title)
-{
-	$cnx=dbConnect();
-	if (!$cnx) return;
-
-	header("Content-type: text/html; charset=UTF-8");
-	echo "<html>";
-	echo $title;
-
-	echo "<font face=verdana size=2><b><a href=./admin.php?action=menu"._MENUSUFFIX_.">Menu principal</a> > Gestion des domaines</b><br/><br/>";
-
-	if (isset($_GET["new"]))
-	{
-		$var_new=utf8_decode(addslashes($_GET['new']));
-		$szRequest="insert into "._TABLE_PREFIX_."domains (label) values ('".$var_new."')";
-		$req=mysql_query($szRequest,$cnx);
-		if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-	}
-	
-	$szRequest="select id,label from "._TABLE_PREFIX_."domains order by id";      
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-	echo "<table border=1 style=\"font-family:Verdana; font-size:11px;\">";
-	echo "<tr>";
-	echo "<th>Identifiant</th>";
-	echo "<th>Libell&eacute; du domaine</th>";
-	echo "</tr>";
-	for ($i=0;$i<mysql_num_rows($req);$i++)
-	{
-		$ligne = mysql_fetch_row($req);
-		echo "<tr>";
-		if ($ligne[0]=='1')
-			echo "<td>".utf8_encode($ligne[0])."</td>";
-		else
-			echo "<td><a href=\"./admin.php?action=deletedomain"._WRITESUFFIX_."&id=".$ligne[0]."\" ".
-				" onclick=\"return confirm('Confirmez-vous la suppression du domaine ".utf8_encode($ligne[1])." [".$ligne[0]."] ?');\">".$ligne[0]."</a></td>";
-		if ($ligne[1]!="") echo "<td>".utf8_encode($ligne[1])."</td>"; else echo "<td align=center>-</td>"; // label
-		echo "</tr>";
-	}
-	echo "</table>";
-	echo "<font face=verdana size=2>";
-	echo "<br/>Pour supprimer un domaine, cliquez sur son identifiant puis validez la confirmation qui vous sera demand&eacute;e.<br/>";
-	echo "<br/>Ajouter un domaine : ";
-	echo "<form method=\"GET\" action=\"./admin.php\">";
-    echo "<input name=\"action\" type=\"hidden\" value=\"showdomains"._MENUSUFFIX_."\"/>";
-	echo "<input name=\"new\" type=\"text\"/>";
-    echo "<input name=\"valider\" type=\"submit\" value=\"OK\"/>";
-	echo "</form>";
-    echo "</font>";
-	echo "</html>";
-	dbClose($cnx);
-}
-// ------------------------------------------------------------
-// menuShowDomains
-// ------------------------------------------------------------
-function menuShowDomains()
-{
-	$cnx=dbConnect();
-	if (!$cnx) return;
-
-	$szRequest="select id,label from "._TABLE_PREFIX_."domains order by label";      
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-	for ($i=0;$i<mysql_num_rows($req);$i++)
-	{
-		$ligne = mysql_fetch_row($req);
-		echo "<br>&nbsp;&nbsp;&nbsp;-&nbsp;";
-		echo "<a href=\"./admin.php?action=menu"._MENUSUFFIX_."&domain=".$ligne[0]."\">".utf8_encode($ligne[1])."</a>";
-	}
-	echo "<br>&nbsp;&nbsp;&nbsp;-&nbsp;";
-	echo "<a href=\"./admin.php?action=menu"._MENUSUFFIX_."&domain=0\">Tous les domaines</a>";
-	
-	dbClose($cnx);
-}
-// ------------------------------------------------------------
-// exportStats
-// ------------------------------------------------------------
-function exportStats()
-{
-	$cnx=dbConnect();
-	if (!$cnx) return;
-
-	$szRequest="select shausername,logindate,nconfigs,nsso,nenrolled,computername from "._TABLE_PREFIX_."stats order by logindate";      
-
-	$req=mysql_query($szRequest,$cnx);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
-	$csv=fopen('php://output','w');
-	header('Content-Type: application/csv');
-	header('Content-Disposition: attachement; filename="swsso-statistiques.csv";');
-	for ($i=0;$i<mysql_num_rows($req);$i++)
-	{
-		$ligne = mysql_fetch_row($req);
-		fputcsv($csv,$ligne,_SEPARATOR_);
-	}
-	fclose($csv);
-	dbClose($cnx);
-}?>
+?>

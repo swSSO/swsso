@@ -23,9 +23,9 @@
 /*----------------------------------------------------------------------------------------------
 VARIABLES DE CONNEXION A LA BASE DE DONNEES
 ----------------------------------------------------------------------------------------------*/
-define("_HOST_","");			// Nom du serveur hebergeant la base de donnees
-define("_DB_",""); 				// Nom de la base de données
-define("_USER_","");			// Utilisateur MySQL
+define("_HOST_","localhost");	// Nom du serveur hebergeant la base de donnees
+define("_DB_","swsso"); 		// Nom de la base de données
+define("_USER_","root");		// Utilisateur MySQL
 define("_PWD_","");				// Mot de passe utilisateur MySQL
 define("_TABLE_PREFIX_",""); 	// Préfixe à utiliser pour les tables
 
@@ -45,6 +45,6 @@ define("_MENUSUFFIX_","");  		// "protection" de l'URL presentant le menu
 define("_READSUFFIX_","");  		// "protection" des URLs permettant la lecture de la base
 define("_WRITESUFFIX_",""); 		// "protection" des URLs permettant la modification de la base
 define("_SHOWRESETPWD_","FALSE"); 	// TRUE | FALSE (montre / cache la fonction d'effacement du mdp admin)
-define("_SEPARATOR_",";");		// séparateur pour les exports CSV
+define("_SEPARATOR_",";");			// séparateur pour les exports CSV
 define("_STATOVERWRITE_","TRUE");	// chaque remontée de stat écrase la ligne précédemment remontée pour cet utilisateur
 ?>
