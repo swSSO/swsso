@@ -5024,7 +5024,8 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 			iType=UNK; // permet de récupérer les configs WEB ou XEB 
 			pszURL=GetChromeURL(w);
 			if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
-			if (pszURL==NULL) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
+			// ISSUE#382 : avec Chrome 69, GetChromeURL et  GetChromeURL51 ne fonctionnent pas, il faut NewGetChromeURL
+			if (pszURL==NULL || *pszURL==0) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
 			if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 			// ISSUE#142 : si pszURL=NULL, mieux vaut s'arrêter même si en fait ça ne crashe pas car bien géré partout
 			// ISSUE#155
