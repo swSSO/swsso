@@ -307,7 +307,8 @@ int GetFileHash(char *szFile,unsigned char *pBufHashValue)
 	int rc=-1;
 	
 	// ouvre le .ini en lecture
-	hf=CreateFile(szFile,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	// ISSUE #383 : remplacement dwShareMode=0 par FILE_SHARE_READ
+	hf=CreateFile(szFile,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hf==INVALID_HANDLE_VALUE) {	TRACE((TRACE_ERROR,_F_,"CreateFile(%s)=%d",szFile,GetLastError())); goto end;	}
 	// regarde la taille et alloue le buffer pour la lecture
 	dwFileSize=GetFileSize(hf,NULL);
