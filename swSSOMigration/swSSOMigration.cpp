@@ -280,21 +280,44 @@ int swSSOMigrationPart2()
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
 
-	char bufRequest[1024];
+	char bufRequest[1280];
 	char bufResponse[1024];
 	DWORD dwLenResponse;
 
 	LogMessage("INFO  : Communication avec swSSOSVC 1/1");
+	// ISSUE#384 : commence par essayer en V03 (swSSOSVC 1.18+)
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:PUTPASS:",12);
+	memcpy(bufRequest,"V03:PUTPASS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gBufPassword,sizeof(gBufPassword));
+	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN*2,gBufPassword,sizeof(gBufPassword));
 	
 	// Envoie la requête
-	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+sizeof(gBufPassword),bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN*2+sizeof(gBufPassword),bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
 		LogMessage("ERROR : Le service swSSOSVC ne repond pas"); 
+		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); 
+		goto end;
+	}
+	// ISSUE#384 : teste le retour, si BADREQUEST ré-essaie en V02
+	if (dwLenResponse==10 && memcmp(bufResponse,"BADREQUEST",10)==0)
+	{
+		SecureZeroMemory(bufRequest,sizeof(bufRequest));
+		memcpy(bufRequest,"V02:PUTPASS:",12);
+		memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
+		memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
+		memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN,gBufPassword,sizeof(gBufPassword));
+		// Envoie la requête
+		if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN+sizeof(gBufPassword),bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+		{
+			LogMessage("ERROR : Le service swSSOSVC ne repond pas"); 
+			TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); 
+			goto end;
+		}
+	}
+	if (dwLenResponse!=2)
+	{
+		LogMessage("ERROR : Le service swSSOSVC a retourne une erreur");
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); 
 		goto end;
 	}
