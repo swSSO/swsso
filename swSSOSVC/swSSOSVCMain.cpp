@@ -165,6 +165,54 @@ void Usage(void)
 }
 
 //-----------------------------------------------------------------------------
+// ResetCMRegKey()
+//-----------------------------------------------------------------------------
+// ISSUE#354 : Repositionne swSSOCM dans la clé (si supprimé par montée de version W10 par ex) :
+// HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\NetworkProvider\Order\ProviderOrder
+//-----------------------------------------------------------------------------
+void ResetCMRegKey(void)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+
+	HKEY hKey=NULL;
+	int rc;
+	char szValue[1024+1];
+	DWORD dwValueSize,dwValueType;
+	int len;
+
+	rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,"SYSTEM\\CurrentControlSet\\Control\\NetworkProvider\\Order",0,KEY_READ,&hKey);
+	if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegOpenKeyEx(SYSTEM\\CurrentControlSet\\Control\\NetworkProvider\\Order,KEY_READ) : %d",rc)); goto end; }
+
+	dwValueType=REG_SZ; dwValueSize=sizeof(szValue);
+	rc=RegQueryValueEx(hKey,"ProviderOrder",NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
+	if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegQueryValueEx(ProviderOrder) : %d",rc)); goto end; }
+	
+	TRACE((TRACE_DEBUG,_F_,"ProviderOrder=%s",szValue));
+
+	if (strstr(szValue,"swSSOCM")==NULL)
+	{
+		TRACE((TRACE_INFO,_F_,"swSSOCM non trouvé dans ProviderOrder, on l'ajoute"));
+
+		RegCloseKey(hKey); 
+		rc=RegOpenKeyEx(HKEY_LOCAL_MACHINE,"SYSTEM\\CurrentControlSet\\Control\\NetworkProvider\\Order",0,KEY_SET_VALUE,&hKey);
+		if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegOpenKeyEx(SYSTEM\\CurrentControlSet\\Control\\NetworkProvider\\Order,KEY_SET_VALUE) : %d",rc)); goto end; }
+
+		len=strlen(szValue);
+		if (len+strlen(",swSSOCM") > 1024) { TRACE((TRACE_ERROR,_F_,"Valeur trop longue")); goto end; }
+		strcat_s(szValue,",swSSOCM"); 
+		
+		rc=RegSetValueEx(hKey,"ProviderOrder",0,REG_SZ,(LPBYTE)szValue,strlen(szValue)+1);
+		if (rc!=ERROR_SUCCESS) { TRACE((TRACE_ERROR,_F_,"RegSetValueEx(%s) : %d",szValue,rc)); goto end; }
+
+		TRACE((TRACE_INFO,_F_,"Ajout swSSOCM non trouvé dans ProviderOrder OK"));
+	}
+		
+end:
+	if (hKey!=NULL) RegCloseKey(hKey);
+	TRACE((TRACE_LEAVE,_F_,""));
+}
+
+//-----------------------------------------------------------------------------
 // main()
 //-----------------------------------------------------------------------------
 // 
@@ -214,6 +262,7 @@ int main(int argc, _TCHAR* argv[])
 	}
 	else if (argc==1)
 	{ 
+		ResetCMRegKey(); // ISSUE#354
 		StartServiceCtrlDispatcher(st);
 	}
 	else 
