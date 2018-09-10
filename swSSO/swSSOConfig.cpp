@@ -4905,10 +4905,10 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 	// construction URL
 	if (pszURL!=NULL)
 	{
-		// ISSUE#305 : avec Chrome, si l'URL ne commence pas par http://, on l'ajoute
+		// ISSUE#305 : avec Chrome, si l'URL ne commence pas par http://, on ajoute https (avant la 1.22, on ajoutait http cf. ISSUE#385)
 		if (iBrowser==BROWSER_CHROME && _strnicmp(pszURL,"http://",7)!=0 && _strnicmp(pszURL,"https://",8)!=0 && _strnicmp(pszURL,"file://",7)!=0)
 		{
-			strcpy_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),"http://");
+			strcpy_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),"https://"); // ISSUE#385
 			strncat_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),pszURL,LEN_URL-1);
 		}
 		else

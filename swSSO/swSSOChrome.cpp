@@ -451,16 +451,21 @@ char *GetChromeURL51(HWND w)
 	hr=pChildNiveau6->get_accValue(vtChild,&bstrURL);
 	if (hr!=S_OK) { TRACE((TRACE_ERROR,_F_,"pChildNiveau6->get_accValue(%ld)=0x%08lx",vtChild.lVal,hr)); goto end; }
 	
-	// ISSUE#298 : ne plus utiliser le %S, j'ai fait une fonction pour ça !! 
-	// (remarque : je corrige mais ça marchait quand même pour Chrome, le sprintf_s semble meilleur que le wsprintf)
-	/* TRACE((TRACE_DEBUG,_F_,"pChildNiveau6->get_accValue(%ld)='%S'",vtChild.lVal,bstrURL));
-	bstrLen=SysStringLen(bstrURL);
-	pszURL=(char*)malloc(bstrLen+1);
-	if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",bstrLen+1)); goto end; }
-	sprintf_s(pszURL,bstrLen+1,"%S",bstrURL); */
 	pszURL=GetSZFromBSTR(bstrURL);
 	TRACE((TRACE_DEBUG,_F_,"pszURL='%s'",pszURL));
-	
+
+	// ISSUE#385
+	if (pszURL!=NULL)
+	{
+		if ( _strnicmp(pszURL,"http://",7)!=0 && _strnicmp(pszURL,"https://",8)!=0 && _strnicmp(pszURL,"file://",7)!=0)
+		{
+			free(pszURL);
+			pszURL=NULL;
+			TRACE((TRACE_DEBUG,_F_,"pszURL ne commence pas par http://, https:// ou file:// -> on retourne NULL"));
+			goto end;
+		}
+	}
+
 	gpAccessibleChromeURL=pChildNiveau6;
 	pChildNiveau6->AddRef();
 
