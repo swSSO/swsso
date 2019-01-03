@@ -87,6 +87,8 @@
 #include "swSSOSelectAccount.h"
 #include "swSSOAdminNoPwd.h"
 #include "swSSOAdmin.h"
+#include "swSSOMobile.h"
+
 
 
 

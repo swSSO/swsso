@@ -247,6 +247,7 @@
     <ClCompile Include="swSSOLaunchApp.cpp" />
     <ClCompile Include="swSSOLogs.cpp" />
     <ClCompile Include="swSSOMain.cpp" />
+    <ClCompile Include="swSSOMobile.cpp" />
     <ClCompile Include="swSSOPolicies.cpp" />
     <ClCompile Include="swSSORecovery.cpp" />
     <ClCompile Include="swSSOSelectAccount.cpp" />
@@ -281,6 +282,7 @@
     <ClInclude Include="swSSOLaunchApp.h" />
     <ClInclude Include="swSSOLogs.h" />
     <ClInclude Include="swSSOMain.h" />
+    <ClInclude Include="swSSOMobile.h" />
     <ClInclude Include="swSSOPolicies.h" />
     <ClInclude Include="swSSORecovery.h" />
     <ClInclude Include="swSSOSelectAccount.h" />

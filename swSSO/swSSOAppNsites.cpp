@@ -413,7 +413,7 @@ void PublishToOnInitDialog(HWND w)
 	LVITEM lvi;
 	int i,j;
 	T_CONFIGS_DOMAIN tabConfigDomains[MAX_DOMAINS];
-	int iNbDomains;
+	int iNbDomains=0;
 	HCURSOR hCursorOld=NULL;
 	hCursorOld=SetCursor(ghCursorWait);
 

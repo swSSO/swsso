@@ -512,7 +512,7 @@ BEGIN
     PUSHBUTTON      "&Open",PB_OUVRIR,280,147,50,14
     EDITTEXT        TX_PORTAL,99,120,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT        TX_CONFIGFILE,99,151,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Copyright © 2004-2018 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Copyright © 2004-2019 - Sylvain Werdefroy",-1,47,24,155,10
     LTEXT           "Statistics",TX_STATISTIQUES,7,196,31,10
     LTEXT           "Number of connections:",-1,17,210,77,8
     LTEXT           "0",TX_NBSSO,101,210,230,8
@@ -523,7 +523,7 @@ BEGIN
     LTEXT           "Configuration file:",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,55,262,18
     LTEXT           "License",TX_LICENCE,7,40,28,11
-    LTEXT           "1.22b1 (9/2018)",TX_ABOUT,47,12,154,8
+    LTEXT           "1.22b2 (1/2019)",TX_ABOUT,47,12,154,8
     LTEXT           "Portal:",TX_PORTAL2,17,120,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -1454,7 +1454,7 @@ BEGIN
     PUSHBUTTON      "&Ouvrir",PB_OUVRIR,280,147,50,14
     EDITTEXT        TX_PORTAL,99,120,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT        TX_CONFIGFILE,99,151,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Copyright © 2004-2018 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Copyright © 2004-2019 - Sylvain Werdefroy",-1,47,24,155,10
     LTEXT           "Statistiques",TX_STATISTIQUES,7,196,41,10
     LTEXT           "Nombre de SSO réalisés :",-1,17,210,82,8
     LTEXT           "0",TX_NBSSO,99,210,230,8
@@ -1465,7 +1465,7 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,40,28,11
-    LTEXT           "1.22b1 (09/2018)",TX_ABOUT,47,12,157,8
+    LTEXT           "1.22b2 (01/2019)",TX_ABOUT,47,12,157,8
     LTEXT           "Portail :",TX_PORTAL2,17,120,42,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
