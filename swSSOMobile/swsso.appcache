@@ -1,0 +1,18 @@
+CACHE MANIFEST
+#V008
+
+CACHE:
+index.html
+./#PageSafe
+./apple-touch-icon.png
+./cadenas.png
+./jquery/jquery.mobile-1.4.5.min.css
+./jquery/jquery.min.js
+./jquery/jquery.mobile-1.4.5.min.js
+./jquery/images/ajax-loader.gif
+./sjcl/sjcl.js
+./swSSOCrypt.js
+./swSSOIHM.js
+
+NETWORK:
+*

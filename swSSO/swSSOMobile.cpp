@@ -50,6 +50,7 @@ int SaveJSON(char *szFullpathname)
 	char szCheckSynchroValue[192+1]; // (16+64+16)*2+1 = 193 -- en mode PP_WINDOWS
 	char szPBKDF2MasterPwd[PBKDF2_PWD_LEN*2+1]; // -- en mode PP_ENCRYPTED
 	char szIdEncryptedValue[LEN_ENCRYPTED_AES256+1];
+	char szAppEncryptedName[LEN_ENCRYPTED_AES256+1];
 
 	if (giPwdProtection!=PP_ENCRYPTED && giPwdProtection!=PP_WINDOWS)
 	{
@@ -89,8 +90,20 @@ int SaveJSON(char *szFullpathname)
 	// stockage des apps
 	for (i=0;i<giNbActions;i++)
 	{
-		sprintf_s(szBuf,sizeof(szBuf),"{\n\"strApp\":\"%s\",",gptActions[i].szApplication);
+		// app (chiffré pour ne pas perdre les accents & cie... et puis finalement c'est pas plus mal que ce ne soit pas en clair)
+		*szAppEncryptedName=0;
+		if (*gptActions[i].szApplication!=0)
+		{
+			char *pszEncrypted=swCryptEncryptString(gptActions[i].szApplication,ghKey1);
+			if (pszEncrypted!=NULL)
+			{
+				strcpy_s(szAppEncryptedName,sizeof(szAppEncryptedName),pszEncrypted);
+				free(pszEncrypted);
+			}
+		}
+		sprintf_s(szBuf,sizeof(szBuf),"{\n\"strApp\":\"%s\",",szAppEncryptedName);
 		if (!WriteFile(hf,szBuf,strlen(szBuf),&dw,NULL)) { TRACE((TRACE_ERROR,_F_,"WriteFile(%s),len=%d",szBuf,strlen(szBuf))); goto end; }
+		// id (chiffré)
 		*szIdEncryptedValue=0;
 		if (*gptActions[i].szId1Value!=0)
 		{
@@ -101,9 +114,10 @@ int SaveJSON(char *szFullpathname)
 				free(pszEncrypted);
 			}
 		}
-		sprintf_s(szBuf,sizeof(szBuf),"\n\"strEncryptedId\":\"%s\",",szIdEncryptedValue);
+		sprintf_s(szBuf,sizeof(szBuf),"\n\"strId\":\"%s\",",szIdEncryptedValue);
 		if (!WriteFile(hf,szBuf,strlen(szBuf),&dw,NULL)) { TRACE((TRACE_ERROR,_F_,"WriteFile(%s),len=%d",szBuf,strlen(szBuf))); goto end; }
-		sprintf_s(szBuf,sizeof(szBuf),"\n\"strEncryptedPassword\":\"%s\"\n}",gptActions[i].szPwdEncryptedValue);
+		// pwd (chiffré)
+		sprintf_s(szBuf,sizeof(szBuf),"\n\"strPassword\":\"%s\"\n}",gptActions[i].szPwdEncryptedValue);
 		if (!WriteFile(hf,szBuf,strlen(szBuf),&dw,NULL)) { TRACE((TRACE_ERROR,_F_,"WriteFile(%s),len=%d",szBuf,strlen(szBuf))); goto end; }
 		if (i!=(giNbActions-1))
 		{

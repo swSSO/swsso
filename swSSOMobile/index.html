@@ -1,0 +1,98 @@
+<!DOCTYPE html> 
+<!--html manifest="./swsso.appcache"--> 
+<head> 
+	<title>swSSO</title> 
+	<link rel="shortcut icon" href="#" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+	<link rel="stylesheet" href="./jquery/jquery.mobile-1.4.5.min.css" />
+	<script src="./jquery/jquery.min.js"></script>
+	<script src="./jquery/jquery.mobile-1.4.5.min.js"></script>
+	<script src="./sjcl/sjcl.js"></script>
+	<script src="./swSSOCrypt.js"></script>
+	<script src="./swSSOIHM.js"></script>
+	<script>
+		$(document).on("pagebeforeshow","#PageWelcome",function(event) { pageWelcomeInit(); });
+		$(document).on("pagebeforeshow","#PagePassword",function(event) { pagePasswordInit(); });
+		$(document).on("pagebeforeshow","#PageSafe",function(event) { pageSafeInit(); });
+	</script>
+	<style id="center">
+	.center {
+		text-align: center;
+	}
+	</style>
+	<style id="aligncenter">
+	.aligncenter {
+		text-align: center;
+	}
+	</style>
+</head> 
+
+<body> 
+	<!-- PAGE 1 -->
+	<div data-role="page" id="PageWelcome">
+		<div data-role="header">
+			<h1>swSSO</h1>
+		</div><!-- /header -->
+		<div data-role="content">	
+			<p>Bienvenue !</p>
+			<p>Pour commencer, veuillez indiquer l'emplacement de votre fichier swsso.json ci-dessous, puis cliquer sur Valider.</p>
+			<label for="url">URL (exemple : https://file.io/jsn4yQ)</label>
+			<input type="url" data-clear-btn="true" name="url" id="url" value="https://">
+			<button onclick="loadJSON()">Valider</button>
+			<p>Remarque : vous pourrez mettre &agrave; jour votre fichier ult&eacute;rieurement depuis la page options.</p>
+		</div><!-- /content -->
+	</div><!-- /page -->
+	
+	<!-- PAGE 2 -->
+	<div data-role="page" id="PagePassword">
+		<div data-role="header">
+			<h1>swSSO</h1>
+		</div><!-- /header -->
+		<div data-role="content">	
+<div class="aligncenter">
+<img src="./cadenas.png"></img>
+</div>			
+			<p>Veuillez saisir votre mot de passe pour d&eacute;verrouiller votre coffre :</p>
+			<input type="password" data-clear-btn="false" name="password" id="password" value="" autocomplete="off">
+			<button onclick="unlockSafe()">D&eacute;verrouiller</button>
+			<br/>
+			<p>Mot de passe perdu ? Cliquez ci-dessous pour r&eacute;initialiser votre coffre fort.</p>
+			<button onclick="restartFromScratch()">R&eacute;initialiser</button>
+		</div><!-- /content -->
+	</div><!-- /page -->
+	
+	<!-- PAGE 3 -->
+	<div data-role="page" id="PageSafe">
+		<div data-role="header">
+			<div class="ui-grid-b center">
+				<div class="ui-block-a"><button onclick="copyToClipboard('*')" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-top ui-icon-delete ui-btn-inline">&nbsp;Presse-papier&nbsp;</button></div>
+				<div class="ui-block-b"><button onclick="lockSafe()" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-top ui-icon-lock ui-btn-inline">&nbsp;&nbsp;&nbsp;&nbsp;Verrouiller&nbsp;&nbsp;&nbsp;&nbsp;</button></div>
+				<div class="ui-block-c"><button onclick="showOptions()" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-top ui-icon-gear ui-btn-inline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Options&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button></div>
+			</div><!-- /ui-grid-b -->
+		</div><!-- /header -->
+		<div data-role="content">	
+			<form>
+				<input data-type="search" id="searchForCollapsibleSet" placeholder="Rechercher...">
+			</form>
+			<div data-role="collapsibleset" data-filter="true" data-inset="true" id="listeApplis" data-input="#searchForCollapsibleSet">
+			</div>
+		</div><!-- /content -->
+	</div><!-- /page -->
+	
+	<!-- PAGE 4 -->
+	<div data-role="page" id="PageOptions">
+		<div data-role="header">
+			<h1>Options</h1>
+		</div><!-- /header -->
+		<div data-role="content">	
+			<button onclick="restartFromScratch()">R&eacute;initialiser</button>
+			<button onclick="$.mobile.navigate('#PageSafe')">Retour</button>
+			<br/>
+			<p>Version 008</p>
+		</div><!-- /content -->
+	</div><!-- /page -->
+
+</body>
+</html>
