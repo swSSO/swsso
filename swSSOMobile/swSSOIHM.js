@@ -1,15 +1,84 @@
+/*
+TODO : trouver un moyen de détecter que la pagesafe est vide pour recharger la liste
+-> soit en mettant ginbapps à null quand appli rechargée (voir les événements sur iphone) > KO
+-> soit en trouvant un moyen de compter les apps affichées
+*/
 //-----------------------------------------------------------------------------
 //               swSSO - http://www.swsso.fr - sylvain@swsso.fr
 //-----------------------------------------------------------------------------
+// $.mobile.navigate("#PagePassword",{ transition : "slide" }); 
+// Initialise la page 1 (welcome)
+function pageChange(e,data)
+{
+	console.log("> pageChange()");
+	
+	if (typeof data.toPage[0].id!='undefined') 
+	{
+		console.log("toPage",data.toPage[0].id);
+		if (typeof data.options.fromPage=="undefined") 
+			console.log("fromPage","undefined");
+		else 
+			console.log("fromPage",data.options.fromPage[0].id);
+
+		if (data.toPage[0].id=="PageWelcome") //  && typeof data.options.fromPage=="undefined"
+		{
+			if (typeof data.options.fromPage=="undefined") // restauration de l'app sur iPhone ou appel depuis un signet
+			{
+				var prevPage=localStorage.getItem("curPage");
+				if (prevPage!=null && prevPage!="#PageWelcome") { $.mobile.navigate(prevPage); e.preventDefault(); }
+			}
+		}
+		else if (data.toPage[0].id=="PagePassword")
+		{
+			if (localStorage.getItem("strPwdSalt")==null) 
+			{
+				$.mobile.navigate("#PageWelcome"); e.preventDefault();
+			}
+			else if (localStorage.getItem("strKeyValue")!=null)
+			{
+				$.mobile.navigate("#PageSafe"); e.preventDefault();
+			}
+		}
+		else if (data.toPage[0].id=="PageSafe")
+		{
+			if (localStorage.getItem("strPwdSalt")==null) 
+			{
+				$.mobile.navigate("#PageWelcome"); e.preventDefault();
+			}
+			else if (localStorage.getItem("strKeyValue")==null)
+			{
+				$.mobile.navigate("#PagePassword"); e.preventDefault();
+			}
+			else 
+			{
+				if (document.getElementById("item0")==null) pageSafeInit();
+			}
+		}
+		else if (data.toPage[0].id=="PageOptions")
+		{
+			if (localStorage.getItem("strPwdSalt")==null) 
+			{
+				$.mobile.navigate("#PageWelcome"); e.preventDefault();
+			}
+			else if (localStorage.getItem("strKeyValue")==null)
+			{
+				$.mobile.navigate("#PagePassword"); e.preventDefault();
+			}
+		}
+		localStorage.setItem("curPage","#"+data.toPage[0].id);
+	}
+	console.log("< pageChange()");
+}
 
 // =================================================== PAGE 1 (WELCOME) ==========================================
 // Initialise la page 1 (welcome)
-function pageWelcomeInit()
+function pageWelcomeInit(e,data)
 {
 	console.log("> pageWelcomeInit()");
 	if (localStorage.getItem("strPwdSalt")!=null) $.mobile.navigate("#PagePassword");
 	console.log("< pageWelcomeInit()");
 }
+
 // charge le fichier JSON et stocke les données dans le localstorage
 function loadJSON()
 {
@@ -73,32 +142,25 @@ function unlockSafe()
 function pageSafeInit()
 {
 	console.log("> pageSafeInit()");
-	if (localStorage.getItem("strKeyValue")==null)
+	$("#listeApplis").empty();
+	var json=jQuery.parseJSON(localStorage.getItem("json"));
+	// 1er tour pour déchiffrer le strApp (pour pouvoir trier)
+	for(var i=0;i<json.apps.length;i++) 
 	{
-		$.mobile.navigate("#PagePassword");
+		var varDecryptedApp=decryptString(localStorage.getItem("strKeyValue"),json.apps[i].strApp);
+		json.apps[i].strApp=varDecryptedApp;
 	}
-	else
+	// tri des applis par ordre alphabétique
+	json.apps.sort(function(first, second) {
+		return first.strApp.localeCompare(second.strApp);
+	});	
+	// 2eme tour pour afficher les applis		
+	for(i=0;i<json.apps.length;i++) 
 	{
-		var json=jQuery.parseJSON(localStorage.getItem("json"));
-		// 1er tour pour déchiffrer le strApp (pour pouvoir trier)
-		for(var i=0;i<json.apps.length;i++) 
-		{
-			var varDecryptedApp=decryptString(localStorage.getItem("strKeyValue"),json.apps[i].strApp);
-			json.apps[i].strApp=varDecryptedApp;
-			console.log("app#"+i+"="+json.apps[i].strApp);
-		}
-		// tri des applis par ordre alphabétique
-		json.apps.sort(function(first, second) {
-			return first.strApp.localeCompare(second.strApp);
-		});	
-		// 2eme tour pour afficher les applis		
-		for(var i=0;i<json.apps.length;i++) 
-		{
-			console.log("app#"+i+"="+json.apps[i].strApp);
-			var strDecryptedId=decryptString(localStorage.getItem("strKeyValue"),json.apps[i].strId);
-			console.log(strDecryptedId);
-			addItem(i,localStorage.getItem("strKeyValue"),json.apps[i].strApp,strDecryptedId,json.apps[i].strPassword);
-		}
+		//console.log("app#"+i+"="+json.apps[i].strApp);
+		var strDecryptedId=decryptString(localStorage.getItem("strKeyValue"),json.apps[i].strId);
+		//console.log(strDecryptedId);
+		addItem(i,localStorage.getItem("strKeyValue"),json.apps[i].strApp,strDecryptedId,json.apps[i].strPassword);
 	}
 	console.log("< pageSafeInit()");
 }
@@ -162,10 +224,10 @@ function hidePassword(buttonPwdId)
 // Ajoute une appli dans la liste
 function addItem(i,strKeyValue,strAppli,strDecryptedId,strEncryptedPassword) 
 {
-	var content = "<div data-role='collapsible' data-filtertext='"+strAppli+"'><h3>"+strAppli+"</h3>";
+	var content = "<div id=item"+i+" data-role='collapsible' data-filtertext='"+strAppli+"'><h3>"+strAppli+"</h3>";
 	content+="<button onclick=\"copyToClipboard('"+strDecryptedId+"')\" class='ui-btn ui-shadow ui-corner-all'>"+strDecryptedId+"</button>";
 	content+="<button onclick=\"copyPassword('"+strKeyValue+"','"+strEncryptedPassword+"')\" class='ui-btn ui-shadow ui-corner-all'>Copier le mot de passe</button>";
-	content+="<button id=buttonPwd"+i+" ontouchstart=\"showPassword('#buttonPwd"+i+"','"+strKeyValue+"','"+strEncryptedPassword+"')\" ontouchend=\"hidePassword('#buttonPwd"+i+"')\" class='ui-btn ui-shadow ui-corner-all'>Voir le mot de passe</button>";
+	content+="<button id=buttonPwd"+i+" ontouchstart=\"showPassword('#buttonPwd"+i+"','"+strKeyValue+"','"+strEncryptedPassword+"')\" onmousedown=\"showPassword('#buttonPwd"+i+"','"+strKeyValue+"','"+strEncryptedPassword+"')\" ontouchend=\"hidePassword('#buttonPwd"+i+"')\" onmouseup=\"hidePassword('#buttonPwd"+i+"')\" class='ui-btn ui-shadow ui-corner-all'>Voir le mot de passe</button>";
 	content+="</div>";
 	$("#listeApplis").append(content).collapsibleset('refresh');
 }

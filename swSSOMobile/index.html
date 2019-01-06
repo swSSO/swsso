@@ -1,5 +1,5 @@
 <!DOCTYPE html> 
-<!--html manifest="./swsso.appcache"--> 
+<html manifest="./swsso.appcache"> 
 <head> 
 	<title>swSSO</title> 
 	<link rel="shortcut icon" href="#" />
@@ -13,14 +13,17 @@
 	<script src="./swSSOCrypt.js"></script>
 	<script src="./swSSOIHM.js"></script>
 	<script>
-		$(document).on("pagebeforeshow","#PageWelcome",function(event) { pageWelcomeInit(); });
-		$(document).on("pagebeforeshow","#PagePassword",function(event) { pagePasswordInit(); });
-		$(document).on("pagebeforeshow","#PageSafe",function(event) { pageSafeInit(); });
+		$(document).on("pagebeforechange",function (e,data) { pageChange(e,data); });
+		//$(document).on("pagebeforetransition","#PageWelcome",function(event) { pageWelcomeInit(); });
+		//$(document).on("pagebeforeshow","#PagePassword",function(event) { pagePasswordInit(); });
+		//$(document).on("pagebeforeshow","#PageSafe",function(event) { pageSafeInit(); });
 	</script>
 	<style id="center">
 	.center {
 		text-align: center;
 	}
+	[data-role=page]{height: 100% !important; position:relative !important;}
+	[data-role=footer]{bottom:0; position:absolute !important; top: auto !important; width:100%;} 
 	</style>
 	<style id="aligncenter">
 	.aligncenter {
@@ -90,8 +93,10 @@
 			<button onclick="restartFromScratch()">R&eacute;initialiser</button>
 			<button onclick="$.mobile.navigate('#PageSafe')">Retour</button>
 			<br/>
-			<p>Version 008</p>
 		</div><!-- /content -->
+		<div data-role="footer">
+			<h4>Version 0.10.014</h4>
+		</div><!-- /footer -->
 	</div><!-- /page -->
 
 </body>

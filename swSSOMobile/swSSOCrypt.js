@@ -15,7 +15,19 @@ function hexa2ascii(strHexa)
 	}
 	return strResult;
 }
-
+// conversion d'une chaine ascii en hexa : nécessaire pour traiter le mot de passe maitre car la fonction PBKDF2 de sjcl
+// utilise sjcl.codec.utf8String.toBits pour convertir le mot de passe s'il est passé en string (alors que le mot de passe
+// côté Windows est converti avec le jeu de caractères ISO-8859-1)
+function ascii2hexa(str)
+{
+	var tab=[];
+	for (var n=0,l=str.length;n<l;n++) 
+    {
+		var hex=Number(str.charCodeAt(n)).toString(16);
+		tab.push(hex);
+	}
+	return tab.join('');
+}
 // hmacSHA1
 var hmacSHA1 = function (key) {
 	var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
@@ -25,26 +37,25 @@ var hmacSHA1 = function (key) {
 // déchiffre un identifiant ou un mot de passe du swsso.ini
 function decryptString(strKeyValue,strEncryptedIniString)
 {
-	var strDecryptedIniString='ERROR';
+	var strDecryptedIniString='[VIDE]';
 	var binKeyValue=sjcl.codec.hex.toBits(strKeyValue);
 	if (strEncryptedIniString.length==192)
 	{
 		var strIV=strEncryptedIniString.substring(0,32);
 		var strEncrypedDataAndOV=strEncryptedIniString.substring(32,192);
-		console.log('strIV',strIV);
-		console.log('strEncrypedDataAndOV',strEncrypedDataAndOV);
+		//console.log('strIV',strIV);
+		//console.log('strEncrypedDataAndOV',strEncrypedDataAndOV);
 		
 		var binIV=sjcl.codec.hex.toBits(strIV);
 		var binEncrypedDataAndOV=sjcl.codec.hex.toBits(strEncrypedDataAndOV);
 		sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
-		var prp = new sjcl.cipher.aes(binKeyValue);
-		var binDecryptedIniString=sjcl.mode.cbc.decrypt(prp, binEncrypedDataAndOV, binIV);
+		var prp=new sjcl.cipher.aes(binKeyValue);
+		var binDecryptedIniString=sjcl.mode.cbc.decrypt(prp,binEncrypedDataAndOV,binIV);
 		var strHexDecryptedIniString=sjcl.codec.hex.fromBits(binDecryptedIniString);
 		strDecryptedIniString=hexa2ascii(strHexDecryptedIniString);	
 	}
 	return strDecryptedIniString;
 }
-
 // vérifie le mot de passe maitre et retourne la clé de chiffrement si OK
 function checkPassword(strPwd,strPwdSalt,strKeySalt,strIniPwdValue)
 {
@@ -53,13 +64,13 @@ function checkPassword(strPwd,strPwdSalt,strKeySalt,strIniPwdValue)
 	var binKeyValue;
 	var binPwdSalt=sjcl.codec.hex.toBits(strPwdSalt);
 	var binKeySalt=sjcl.codec.hex.toBits(strKeySalt);
-	var strPwdValue=sjcl.codec.hex.fromBits(sjcl.misc.pbkdf2(strPwd, binPwdSalt, 10000, 256, hmacSHA1)).toUpperCase();
+	var strPwdValue=sjcl.codec.hex.fromBits(sjcl.misc.pbkdf2(sjcl.codec.hex.toBits(ascii2hexa(strPwd)), binPwdSalt, 10000, 256, hmacSHA1)).toUpperCase();
 	console.log('strPwdValue',strPwdValue);
 	console.log('strIniPwdValue',strIniPwdValue);
 	if (strPwdValue==strIniPwdValue) // mot de passe maitre OK
 	{
 		console.log('password:OK');
-		binKeyValue=sjcl.misc.pbkdf2(strPwd, binKeySalt, 10000, 256, hmacSHA1);
+		binKeyValue=sjcl.misc.pbkdf2(sjcl.codec.hex.toBits(ascii2hexa(strPwd)), binKeySalt, 10000, 256, hmacSHA1);
 		strKeyValue=sjcl.codec.hex.fromBits(binKeyValue);
 	}
 	else

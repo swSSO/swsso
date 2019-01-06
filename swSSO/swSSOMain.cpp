@@ -2787,7 +2787,7 @@ askpwd:
 	}
 	iError=0;
 end:
-	SaveJSON("C:\\tools\\xampp_php7\\htdocs\\mobile\\test.json");
+	SaveJSON("c:\\temp\\test.json");
 	if (gbAdmin && !gbNoMasterPwd) ServerAdminLogout(); // ISSUE#342
 
 	if (iError==-1)
