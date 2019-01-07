@@ -83,23 +83,24 @@ function pageWelcomeInit(e,data)
 function loadJSON()
 {
 	console.log("> loadJSON()");
-	$.ajax({
-		type: "GET",
-		url: "./test.json", // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX A FAIRE XXXXXXXXXXXXXXXXXXXXXXXX
-		processData: true,
-		data: {},
-		dataType: "json",
-		success: function(json) {
-			localStorage.setItem("strPwdSalt",json.strPwdSalt);
-			localStorage.setItem("strKeySalt",json.strKeySalt);
-			localStorage.setItem("strIniPwdValue",json.strIniPwdValue);
-			localStorage.setItem("json",JSON.stringify(json));
-			$.mobile.navigate("#PagePassword");
-		},
-		error: function(x,y,z) {
-			alert("Fichier introuvable.");
-		}
-	});
+	// remarque : on ne peut pas le faire avec $.ajax car la callback ne fonctionne pas avec la google API
+	// erreur 400 : "parameter callback can only be used on requests returning json or xml data"
+	var strFileId=document.getElementById("fileid").value;
+	var strUrl='https://www.googleapis.com/drive/v3/files/'+strFileId+'?key=AIzaSyDgoL_efhcHBWoiw4PlPB4zjpBRYq8g5Y4&alt=media';
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', strUrl);
+	xhr.onload = function() {
+		var json=jQuery.parseJSON(xhr.responseText);
+		localStorage.setItem("strPwdSalt",json.strPwdSalt);
+		localStorage.setItem("strKeySalt",json.strKeySalt);
+		localStorage.setItem("strIniPwdValue",json.strIniPwdValue);
+		localStorage.setItem("json",JSON.stringify(json));
+		$.mobile.navigate("#PagePassword");
+	};
+	xhr.onerror = function() {
+		alert("Fichier introuvable.");
+    };
+    xhr.send();
 	console.log("< loadJSON()");
 }
 // =================================================== PAGE 2 (PASSWORD) =========================================

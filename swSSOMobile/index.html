@@ -40,9 +40,10 @@
 		</div><!-- /header -->
 		<div data-role="content">	
 			<p>Bienvenue !</p>
-			<p>Pour commencer, veuillez indiquer l'emplacement de votre fichier swsso.json ci-dessous, puis cliquer sur Valider.</p>
-			<label for="url">URL (exemple : https://file.io/jsn4yQ)</label>
-			<input type="url" data-clear-btn="true" name="url" id="url" value="https://">
+			<p>Pour commencer, veuillez indiquer l'emplacement de votre fichier swSSO ci-dessous, puis cliquer sur Valider.</p>
+			<p>Dans cette version, seuls les fichiers Google Drive sont support&eacute;s. Veuillez renseigner l'id du fichier ci-dessous (uniquement l'id en gras : https://drive.google.com/open?id=<b>23hKRzQ2MdTWAC8URLQZ-g1qqYZR_nKLP)</b></p>
+			
+			<input type="text" data-clear-btn="true" name="fileid" id="fileid" value="" autocomplete="off">
 			<button onclick="loadJSON()">Valider</button>
 			<p>Remarque : vous pourrez mettre &agrave; jour votre fichier ult&eacute;rieurement depuis la page options.</p>
 		</div><!-- /content -->
@@ -95,7 +96,7 @@
 			<br/>
 		</div><!-- /content -->
 		<div data-role="footer">
-			<h4>Version 0.10.014</h4>
+			<h4>Version 0.10.017</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 
