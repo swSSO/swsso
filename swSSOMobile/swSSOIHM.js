@@ -86,7 +86,7 @@ function loadJSON()
 	// remarque : on ne peut pas le faire avec $.ajax car la callback ne fonctionne pas avec la google API
 	// erreur 400 : "parameter callback can only be used on requests returning json or xml data"
 	var strFileId=document.getElementById("fileid").value;
-	var strUrl='https://www.googleapis.com/drive/v3/files/'+strFileId+'?key=AIzaSyDgoL_efhcHBWoiw4PlPB4zjpBRYq8g5Y4&alt=media';
+	var strUrl='https://www.googleapis.com/drive/v3/files/'+strFileId+'?key=XXX&alt=media';
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', strUrl);
 	xhr.onload = function() {
