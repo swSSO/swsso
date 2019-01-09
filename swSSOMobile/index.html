@@ -11,19 +11,15 @@
 	<script src="./jquery/jquery.mobile-1.4.5.min.js"></script>
 	<script src="./sjcl/sjcl.js"></script>
 	<script src="./swSSOCrypt.js"></script>
+	<script src="./GK.js"></script>
 	<script src="./swSSOIHM.js"></script>
 	<script>
 		$(document).on("pagebeforechange",function (e,data) { pageChange(e,data); });
-		//$(document).on("pagebeforetransition","#PageWelcome",function(event) { pageWelcomeInit(); });
-		//$(document).on("pagebeforeshow","#PagePassword",function(event) { pagePasswordInit(); });
-		//$(document).on("pagebeforeshow","#PageSafe",function(event) { pageSafeInit(); });
 	</script>
 	<style id="center">
 	.center {
 		text-align: center;
 	}
-	[data-role=page]{height: 100% !important; position:relative !important;}
-	[data-role=footer]{bottom:0; position:absolute !important; top: auto !important; width:100%;} 
 	</style>
 	<style id="aligncenter">
 	.aligncenter {
@@ -33,8 +29,8 @@
 </head> 
 
 <body> 
-	<!-- PAGE 1 -->
-	<div data-role="page" id="PageWelcome">
+	<!-- PAGE 1 : WELCOME -->
+	<div data-role="page" id="PageWelcome" style="height: 100% !important; position:relative !important">
 		<div data-role="header">
 			<h1>swSSO</h1>
 		</div><!-- /header -->
@@ -42,15 +38,17 @@
 			<p>Bienvenue !</p>
 			<p>Pour commencer, veuillez indiquer l'emplacement de votre fichier swSSO ci-dessous, puis cliquer sur Valider.</p>
 			<p>Dans cette version, seuls les fichiers Google Drive sont support&eacute;s. Veuillez renseigner l'id du fichier ci-dessous (uniquement l'id en gras : https://drive.google.com/open?id=<b>23hKRzQ2MdTWAC8URLQZ-g1qqYZR_nKLP)</b></p>
-			
 			<input type="text" data-clear-btn="true" name="fileid" id="fileid" value="" autocomplete="off">
 			<button onclick="loadJSON()">Valider</button>
 			<p>Remarque : vous pourrez mettre &agrave; jour votre fichier ult&eacute;rieurement depuis la page options.</p>
 		</div><!-- /content -->
+		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
+			<h4>Version 0.10.034</h4>
+		</div><!-- /footer -->
 	</div><!-- /page -->
 	
-	<!-- PAGE 2 -->
-	<div data-role="page" id="PagePassword">
+	<!-- PAGE 2 : PASSWORD -->
+	<div data-role="page" id="PagePassword" style="height: 100% !important; position:relative !important">
 		<div data-role="header">
 			<h1>swSSO</h1>
 		</div><!-- /header -->
@@ -65,9 +63,12 @@
 			<p>Mot de passe perdu ? Cliquez ci-dessous pour r&eacute;initialiser votre coffre fort.</p>
 			<button onclick="restartFromScratch()">R&eacute;initialiser</button>
 		</div><!-- /content -->
+		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
+			<h4>Version 0.10.034</h4>
+		</div><!-- /footer -->
 	</div><!-- /page -->
 	
-	<!-- PAGE 3 -->
+	<!-- PAGE 3 : SAFE -->
 	<div data-role="page" id="PageSafe">
 		<div data-role="header">
 			<div class="ui-grid-b center">
@@ -77,26 +78,39 @@
 			</div><!-- /ui-grid-b -->
 		</div><!-- /header -->
 		<div data-role="content">	
-			<form>
-				<input data-type="search" id="searchForCollapsibleSet" placeholder="Rechercher...">
-			</form>
-			<div data-role="collapsibleset" data-filter="true" data-inset="true" id="listeApplis" data-input="#searchForCollapsibleSet">
-			</div>
+			<ul data-role="listview" data-filter="true" data-inset="true" id="appList" data-filter-placeholder="Rechercher...">
+			</ul>
 		</div><!-- /content -->
 	</div><!-- /page -->
 	
-	<!-- PAGE 4 -->
-	<div data-role="page" id="PageOptions">
+	<!-- PAGE 4 : OPTIONS -->
+	<div data-role="page" id="PageOptions" style="height: 100% !important; position:relative !important">
 		<div data-role="header">
 			<h1>Options</h1>
 		</div><!-- /header -->
 		<div data-role="content">	
+			<p>Cliquez sur le bouton ci-dessous pour charger une nouvelle version de votre fichier coffre fort :</p>
 			<button onclick="restartFromScratch()">R&eacute;initialiser</button>
-			<button onclick="$.mobile.navigate('#PageSafe')">Retour</button>
+			<p>S&eacute;lectionnez le d&eacute;lai de verrouillage du coffre (en minutes). Au-del&agrave; de ce d&eacute;lai, votre coffre sera verrouill&eacute; et vous devrez de nouveau saisir votre mot de passe.</p>
+			<input type="range" name="sliderPwdTimeout" id="sliderPwdTimeout" min="1" max="60" value="5">
+			<br/>
+			<button onclick="saveOptions(); $.mobile.navigate('#PageSafe')">Retour</button>
 			<br/>
 		</div><!-- /content -->
-		<div data-role="footer">
-			<h4>Version 0.10.017</h4>
+		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
+			<h4>Version 0.10.034</h4>
+		</div><!-- /footer -->
+	</div><!-- /page -->
+
+	<!-- PAGE 5 : APP -->
+	<div data-role="page" id="PageApp" style="height: 100% !important; position:relative !important">
+		<div data-role="header">
+			<h1><span id="PageAppTitle">Titre</span></h1>
+		</div><!-- /header -->
+		<div data-role="content" id="PageAppButtons">	
+		</div><!-- /content -->
+		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
+			<h4>Version 0.10.034</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 

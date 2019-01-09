@@ -1,13 +1,8 @@
-/*
-TODO : trouver un moyen de détecter que la pagesafe est vide pour recharger la liste
--> soit en mettant ginbapps à null quand appli rechargée (voir les événements sur iphone) > KO
--> soit en trouvant un moyen de compter les apps affichées
-*/
 //-----------------------------------------------------------------------------
 //               swSSO - http://www.swsso.fr - sylvain@swsso.fr
 //-----------------------------------------------------------------------------
-// $.mobile.navigate("#PagePassword",{ transition : "slide" }); 
-// Initialise la page 1 (welcome)
+
+// Aiguillage et initialisations
 function pageChange(e,data)
 {
 	console.log("> pageChange()");
@@ -20,7 +15,7 @@ function pageChange(e,data)
 		else 
 			console.log("fromPage",data.options.fromPage[0].id);
 
-		if (data.toPage[0].id=="PageWelcome") //  && typeof data.options.fromPage=="undefined"
+		if (data.toPage[0].id=="PageWelcome") // ------------------------------------------ WELCOME
 		{
 			if (typeof data.options.fromPage=="undefined") // restauration de l'app sur iPhone ou appel depuis un signet
 			{
@@ -28,7 +23,7 @@ function pageChange(e,data)
 				if (prevPage!=null && prevPage!="#PageWelcome") { $.mobile.navigate(prevPage); e.preventDefault(); }
 			}
 		}
-		else if (data.toPage[0].id=="PagePassword")
+		else if (data.toPage[0].id=="PagePassword") // ------------------------------------- PASSWORD
 		{
 			if (localStorage.getItem("strPwdSalt")==null) 
 			{
@@ -39,7 +34,7 @@ function pageChange(e,data)
 				$.mobile.navigate("#PageSafe"); e.preventDefault();
 			}
 		}
-		else if (data.toPage[0].id=="PageSafe")
+		else if (data.toPage[0].id=="PageSafe") // ------------------------------------------ SAFE
 		{
 			if (localStorage.getItem("strPwdSalt")==null) 
 			{
@@ -49,12 +44,19 @@ function pageChange(e,data)
 			{
 				$.mobile.navigate("#PagePassword"); e.preventDefault();
 			}
-			else 
+			else if (isPwdExpired())
 			{
-				if (document.getElementById("item0")==null) pageSafeInit();
+				$.mobile.navigate("#PagePassword"); e.preventDefault();
+			}
+			else
+			{
+				if (document.getElementById("item0")==null)
+				{
+					pageSafeInit();
+				}
 			}
 		}
-		else if (data.toPage[0].id=="PageOptions")
+		else if (data.toPage[0].id=="PageOptions") // ------------------------------------------ OPTIONS 
 		{
 			if (localStorage.getItem("strPwdSalt")==null) 
 			{
@@ -64,6 +66,31 @@ function pageChange(e,data)
 			{
 				$.mobile.navigate("#PagePassword"); e.preventDefault();
 			}
+			else
+			{
+				var pwdTimeOut=localStorage.getItem("pwdTimeOut");
+				if (pwdTimeOut==null) pwdTimeOut=5;
+				$('#sliderPwdTimeout').val(pwdTimeOut).slider( "refresh" );
+			}
+		}
+		else if (data.toPage[0].id=="PageApp") // ---------------------------------------------- APP 
+		{
+			if (localStorage.getItem("strPwdSalt")==null) 
+			{
+				$.mobile.navigate("#PageWelcome"); e.preventDefault();
+			}
+			else if (localStorage.getItem("strKeyValue")==null)
+			{
+				$.mobile.navigate("#PagePassword"); e.preventDefault();
+			}
+			else
+			{
+				if (document.getElementById("btnShowPwd")==null)
+				{
+					pageAppRestore(localStorage.getItem("strKeyValue"));
+				}
+			}
+
 		}
 		localStorage.setItem("curPage","#"+data.toPage[0].id);
 	}
@@ -86,16 +113,23 @@ function loadJSON()
 	// remarque : on ne peut pas le faire avec $.ajax car la callback ne fonctionne pas avec la google API
 	// erreur 400 : "parameter callback can only be used on requests returning json or xml data"
 	var strFileId=document.getElementById("fileid").value;
-	var strUrl='https://www.googleapis.com/drive/v3/files/'+strFileId+'?key=XXX&alt=media';
+	var strUrl='https://www.googleapis.com/drive/v3/files/'+strFileId+'?key='+strGK+'&alt=media';
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', strUrl);
 	xhr.onload = function() {
-		var json=jQuery.parseJSON(xhr.responseText);
-		localStorage.setItem("strPwdSalt",json.strPwdSalt);
-		localStorage.setItem("strKeySalt",json.strKeySalt);
-		localStorage.setItem("strIniPwdValue",json.strIniPwdValue);
-		localStorage.setItem("json",JSON.stringify(json));
-		$.mobile.navigate("#PagePassword");
+		if (xhr.status==200)
+		{
+			var json=jQuery.parseJSON(xhr.responseText);
+			localStorage.setItem("strPwdSalt",json.strPwdSalt);
+			localStorage.setItem("strKeySalt",json.strKeySalt);
+			localStorage.setItem("strIniPwdValue",json.strIniPwdValue);
+			localStorage.setItem("json",JSON.stringify(json));
+			$.mobile.navigate("#PagePassword");
+		}
+		else
+		{
+			alert("Fichier introuvable (erreur "+xhr.status+").");
+		}
 	};
 	xhr.onerror = function() {
 		alert("Fichier introuvable.");
@@ -118,6 +152,7 @@ function pagePasswordInit()
 	}
 	console.log("< pagePasswordInit()");
 }
+
 // vérifie le mot de passe et génère la clé de déchiffrement
 function unlockSafe()
 {
@@ -133,6 +168,9 @@ function unlockSafe()
 	else
 	{
 		localStorage.setItem("strKeyValue",strKeyValue);
+		var d = new Date();
+		var dateLastLogin = d.getTime();
+		localStorage.setItem("dateLastLogin",dateLastLogin);
 		$.mobile.navigate("#PageSafe");
 	}
 	console.log("< unlockSafe()");
@@ -166,14 +204,13 @@ function pageSafeInit()
 	console.log("< pageSafeInit()");
 }
 
-// Copie une chaine dans le presse papier --> XXXXXXXXXXX à corriger : l'élément est créé en haut de page et fait scroller
-function copyToClipboard(str) 
+// Copie une chaine dans le presse papier
+function copyToClipboard(strToCopy) 
 {
 	console.log("> copyToClipboard()");
 	var tempText = document.createElement('textArea');
-	tempText.value = str;
+	tempText.value = strToCopy;
 	document.body.appendChild(tempText);
-	console.log('useragent',navigator.userAgent);
 	if (navigator.userAgent.match(/ipad|ipod|iphone/i))
 	{
 		var range, selection;
@@ -184,7 +221,7 @@ function copyToClipboard(str)
 		selection = window.getSelection();
 		selection.removeAllRanges();
 		selection.addRange(range);
-		tempText.setSelectionRange(0, 100);
+		tempText.setSelectionRange(0,100);
 	}
 	else
 	{
@@ -203,35 +240,36 @@ function copyPassword(strKeyValue,strEncryptedPassword)
 	copyToClipboard(strClearPassword);
 	console.log('< copyPassword()');
 }
+
 // affiche/masque le mot de passe 
-function showPassword(buttonPwdId,strKeyValue,strEncryptedPassword)
+function showPassword(strKeyValue,strEncryptedPassword)
 {
 	console.log("> showPassword()");
 	strClearPassword=decryptString(strKeyValue,strEncryptedPassword);
-	$(buttonPwdId).text(strClearPassword);
-	$(buttonPwdId).css('background-color','#AAAAAA');
-	$(buttonPwdId).css('color','#FFFFFF');
+	$("#btnShowPwd").text(strClearPassword);
+	$("#btnShowPwd").css('background-color','#AAAAAA');
+	$("#btnShowPwd").css('color','#FFFFFF');
 	console.log("< showPassword()");
 }
+
 // affiche/masque le mot de passe 
-function hidePassword(buttonPwdId)
+function hidePassword()
 {
 	console.log("> hidePassword()");
-	$(buttonPwdId).text("Voir le mot de passe");
-	$(buttonPwdId).css('color','#333');
-	$(buttonPwdId).css('background-color','#ededed');
+	$("#btnShowPwd").text("Voir le mot de passe");
+	$("#btnShowPwd").css('color','#333');
+	$("#btnShowPwd").css('background-color','#ededed');
 	console.log("< hidePassword()");
 }
+
 // Ajoute une appli dans la liste
 function addItem(i,strKeyValue,strAppli,strDecryptedId,strEncryptedPassword) 
 {
-	var content = "<div id=item"+i+" data-role='collapsible' data-filtertext='"+strAppli+"'><h3>"+strAppli+"</h3>";
-	content+="<button onclick=\"copyToClipboard('"+strDecryptedId+"')\" class='ui-btn ui-shadow ui-corner-all'>"+strDecryptedId+"</button>";
-	content+="<button onclick=\"copyPassword('"+strKeyValue+"','"+strEncryptedPassword+"')\" class='ui-btn ui-shadow ui-corner-all'>Copier le mot de passe</button>";
-	content+="<button id=buttonPwd"+i+" ontouchstart=\"showPassword('#buttonPwd"+i+"','"+strKeyValue+"','"+strEncryptedPassword+"')\" onmousedown=\"showPassword('#buttonPwd"+i+"','"+strKeyValue+"','"+strEncryptedPassword+"')\" ontouchend=\"hidePassword('#buttonPwd"+i+"')\" onmouseup=\"hidePassword('#buttonPwd"+i+"')\" class='ui-btn ui-shadow ui-corner-all'>Voir le mot de passe</button>";
-	content+="</div>";
-	$("#listeApplis").append(content).collapsibleset('refresh');
+	var content="<li onclick=\"showApp('"+strKeyValue+"','"+strAppli+"','"+strDecryptedId+"','"+strEncryptedPassword+"');\" id=item"+i+"><a href='#PageApp'>"+strAppli+"</a></li>";
+	$("#appList").append(content);
+	$("#appList").listview("refresh");
 }
+
 // verrouillage du coffre
 function lockSafe()
 {
@@ -250,7 +288,7 @@ function showOptions()
 	console.log("< showOptions()");
 }
 
-// Supprime 
+// Efface tous les éléments du coffre et repart à 0
 function restartFromScratch()
 {
 	console.log("> restartFromScratch()");
@@ -259,63 +297,87 @@ function restartFromScratch()
 	localStorage.removeItem("strIniPwdValue");
 	localStorage.removeItem("json");
 	localStorage.removeItem("strKeyValue");
+	$("#listeApplis").empty();
 	$.mobile.navigate("#PageWelcome");
 	console.log("< restartFromScratch()");
 }
 
-// --------------------------------------------------------------------------------------------------
-// ------------------------------------------ POUBELLE /TEST ---------------------------------------
-// --------------------------------------------------------------------------------------------------
-
-/* vérifie le mot de passe maitre et retourne la clé de chiffrement si OK
-function showAccounts()
+// Sauvegarde les options
+function saveOptions()
 {
-	// TODO : à lire dans le .ini
-	var strPwdSalt = '66E9D278AB3B6AFD409CF40864388D88B708042CA9D61269BCD201A1A747B621FC2E11365CA90E51B2CFC19DC8104A47B5493E7EC1A2AC2943339A9DB34C234C';
-	var strKeySalt = 'B14FF138A5DCEF2323FCF5E11ED25CDC93532600D47AC01B7AD0AB9B8B251F0925BF4816A7E02F86024C854D5226743902CA6167E90A471B21B60E6DA901717B';
-	var strIniPwdValue = '20CE8D73FEC68162665227A853578629E6F1EDAF2DBB4BF25A100F0B0C25F081';
-	// vérification du mot de passe
-	var strPwd=document.getElementById("password").value;
-	strPwd="Demo1234"; // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX A SUPPRIMER XXXXXXXXXXXXXXXXXXXXXXXX
-	var binKeyValue=null;
-	binKeyValue=checkPassword(strPwd,strPwdSalt,strKeySalt,strIniPwdValue);
-	if (binKeyValue==null)
+	console.log("> saveOptions()");
+	var pwdTimeOut=$('#sliderPwdTimeout').val();
+	console.log("sliderPwdTimeout",pwdTimeOut);
+	localStorage.setItem("pwdTimeOut",pwdTimeOut);
+	console.log("< saveOptions()");
+}
+
+// vérifie si le mot de passe a expiré. Si oui, efface la clé du localstorage
+function isPwdExpired()
+{
+	var pwdTimeOut=localStorage.getItem("pwdTimeOut");
+	if (pwdTimeOut==null) pwdTimeOut=5;
+	var dateLastLogin=localStorage.getItem("dateLastLogin");
+	if (dateLastLogin==null) // jamais connecté, demande le mot de passe
 	{
-		console.log('Mot de passe KO');
-		alert('Mot de passe incorrect');
+		localStorage.removeItem("strKeyValue");
+		return true;
+	}
+	var d = new Date();
+	var dateNow = d.getTime();
+	console.log("dateNow-dateLastLogin",dateNow-dateLastLogin);
+	if (dateNow-dateLastLogin > (pwdTimeOut*60*1000))
+	{
+		localStorage.removeItem("strKeyValue");
+		return true;
 	}
 	else
 	{
-		console.log('Mot de passe OK');
-		var strEncryptedPassword='EB502BE24AF484289ED8528614F244427E306FC6384325F53046E4884AEC131C04ED0F1532CEE7EB0CDFFF7D3EE4A99C586CA683FCC3F267118BE52673AF79587D081A06F73F9363ED8C339811937C51188FE6EE800823EF91FF1C3BE6BA8810';
-		var strEncryptedId='391025D0C4D8D3927FF869E134E6006ED7A3CADBA5864E3952C0BEBB04C9B079179134A5D86EED0611AAA1074696E0E8F8A083D5B4BF44F1DCBEADF1D54626395537A4322C3BF284E50063A78C031F0713E16070F1B95ECA5EB302EB35288881';
-		var strApp='Demo swsso';
-		var strClearId=decryptString(binKeyValue,strEncryptedId);
-		//var tableToRemove=document.getElementById('table');
-		//if (tableToRemove!=null) document.removeChild(tableToRemove);
-		var table = document.createElement('table');
-		for (var i = 1; i < 10; i++){
-			var tr = document.createElement('tr');   
-			var td1 = document.createElement('td');
-			var td2 = document.createElement('td');
-			var td3 = document.createElement('td');
-			var textApp = document.createTextNode(strApp);
-			var textId = document.createTextNode(strClearId);
-			var button = document.createElement('button');
-			button.innerHTML = 'Mot de passe';
-			button.onclick = function(){
-				copyPassword(binKeyValue,strEncryptedPassword);
-				return false;
-			};
-			td1.appendChild(textApp);
-			td2.appendChild(textId);
-			td3.appendChild(button);
-			tr.appendChild(td1);
-			tr.appendChild(td2);
-			tr.appendChild(td3);
-			table.appendChild(tr);
-		}
-		document.body.appendChild(table);
+		return false;
 	}
-}*/
+}
 
+// =================================================== PAGE 5 (APP) =============================================
+// Affiche la page 5 (App)
+function showApp(strKeyValue,strAppli,strDecryptedId,strEncryptedPassword)
+{
+	console.log("> showApp()",strAppli);
+	addButtons(strKeyValue,strAppli,strDecryptedId,strEncryptedPassword);
+	localStorage.setItem("strAppli",strAppli);
+	localStorage.setItem("strDecryptedId",strDecryptedId);
+	localStorage.setItem("strEncryptedPassword",strEncryptedPassword);
+	$.mobile.navigate("#PageApp");
+	console.log("< showApp()");
+}
+// ajoute dynamiquement les boutons avec les bons contenus et les bons liens
+function addButtons(strKeyValue,strAppli,strDecryptedId,strEncryptedPassword)
+{
+	document.getElementById("PageAppTitle").textContent=strAppli;
+	$("#PageAppButtons").empty();
+	if (strDecryptedId!=null)
+	{
+		var btnCopyId=$("<button onclick=\"copyToClipboard('"+strDecryptedId+"')\" class='ui-btn ui-shadow ui-corner-all'>"+strDecryptedId+"</button>");
+		$("#PageAppButtons").append(btnCopyId);
+	}
+	if (strEncryptedPassword!=null)
+	{
+		var btnCopyPwd=$("<button onclick=\"copyPassword('"+strKeyValue+"','"+strEncryptedPassword+"')\" class='ui-btn ui-shadow ui-corner-all'>Copier le mot de passe</button>");
+		$("#PageAppButtons").append(btnCopyPwd);
+		var btnShowPwd=$("<button id='btnShowPwd' ontouchstart=\"showPassword('"+strKeyValue+"','"+strEncryptedPassword+"')\" onmousedown=\"showPassword('"+strKeyValue+"','"+strEncryptedPassword+"')\" ontouchend=\"hidePassword()\" onmouseup=\"hidePassword()\" class='ui-btn ui-shadow ui-corner-all'>Voir le mot de passe</button>");
+		$("#PageAppButtons").append(btnShowPwd);
+	}
+	var btnRetour=$("<button onclick=\"$.mobile.navigate('#PageSafe')\" class='ui-btn ui-shadow ui-corner-all'>Retour</button>");
+	$("#PageAppButtons").append(btnRetour);
+
+}
+
+// Restaure la page 5 (cas du rechargement ou de la réactivation de l'app sur iPhone)
+function pageAppRestore(strKeyValue)
+{
+	console.log("> pageAppRestore()");
+	strAppli=localStorage.getItem("strAppli");
+	strDecryptedId=localStorage.getItem("strDecryptedId");
+	strEncryptedPassword=localStorage.getItem("strEncryptedPassword");
+	addButtons(strKeyValue,strAppli,strDecryptedId,strEncryptedPassword);
+	console.log("< pageAppRestore()");
+}	

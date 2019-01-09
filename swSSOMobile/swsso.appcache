@@ -1,5 +1,5 @@
 CACHE MANIFEST
-#V017
+#V034
 
 CACHE:
 index.html
@@ -12,6 +12,7 @@ index.html
 ./jquery/images/ajax-loader.gif
 ./sjcl/sjcl.js
 ./swSSOCrypt.js
+./GK.js
 ./swSSOIHM.js
 
 NETWORK:
