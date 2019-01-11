@@ -1,5 +1,5 @@
 CACHE MANIFEST
-#V034
+#V040
 
 CACHE:
 index.html
@@ -11,9 +11,16 @@ index.html
 ./jquery/jquery.mobile-1.4.5.min.js
 ./jquery/images/ajax-loader.gif
 ./sjcl/sjcl.js
-./swSSOCrypt.js
 ./GK.js
+./swSSOCrypt.js
 ./swSSOIHM.js
+./swSSOPageWelcome.js
+./swSSOPagePassword.js
+./swSSOPageSafe.js
+./swSSOPageApp.js
+./swSSOPageOptions.js
+./swSSOLoadJSON.js
+./swSSOGoogleAuth.js
 
 NETWORK:
 *

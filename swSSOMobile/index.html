@@ -1,5 +1,5 @@
 <!DOCTYPE html> 
-<html manifest="./swsso.appcache"> 
+<!html manifest="./swsso.appcache"> 
 <head> 
 	<title>swSSO</title> 
 	<link rel="shortcut icon" href="#" />
@@ -7,12 +7,20 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 	<link rel="stylesheet" href="./jquery/jquery.mobile-1.4.5.min.css" />
+	<script src="https://apis.google.com/js/api.js"></script>
 	<script src="./jquery/jquery.min.js"></script>
 	<script src="./jquery/jquery.mobile-1.4.5.min.js"></script>
 	<script src="./sjcl/sjcl.js"></script>
-	<script src="./swSSOCrypt.js"></script>
 	<script src="./GK.js"></script>
+	<script src="./swSSOCrypt.js"></script>
 	<script src="./swSSOIHM.js"></script>
+	<script src="./swSSOPageWelcome.js"></script>
+	<script src="./swSSOPagePassword.js"></script>
+	<script src="./swSSOPageSafe.js"></script>
+	<script src="./swSSOPageApp.js"></script>
+	<script src="./swSSOPageOptions.js"></script>
+	<script src="./swSSOLoadJSON.js"></script>
+	<script src="./swSSOGoogleAuth.js"></script>
 	<script>
 		$(document).on("pagebeforechange",function (e,data) { pageChange(e,data); });
 	</script>
@@ -29,21 +37,75 @@
 </head> 
 
 <body> 
-	<!-- PAGE 1 : WELCOME -->
+	<!-- PAGEWELCOME -->
 	<div data-role="page" id="PageWelcome" style="height: 100% !important; position:relative !important">
 		<div data-role="header">
 			<h1>swSSO</h1>
 		</div><!-- /header -->
 		<div data-role="content">	
-			<p>Bienvenue !</p>
-			<p>Pour commencer, veuillez indiquer l'emplacement de votre fichier swSSO ci-dessous, puis cliquer sur Valider.</p>
-			<p>Dans cette version, seuls les fichiers Google Drive sont support&eacute;s. Veuillez renseigner l'id du fichier ci-dessous (uniquement l'id en gras : https://drive.google.com/open?id=<b>23hKRzQ2MdTWAC8URLQZ-g1qqYZR_nKLP)</b></p>
-			<input type="text" data-clear-btn="true" name="fileid" id="fileid" value="" autocomplete="off">
-			<button onclick="loadJSON()">Valider</button>
-			<p>Remarque : vous pourrez mettre &agrave; jour votre fichier ult&eacute;rieurement depuis la page options.</p>
+			Conseil : si ce n'est pas d&eacute;j&agrave; fait ajoutez cette page &agrave; votre &eacute;cran d'accueil, quittez le navigateur et lancez l'application pour continuer.
+			<p>C'est fait ? Parfait ! Cliquez maintenant sur le bouton correspondant &agrave; votre situation. Votre fichier swSSO est :</p>
+			Accessible sur une URL publique :
+			<a href="#PageURLPublique" class="ui-btn ui-shadow ui-corner-all">URL publique</a>
+			Partag&eacute; sans authentification sur Google Drive :
+			<a href="#PageGDrivePublic" class="ui-btn ui-shadow ui-corner-all">Fichier public Google Drive</a>
+			Priv&eacute; sur Google Drive :
+			<a href="#PageGDrivePrive" class="ui-btn ui-shadow ui-corner-all">Fichier priv&eacute; Google Drive</a>
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.034</h4>
+			<h4>Version 0.10.040</h4>
+		</div><!-- /footer -->
+	</div><!-- /page -->
+
+	<!-- PAGEURLPUBLIQUE -->
+	<div data-role="page" id="PageURLPublique" style="height: 100% !important; position:relative !important">
+		<div data-role="header">
+			<h1>swSSO</h1>
+		</div><!-- /header -->
+		<div data-role="content">	
+			<p>Veuillez indiquer ci-dessous l'emplacement (URL compl&egrave;te) de votre fichier swSSO, puis cliquer sur Valider.</p>
+			<input type="text" data-clear-btn="true" name="tbURLPublique" id="tbURLPublique" placeholder="https://file.io/2ojE41" autocomplete="off">
+			<button onclick="loadFromURL()">Valider</button>
+			<p>Remarque : vous pourrez mettre &agrave; jour votre fichier ult&eacute;rieurement depuis la page options.</p>
+			<a href="#PageWelcome" class="ui-btn ui-shadow ui-corner-all">Retour</a>
+		</div><!-- /content -->
+		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
+			<h4>Version 0.10.040</h4>
+		</div><!-- /footer -->
+	</div><!-- /page -->
+
+	<!-- PAGEGDRIVEPUBLIC -->
+	<div data-role="page" id="PageGDrivePublic" style="height: 100% !important; position:relative !important">
+		<div data-role="header">
+			<h1>swSSO</h1>
+		</div><!-- /header -->
+		<div data-role="content">	
+			<p>Veuillez indiquer ci-dessous l'id Google Drive du fichier, puis cliquer sur Valider.</p>
+			<input type="text" data-clear-btn="true" name="tbIDGDrivePublic" id="tbIDGDrivePublic" placeholder="23hKRzQ2MdTWAC8URLQZ-g1qqYZR_nKLP" autocomplete="off">
+			<button onclick="loadFromGDrive(false,false)">Valider</button>
+			<p>Remarque : vous pourrez mettre &agrave; jour votre fichier ult&eacute;rieurement depuis la page options.</p>
+			<a href="#PageWelcome" class="ui-btn ui-shadow ui-corner-all">Retour</a>
+		</div><!-- /content -->
+		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
+			<h4>Version 0.10.040</h4>
+		</div><!-- /footer -->
+	</div><!-- /page -->
+	
+	<!-- PAGEGDRIVEPRIVE -->
+	<div data-role="page" id="PageGDrivePrive" style="height: 100% !important; position:relative !important">
+		<div data-role="header">
+			<h1>swSSO</h1>
+		</div><!-- /header -->
+		<div data-role="content">
+			<p>Veuillez indiquer ci-dessous l'id Google Drive du fichier, puis cliquer sur Valider. Vous serez alors redirig&eacute; vers l'authentification Google.</p>
+			<p>Attention : si vous avez ajout&eacute; swSSO &agrave; l'&eacute;cran d'accueil et que vous avez activ&eacute; l'authentification en deux &eacute;tapes Google, choisissez de recevoir un SMS et ne sortez pas de l'application swSSO.
+			<input type="text" data-clear-btn="true" name="tbIDGDrivePrive" id="tbIDGDrivePrive" placeholder="23hKRzQ2MdTWAC8URLQZ-g1qqYZR_nKLP" autocomplete="off">
+			<button onclick="loadFromGDrive(true,false)">Valider</button>
+			<p>Remarque : vous pourrez mettre &agrave; jour votre fichier ult&eacute;rieurement depuis la page options.</p>
+			<a href="#PageWelcome" class="ui-btn ui-shadow ui-corner-all">Retour</a>
+		</div><!-- /content -->
+		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
+			<h4>Version 0.10.040</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 	
@@ -64,7 +126,7 @@
 			<button onclick="restartFromScratch()">R&eacute;initialiser</button>
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.034</h4>
+			<h4>Version 0.10.040</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 	
@@ -74,7 +136,7 @@
 			<div class="ui-grid-b center">
 				<div class="ui-block-a"><button onclick="copyToClipboard('*')" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-top ui-icon-delete ui-btn-inline">&nbsp;Presse-papier&nbsp;</button></div>
 				<div class="ui-block-b"><button onclick="lockSafe()" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-top ui-icon-lock ui-btn-inline">&nbsp;&nbsp;&nbsp;&nbsp;Verrouiller&nbsp;&nbsp;&nbsp;&nbsp;</button></div>
-				<div class="ui-block-c"><button onclick="showOptions()" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-top ui-icon-gear ui-btn-inline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Options&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button></div>
+				<div class="ui-block-c"><button onclick="showPageOptions()" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-top ui-icon-gear ui-btn-inline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Options&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button></div>
 			</div><!-- /ui-grid-b -->
 		</div><!-- /header -->
 		<div data-role="content">	
@@ -98,7 +160,7 @@
 			<br/>
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.034</h4>
+			<h4>Version 0.10.040</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 
@@ -110,7 +172,7 @@
 		<div data-role="content" id="PageAppButtons">	
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.034</h4>
+			<h4>Version 0.10.040</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 

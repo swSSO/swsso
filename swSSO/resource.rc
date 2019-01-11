@@ -523,14 +523,14 @@ BEGIN
     LTEXT           "Configuration file:",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,55,262,18
     LTEXT           "License",TX_LICENCE,7,40,28,11
-    LTEXT           "1.22b2 (1/2019)",TX_ABOUT,47,12,154,8
-    LTEXT           "Portal:",TX_PORTAL2,17,120,42,8
+    LTEXT           "1.22b2 (1/13/2019)",TX_ABOUT,47,12,154,8
+    LTEXT           "swSSO Mobile file:",TX_PORTAL2,17,120,75,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
     CONTROL         "",IDC_SEP_STATISTIQUES,"Static",SS_ETCHEDHORZ,43,201,252,1
     LTEXT           "Number of applications:",-1,17,181,76,8
     LTEXT           "0",TX_NBAPP,101,181,230,8
-    LTEXT           "swSSO server:",TX_SERVER2,17,91,48,8
+    LTEXT           "swSSO server:",TX_SERVER2,17,91,68,8
     EDITTEXT        TX_SERVER,99,91,230,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     LTEXT           "Domain:",TX_SERVER1,18,105,27,8
     LTEXT           "Aucun",TX_DOMAIN,101,105,174,8
@@ -1465,16 +1465,16 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,40,28,11
-    LTEXT           "1.22b2 (01/2019)",TX_ABOUT,47,12,157,8
-    LTEXT           "Portail :",TX_PORTAL2,17,120,42,8
+    LTEXT           "1.22b2 (13/01/2019)",TX_ABOUT,47,12,157,8
+    LTEXT           "Fichier swSSO Mobile :",TX_PORTAL2,17,120,78,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
     CONTROL         "",IDC_SEP_STATISTIQUES,"Static",SS_ETCHEDHORZ,51,201,246,1
     LTEXT           "Applications actives :",-1,17,180,68,8
     LTEXT           "0",TX_NBAPP,99,180,88,8
-    LTEXT           "Serveur swSSO :",TX_SERVER2,17,91,55,8
+    LTEXT           "Serveur swSSO :",TX_SERVER2,17,91,63,8
     EDITTEXT        TX_SERVER,99,91,230,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Domaine :",TX_SERVER1,18,105,33,8
+    LTEXT           "Domaine :",TX_SERVER1,18,105,68,8
     LTEXT           "Aucun",TX_DOMAIN,101,105,174,8
     PUSHBUTTON      "&Réinitialiser",PB_RESET,280,178,50,14
     LTEXT           "Contenu du coffre",TX_COFFRE,7,166,63,10

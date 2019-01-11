@@ -2787,7 +2787,6 @@ askpwd:
 	}
 	iError=0;
 end:
-	SaveJSON("c:\\temp\\test.json");
 	if (gbAdmin && !gbNoMasterPwd) ServerAdminLogout(); // ISSUE#342
 
 	if (iError==-1)

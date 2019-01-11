@@ -39,7 +39,7 @@
 char gszCfgFile[_SW_MAX_PATH+1];
 char gszCfgVersion[5+1];
 BOOL gbSessionLock=TRUE;     // 0.63B4 : true si verrouillage sur suspension de session windows
-char gszCfgPortal[_MAX_PATH+1];
+char gszCfgPortal[_SW_MAX_PATH+1];
 BOOL gbInternetCheckVersion=FALSE;		// 0.80 : autorise swSSO à se connecter à internet pour vérifier la version
 BOOL gbInternetCheckBeta=FALSE;			// 0.80 : y compris pour les beta
 BOOL gbInternetGetConfig=FALSE;			// 0.80 : autorise swSSO à se connecter à internet pour récupérer des configurations
@@ -341,7 +341,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					ofn.lStructSize=sizeof(OPENFILENAME);
 					ofn.hwndOwner=w;
 					ofn.hInstance=NULL;
-					ofn.lpstrFilter="*.xml";
+					ofn.lpstrFilter="*.json";
 					ofn.lpstrCustomFilter=NULL;
 					ofn.nMaxCustFilter=0;
 					ofn.nFilterIndex=0;
@@ -353,7 +353,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					ofn.lpstrTitle=NULL;
 					ofn.Flags=OFN_PATHMUSTEXIST;
 					ofn.nFileOffset;
-					ofn.lpstrDefExt="xml";
+					ofn.lpstrDefExt="json";
 					if (GetSaveFileName(&ofn)) 
 					{
 						SetDlgItemText(w,TX_PORTAL,gszCfgPortal);
@@ -3081,7 +3081,14 @@ int ChangeApplicationPassword(HWND w,int iAction)
 // SavePortal()
 // ----------------------------------------------------------------------------------
 // Génération du fichier XML portail (0.78)
+// Remplacé en 1.22 par la génération d'un fichier JSON pour swSSO Mobile
 // ----------------------------------------------------------------------------------
+void SavePortal()
+{
+	SaveJSON(gszCfgPortal);
+}
+
+#if 0
 void SavePortal()
 {
 	TRACE((TRACE_ENTER,_F_,"%s",gszCfgPortal));
@@ -3146,38 +3153,12 @@ nextAction:
 		if (iNbActionsInConfig!=0) iCategoryPortalIndex++;
 	}
 
-#if 0
-	for (i=0;i<giNbActions;i++)
-	{
-		TRACE((TRACE_DEBUG,_F_,"Application '%s'",gptActions[i].szApplication));
-		if (gptActions[i].bActive && strstr(gptActions[i].szURL,"http")!=NULL)
-		{
-			fputs("\t<app>\n",hf);
-			iCategory=GetCategoryIndex(gptActions[i].iCategoryId);
-			if (iCategory!=-1)
-			{
-				fputs("\t\t<categoryLabel>",hf); fputs(gptCategories[iCategory].szLabel,hf); fputs("</categoryLabel>\n",hf);
-				wsprintf(szCategoryIndex,"%d",iCategory);
-				fputs("\t\t<categoryIndex>",hf); fputs(szCategoryIndex,hf); fputs("</categoryIndex>\n",hf);
-			}
-			fputs("\t\t<label>",hf); fputs(gptActions[i].szApplication,hf); fputs("</label>\n",hf);
-			fputs("\t\t<url><![CDATA[",hf); // supprimer l'* en fin d'URL si présente
-			lenURL=strlen(gptActions[i].szURL);
-			memcpy(szTmpURL,gptActions[i].szURL,lenURL+1);
-			if (szTmpURL[lenURL-1]=='*') szTmpURL[lenURL-1]=0;
-			fputs(szTmpURL,hf); 
-			fputs("]]></url>\n",hf);
-			fputs("\t\t<title>",hf); fputs(gptActions[i].szTitle,hf); fputs("</title>\n",hf);
-			fputs("\t</app>\n",hf);
-			TRACE((TRACE_DEBUG,_F_,"fputs(application '%s')",gptActions[i].szApplication));
-		}
-	}
-#endif
 	fputs("</swsso>\n",hf);
 end:
 	if (hf!=NULL) fclose(hf);
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
+#endif
 
 // ----------------------------------------------------------------------------------
 // StoreNodeValue()
