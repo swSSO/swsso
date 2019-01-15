@@ -91,6 +91,7 @@ function loadFromGDrive(bAuth,fromGoogleAuth)
 			}
 			else
 			{
+				console.log(xhr.responseText);
 				if (xhr.status!=401) alert("Fichier introuvable (erreur "+xhr.status+").");
 			}
 		};
@@ -105,15 +106,72 @@ function loadFromGDrive(bAuth,fromGoogleAuth)
 			else if (xhr.readyState === 4 && xhr.status === 401) 
 			{
 				// Token invalide, lance l'authent
-				googleAuth();
+				googleAuth('loadFromGDrive');
 			}
 		};		
 		xhr.send();
 	}
 	else 
 	{
-		googleAuth();
+		googleAuth('loadFromGDrive');
 	}
 	console.log("< loadFromGDrive()");
+}
+
+// créee un fichier swsso.json sur Google Drive (authent obligatoire)
+function createFileOnGDrive()
+{
+	console.log("> createFileOnGDrive()");
+	var access_token=null;
+	var strFileId;
+	
+	var params=jQuery.parseJSON(localStorage.getItem('oauth2-params'));
+	if (params!=null) console.log('access_token',params['access_token']);
+	
+	if (params && params['access_token'])
+	{
+		var strUrl='https://www.googleapis.com/upload/drive/v3/files/?key='+strGK+'&uploadType=multipart&access_token=' + params['access_token'];
+		var xhr = new XMLHttpRequest();
+		xhr.open('POST',strUrl);
+		xhr.setRequestHeader('Content-Type', 'multipart/related; boundary=foo_bar_baz');
+		console.log("strUrl",strUrl);
+		xhr.onload = function() {
+			if (xhr.status==200)
+			{
+				var json=jQuery.parseJSON(xhr.responseText);
+				localStorage.setItem('strFileIdPrive',json.id);
+				$.mobile.navigate("#PageWaitForJSONUpload");
+			}
+			else
+			{
+				console.log(xhr.responseText);
+				if (xhr.status!=401) alert("Fichier introuvable (erreur "+xhr.status+").");
+			}
+		};
+		xhr.onerror = function() {
+			alert("Fichier introuvable.");
+		};
+		xhr.onreadystatechange = function (e) {
+			if (xhr.readyState === 4 && xhr.status === 200) 
+			{
+				// à supprimer ?
+			} 
+			else if (xhr.readyState === 4 && xhr.status === 401) 
+			{
+				// Token invalide, lance l'authent
+				googleAuth('createFileOnGDrive');
+			}
+		};		
+		var strBody='--foo_bar_baz\nContent-Type: application/json; charset=UTF-8\n'+
+		'\n{"name": "swsso.json"}\n'+'--foo_bar_baz\n'+
+		'Content-Type:text/plain\n'+'\nEmpty swSSO-Mobile File\n'+'--foo_bar_baz--';
+		console.log(strBody);
+		xhr.send(strBody);
+	}
+	else 
+	{
+		googleAuth('createFileOnGDrive');
+	}
+	console.log("< createFileOnGDrive()");
 }
 

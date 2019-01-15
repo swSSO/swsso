@@ -2,7 +2,7 @@
 //               swSSO - http://www.swsso.fr - sylvain@swsso.fr
 //-----------------------------------------------------------------------------
  
- function googleAuth() 
+ function googleAuth(strPostAction) 
  {
     var oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
 
@@ -11,9 +11,9 @@
     form.setAttribute('action',oauth2Endpoint);
 
     var params = {'client_id': strCID,
-                  'redirect_uri': 'https://www.swsso.fr/mobile/',  // test : http://www.mytasks.fr:82/mobile/ | prod : https://www.swsso.fr/mobile/
-                  'scope': 'https://www.googleapis.com/auth/drive.readonly',
-                  'state': 'readyToLoadFromGDrive',
+                  'redirect_uri': 'https://www.swsso.fr/mobile/',  // test : http://www.mytasks.fr:82/mobile/ | prod : 
+                  'scope': 'https://www.googleapis.com/auth/drive.file',
+                  'state': strPostAction,
                   'include_granted_scopes': 'true',
                   'response_type': 'token'};
 
@@ -41,8 +41,15 @@ while (m = regex.exec(fragmentString)) {
 if (Object.keys(params).length > 0) 
 {
 	localStorage.setItem('oauth2-params', JSON.stringify(params) );
-	if (params['state'] && params['state'] == 'readyToLoadFromGDrive') 
+	if (params['state'])
 	{
-		loadFromGDrive(true,true);
+		if (params['state'] == 'loadFromGDrive') 
+		{
+			loadFromGDrive(true,true);
+		}
+		else if (params['state'] == 'createFileOnGDrive') 
+		{
+			createFileOnGDrive();
+		}
 	}
 }

@@ -49,11 +49,11 @@
 			<a href="#PageURLPublique" class="ui-btn ui-shadow ui-corner-all">URL publique</a>
 			Partag&eacute; sans authentification sur Google Drive :
 			<a href="#PageGDrivePublic" class="ui-btn ui-shadow ui-corner-all">Fichier public Google Drive</a>
-			Priv&eacute; sur Google Drive :
+			Priv&eacute; sur Google Drive (recommand&eacute;) :
 			<a href="#PageGDrivePrive" class="ui-btn ui-shadow ui-corner-all">Fichier priv&eacute; Google Drive</a>
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.040</h4>
+			<h4>Version 0.10.042</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 
@@ -70,7 +70,7 @@
 			<a href="#PageWelcome" class="ui-btn ui-shadow ui-corner-all">Retour</a>
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.040</h4>
+			<h4>Version 0.10.042</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 
@@ -87,7 +87,7 @@
 			<a href="#PageWelcome" class="ui-btn ui-shadow ui-corner-all">Retour</a>
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.040</h4>
+			<h4>Version 0.10.042</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 	
@@ -97,27 +97,45 @@
 			<h1>swSSO</h1>
 		</div><!-- /header -->
 		<div data-role="content">
-			<p>Veuillez indiquer ci-dessous l'id Google Drive du fichier, puis cliquer sur Valider. Vous serez alors redirig&eacute; vers l'authentification Google.</p>
-			<p>Attention : si vous avez ajout&eacute; swSSO &agrave; l'&eacute;cran d'accueil et que vous avez activ&eacute; l'authentification en deux &eacute;tapes Google, choisissez de recevoir un SMS et ne sortez pas de l'application swSSO.
+			<p>C'est votre 1&egrave;re utilisation de swSSO Mobile ?</p>
+			<button onclick="createFileOnGDrive()">Cr&eacute;er mon fichier swsso.json</button>
+			<p>Vous avez d&eacute;j&agrave; cr&eacute;&eacute; votre fichier swsso.json ?</p>
 			<input type="text" data-clear-btn="true" name="tbIDGDrivePrive" id="tbIDGDrivePrive" placeholder="23hKRzQ2MdTWAC8URLQZ-g1qqYZR_nKLP" autocomplete="off">
-			<button onclick="loadFromGDrive(true,false)">Valider</button>
-			<p>Remarque : vous pourrez mettre &agrave; jour votre fichier ult&eacute;rieurement depuis la page options.</p>
+			<button onclick="loadFromGDrive(true,false)">Utiliser ce fichier</button>
+			<p><b>Attention</b> : dans les 2 cas, vous allez &ecirc;tre redirig&eacute; vers l'authentification Google. Si vous avez ajout&eacute; swSSO &agrave; l'&eacute;cran d'accueil et que vous avez activ&eacute; l'authentification en deux &eacute;tapes Google, choisissez de recevoir un SMS et ne sortez pas de l'application swSSO avant d'arriver sur la page de saisie du mot de passe.</p>
 			<a href="#PageWelcome" class="ui-btn ui-shadow ui-corner-all">Retour</a>
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.040</h4>
+			<h4>Version 0.10.042</h4>
+		</div><!-- /footer -->
+	</div><!-- /page -->
+
+	<!-- PAGE	JSONUPLOAD -->
+	<div data-role="page" id="PageWaitForJSONUpload" style="height: 100% !important; position:relative !important">
+		<div data-role="header">
+			<h1>swSSO</h1>
+		</div><!-- /header -->
+		<div data-role="content">	
+			<p>Avant de continuer, vous devez lancer le client swSSO sur votre poste de travail et d&eacute;finir le chemin de votre fichier swsso.json dans les options.</p>
+			<p>Si vous utilisez le client Google Drive sur votre PC, choisissez par exemple :<br/>C:\Users\Bob\Google Drive\swsso.json</p>
+			<p>Sinon, choisissez par exemple :<br/>C:\Users\Bob\Documents\swsso.json<br/>puis uploadez manuellement le fichier swsso.json sur votre Google Drive avec votre navigateur.</p>
+			<p>C'est fait ? Cliquez sur continuer !</p>
+			<button onclick="loadFromGDrive(true,true)">Continuer</button>
+		</div><!-- /content -->
+		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
+			<h4>Version 0.10.042</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 	
-	<!-- PAGE 2 : PASSWORD -->
+	<!-- PAGEPASSWORD -->
 	<div data-role="page" id="PagePassword" style="height: 100% !important; position:relative !important">
 		<div data-role="header">
 			<h1>swSSO</h1>
 		</div><!-- /header -->
 		<div data-role="content">	
-<div class="aligncenter">
-<img src="./cadenas.png"></img>
-</div>			
+			<div class="aligncenter">
+				<img src="./cadenas.png"></img>
+			</div>			
 			<p>Veuillez saisir votre mot de passe pour d&eacute;verrouiller votre coffre :</p>
 			<input type="password" data-clear-btn="false" name="password" id="password" value="" autocomplete="off">
 			<button onclick="unlockSafe()">D&eacute;verrouiller</button>
@@ -126,11 +144,11 @@
 			<button onclick="restartFromScratch()">R&eacute;initialiser</button>
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.040</h4>
+			<h4>Version 0.10.042</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 	
-	<!-- PAGE 3 : SAFE -->
+	<!-- PAGESAFE -->
 	<div data-role="page" id="PageSafe">
 		<div data-role="header">
 			<div class="ui-grid-b center">
@@ -145,7 +163,7 @@
 		</div><!-- /content -->
 	</div><!-- /page -->
 	
-	<!-- PAGE 4 : OPTIONS -->
+	<!-- PAGEOPTIONS -->
 	<div data-role="page" id="PageOptions" style="height: 100% !important; position:relative !important">
 		<div data-role="header">
 			<h1>Options</h1>
@@ -160,11 +178,11 @@
 			<br/>
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.040</h4>
+			<h4>Version 0.10.042</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 
-	<!-- PAGE 5 : APP -->
+	<!-- PAGEAPP -->
 	<div data-role="page" id="PageApp" style="height: 100% !important; position:relative !important">
 		<div data-role="header">
 			<h1><span id="PageAppTitle">Titre</span></h1>
@@ -172,7 +190,7 @@
 		<div data-role="content" id="PageAppButtons">	
 		</div><!-- /content -->
 		<div data-role="footer" style="bottom:0; position:absolute !important; top: auto !important; width:100%">
-			<h4>Version 0.10.040</h4>
+			<h4>Version 0.10.042</h4>
 		</div><!-- /footer -->
 	</div><!-- /page -->
 
