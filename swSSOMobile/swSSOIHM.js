@@ -81,6 +81,10 @@ function pageChange(e,data)
 			{
 				$.mobile.navigate("#PagePassword"); e.preventDefault();
 			}
+			else if (isPwdExpired())
+			{
+				$.mobile.navigate("#PagePassword"); e.preventDefault();
+			}
 			else
 			{
 				var pwdTimeOut=localStorage.getItem("pwdTimeOut");
@@ -95,6 +99,10 @@ function pageChange(e,data)
 				$.mobile.navigate("#PageWelcome"); e.preventDefault();
 			}
 			else if (localStorage.getItem("strKeyValue")==null)
+			{
+				$.mobile.navigate("#PagePassword"); e.preventDefault();
+			}
+			else if (isPwdExpired())
 			{
 				$.mobile.navigate("#PagePassword"); e.preventDefault();
 			}

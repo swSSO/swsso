@@ -14,13 +14,16 @@ function showPageOptions()
 function restartFromScratch()
 {
 	console.log("> restartFromScratch()");
-	localStorage.removeItem("strPwdSalt");
-	localStorage.removeItem("strKeySalt");
-	localStorage.removeItem("strIniPwdValue");
-	localStorage.removeItem("json");
-	localStorage.removeItem("strKeyValue");
-	$("#listeApplis").empty();
-	$.mobile.navigate("#PageWelcome");
+	if (confirm("Voulez-vous effacer votre coffre et charger un nouveau fichier swsso.json ?"))
+	{
+		localStorage.removeItem("strPwdSalt");
+		localStorage.removeItem("strKeySalt");
+		localStorage.removeItem("strIniPwdValue");
+		localStorage.removeItem("json");
+		localStorage.removeItem("strKeyValue");
+		$("#listeApplis").empty();
+		$.mobile.navigate("#PageWelcome");
+	}
 	console.log("< restartFromScratch()");
 }
 
