@@ -600,11 +600,19 @@ char *GetFirefoxURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcces
 
 			hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pContent);
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr)); goto end; }
-	
+			
 			hr=pContent->get_accRole(vtMe,&vtResult);
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pContent->get_accRole()=0x%08lx",hr)); goto end; }
-			if (vtResult.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole() : vtResult.lVal=%ld",vtResult.lVal)); goto end; }
-
+			// ISSUE#386 - le vtResult retourné est parfois de type I4 et parfois de type BSTR (dans ce cas contient "document")
+			// Semble se produire depuis Firefox 65, mais peut-être plus ancien. Correction prévue dans Firefox 67
+			if (vtResult.vt==VT_I4)
+			{
+				if (vtResult.lVal!=ROLE_SYSTEM_DOCUMENT) { TRACE((TRACE_ERROR,_F_,"get_accRole() : vtResult.lVal=%ld",vtResult.lVal)); goto end; }
+			}
+			else
+			{
+				TRACE((TRACE_ERROR,_F_,"cf. ISSUE#386 : waiting for Firefox 67...")); goto end;
+			}
 		}
 		else // Solution de contournement conservée au cas où accNavigate(NAVRELATION_EMBEDS) échoue (cf. ISSUE#358 et ISSUE#371)
 		{
