@@ -110,7 +110,8 @@
       </Message>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>mc swSSOLogMessages.mc</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <ResourceCompile>
       <Culture>0x040c</Culture>
