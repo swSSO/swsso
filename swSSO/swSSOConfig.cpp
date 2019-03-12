@@ -4557,7 +4557,7 @@ int DeleteConfigsNotOnServer(void)
 		// ISSUE#232 : c'est peut-être louche, mais il faut supprimer les configs du coup...
 		gtConfigSync.iNbConfigsDeleted=giNbActions;
 		giNbActions=0;
-		giNbCategories=0;
+		giNbCategories=1; // ISSUE#392
 	}
 	else // réponse au format id,id,id,
 	{
