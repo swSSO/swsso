@@ -17,11 +17,11 @@
 //  You should have received a copy of the GNU General Public License
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------------
-// VERSION INTERNE : 6.7.0 (PHP7)
+// VERSION INTERNE : 6.7.1 (PHP7) -- ISSUE#391
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
-// getconfig
+// getconfig [pas de code retour]
 // ------------------------------------------------------------
 function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_modifiedSince,$var_type,$var_version,$var_domainId,$var_autoPublish)
 {
@@ -221,7 +221,7 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 }
 
 // ------------------------------------------------------------
-// showAll -> appelé par showall et showold 
+// showAll -> appelé par showall et showold  [pas de code retour]
 // ------------------------------------------------------------
 function showAll($active,$domain,$title,$export)
 {
@@ -461,7 +461,7 @@ function showAll($active,$domain,$title,$export)
 	sqliClose($cnx);
 }
 // ------------------------------------------------------------
-// getDomainLabel 
+// getDomainLabel [retour : libellé du domaine]
 // ------------------------------------------------------------
 function getDomainLabel($cnx,$domainId)
 {
@@ -490,7 +490,7 @@ function getDomainLabel($cnx,$domainId)
 	}
 }
 // ------------------------------------------------------------
-// showCategories 
+// showCategories [pas de code retour]
 // ------------------------------------------------------------
 function showCategories($title)
 {
@@ -535,7 +535,7 @@ function showCategories($title)
 	sqliClose($cnx);
 }
 // ------------------------------------------------------------
-// showDomains 
+// showDomains [pas de code retour]
 // ------------------------------------------------------------
 function showDomains($title)
 {
@@ -599,7 +599,7 @@ function showDomains($title)
 	sqliClose($cnx);
 }
 // ------------------------------------------------------------
-// menuShowDomains
+// menuShowDomains [pas de code retour]
 // ------------------------------------------------------------
 function menuShowDomains()
 {
@@ -624,7 +624,7 @@ function menuShowDomains()
 	sqliClose($cnx);
 }
 // ------------------------------------------------------------
-// exportStats
+// exportStats [pas de code retour]
 // ------------------------------------------------------------
 function exportStats()
 {
@@ -649,13 +649,13 @@ function exportStats()
 	sqliClose($cnx);
 }
 // ------------------------------------------------------------
-// deleteConfig
+// deleteConfig [code retour : TRUE si OK, FALSE sinon] -- ISSUE#391
 // ------------------------------------------------------------
 function deleteConfig($configId)
 {
 	$rc=FALSE;
 	
-	$cnx=sqliConnect();	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return $rc;
 		
 	// ISSUE#231 : il faut aussi supprimer le lien config - domaines
 	$szRequest="delete from "._TABLE_PREFIX_."configs_domains where configId=?";
@@ -677,15 +677,16 @@ function deleteConfig($configId)
 		mysqli_stmt_close($stmt);	
 	}
 	sqliClose($cnx);
+	return $rc; //ISSUE#391
 }
 // ------------------------------------------------------------
-// deleteCateg
+// deleteCateg [code retour : TRUE si OK, FALSE sinon] -- ISSUE#391
 // ------------------------------------------------------------
 function deleteCateg($categId)
 {
 	$rc=FALSE;
 	
-	$cnx=sqliConnect();	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return $rc;
 	
 	$szRequest="delete from "._TABLE_PREFIX_."categ where id=?";
 	$stmt = mysqli_stmt_init($cnx);
@@ -697,15 +698,16 @@ function deleteCateg($categId)
 		mysqli_stmt_close($stmt);	
 	}
 	sqliClose($cnx);
+	return $rc; //ISSUE#391
 }
 // ------------------------------------------------------------
-// deleteDomain
+// deleteDomain [code retour : TRUE si OK, FALSE sinon] -- ISSUE#391
 // ------------------------------------------------------------
 function deleteDomain($domainId)
 {
 	$rc=FALSE;
 	
-	$cnx=sqliConnect();	if (!$cnx) return;
+	$cnx=sqliConnect();	if (!$cnx) return $rc;
 	
 	// vérifie qu'aucune config n'est attachée à ce domaine
 	$szRequest="select count(*) from "._TABLE_PREFIX_."configs_domains where domainId=?";
@@ -731,9 +733,10 @@ function deleteDomain($domainId)
 		}
 	}
 	sqliClose($cnx);
+	return $rc; //ISSUE#391
 }
 // ------------------------------------------------------------
-// showLogs 
+// showLogs [pas de code retour]
 // ------------------------------------------------------------
 function showLogs($domain,$result,$title)
 {
