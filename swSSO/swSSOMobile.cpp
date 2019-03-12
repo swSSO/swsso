@@ -52,6 +52,8 @@ int SaveJSON(char *szFullpathname)
 	char szIdEncryptedValue[LEN_ENCRYPTED_AES256+1];
 	char szAppEncryptedName[LEN_ENCRYPTED_AES256+1];
 
+	if (szFullpathname==NULL || *szFullpathname==0) goto end;
+
 	if (giPwdProtection!=PP_ENCRYPTED && giPwdProtection!=PP_WINDOWS)
 	{
 		TRACE((TRACE_ERROR,_F_,"Export mobile non supporté avec giPwdProtection=%d",giPwdProtection)); goto end;
