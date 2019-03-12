@@ -140,6 +140,8 @@ void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
 		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
 		
+		TRACE((TRACE_DEBUG,_F_,"%04x",MapVirtualKey(loVk,MAPVK_VK_TO_CHAR)));
+		
 		// ISSUE#336 : si caps lock, on fait shift à l'envers puisque la désactivation de caps lock ne fonctionne pas (en citrix)
 		// Attention, il ne faut pas le faire si la touche control est aussi enfoncée sinon ça fout la zone (saisie de @ par exemple)
 		if (bCapsLock & !(hiVk & 2))

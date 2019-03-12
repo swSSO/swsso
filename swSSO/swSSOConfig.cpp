@@ -5438,6 +5438,153 @@ end:
 	return rc;
 }
 
+//-----------------------------------------------------------------------------
+// SyncConfigsPwdAndOptionnalyLogin() -- ISSUE#390
+//-----------------------------------------------------------------------------
+// Synchronise toutes les configurations du groupe avec celle passée en paramètre
+// Si le n° du groupe est < 60, ne synchronise que le mot de passe et seulement si l'identifiant est non vide et égal
+// Si le n° du groupe est >=60, synchronise systématiquement identifiant et mot de passe
+//-----------------------------------------------------------------------------
+int SyncConfigsPwdAndOptionnalyLogin(int iAction)
+{
+	TRACE((TRACE_ENTER,_F_,"iAction=%d",iAction));
+	int rc=-1;
+	int i;
+	char *pszEncryptedValue=NULL;
+	char *pszDecryptedValue=NULL;
+	BOOL bSyncId=FALSE;
+	BOOL bSyncPwd=FALSE;
+
+	TRACE((TRACE_DEBUG,_F_,"Changement mdp groupé induit par appli %s groupe=%d",gptActions[iAction].szApplication,gptActions[iAction].iPwdGroup));
+
+	// déchiffre le mot de passe à synchroniser sur les autres configs
+	pszDecryptedValue=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+	if (pszDecryptedValue==NULL) goto end;
+
+	for (i=0;i<giNbActions;i++)
+	{
+		if (i==iAction) continue;
+		if (gptActions[i].iPwdGroup==gptActions[iAction].iPwdGroup) 
+		{
+			if (gptActions[iAction].iPwdGroup>=60) // pour les groupes >=60, synchro systématique
+			{
+				if (*gptActions[iAction].szId1Value!=0) bSyncId=TRUE;
+				bSyncPwd=TRUE;
+			}
+			// pour les groupes<60, ne synchronise que le mot de passe et à condition que 
+			// l'id soit non vide et égal à celui de la config de référence
+			else if ((*gptActions[i].szId1Value!=0) && (*gptActions[iAction].szId1Value!=0) &&  
+					(_stricmp(gptActions[i].szId1Value,gptActions[iAction].szId1Value)==0))
+			{
+				bSyncId=FALSE;
+				bSyncPwd=TRUE;
+			}
+			else
+			{
+				bSyncId=FALSE;
+				bSyncPwd=FALSE;
+			}
+			if (bSyncId)
+			{
+				TRACE((TRACE_DEBUG,_F_,"Changement id appli %s induit par appli %s",gptActions[i].szApplication,gptActions[iAction].szApplication));
+				strcpy_s(gptActions[i].szId1Value,sizeof(gptActions[i].szId1Value),gptActions[iAction].szId1Value);
+			}
+			if (bSyncPwd)
+			{
+				TRACE((TRACE_DEBUG,_F_,"Changement mdp appli %s induit par appli %s",gptActions[i].szApplication,gptActions[iAction].szApplication));
+				pszEncryptedValue=swCryptEncryptString(pszDecryptedValue,ghKey1);
+				if (pszEncryptedValue==NULL) goto end;
+				strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedValue);
+				free(pszEncryptedValue); // forcément pas NULL sinon on ne serait pas là
+				pszEncryptedValue=NULL;
+			}
+		}
+	}
+	rc=0;
+end:
+	if (pszDecryptedValue!=NULL)
+	{
+		SecureZeroMemory(pszDecryptedValue,strlen(pszDecryptedValue));
+		free(pszDecryptedValue);
+	}
+	if (pszEncryptedValue!=NULL) free(pszEncryptedValue);
+	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// SyncAllConfigsLogionAndPwd() -- ISSUE#390
+//-----------------------------------------------------------------------------
+// Parcourt l'ensemble des configurations et pour celles dont le groupe est > 60
+// synchronise l'identifiant et le mot de passe avec les 1ères valeurs non vides
+// trouvées dans une configuration du même groupe
+//-----------------------------------------------------------------------------
+int SyncAllConfigsLoginAndPwd(void)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	int tabGroups[40];
+	int rc=-1;
+	int iConfig;
+	int iGroupe;
+	int nGroupes=0;
+	int iConfigWithIdAndPwd;
+	BOOL bAlreadyAdded;
+
+	// construit la liste des groupes > 60
+	for (iConfig=0;iConfig<giNbActions;iConfig++)
+	{
+		if (gptActions[iConfig].iPwdGroup>=60) 
+		{
+			// ajoute groupe si pas déjà fait
+			bAlreadyAdded=FALSE;
+			for (iGroupe=0;iGroupe<nGroupes;iGroupe++)
+			{
+				if (tabGroups[iGroupe]==gptActions[iConfig].iPwdGroup) 
+				{ 
+					bAlreadyAdded=TRUE; 
+					break; 
+				}
+			}
+			if (!bAlreadyAdded)
+			{
+				tabGroups[nGroupes]=gptActions[iConfig].iPwdGroup;
+				TRACE((TRACE_DEBUG,_F_,"tabGroups[%d]=%d",nGroupes,tabGroups[nGroupes]));
+				nGroupes++;
+			}
+		}
+	}
+	// parcourt la liste des groupes et synchronise les identifiants et mots de passe
+	for (iGroupe=0;iGroupe<nGroupes;iGroupe++)
+	{
+		TRACE((TRACE_DEBUG,_F_,"Début synchronisation du groupe %d",tabGroups[iGroupe]));
+		// parcourt les configs du groupe pour en trouver une avec id et mdp non vide
+		iConfigWithIdAndPwd=-1;
+		for (iConfig=0;iConfig<giNbActions;iConfig++)
+		{
+			if ((gptActions[iConfig].iPwdGroup==tabGroups[iGroupe]) &&
+				(*gptActions[iConfig].szId1Value!=0) &&
+				(*gptActions[iConfig].szPwdEncryptedValue!=0))
+			{
+				iConfigWithIdAndPwd=iConfig;
+				break;
+			}
+		}
+		if (iConfigWithIdAndPwd==-1)
+		{
+			TRACE((TRACE_DEBUG,_F_,"Aucune config avec id et mdp trouvee dans ce groupe -> pas de synchro"));
+		}
+		else
+		{
+			TRACE((TRACE_DEBUG,_F_,"Config avec id et mdp trouvee dans ce groupe : %s",gptActions[iConfigWithIdAndPwd].szApplication));
+			SyncConfigsPwdAndOptionnalyLogin(iConfigWithIdAndPwd);
+		}
+		TRACE((TRACE_DEBUG,_F_,"Fin synchronisation du groupe %d",tabGroups[iGroupe]));
+	}
+	rc=0;
+	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	return rc;
+}
+
 //////////////////////// WM_PAINT pour bitmap dans onglet about
 #if 0
 		case WM_PAINT:

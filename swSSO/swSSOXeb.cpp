@@ -775,7 +775,8 @@ int SSOWebAccessible(HWND w,int *piAction,int iBrowser)
 						/* TODO
 						   Pour l'instant on fait bete et méchant : on réplique le mot de passe dans tout le pwdGroup
 						   Il faudrait plutôt récupérer l'identifiant de la configuration utilisée pour le login et 
-						   ne propager le mot de passe que sur les configurations utilisant cet identifiant
+						   ne propager le mot de passe que sur les configurations utilisant cet identifiant.
+						   Si un jour je code ça, attention à ne pas faire ce filtre pour les groupes >=60 !
 						&&
 						(*gptActions[i].szId1Value!=0) && (*gptActions[iAction].szId1Value!=0) && // nouvelle condition ISSUE#235
 						(_stricmp(gptActions[i].szId1Value,gptActions[iAction].szId1Value)==0))    // nouvelle condition ISSUE#235 

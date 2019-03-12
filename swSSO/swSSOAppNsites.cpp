@@ -2996,15 +2996,18 @@ void GetApplicationDetails(HWND w,int iAction)
 	if (*szPassword!=0)
 	{
 		pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
+		SecureZeroMemory(szPassword,strlen(szPassword));
 		if (pszEncryptedPassword==NULL) goto end;
 		strcpy_s(gptActions[iAction].szPwdEncryptedValue,sizeof(gptActions[iAction].szPwdEncryptedValue),pszEncryptedPassword);
 		
 		// ISSUE#191 : changement des mots de passe de toutes les applications du groupe
 		free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
 		pszEncryptedPassword=NULL;
+		
 		if (gptActions[iAction].iPwdGroup!=-1) // change les autres applis
 		{
-			TRACE((TRACE_DEBUG,_F_,"Changement mot de passe groupé induit par appli %s",gptActions[iAction].szApplication));
+			SyncConfigsPwdAndOptionnalyLogin(iAction);
+			/*TRACE((TRACE_DEBUG,_F_,"Changement mot de passe groupé induit par appli %s",gptActions[iAction].szApplication));
 			int i;
 			for (i=0;i<giNbActions;i++)
 			{
@@ -3019,9 +3022,9 @@ void GetApplicationDetails(HWND w,int iAction)
 					free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
 					pszEncryptedPassword=NULL;
 				}
-			}
+			}*/
 		}
-		SecureZeroMemory(szPassword,strlen(szPassword));
+		// SecureZeroMemory(szPassword,strlen(szPassword)); -- remonté plus haut
 	}
 	else
 	{
@@ -4329,6 +4332,8 @@ int SaveApplications(void)
 	char *pszHeader=NULL;
 	char tmpBuf[2048];
 	char szId1EncryptedValue[LEN_ENCRYPTED_AES256+1];
+
+	SyncAllConfigsLoginAndPwd(); // ISSUE#390
 
 	// ouvre le fichier en lecture pour récupérer le header complet (un peu bidouille mais bon...)
 	hf=CreateFile(gszCfgFile,GENERIC_READ,0,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);

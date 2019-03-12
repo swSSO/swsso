@@ -180,3 +180,6 @@ void SetLanguage(void);
 void GetOSLanguage(void);
 
 extern HWND gwChangeApplicationPassword;
+
+int SyncConfigsPwdAndOptionnalyLogin(int iAction);
+int SyncAllConfigsLoginAndPwd(void);
