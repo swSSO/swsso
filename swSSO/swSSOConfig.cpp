@@ -943,8 +943,9 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						if (pszEncryptedPassword!=NULL)
 						{
 							strcpy_s(gptActions[params->iAction].szPwdEncryptedValue,sizeof(gptActions[params->iAction].szPwdEncryptedValue),pszEncryptedPassword);
-							// NEW pour ISSUE#367 : replique le mot de passe sur toutes les configs du password group, uniquement si password group >= 20
-							if (gptActions[params->iAction].iPwdGroup >= 20)
+							// NEW pour ISSUE#367 : replique le mot de passe sur toutes les configs du password group, 
+							// uniquement si password group >= 20 et que la configuration n'est pas issue d'un ajout de compte
+							if (gptActions[params->iAction].iPwdGroup>=20 && !gptActions[params->iAction].bAddAccount)
 							{
 								for (int i=0;i<giNbActions;i++)
 								{
@@ -5442,8 +5443,8 @@ end:
 // SyncConfigsPwdAndOptionnalyLogin() -- ISSUE#390
 //-----------------------------------------------------------------------------
 // Synchronise toutes les configurations du groupe avec celle passée en paramètre
-// Si le n° du groupe est < 60, ne synchronise que le mot de passe et seulement si l'identifiant est non vide et égal
-// Si le n° du groupe est >=60, synchronise systématiquement identifiant et mot de passe
+// Si le n° du groupe est < 40, ne synchronise que le mot de passe et seulement si l'identifiant est non vide et égal
+// Si le n° du groupe est >=40, synchronise systématiquement identifiant et mot de passe, sauf si config issue d'un ajout de compte
 //-----------------------------------------------------------------------------
 int SyncConfigsPwdAndOptionnalyLogin(int iAction)
 {
@@ -5466,12 +5467,13 @@ int SyncConfigsPwdAndOptionnalyLogin(int iAction)
 		if (i==iAction) continue;
 		if (gptActions[i].iPwdGroup==gptActions[iAction].iPwdGroup) 
 		{
-			if (gptActions[iAction].iPwdGroup>=60) // pour les groupes >=60, synchro systématique
+			// pour les groupes>=40, synchro systématique sauf si issue d'un ajout de compte
+			if (gptActions[iAction].iPwdGroup>=40 && !gptActions[iAction].bAddAccount && !gptActions[i].bAddAccount)
 			{
 				if (*gptActions[iAction].szId1Value!=0) bSyncId=TRUE;
 				bSyncPwd=TRUE;
 			}
-			// pour les groupes<60, ne synchronise que le mot de passe et à condition que 
+			// pour les groupes < 40, ne synchronise que le mot de passe et à condition que 
 			// l'id soit non vide et égal à celui de la config de référence
 			else if ((*gptActions[i].szId1Value!=0) && (*gptActions[iAction].szId1Value!=0) &&  
 					(_stricmp(gptActions[i].szId1Value,gptActions[iAction].szId1Value)==0))
@@ -5515,7 +5517,7 @@ end:
 //-----------------------------------------------------------------------------
 // SyncAllConfigsLogionAndPwd() -- ISSUE#390
 //-----------------------------------------------------------------------------
-// Parcourt l'ensemble des configurations et pour celles dont le groupe est > 60
+// Parcourt l'ensemble des configurations et pour celles dont le groupe est >= 40
 // synchronise l'identifiant et le mot de passe avec les 1ères valeurs non vides
 // trouvées dans une configuration du même groupe
 //-----------------------------------------------------------------------------
@@ -5530,10 +5532,11 @@ int SyncAllConfigsLoginAndPwd(void)
 	int iConfigWithIdAndPwd;
 	BOOL bAlreadyAdded;
 
-	// construit la liste des groupes > 60
+	// construit la liste des groupes >= 40
 	for (iConfig=0;iConfig<giNbActions;iConfig++)
 	{
-		if (gptActions[iConfig].iPwdGroup>=60) 
+		// exclut de la synchro les configurations issues d'un ajout de compte
+		if (gptActions[iConfig].iPwdGroup>=40 && !gptActions[iConfig].bAddAccount)
 		{
 			// ajoute groupe si pas déjà fait
 			bAlreadyAdded=FALSE;

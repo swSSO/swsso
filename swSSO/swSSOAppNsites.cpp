@@ -3007,22 +3007,6 @@ void GetApplicationDetails(HWND w,int iAction)
 		if (gptActions[iAction].iPwdGroup!=-1) // change les autres applis
 		{
 			SyncConfigsPwdAndOptionnalyLogin(iAction);
-			/*TRACE((TRACE_DEBUG,_F_,"Changement mot de passe groupé induit par appli %s",gptActions[iAction].szApplication));
-			int i;
-			for (i=0;i<giNbActions;i++)
-			{
-				if ((gptActions[i].iPwdGroup==gptActions[iAction].iPwdGroup) &&
-					(*gptActions[i].szId1Value!=0) && (*gptActions[iAction].szId1Value!=0) && // nouvelle condition ISSUE#235
-					(_stricmp(gptActions[i].szId1Value,gptActions[iAction].szId1Value)==0))    // nouvelle condition ISSUE#235
-				{
-					TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli %s induit par appli %s",gptActions[i].szApplication,gptActions[iAction].szApplication));
-					pszEncryptedPassword=swCryptEncryptString(szPassword,ghKey1);
-					if (pszEncryptedPassword==NULL) goto end;
-					strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
-					free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
-					pszEncryptedPassword=NULL;
-				}
-			}*/
 		}
 		// SecureZeroMemory(szPassword,strlen(szPassword)); -- remonté plus haut
 	}
