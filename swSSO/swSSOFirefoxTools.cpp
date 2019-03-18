@@ -74,12 +74,187 @@ end:
 //                             FONCTIONS PUBLIQUES
 //*****************************************************************************
 
+typedef struct
+{
+	char c;
+	BOOL bAlt;
+	WORD w1;
+	WORD w2;
+	WORD w3;
+	char c1;
+	char c2;
+} T_ASCII_TO_ALTCODE;
+
+T_ASCII_TO_ALTCODE gTableAsciiToAltcode[]={
+	// a/A
+	{'ä',FALSE,0,0,0,'¨','a'},	
+	{'â',FALSE,0,0,0,'^','a'},	
+	{'ã',FALSE,0,0,0,'~','a'}, 
+	{'Ä',FALSE,0,0,0,'¨','A'},	
+	{'Â',FALSE,0,0,0,'^','A'},	
+	{'Ã',FALSE,0,0,0,'~','A'},
+	// e/E
+	{'ë',FALSE,0,0,0,'¨','e'},	
+	{'ê',FALSE,0,0,0,'^','e'},	
+	{'Ë',FALSE,0,0,0,'¨','E'},	
+	{'Ê',FALSE,0,0,0,'^','E'},	
+	{'È',FALSE,0,0,0,'`','E'},	
+	// i/I
+	{'ï',FALSE,0,0,0,'¨','i'},	
+	{'î',FALSE,0,0,0,'^','i'},	
+	{'ì',FALSE,0,0,0,'`','i'},	
+	{'Ï',FALSE,0,0,0,'¨','I'},	
+	{'Î',FALSE,0,0,0,'^','I'},	
+	{'Ì',FALSE,0,0,0,'`','I'},	
+	// o/O
+	{'ö',FALSE,0,0,0,'¨','o'},	
+	{'ô',FALSE,0,0,0,'^','o'},	
+	{'ò',FALSE,0,0,0,'`','o'},	
+	{'õ',FALSE,0,0,0,'~','o'},	
+	{'Ö',FALSE,0,0,0,'¨','O'},	
+	{'Ô',FALSE,0,0,0,'^','O'},	
+	{'Ò',FALSE,0,0,0,'`','O'},	
+	{'Õ',FALSE,0,0,0,'~','O'},	
+	// u/U
+	{'ü',FALSE,0,0,0,'¨','u'},	
+	{'û',FALSE,0,0,0,'^','u'},	
+	{'Ü',FALSE,0,0,0,'¨','U'},	
+	{'Û',FALSE,0,0,0,'^','U'},	
+	// y/Y
+	{'ÿ',FALSE,0,0,0,'¨','y'},	
+	// n/N
+	{'ñ',FALSE,0,0,0,'~','n'},	
+	{'Ñ',FALSE,0,0,0,'~','N'},	
+	// autres
+	{'å',TRUE,VK_NUMPAD1,VK_NUMPAD3,VK_NUMPAD4,0,0},
+	{'Å',TRUE,VK_NUMPAD1,VK_NUMPAD4,VK_NUMPAD3,0,0},
+	{'É',TRUE,VK_NUMPAD1,VK_NUMPAD4,VK_NUMPAD4,0,0},
+	{'æ',TRUE,VK_NUMPAD1,VK_NUMPAD4,VK_NUMPAD5,0,0},
+	{'Æ',TRUE,VK_NUMPAD1,VK_NUMPAD4,VK_NUMPAD6,0,0},
+	{'ƒ',TRUE,VK_NUMPAD1,VK_NUMPAD5,VK_NUMPAD9,0,0},
+	{'á',TRUE,VK_NUMPAD1,VK_NUMPAD6,VK_NUMPAD0,0,0},
+	{'í',TRUE,VK_NUMPAD1,VK_NUMPAD6,VK_NUMPAD1,0,0},
+	{'ó',TRUE,VK_NUMPAD1,VK_NUMPAD6,VK_NUMPAD2,0,0},
+	{'ú',TRUE,VK_NUMPAD1,VK_NUMPAD6,VK_NUMPAD3,0,0},
+	{'¿',TRUE,VK_NUMPAD1,VK_NUMPAD6,VK_NUMPAD8,0,0},
+	{'¡',TRUE,VK_NUMPAD1,VK_NUMPAD7,VK_NUMPAD3,0,0},
+	{'«',TRUE,VK_NUMPAD1,VK_NUMPAD7,VK_NUMPAD4,0,0},
+	{'»',TRUE,VK_NUMPAD1,VK_NUMPAD7,VK_NUMPAD5,0,0}
+};
+
 // ----------------------------------------------------------------------------------
-// 0.60 - Simulation entrée clavier
+// SendKey
 // ----------------------------------------------------------------------------------
-// Utilisé uniquement pour firefox/mozilla.
-// J'aurais préféré utiliser put_accValue !
-// Demande d'implémentation de put_accValue faite à Aaron le 12 janvier 2005
+void SendKey(HWND w,BOOL bCapsLock,char c)
+{
+	TRACE((TRACE_ENTER,_F_, "%c",c));
+	BYTE hiVk,loVk;
+	WORD wKeyScan;
+
+	wKeyScan=VkKeyScan(c);
+	hiVk=HIBYTE(wKeyScan);
+	loVk=LOBYTE(wKeyScan);
+
+	// ISSUE#336 : si caps lock, on fait shift à l'envers puisque la désactivation de caps lock ne fonctionne pas (en citrix)
+	// Attention, il ne faut pas le faire si la touche control est aussi enfoncée sinon ça fout la zone (saisie de @ par exemple)
+	if (bCapsLock & !(hiVk & 2))
+	{
+		if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+	}
+	else
+	{
+		if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+	}
+	if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0); }
+	if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
+
+	if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
+	keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
+	keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
+		
+	// ISSUE#336 : si caps lock, on fait shift à l'envers puisque la désactivation de caps lock ne fonctionne pas (en citrix)
+	// Attention, il ne faut pas le faire si la touche control est aussi enfoncée sinon ça fout la zone (saisie de @ par exemple)
+	if (bCapsLock & !(hiVk & 2))
+	{
+		if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
+	}
+	else
+	{
+		if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
+	}
+	// ISSUE#163 : inversion des lignes pour CONTROL et MENU il relacher les touches dans le même sens sinon la touche ALT
+	//             reste enfoncée (uniquement constaté dans IE9, reproduit nulle par ailleurs)
+	if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); } 
+	if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); } 
+	TRACE((TRACE_LEAVE,_F_, ""));
+}	
+	
+// ----------------------------------------------------------------------------------
+// SendDiatric
+// ----------------------------------------------------------------------------------
+// Traitement des caractères à saisir en 2 touches ou par Alt+num
+// Liste / jeu de test : äâãÄÂÃëêËÊÈïîìÏÎÌöôòõÖÔÒÕüûÜÛÿñÑåÅÉæÆƒáíóú¿¡«»
+// ----------------------------------------------------------------------------------
+void SendDiatric(HWND w,BOOL bCapsLock,char c)
+{
+	TRACE((TRACE_ENTER,_F_, "%c",c));
+	int i;
+	INPUT inputKey[8];
+	memset(&inputKey,0,sizeof(inputKey));
+	
+	for (i=0;i<sizeof(gTableAsciiToAltcode)/sizeof(T_ASCII_TO_ALTCODE);i++)
+	{
+		if (gTableAsciiToAltcode[i].c==c) break;
+	}
+	if (i==sizeof(gTableAsciiToAltcode)/sizeof(T_ASCII_TO_ALTCODE)) { TRACE((TRACE_ERROR,_F_,"Altcode du caractere %c non trouvé",c)); goto end; }
+
+	if (gTableAsciiToAltcode[i].bAlt) // ALT+3 chiffres
+	{
+		inputKey[0].type=INPUT_KEYBOARD;
+		inputKey[0].ki.wVk=VK_MENU;
+		inputKey[0].ki.wScan=LOBYTE(MapVirtualKey(inputKey[0].ki.wVk, 0));
+		
+		inputKey[1].type=INPUT_KEYBOARD;
+		inputKey[1].ki.wVk=gTableAsciiToAltcode[i].w1;
+		inputKey[1].ki.wScan=LOBYTE(MapVirtualKey(inputKey[1].ki.wVk, 0));
+		inputKey[2].type=INPUT_KEYBOARD;
+		inputKey[2].ki.wVk=gTableAsciiToAltcode[i].w1;
+		inputKey[2].ki.wScan=LOBYTE(MapVirtualKey(inputKey[2].ki.wVk, 0));
+		inputKey[2].ki.dwFlags=KEYEVENTF_KEYUP;
+		
+		inputKey[3].type=INPUT_KEYBOARD;
+		inputKey[3].ki.wVk=gTableAsciiToAltcode[i].w2;
+		inputKey[3].ki.wScan=LOBYTE(MapVirtualKey(inputKey[3].ki.wVk, 0));
+		inputKey[4].type=INPUT_KEYBOARD;
+		inputKey[4].ki.wVk=gTableAsciiToAltcode[i].w2;
+		inputKey[4].ki.wScan=LOBYTE(MapVirtualKey(inputKey[4].ki.wVk, 0));
+		inputKey[4].ki.dwFlags=KEYEVENTF_KEYUP;
+
+		inputKey[5].type=INPUT_KEYBOARD;
+		inputKey[5].ki.wVk=gTableAsciiToAltcode[i].w3;
+		inputKey[5].ki.wScan=LOBYTE(MapVirtualKey(inputKey[5].ki.wVk, 0));
+		inputKey[5].type=INPUT_KEYBOARD;
+		inputKey[6].ki.wVk=gTableAsciiToAltcode[i].w3;
+		inputKey[6].ki.wScan=LOBYTE(MapVirtualKey(inputKey[6].ki.wVk, 0));
+		inputKey[6].ki.dwFlags=KEYEVENTF_KEYUP;
+
+		inputKey[7].type=INPUT_KEYBOARD;
+		inputKey[7].ki.wVk=VK_MENU;
+		inputKey[7].ki.wScan=LOBYTE(MapVirtualKey(inputKey[7].ki.wVk, 0));
+		inputKey[7].ki.dwFlags=KEYEVENTF_KEYUP;
+		SendInput(8,inputKey,sizeof(INPUT));
+	}
+	else // saisie de la séquence de caractères ^ ou ¨ ou ~ + lettre
+	{
+		SendKey(w,bCapsLock,gTableAsciiToAltcode[i].c1);
+		SendKey(NULL,bCapsLock,gTableAsciiToAltcode[i].c2);
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, ""));
+}
+
+// ----------------------------------------------------------------------------------
+// Simulation frappe clavier
 // ----------------------------------------------------------------------------------
 // [in] bErase : TRUE s'il faut vider le contenu du champ avant de le remplir
 // [in] sz : chaine à saisir
@@ -92,7 +267,7 @@ void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 
 	int i,len;
 	len=strlen(sz);
-	BYTE hiVk,loVk;
+	BYTE loVk;
 	WORD wKeyScan;
 	BOOL bCapsLock=FALSE;
 
@@ -120,42 +295,14 @@ void KBSim(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd)
 	for (i=0;i<len;i++)
 	{
 		wKeyScan=VkKeyScan(sz[i]);
-		hiVk=HIBYTE(wKeyScan);
-		loVk=LOBYTE(wKeyScan);
-		
-		// ISSUE#336 : si caps lock, on fait shift à l'envers puisque la désactivation de caps lock ne fonctionne pas (en citrix)
-		// Attention, il ne faut pas le faire si la touche control est aussi enfoncée sinon ça fout la zone (saisie de @ par exemple)
-		if (bCapsLock & !(hiVk & 2))
+		if (wKeyScan==0xffff) // cas des trémas, tilde et accents circonflexes -- ISSUE#388
 		{
-			if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+			SendDiatric(w,bCapsLock,sz[i]);
 		}
 		else
 		{
-			if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+			SendKey(w,bCapsLock,sz[i]);
 		}
-		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0); }
-		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
-
-		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
-		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
-		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
-		
-		TRACE((TRACE_DEBUG,_F_,"%04x",MapVirtualKey(loVk,MAPVK_VK_TO_CHAR)));
-		
-		// ISSUE#336 : si caps lock, on fait shift à l'envers puisque la désactivation de caps lock ne fonctionne pas (en citrix)
-		// Attention, il ne faut pas le faire si la touche control est aussi enfoncée sinon ça fout la zone (saisie de @ par exemple)
-		if (bCapsLock & !(hiVk & 2))
-		{
-			if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
-		}
-		else
-		{
-			if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
-		}
-		// ISSUE#163 : inversion des lignes pour CONTROL et MENU il relacher les touches dans le même sens sinon la touche ALT
-		//             reste enfoncée (uniquement constaté dans IE9, reproduit nulle par ailleurs)
-		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); } 
-		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); } 
 	}
 	Sleep(iTempo);
 
@@ -206,7 +353,7 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 
 	int i,len;
 	len=strlen(sz);
-	BYTE hiVk,loVk;
+	BYTE loVk;
 	WORD wKeyScan;
 	BOOL bCapsLock=FALSE;
 	int rc=-1;
@@ -243,42 +390,16 @@ int KBSimWeb(HWND w,BOOL bErase,int iTempo,const char *sz,BOOL bPwd,int iAction,
 			ChromeAccSelect(w,pTextField);
 		else
 			pTextField->accSelect(SELFLAG_TAKEFOCUS,vtChild);
-		if (w!=NULL) SetForegroundWindow(w); // ISSUE#285 : remet la fenêtre au 1er plan avant chaque frappe
-
+		
 		wKeyScan=VkKeyScan(sz[i]);
-		hiVk=HIBYTE(wKeyScan);
-		loVk=LOBYTE(wKeyScan);
-		
-		// ISSUE#336 : si caps lock, on fait shift à l'envers puisque la désactivation de caps lock ne fonctionne pas (en citrix)
-		// Attention, il ne faut pas le faire si la touche control est aussi enfoncée sinon ça fout la zone (saisie de @ par exemple)
-		if (bCapsLock & !(hiVk & 2)) 
+		if (wKeyScan==0xffff) // cas des trémas, tilde et accents circonflexes -- ISSUE#388
 		{
-			if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+			SendDiatric(w,bCapsLock,sz[i]);
 		}
 		else
 		{
-			if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),0,0);
+			SendKey(w,bCapsLock,sz[i]);
 		}
-		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),0,0); }
-		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),0,0);  } 
-
-		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),0,0);
-		keybd_event(loVk,LOBYTE(MapVirtualKey(loVk,0)),KEYEVENTF_KEYUP,0);
-		
-		// ISSUE#336 : si caps lock, on fait shift à l'envers puisque la désactivation de caps lock ne fonctionne pas (en citrix)
-		// Attention, il ne faut pas le faire si la touche control est aussi enfoncée sinon ça fout la zone (saisie de @ par exemple)
-		if (bCapsLock & !(hiVk & 2))
-		{
-			if (!(hiVk & 1)) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
-		}
-		else
-		{
-			if (hiVk & 1) keybd_event(VK_SHIFT,LOBYTE(MapVirtualKey(VK_SHIFT,0)),KEYEVENTF_KEYUP,0);
-		}
-		// ISSUE#163 : inversion des lignes pour CONTROL et MENU il relacher les touches dans le même sens sinon la touche ALT
-		//             reste enfoncée (uniquement constaté dans IE9, reproduit nulle part ailleurs)
-		if (hiVk & 2) { keybd_event(VK_CONTROL,LOBYTE(MapVirtualKey(VK_CONTROL,0)),KEYEVENTF_KEYUP,0); } 
-		if (hiVk & 4) { keybd_event(VK_MENU,LOBYTE(MapVirtualKey(VK_MENU,0)),KEYEVENTF_KEYUP,0); } 
 	}
 	Sleep(iTempo);
 	rc=0;
