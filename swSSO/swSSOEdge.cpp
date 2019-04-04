@@ -64,6 +64,8 @@ char *GetEdgeURL(HWND w,IUIAutomationElement **ppDocument)
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"gpIUIAutomation->CreatePropertyCondition()=0x%08lx",hr)); goto end; }
 	hr=pEdge->FindFirst(TreeScope_Descendants,pCondition,ppDocument);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pEdge->FindFirst()=0x%08lx",hr)); goto end; }
+	// ISSUE#393 : ppDocument peut être NULL même si hr=S_OK.
+	if (*ppDocument==NULL) { TRACE((TRACE_ERROR,_F_,"pEdge->FindFirst, rien trouve"));; goto end; }
 	hr=(*ppDocument)->get_CurrentName(&bstrURL);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"ppDocument->ElementFromHandle()=0x%08lx",hr)); goto end; }
 	pszURL=GetSZFromBSTR(bstrURL);
