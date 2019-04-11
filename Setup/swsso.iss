@@ -62,7 +62,7 @@ Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\services\swSSOCM\NetworkProvider
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; Flags: uninsdeletekey
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; ValueType: dword; ValueName: "PasswordChoiceLevel"; ValueData: "4"; Flags: uninsdeletevalue
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: none; Flags: uninsdeletekey
-Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "9A602531AF6E20DC4F974C968876B65EE783FECAC5D1A7CC1196F8EA778D7593"; Flags: uninsdeletevalue
+Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "72139A5AC82EE222BFB3A77ABB54066ADD15F7756A50F45354552B11C0CFB575"; Flags: uninsdeletevalue
 
 [CustomMessages]
 french.CreateStartupIcon=Lancer swSSO au démarrage de Windows
