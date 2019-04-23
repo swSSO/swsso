@@ -954,6 +954,8 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 									{
 										TRACE((TRACE_DEBUG,_F_,"Changement mot de passe appli %s induit par config %s",gptActions[i].szApplication,gptActions[params->iAction].szApplication));
 										strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
+										// ISSUE#395 : sauvegarde la valeur du nouveau mot de passe dans le .ini
+										WritePrivateProfileString(gptActions[i].szApplication,"pwdValue",gptActions[i].szPwdEncryptedValue,gszCfgFile);
 									}
 								}
 							}

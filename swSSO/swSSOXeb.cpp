@@ -789,6 +789,8 @@ int SSOWebAccessible(HWND w,int *piAction,int iBrowser)
 						strcpy_s(gptActions[i].szPwdEncryptedValue,sizeof(gptActions[i].szPwdEncryptedValue),pszEncryptedPassword);
 						free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
 						pszEncryptedPassword=NULL;
+						// ISSUE#395 : sauvegarde la valeur du nouveau mot de passe dans le .ini
+						WritePrivateProfileString(gptActions[i].szApplication,"pwdValue",gptActions[i].szPwdEncryptedValue,gszCfgFile);
 					}
 				}
 			}
