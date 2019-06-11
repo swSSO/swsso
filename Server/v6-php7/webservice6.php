@@ -22,6 +22,7 @@
 //                   qu'ils n'auront pas besoin de la gestion des domaines multiples
 //------------------------------------------------------------------------------
 // VERSION INTERNE : 6.7.0 (PHP7)
+// VERSION INTERNE : 6.7.1 -- ISSUE#396
 //------------------------------------------------------------------------------
 include('variables.php');
 include('util.php');
@@ -237,7 +238,7 @@ else if ($_GET['action']=="putconfig")
 	{
 		$szRequest="delete from "._TABLE_PREFIX_."configs_domains where configId=".$var_configId;
 		$result=mysqli_query($cnx,$szRequest);
-		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+		if (!$result) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 	}
 	
 	// V4 : gestion des catégories
@@ -246,20 +247,20 @@ else if ($_GET['action']=="putconfig")
 	{
 		$szRequest="update "._TABLE_PREFIX_."categ set label='".$var_categLabel."' WHERE id='".$var_categId."'";
     	$result=mysqli_query($cnx,$szRequest);
-		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+		if (!$result) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 		if (mysqli_affected_rows($cnx)==0) // la catégorie n'existe pas, on la crée
 		{
 			// lecture du dernier categId affecté
 			$szRequest="select max(id) from "._TABLE_PREFIX_."categ";
 	    	$result=mysqli_query($cnx,$szRequest);
-			if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+			if (!$result) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 			$max=mysqli_fetch_row($result);
 			$var_categId=$max[0];
 			if ($var_categId==0) $var_categId=10000; else $var_categId=$var_categId+1;
 			// incrément et ajout de la catégorie
 			$szRequest="insert into "._TABLE_PREFIX_."categ (id,label) values ('".$var_categId."','".$var_categLabel."')";
 	    	$result=mysqli_query($cnx,$szRequest);
-			if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+			if (!$result) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 		}
 	}
 
@@ -340,7 +341,7 @@ else if ($_GET['action']=="putconfig")
 									  _TABLE_PREFIX_."config.id='".$var_configId."'";
 		
 		$result=mysqli_query($cnx,$szRequest);
-		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+		if (!$result) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 		
 		// si jamais ce configId n'existe plus dans base, on l'ajoute.
 		if (mysqli_affected_rows($cnx)==0) $var_configId="0";
@@ -364,7 +365,7 @@ else if ($_GET['action']=="putconfig")
 	           $var_bKBSim."','".$var_szKBSim."',".$param_szName.",'".
 	           $var_categId."',".$param_szFullPathName.",".$var_lastModified.",".$var_pwdGroup.",".$var_autoLock.$szRequestOptions2.")";
 		$result=mysqli_query($cnx,$szRequest);
-		if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+		if (!$result) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 		$var_configId=mysqli_insert_id($cnx); // id passé en paramètre si !=0, nouvel id sinon
 	}
 	// V6 : gestion des domaines multiples, exemple : $var_domainId=1,3,5
@@ -397,7 +398,7 @@ else if ($_GET['action']=="putconfig")
 		{
 			$szRequest=$szRequest.";";
 			$result=mysqli_query($cnx,$szRequest);
-			if (!$result) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+			if (!$result) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 		}
 	}
 	sqliClose($cnx);
@@ -491,7 +492,7 @@ else if ($_GET['action']=="getconfigdomains")
 			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."domains where ".
 			"configId=".$var_configId." and "._TABLE_PREFIX_."configs_domains.domainId="._TABLE_PREFIX_."domains.id order by "._TABLE_PREFIX_."configs_domains.domainId";
 	$req=mysqli_query($cnx,$szRequest);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+	if (!$req) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 
 	header("Content-type: text/xml; charset=UTF-8");
 	if(mysqli_num_rows($req)==0) 
@@ -534,7 +535,7 @@ else if ($_GET['action']=="getdomainconfigs")
 			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."config where ".
 			"active=1 ".$conditions." and configId="._TABLE_PREFIX_."config.id";
 	$req=mysqli_query($cnx,$szRequest);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+	if (!$req) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 
 	header("Content-type: text/xml; charset=UTF-8");
 	if(mysqli_num_rows($req)==0) 
@@ -569,7 +570,7 @@ else if ($_GET['action']=="getdomainconfigsautopublish")
 			"from "._TABLE_PREFIX_."configs_domains,"._TABLE_PREFIX_."config where ".
 			"active=1 ".$conditions." and configId="._TABLE_PREFIX_."config.id order by "._TABLE_PREFIX_."config.id ASC";
 	$req=mysqli_query($cnx,$szRequest);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+	if (!$req) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 
 	header("Content-type: text/xml; charset=UTF-8");
 	if(mysqli_num_rows($req)!=0) 
