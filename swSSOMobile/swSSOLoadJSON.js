@@ -10,7 +10,7 @@ function parseAndStoreJSON(strJSON)
 	localStorage.setItem("strKeySalt",json.strKeySalt);
 	localStorage.setItem("strIniPwdValue",json.strIniPwdValue);
 	localStorage.setItem("json",JSON.stringify(json));
-	console.log("> parseAndStoreJSON()");
+	console.log("< parseAndStoreJSON()");
 }
 
 // charge le fichier JSON depuis une URL publique et stocke les données dans le localstorage
@@ -79,14 +79,24 @@ function loadFromGDrive(bAuth,fromGoogleAuth)
 	if (!bAuth || (params && params['access_token']))
 	{
 		var strURL='https://www.googleapis.com/drive/v3/files/'+strFileId+'?alt=media&key='+strGK;
-		if (bAuth) strURL+='&access_token='+params['access_token'];
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET',strURL);
 		console.log("strURL",strURL);
+		if (bAuth) 
+		{
+			// 0.10.045
+			// bloqué à partir de janvier 2020
+			// strURL+='&access_token='+params['access_token'];
+			// passage du token en http header
+			xhr.setRequestHeader("Authorization", 'Bearer '+params['access_token']);
+			console.log("Header Authorization: Bearer "+params['access_token'],strURL);
+		}
 		xhr.onload = function() {
 			if (xhr.status==200)
 			{
 				parseAndStoreJSON(xhr.responseText);
+				var strFileRevision=getFileRevision(bAuth,strFileId);
+				if (strFileRevision!=null) localStorage.setItem("strFileRevision",strFileRevision);
 				$.mobile.navigate("#PagePassword");
 			}
 			else
@@ -130,11 +140,16 @@ function createFileOnGDrive()
 	
 	if (params && params['access_token'])
 	{
-		var strUrl='https://www.googleapis.com/upload/drive/v3/files/?key='+strGK+'&uploadType=multipart&access_token=' + params['access_token'];
+		// 0.10.045
+		// access_token en paramètre bloqué à partir de janvier 2020
+		// var strUrl='https://www.googleapis.com/upload/drive/v3/files/?key='+strGK+'&uploadType=multipart&access_token=' + params['access_token'];
+		var strUrl='https://www.googleapis.com/upload/drive/v3/files/?key='+strGK+'&uploadType=multipart';
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST',strUrl);
 		xhr.setRequestHeader('Content-Type', 'multipart/related; boundary=foo_bar_baz');
+		xhr.setRequestHeader("Authorization", 'Bearer '+params['access_token']);
 		console.log("strUrl",strUrl);
+		console.log("Header Authorization: Bearer "+params['access_token'],strUrl);
 		xhr.onload = function() {
 			if (xhr.status==200)
 			{
@@ -175,3 +190,41 @@ function createFileOnGDrive()
 	console.log("< createFileOnGDrive()");
 }
 
+// récupère et stocke le n° de révision 
+function getFileRevision(bAuth,strFileId)
+{
+	console.log("> getFileRevision() bAuth",bAuth);
+	var strFileRevision=null;
+	var params=jQuery.parseJSON(localStorage.getItem('oauth2-params'));
+	console.log('params',params);
+	if (params!=null) console.log('access_token',params['access_token']);
+	
+	if (!bAuth || (params && params['access_token']))
+	{
+		var strURL='https://www.googleapis.com/drive/v3/files/'+strFileId+'/revisions?pageSize=1&key='+strGK;
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET',strURL);
+		console.log("strURL",strURL);
+		if (bAuth) 
+		{
+			// 0.10.045
+			// bloqué à partir de janvier 2020
+			// strURL+='&access_token='+params['access_token'];
+			// passage du token en http header
+			xhr.setRequestHeader("Authorization", 'Bearer '+params['access_token']);
+			console.log("Header Authorization: Bearer "+params['access_token'],strURL);
+		}
+		xhr.onload = function() {
+			if (xhr.status==200)
+			{
+				console.log(xhr.responseText);
+				var json=jQuery.parseJSON(xhr.responseText);
+				strFileRevision=json.revisions[0].id;
+				$.mobile.navigate("#PagePassword");
+			}
+		};
+		xhr.send();
+	}
+	console.log("< getFileRevision()");
+	return strFileRevision;
+}

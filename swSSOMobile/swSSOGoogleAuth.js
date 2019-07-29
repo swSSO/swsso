@@ -11,7 +11,7 @@
     form.setAttribute('action',oauth2Endpoint);
 
     var params = {'client_id': strCID,
-                  'redirect_uri': 'https://www.swsso.fr/mobile/',  // test : http://www.mytasks.fr:82/mobile/ | prod : 
+                  'redirect_uri': 'https://www.swsso.fr/mobile/',  // test : http://www.mytasks.fr:82/mobile/ | prod : https://www.swsso.fr/mobile/
                   'scope': 'https://www.googleapis.com/auth/drive.file',
                   'state': strPostAction,
                   'include_granted_scopes': 'true',

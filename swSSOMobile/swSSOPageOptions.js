@@ -42,6 +42,7 @@ function isPwdExpired()
 {
 	var pwdTimeOut=localStorage.getItem("pwdTimeOut");
 	if (pwdTimeOut==null) pwdTimeOut=5;
+	if (pwdTimeOut==-1) return false; // -1 : le mot de passe n'expire jamais
 	var dateLastLogin=localStorage.getItem("dateLastLogin");
 	if (dateLastLogin==null) // jamais connecté, demande le mot de passe
 	{

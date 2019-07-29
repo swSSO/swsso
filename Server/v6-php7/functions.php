@@ -18,6 +18,7 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------------
 // VERSION INTERNE : 6.7.1 (PHP7) -- ISSUE#391
+// VERSION INTERNE : 6.7.2 -- ISSUE#396
 //------------------------------------------------------------------------------
 
 // ------------------------------------------------------------
@@ -161,7 +162,7 @@ function getconfig($var_title,$var_url,$var_ids,$var_new,$var_mod,$var_old,$var_
 		}
 	}
 	$req=mysqli_query($cnx,$szRequest);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+	if (!$req) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 
 	// trace tous les appels et le résultat ne doit pas être bloquant en cas d'erreur
 	if (_LOGS_=="TRUE")
@@ -282,7 +283,7 @@ function showAll($active,$domain,$title,$export)
 				   $szWhere." group by id order by id";
 	}
 	$req=mysqli_query($cnx,$szRequest);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+	if (!$req) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 	if ($export==0)
 	{
 		header("Content-type: text/html; charset=UTF-8");
@@ -377,7 +378,7 @@ function showAll($active,$domain,$title,$export)
 				{
 					$szRequestDomains="select label,domainId from domains,configs_domains where domains.id=configs_domains.domainId and configs_domains.configId=".$ligne[0]." order by domainId";
 					$reqDomains=mysqli_query($cnx,$szRequestDomains);
-					if (!$reqDomains) { dbError($cnx,$szRequestDomains); dbClose($cnx); return; }
+					if (!$reqDomains) { sqliError($cnx,$szRequestDomains); dbClose($cnx); return; }
 					$szDomainsList="";
 					for ($j=0;$j<mysqli_num_rows($reqDomains);$j++)
 					{
@@ -424,7 +425,7 @@ function showAll($active,$domain,$title,$export)
 				{
 					$szRequestDomains="select label,domainId from domains,configs_domains where domains.id=configs_domains.domainId and configs_domains.configId=".$ligne[0]." order by domainId";
 					$reqDomains=mysqli_query($cnx,$szRequestDomains);
-					if (!$reqDomains) { dbError($cnx,$szRequestDomains); dbClose($cnx); return; }
+					if (!$reqDomains) { sqliError($cnx,$szRequestDomains); dbClose($cnx); return; }
 					$szDomainsList="";
 					for ($j=0;$j<mysqli_num_rows($reqDomains);$j++)
 					{
@@ -755,7 +756,7 @@ function showLogs($domain,$result,$title)
 	$szRequest="select horodate,title,url,result,domainId from "._TABLE_PREFIX_."logs ".$szWhere." order by horodate desc";      
 
 	$req=mysqli_query($cnx,$szRequest);
-	if (!$req) { dbError($cnx,$szRequest); dbClose($cnx); return; }
+	if (!$req) { sqliError($cnx,$szRequest); dbClose($cnx); return; }
 	echo "<table border=1 style=\"font-family:Verdana; font-size:11px;\">";
 	echo "<tr>";
 	echo "<th>Date</th>";
