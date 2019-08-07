@@ -1053,6 +1053,8 @@ BEGIN
     IDS_YES                 "Yes"
     IDS_NO                  "No"
     IDS_CONFIRM_RESET       "Do you really want to reset your safebox ? All your configurations will be deleted and downloaded again from the server."
+    IDS_CLOSE_APPNSITES_BEFORE_PWDCHG 
+                            "Please close 'swSSO web sites and applications management' window to start automatic password change on this application."
 END
 
 #endif    // English resources
@@ -1998,6 +2000,8 @@ BEGIN
     IDS_YES                 "Oui"
     IDS_NO                  "Non"
     IDS_CONFIRM_RESET       "Confirmez-vous la réinitialisation du coffre ? Toutes vos configurations seront supprimées et rechargées depuis le serveur."
+    IDS_CLOSE_APPNSITES_BEFORE_PWDCHG 
+                            "Veuillez fermer la fenêtre de gestion des sites et applications de swSSO pour permettre le changement automatique de votre mot de passe"
 END
 
 #endif    // French resources

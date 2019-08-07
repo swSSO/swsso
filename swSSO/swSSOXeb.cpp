@@ -756,8 +756,15 @@ int SSOWebAccessible(HWND w,int *piAction,int iBrowser)
 				}
 			}
 		}
-		if (p2!=NULL && p3!=NULL)
+		if (p2!=NULL && p3!=NULL) // réalisation du changement automatique de mot de passe
 		{
+			// ISSUE#394
+			while (gwAppNsites!=NULL && IsWindowVisible(gwAppNsites))
+			{
+				MessageBox(ptSuivi->w,GetString(IDS_CLOSE_APPNSITES_BEFORE_PWDCHG),"swSSO",MB_ICONEXCLAMATION | MB_OK);
+				Sleep(200);
+			}
+
 			// génère un mot de passe aléatoire en fonction de la politique
 			if (GenerateNewPassword(szNewPassword,gptActions[ptSuivi->iAction].szId2Value)!=0) goto end; 
 			// saisit le mot de passe défini dans les 2 champs

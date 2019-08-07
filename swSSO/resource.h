@@ -435,6 +435,7 @@
 #define IDS_YES                         42044
 #define IDS_NO                          42045
 #define IDS_CONFIRM_RESET               42046
+#define IDS_CLOSE_APPNSITES_BEFORE_PWDCHG 42047
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005
