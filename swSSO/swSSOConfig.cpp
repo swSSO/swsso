@@ -3623,6 +3623,8 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 
 	char *pszEncodedURL=NULL;
 	char *pszDecodedURL=NULL;
+	char *pszEncodedTitle=NULL;
+	char *pszDecodedTitle=NULL;
 
 	int iConfigId;
 	int iAction=-1;
@@ -3859,10 +3861,19 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"title"))
 			{
+				// ISSUE#399 : décodage du titre qui peut contenir 
+				pszEncodedTitle=(char*)malloc(LEN_TITLE+1);
+				if (pszEncodedTitle==NULL) { TRACE((TRACE_DEBUG,_F_,"malloc(%d)",LEN_TITLE+1)); goto end; }
+				rc=StoreNodeValue(pszEncodedTitle,LEN_TITLE+1,pChildElement);
+				pszDecodedTitle=HTTPDecodeParam(pszEncodedTitle);
+				if (pszDecodedTitle==NULL) goto end;
+
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
-					rc=StoreNodeValue(gptActions[ptiActions[i]].szTitle,sizeof(gptActions[ptiActions[i]].szTitle),pChildElement);
+					strcpy_s(gptActions[ptiActions[i]].szTitle,LEN_TITLE+1,pszDecodedTitle);
 				}
+				free(pszEncodedTitle); pszEncodedTitle=NULL;
+				free(pszDecodedTitle); pszDecodedTitle=NULL;
 			}
 			else if (CompareBSTRtoSZ(bstrNodeName,"url")) 
 			{
@@ -4296,6 +4307,8 @@ end:
 	if (ptiActions!=NULL) { free(ptiActions); ptiActions=NULL; }
 	if (pszEncodedURL!=NULL) free(pszEncodedURL);
 	if (pszDecodedURL!=NULL) free(pszDecodedURL);
+	if (pszEncodedTitle!=NULL) free(pszEncodedTitle);
+	if (pszDecodedTitle!=NULL) free(pszDecodedTitle);
 	if (bstrNodeName!=NULL) SysFreeString(bstrNodeName);
 	if (pDoc!=NULL) pDoc->Release();
 	if (pNode!=NULL)  pNode->Release();

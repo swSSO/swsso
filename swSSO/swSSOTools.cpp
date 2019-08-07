@@ -431,6 +431,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 //-----------------------------------------------------------------------------
 // Encode une URL -- ISSUE#332
 // Dans la version actuelle, seuls le caractère ? et & sont encodé en %3F et %26
+// ISSUE#399 : ajout de la conversion de + en %2B
 //-----------------------------------------------------------------------------
 char *HTTPEncodeURL(char *pszToEncode)
 {
@@ -451,7 +452,7 @@ char *HTTPEncodeURL(char *pszToEncode)
 	nbCarsToEncode=0;
 	for (i=0;i<lenToEncode;i++)
 	{
-		if (pszToEncode[i]=='?' || pszToEncode[i]=='&') nbCarsToEncode++;
+		if (pszToEncode[i]=='?' || pszToEncode[i]=='&' || pszToEncode[i]=='+') nbCarsToEncode++;
 	}
 	lenEncoded=lenToEncode+(2*nbCarsToEncode);
 	TRACE((TRACE_DEBUG,_F_,"lenToEncode=%d nbCarsToEncode=%d lenEncoded=%d",lenToEncode,nbCarsToEncode,lenEncoded));
@@ -471,6 +472,11 @@ char *HTTPEncodeURL(char *pszToEncode)
 			memcpy(pszEncoded+j,"%26",3);
 			j+=3;
 		}
+		else if (pszToEncode[i]=='+') 
+		{
+			memcpy(pszEncoded+j,"%2B",3);
+			j+=3;
+		}
 		else
 		{
 			pszEncoded[j]=pszToEncode[i];
@@ -488,6 +494,7 @@ end:
 //-----------------------------------------------------------------------------
 // Encode un paramètre à passer dans une URL
 // Dans la version actuelle, seul le caractère & est encodé en %26
+// ISSUE#399 : ajout de la conversion de + en %2B et ? en %3F
 //-----------------------------------------------------------------------------
 char *HTTPEncodeParam(char *pszToEncode)
 {
@@ -506,7 +513,7 @@ char *HTTPEncodeParam(char *pszToEncode)
 	nbCarsToEncode=0;
 	for (i=0;i<lenToEncode;i++)
 	{
-		if (pszToEncode[i]=='&') nbCarsToEncode++;
+		if (pszToEncode[i]=='?' || pszToEncode[i]=='&' || pszToEncode[i]=='+')  nbCarsToEncode++;
 	}
 	lenEncoded=lenToEncode+(2*nbCarsToEncode);
 	TRACE((TRACE_DEBUG,_F_,"lenToEncode=%d nbCarsToEncode=%d lenEncoded=%d",lenToEncode,nbCarsToEncode,lenEncoded));
@@ -516,9 +523,19 @@ char *HTTPEncodeParam(char *pszToEncode)
 	// copie avec encodage des caractères
 	for (i=0,j=0;i<lenToEncode;i++)
 	{
-		if (pszToEncode[i]=='&') 
+		if (pszToEncode[i]=='?') 
+		{
+			memcpy(pszEncoded+j,"%3F",3);
+			j+=3;
+		}
+		else if (pszToEncode[i]=='&') 
 		{
 			memcpy(pszEncoded+j,"%26",3);
+			j+=3;
+		}
+		else if (pszToEncode[i]=='+') 
+		{
+			memcpy(pszEncoded+j,"%2B",3);
 			j+=3;
 		}
 		else
@@ -540,6 +557,7 @@ end:
 //-----------------------------------------------------------------------------
 // Decode un paramètre URL recu dans le fichier XML
 // Dans la version actuelle, seul le caractère %26 est décodé en &
+// ISSUE#399 : ajout de la conversion de + en %2B et ? en %3F
 //-----------------------------------------------------------------------------
 char *HTTPDecodeParam(char *pszToDecode)
 {
@@ -554,7 +572,7 @@ char *HTTPDecodeParam(char *pszToDecode)
 	nbCarsToDecode=0;
 	for (i=0;i<lenToDecode;i++)
 	{
-		if (memcmp(pszToDecode+i,"%26",3)==0) nbCarsToDecode++;
+		if (memcmp(pszToDecode+i,"%26",3)==0 || memcmp(pszToDecode+i,"%3F",3)==0 ||memcmp(pszToDecode+i,"%2B",3)==0) nbCarsToDecode++;
 	}
 	lenDecoded=lenToDecode-(2*nbCarsToDecode);
 	TRACE((TRACE_DEBUG,_F_,"lenToDecode=%d nbCarsToDecode=%d lenDecoded=%d",lenToDecode,nbCarsToDecode,lenDecoded));
@@ -564,9 +582,19 @@ char *HTTPDecodeParam(char *pszToDecode)
 	// copie avec décodage des caractères
 	for (i=0,j=0;i<lenToDecode;j++)
 	{
-		if (memcmp(pszToDecode+i,"%26",3)==0)
+		if (memcmp(pszToDecode+i,"%3F",3)==0)
+		{
+			pszDecoded[j]='?';
+			i+=3;
+		}
+		else if (memcmp(pszToDecode+i,"%26",3)==0)
 		{
 			pszDecoded[j]='&';
+			i+=3;
+		}
+		else if (memcmp(pszToDecode+i,"%2B",3)==0)
+		{
+			pszDecoded[j]='+';
 			i+=3;
 		}
 		else
