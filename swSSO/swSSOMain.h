@@ -81,10 +81,6 @@ extern int giBadPwdCount;
 extern HWND gwAskPwd ; 
 
 extern BOOL gAESKeyInitialized[2];
-/*extern BYTE gAESKeyDataPart1[][AES256_KEY_PART_LEN];
-extern BYTE gAESKeyDataPart2[][AES256_KEY_PART_LEN];
-extern BYTE gAESKeyDataPart3[][AES256_KEY_PART_LEN];
-extern BYTE gAESKeyDataPart4[][AES256_KEY_PART_LEN];*/
 extern BYTE gAESProtectedKeyData[][AES256_KEY_LEN];
 
 // astuce pour limiter les modifs de code : ghKey1 et ghKey2 étaient les handle des 2 clés, ils deviennent les index pour le tableau des clés

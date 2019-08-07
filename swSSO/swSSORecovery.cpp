@@ -462,14 +462,9 @@ int RecoveryChangeAESKeyData(int iKeyId)
 	// (remarque : on tronque donc le username qui est limité par WIndows à UNLEN = 256)
 	ZeroMemory(Data,sizeof(Data));
 	
-	memcpy(Data,gAESProtectedKeyData,AES256_KEY_LEN);
+	memcpy(Data,gAESProtectedKeyData[iKeyId],AES256_KEY_LEN);
 	if (swUnprotectMemory(Data,AES256_KEY_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
-
-	/*memcpy(Data,gAESKeyDataPart1[iKeyId],AES256_KEY_PART_LEN);
-	memcpy(Data+AES256_KEY_PART_LEN,gAESKeyDataPart2[iKeyId],AES256_KEY_PART_LEN);
-	memcpy(Data+AES256_KEY_PART_LEN*2,gAESKeyDataPart3[iKeyId],AES256_KEY_PART_LEN);
-	memcpy(Data+AES256_KEY_PART_LEN*3,gAESKeyDataPart4[iKeyId],AES256_KEY_PART_LEN);*/
-
+		
 	lenUserName=strlen(gszUserName);
 	memcpy(Data+AES256_KEY_LEN,gszUserName,(lenUserName<100)?lenUserName:99); // au pire le 0 est là puisque ZeroMemory
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)Data,100+AES256_KEY_LEN,"Data :"));
@@ -668,7 +663,7 @@ end:
 // RecoveryResponse()
 //-----------------------------------------------------------------------------
 // Intégration de la réponse, format : (AESKeyData)Ks
-// Transchiffrement des mots de passe secondaire
+// Transchiffrement des mots de passe secondaires
 // Effacement de Ks du .ini
 //-----------------------------------------------------------------------------
 // [in] w : handle fenêtre parent pour affichage messages

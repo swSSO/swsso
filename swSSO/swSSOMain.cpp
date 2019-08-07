@@ -56,7 +56,6 @@ HWND gwAskPwd=NULL ;       // anti ré-entrance fenêtre saisie pwd
 
 // 1.12 : on ne conserve plus l'objet clé AES, mais seulement les données utiles dans 4 buffers différents
 BOOL gAESKeyInitialized[2];
-//BYTE gAESKeyDataPart1[2][AES256_KEY_PART_LEN];
 BYTE gAESProtectedKeyData[2][AES256_KEY_LEN];
 
 // astuce pour limiter les modifs de code : ghKey1 et ghKey2 étaient les handle des 2 clés, ils deviennent les index pour le tableau des clés
@@ -87,8 +86,6 @@ UINT guiNbPOPSSO;
 UINT guiNbWindows;
 UINT guiNbVisibleWindows;
 
-//BYTE gAESKeyDataPart2[2][AES256_KEY_PART_LEN];
-
 // 0.76
 BOOL gbRememberOnThisComputer=FALSE;
 BOOL gbRecoveryRunning=FALSE;
@@ -107,8 +104,6 @@ int giRefreshRightsTimer=0;
 
 int giOSVersion=OS_WINDOWS_OTHER;
 int giOSBits=OS_32;
-
-//BYTE gAESKeyDataPart3[2][AES256_KEY_PART_LEN];
 
 SID *gpSid=NULL;
 char *gpszRDN=NULL;
@@ -143,8 +138,6 @@ BOOL gbAdmin=FALSE;
 HBRUSH ghRedBrush=NULL;
 
 int giNbTranscryptError=0;
-
-//BYTE gAESKeyDataPart4[2][AES256_KEY_PART_LEN];
 
 time_t gtLastAskPwd=0;
 
