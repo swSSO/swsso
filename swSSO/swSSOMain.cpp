@@ -874,6 +874,12 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 		}
 		else if (gptActions[i].iType==XINSSO)
 		{
+			// ISSUE#400 : ajout du CheckURL pour qu'il s'applique également aux configurations Windows simplifiées
+			if (!CheckURL(w,i))
+			{
+				TRACE((TRACE_DEBUG,_F_,"Titre connu, mais URL ne matche pas, on passe !"));
+				goto suite;
+			}
 		}
 		else if (gptActions[i].iType==WEBSSO || gptActions[i].iType==XEBSSO) // action WEB, il faut vérifier que l'URL matche
 		{
