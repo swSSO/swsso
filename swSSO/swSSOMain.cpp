@@ -872,7 +872,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				goto suite;// URL popup authentification inconnue
 			}
 		}
-		else if (gptActions[i].iType==XINSSO)
+		else if (gptActions[i].iType==XINSSO && *(gptActions[i].szURL)!=0)
 		{
 			// ISSUE#400 : ajout du CheckURL pour qu'il s'applique également aux configurations Windows simplifiées
 			if (!CheckURL(w,i))
