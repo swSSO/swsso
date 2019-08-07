@@ -71,7 +71,7 @@ static void swXORBuff(BYTE *result, BYTE *key, int len)
 // swCreateAESKeyFromKeyDataParts()
 //-----------------------------------------------------------------------------
 // Crée la clé AES à partir des 4 morceaux de clé et l'importe dans le ghProv
-// L'appelant doit détruire la clé juste après utilisation pour quelle reste
+// L'appelant doit détruire la clé juste après utilisation pour qu'elle reste
 // le moins longtemps possible en mémoire
 //-----------------------------------------------------------------------------
 // [in] iKeyId = ID de la clé
@@ -82,7 +82,7 @@ static void swXORBuff(BYTE *result, BYTE *key, int len)
 static int swCreateAESKeyFromKeyDataParts(int iKeyId,HCRYPTKEY *phKey)
 {
 	TRACE((TRACE_ENTER,_F_,"iKeyId=%d",iKeyId));
-	int iAESKeySize;
+	int iAESKeySize=-1;
 	KEYBLOB *pAESKey=NULL;
 	BOOL brc;
 	int rc=-1;
@@ -100,20 +100,28 @@ static int swCreateAESKeyFromKeyDataParts(int iKeyId,HCRYPTKEY *phKey)
 	pAESKey->header.reserved=0;
 	pAESKey->header.aiKeyAlg=CALG_AES_256;
 	pAESKey->dwKeySize=AES256_KEY_LEN;
-	memcpy(pAESKey->KeyData,gAESKeyDataPart1[iKeyId],AES256_KEY_PART_LEN);
+	
+	memcpy(pAESKey->KeyData,gAESProtectedKeyData,AES256_KEY_LEN);
+	if (swUnprotectMemory(pAESKey->KeyData,AES256_KEY_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS)!=0) goto end;
+
+	/*memcpy(pAESKey->KeyData,gAESKeyDataPart1[iKeyId],AES256_KEY_PART_LEN);
 	memcpy(pAESKey->KeyData+AES256_KEY_PART_LEN,gAESKeyDataPart2[iKeyId],AES256_KEY_PART_LEN);
 	memcpy(pAESKey->KeyData+AES256_KEY_PART_LEN*2,gAESKeyDataPart3[iKeyId],AES256_KEY_PART_LEN);
-	memcpy(pAESKey->KeyData+AES256_KEY_PART_LEN*3,gAESKeyDataPart4[iKeyId],AES256_KEY_PART_LEN);
+	memcpy(pAESKey->KeyData+AES256_KEY_PART_LEN*3,gAESKeyDataPart4[iKeyId],AES256_KEY_PART_LEN);*/
+	
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(BYTE*)pAESKey,iAESKeySize,"pAESKey (iAESKeySize=%d)",iAESKeySize));
 	brc= CryptImportKey(ghProv,(LPBYTE)pAESKey,iAESKeySize,NULL,0,phKey);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptImportKey()=0x%08lx",GetLastError())); goto end; }
 	rc=0;
 end:
-	if (pAESKey!=NULL) free(pAESKey);
+	if (pAESKey!=NULL) 
+	{
+		if (iAESKeySize!=-1) SecureZeroMemory(pAESKey,iAESKeySize);
+		free(pAESKey);
+	}
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
 	return rc;
 }
-
 
 //*****************************************************************************
 //                             FONCTIONS PUBLIQUES
@@ -502,10 +510,15 @@ int swStoreAESKey(BYTE *AESKeyData,int iKeyId)
 
 	// stocke les données permettant de reconstruire la clé 
 	gAESKeyInitialized[iKeyId]=TRUE;
-	memcpy_s(gAESKeyDataPart1[iKeyId],AES256_KEY_PART_LEN,AESKeyData,AES256_KEY_PART_LEN);
+	
+	/*memcpy_s(gAESKeyDataPart1[iKeyId],AES256_KEY_PART_LEN,AESKeyData,AES256_KEY_PART_LEN);
 	memcpy_s(gAESKeyDataPart2[iKeyId],AES256_KEY_PART_LEN,AESKeyData+AES256_KEY_PART_LEN,AES256_KEY_PART_LEN);
 	memcpy_s(gAESKeyDataPart3[iKeyId],AES256_KEY_PART_LEN,AESKeyData+AES256_KEY_PART_LEN*2,AES256_KEY_PART_LEN);
-	memcpy_s(gAESKeyDataPart4[iKeyId],AES256_KEY_PART_LEN,AESKeyData+AES256_KEY_PART_LEN*3,AES256_KEY_PART_LEN);
+	memcpy_s(gAESKeyDataPart4[iKeyId],AES256_KEY_PART_LEN,AESKeyData+AES256_KEY_PART_LEN*3,AES256_KEY_PART_LEN);*/
+	
+	swProtectMemory(AESKeyData,AES256_KEY_LEN,CRYPTPROTECTMEMORY_SAME_PROCESS);
+	memcpy_s(gAESProtectedKeyData[iKeyId],AES256_KEY_LEN,AESKeyData,AES256_KEY_LEN);
+			
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));

@@ -146,6 +146,9 @@
     <ClCompile Include="swSSOMobile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="swSSOProtectMemory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="hand.cur">
@@ -239,6 +242,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="swSSOMobile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOProtectMemory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

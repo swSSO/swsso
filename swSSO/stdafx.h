@@ -88,6 +88,8 @@
 #include "swSSOAdminNoPwd.h"
 #include "swSSOAdmin.h"
 #include "swSSOMobile.h"
+#include "swSSOProtectMemory.h"
+
 
 
 

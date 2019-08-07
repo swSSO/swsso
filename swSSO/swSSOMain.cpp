@@ -56,7 +56,9 @@ HWND gwAskPwd=NULL ;       // anti ré-entrance fenêtre saisie pwd
 
 // 1.12 : on ne conserve plus l'objet clé AES, mais seulement les données utiles dans 4 buffers différents
 BOOL gAESKeyInitialized[2];
-BYTE gAESKeyDataPart1[2][AES256_KEY_PART_LEN];
+//BYTE gAESKeyDataPart1[2][AES256_KEY_PART_LEN];
+BYTE gAESProtectedKeyData[2][AES256_KEY_LEN];
+
 // astuce pour limiter les modifs de code : ghKey1 et ghKey2 étaient les handle des 2 clés, ils deviennent les index pour le tableau des clés
 const int ghKey1=0; 
 const int ghKey2=1;
@@ -85,7 +87,7 @@ UINT guiNbPOPSSO;
 UINT guiNbWindows;
 UINT guiNbVisibleWindows;
 
-BYTE gAESKeyDataPart2[2][AES256_KEY_PART_LEN];
+//BYTE gAESKeyDataPart2[2][AES256_KEY_PART_LEN];
 
 // 0.76
 BOOL gbRememberOnThisComputer=FALSE;
@@ -106,7 +108,7 @@ int giRefreshRightsTimer=0;
 int giOSVersion=OS_WINDOWS_OTHER;
 int giOSBits=OS_32;
 
-BYTE gAESKeyDataPart3[2][AES256_KEY_PART_LEN];
+//BYTE gAESKeyDataPart3[2][AES256_KEY_PART_LEN];
 
 SID *gpSid=NULL;
 char *gpszRDN=NULL;
@@ -142,7 +144,7 @@ HBRUSH ghRedBrush=NULL;
 
 int giNbTranscryptError=0;
 
-BYTE gAESKeyDataPart4[2][AES256_KEY_PART_LEN];
+//BYTE gAESKeyDataPart4[2][AES256_KEY_PART_LEN];
 
 time_t gtLastAskPwd=0;
 
@@ -2244,6 +2246,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 
 	// initialisation du module crypto
 	if (swCryptInit()!=0) { iError=-1; goto end; }
+	if (swProtectMemoryInit()!=0) { iError=-1; goto end; }
 	
 	// chargement des policies (password, global et enterprise)
 	LoadPolicies();
@@ -2818,6 +2821,7 @@ end:
 	}
 	if (gpIUIAutomation!=NULL) gpIUIAutomation->Release();
 	// on libère tout avant de terminer
+	swProtectMemoryTerm();
 	swCryptTerm();
 	//SSOWebTerm(); // 1.12B3-TI-TIE4
 	UnloadIcons();

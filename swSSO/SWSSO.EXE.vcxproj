@@ -250,6 +250,7 @@
     <ClCompile Include="swSSOMain.cpp" />
     <ClCompile Include="swSSOMobile.cpp" />
     <ClCompile Include="swSSOPolicies.cpp" />
+    <ClCompile Include="swSSOProtectMemory.cpp" />
     <ClCompile Include="swSSORecovery.cpp" />
     <ClCompile Include="swSSOSelectAccount.cpp" />
     <ClCompile Include="swSSOTools.cpp" />
@@ -285,6 +286,7 @@
     <ClInclude Include="swSSOMain.h" />
     <ClInclude Include="swSSOMobile.h" />
     <ClInclude Include="swSSOPolicies.h" />
+    <ClInclude Include="swSSOProtectMemory.h" />
     <ClInclude Include="swSSORecovery.h" />
     <ClInclude Include="swSSOSelectAccount.h" />
     <ClInclude Include="swSSOTools.h" />
