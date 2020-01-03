@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -4835,20 +4835,32 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 	TRACE((TRACE_ENTER,_F_, ""));
 	char *pszIEWindowTitle=NULL;
 	char *p=NULL;
-	
+	int i;
+
+	// Nouveau avec le signup, recherche si on a une config créée par signup pour ce FQDN
+	i=giNbActions; // valeur par défaut = création d'une nouvelle action
+	if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4 || iBrowser==BROWSER_EDGE)
+	{
+		for (i=0;i<giNbActions;i++)
+		{
+			if (gptActions[i].bSafe && *gptActions[i].szURL!=0 && strstr(pszURL,gptActions[i].szURL)!=NULL)
+			{
+				goto suite; // oui, oui, je sais
+			}
+		}
+	}
+	// si pas trouvé, i=giNbActions, donc c'est OK pour l'ajout d'une nouvelle action
 	ZeroMemory(&gptActions[giNbActions],sizeof(T_ACTION));
-	//gptActions[giNbActions].wLastDetect=NULL;
-	//gptActions[giNbActions].tLastDetect=-1;
-	gptActions[giNbActions].tLastSSO=-1;
-	gptActions[giNbActions].wLastSSO=NULL;
-	gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
-	gptActions[giNbActions].bActive=TRUE; //0.93B6
-	gptActions[giNbActions].bAutoLock=TRUE;
-	//gptActions[giNbActions].bAutoPublish=FALSE;
-	gptActions[giNbActions].bConfigSent=FALSE;
-	gptActions[giNbActions].bSaved=FALSE; // 0.93B6 ISSUE#55
-	// gptActions[giNbActions].iDomainId=1; //  1.00 ISSUE#112
-	gptActions[giNbActions].iPwdGroup=-1;
+suite:
+	gptActions[i].tLastSSO=-1;
+	gptActions[i].wLastSSO=NULL;
+	gptActions[i].iWaitFor=giWaitBeforeNewSSO;
+	gptActions[i].bActive=TRUE; 
+	gptActions[i].bAutoLock=TRUE;
+	gptActions[i].bConfigSent=FALSE;
+	gptActions[i].bSaved=FALSE; 
+	gptActions[i].iPwdGroup=-1;
+	gptActions[i].bSafe=FALSE;
 	if (iType==UNK)
 	{
 		// le UNK était utile dans la requete WEB pour récupérer configs WEB et XEB, maintenant il 
@@ -4857,13 +4869,13 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 		// if (iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4) iType=XEBSSO;
 		if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4 || iBrowser==BROWSER_EDGE) iType=XEBSSO;
 	}
-	gptActions[giNbActions].iType=iType;
+	gptActions[i].iType=iType;
 
 	if (iBrowser==BROWSER_CHROME || iBrowser==BROWSER_IE || iBrowser==BROWSER_FIREFOX3 || iBrowser==BROWSER_FIREFOX4 || iBrowser==BROWSER_EDGE || iType==XINSSO)
 	{
-		strcpy_s(gptActions[giNbActions].szId1Name,sizeof(gptActions[giNbActions].szId1Name),"-1");
-		strcpy_s(gptActions[giNbActions].szPwdName,sizeof(gptActions[giNbActions].szPwdName),"1");
-		strcpy_s(gptActions[giNbActions].szValidateName,sizeof(gptActions[giNbActions].szValidateName),"[ENTER]");
+		strcpy_s(gptActions[i].szId1Name,sizeof(gptActions[i].szId1Name),"-1");
+		strcpy_s(gptActions[i].szPwdName,sizeof(gptActions[i].szPwdName),"1");
+		strcpy_s(gptActions[i].szValidateName,sizeof(gptActions[i].szValidateName),"[ENTER]");
 	}
 	// construction du titre
 	if (iType==WEBSSO || iType==XEBSSO) // tronque la fin du titre qui contient le nom du navigateur
@@ -4892,39 +4904,39 @@ void GenerateConfigAndOpenAppNsites(int iType, int iBrowser, char *pszTitle, cha
 		p=strstr(pszTitle," - Maxthon");
 		if (p!=NULL) *p=0;
 	}
-	strncpy_s(gptActions[giNbActions].szTitle,sizeof(gptActions[giNbActions].szTitle),pszTitle,LEN_TITLE-1);
+	strncpy_s(gptActions[i].szTitle,sizeof(gptActions[i].szTitle),pszTitle,LEN_TITLE-1);
 	// 0.92B4 : ajoute une * à la fin du titre suggéré
 	// 0.92B6 : sauf si c'est une popup dans ce cas le titre est toujours complet ?
-	if (iType!=POPSSO) strcat_s(gptActions[giNbActions].szTitle,sizeof(gptActions[giNbActions].szTitle),"*"); 
+	if (iType!=POPSSO) strcat_s(gptActions[i].szTitle,sizeof(gptActions[i].szTitle),"*"); 
 	// construction du application name
-	strncpy_s(gptActions[giNbActions].szApplication,sizeof(gptActions[giNbActions].szApplication),pszTitle,LEN_APPLICATION_NAME-5);
-	GenerateApplicationName(giNbActions,gptActions[giNbActions].szApplication);
+	strncpy_s(gptActions[i].szApplication,sizeof(gptActions[i].szApplication),pszTitle,LEN_APPLICATION_NAME-5);
+	GenerateApplicationName(i,gptActions[i].szApplication);
 	// construction URL
 	if (pszURL!=NULL)
 	{
 		// ISSUE#305 : avec Chrome, si l'URL ne commence pas par http://, on ajoute https (avant la 1.22, on ajoutait http cf. ISSUE#385)
 		if (iBrowser==BROWSER_CHROME && _strnicmp(pszURL,"http://",7)!=0 && _strnicmp(pszURL,"https://",8)!=0 && _strnicmp(pszURL,"file://",7)!=0)
 		{
-			strcpy_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),"https://"); // ISSUE#385
-			strncat_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),pszURL,LEN_URL-1);
+			strcpy_s(gptActions[i].szURL,sizeof(gptActions[i].szURL),"https://"); // ISSUE#385
+			strncat_s(gptActions[i].szURL,sizeof(gptActions[i].szURL),pszURL,LEN_URL-1);
 		}
 		else
 		{
-			strncpy_s(gptActions[giNbActions].szURL,sizeof(gptActions[giNbActions].szURL),pszURL,LEN_URL-1);
+			strncpy_s(gptActions[i].szURL,sizeof(gptActions[i].szURL),pszURL,LEN_URL-1);
 		}
 	}
 
-	TRACE((TRACE_DEBUG,_F_,"giNbActions=%d iType=%d szURL=%s",giNbActions,gptActions[giNbActions].iType,gptActions[giNbActions].szURL));
+	TRACE((TRACE_DEBUG,_F_,"i=%d iType=%d szURL=%s",i,gptActions[i].iType,gptActions[i].szURL));
 	// et hop, c'est fait (la sauvegarde sera faite ou pas par l'utilisateur dans la fenêtre appNsites)
 	// si la fenêtre appnsites est ouverte, il ne faut pas faire le backup car il a été fait au moment de l'ouverture de la fenêtre 
 	// et on veut que l'annulation annule tout ce qu'il a fait depuis. Sinon on fait le backup avant d'ouvrir la fenêtre.
 	if (gwAppNsites==NULL) BackupAppsNcategs(); // il faut bien le faire avant le ++
-	giNbActions++; 
+	if (i==giNbActions) giNbActions++; 
 	if (gwAppNsites!=NULL) 
 	{
 		EnableWindow(GetDlgItem(gwAppNsites,IDAPPLY),TRUE); // ISSUE#114
 	}
-	ShowAppNsites(giNbActions-1,FALSE);
+	ShowAppNsites(i,FALSE);
 
 	if (pszIEWindowTitle!=NULL) free(pszIEWindowTitle);
 	TRACE((TRACE_LEAVE,_F_, ""));

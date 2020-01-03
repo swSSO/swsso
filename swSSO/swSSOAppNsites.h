@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -164,4 +164,14 @@ void DeleteDomain(HWND w);
 int GetDomainIndex(int id);
 int UploadDomain(HWND w,int iDomain);
 
+typedef struct
+{
+	HWND gw;
+} T_SUBCLASS_DATA;
+
+extern T_SUBCLASS_DATA gSubClassData;
+
 extern BOOL gbAjoutDeCompteEnCours;
+
+LRESULT CALLBACK PwdProc(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+LRESULT CALLBACK IdProc(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR uIdSubclass, DWORD_PTR dwRefData);

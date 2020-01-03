@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -100,6 +100,7 @@ BOOL gbShowSystrayIcon=TRUE;
 BOOL gbEnableOption_ShowAdditionalIds=TRUE;
 // ISSUE#374
 BOOL gbEnableOption_Reset=FALSE;
+BOOL gbShowMenu_SignUp=TRUE;
 
 // REGKEY_PASSWORD_POLICY
 int giPwdPolicy_MinLength=8;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
@@ -981,6 +982,7 @@ suite:;
 	TRACE((TRACE_INFO,_F_,"gbShowSystrayIcon=%d"			,gbShowSystrayIcon));
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_ShowAdditionalIds=%d",gbEnableOption_ShowAdditionalIds));
 	TRACE((TRACE_INFO,_F_,"gbEnableOption_Reset=%d"			,gbEnableOption_Reset));
+	TRACE((TRACE_INFO,_F_,"gbShowMenu_SignUp=%d"			,gbShowMenu_SignUp));
 	TRACE((TRACE_INFO,_F_,"PASSWORD POLICY-------------"));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLength=%d"		,giPwdPolicy_MinLength));
 	TRACE((TRACE_INFO,_F_,"giPwdPolicy_MinLetters=%d"		,giPwdPolicy_MinLetters));
@@ -1433,7 +1435,13 @@ void LoadGlobalOrDomainPolicies(char *pcszDomain)
 		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_RESET,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbEnableOption_Reset=(BOOL)dwValue; 
 
-
+		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		rc=RegQueryValueEx(hKey,REGVALUE_SHOWMENU_SIGNUP,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		if (rc==ERROR_SUCCESS) 
+			gbShowMenu_SignUp=(BOOL)dwValue; 
+		else // la clé policy existe mais la valeur n'existe pas : on cache ce nouveau menu qui est affiché par défaut dans la version non entreprise
+			gbShowMenu_SignUp=FALSE;
+		
 		RegCloseKey(hKey);
 	}
 

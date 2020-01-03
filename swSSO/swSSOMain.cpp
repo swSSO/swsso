@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="122";	// 101 = 1.01
-const char gcszCurrentBeta[]="1231";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1232";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 HWND gwChooseConfig=NULL;
@@ -280,10 +280,8 @@ int LaunchTimer(void)
 		giTimer=SetTimer(NULL,0,giDetectionFrequency,TimerProc); // ISSUE#379 - timer configurable
 		if (giTimer==0) 
 		{
-#ifdef TRACE_ACTIVEES
 			DWORD err=GetLastError();
 			TRACE((TRACE_ERROR,_F_,"SetTimer() : %ld (0x%08lx)",err,err));
-#endif
 			goto end;
 		}
 	}
@@ -556,13 +554,11 @@ int ChooseConfig(HWND w,int *piAction)
 			config.iNbConfigs++;
 		}
 	}
-#ifdef TRACES_ACTIVEES
 	TRACE((TRACE_INFO,_F_,"Liste des configurations possibles :"));
 	for (i=0;i<config.iNbConfigs;i++) 
 	{
 		TRACE((TRACE_INFO,_F_,"%d : %d",i,config.tabConfigs[i]));
 	}
-#endif
 	// si aucune config trouvée autre que celle initiale, on sort et on fait le SSO avec cette config
 	if (config.iNbConfigs==1) { giLaunchedApp=-1; rc=0; goto end; }
 

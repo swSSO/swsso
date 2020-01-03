@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -99,6 +99,7 @@
 #define REGVALUE_SHOW_ADDITIONAL_IDS				"ShowAdditionalIds"
 // ISSUE#374
 #define REGVALUE_ENABLEOPTION_RESET					"ShowResetButton"
+#define REGVALUE_SHOWMENU_SIGNUP					"ShowSignUpMenu"
 
 extern BOOL gbEnableOption_Portal;
 extern BOOL gbEnableOption_ViewIni;
@@ -163,6 +164,7 @@ extern BOOL gbShowSystrayIcon;
 extern BOOL gbEnableOption_ShowAdditionalIds;
 // ISSUE#374
 extern BOOL gbEnableOption_Reset;
+extern BOOL gbShowMenu_SignUp;
 
 //-----------------------------------------------------------------------------
 #define REGKEY_PASSWORD_POLICY "SOFTWARE\\swSSO\\PasswordPolicy"

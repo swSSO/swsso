@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -134,6 +134,10 @@ void KillswSSO(void);
 
 int GenerateNewPassword(char *pszNewPassword,char *pszPolicy);
 
+#define NB_MAX_DISTINCT_IDS 100
+int GetDistinctIds(void);
+extern char gszDistinctIds[NB_MAX_DISTINCT_IDS][LEN_ID+1];
+
 // comme RESEDIT est un peu merdique et me change la taille du séparateur quand il a envie
 // cette macro (à positionner dans WM_INITDIALOG) le replace correctement !
 #define MACRO_SET_SEPARATOR { RECT rectSeparator; GetClientRect(w,&rectSeparator); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,50,rectSeparator.right+1,2,FALSE); }
@@ -141,6 +145,5 @@ int GenerateNewPassword(char *pszNewPassword,char *pszPolicy);
 #define MACRO_SET_SEPARATOR_140 { RECT rectSeparator; GetClientRect(w,&rectSeparator); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,140,rectSeparator.right+1,2,FALSE); }
 #define MACRO_SET_SEPARATOR_90 { RECT rectSeparator; GetClientRect(w,&rectSeparator); MoveWindow(GetDlgItem(w,IDC_SEPARATOR),0,90,rectSeparator.right+1,2,FALSE); }
 
-
-
-
+char* UniversalGetFQDN(HWND w);
+char* UniversalGetURL(HWND w);

@@ -512,7 +512,7 @@ BEGIN
     PUSHBUTTON      "&Open",PB_OUVRIR,280,147,50,14
     EDITTEXT        TX_PORTAL,99,120,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT        TX_CONFIGFILE,99,151,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Copyright © 2004-2019 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Copyright © 2004-2020 - Sylvain Werdefroy",-1,47,24,155,10
     LTEXT           "Statistics",TX_STATISTIQUES,7,196,31,10
     LTEXT           "Number of connections:",-1,17,210,77,8
     LTEXT           "0",TX_NBSSO,101,210,230,8
@@ -523,7 +523,7 @@ BEGIN
     LTEXT           "Configuration file:",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,55,262,18
     LTEXT           "License",TX_LICENCE,7,40,28,11
-    LTEXT           "1.23b1 (8/8/2019)",TX_ABOUT,47,12,154,8
+    LTEXT           "1.23b2 (11/22/2019)",TX_ABOUT,47,12,154,8
     LTEXT           "swSSO Mobile file:",TX_PORTAL2,17,120,75,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -590,6 +590,27 @@ BEGIN
     PUSHBUTTON      "&Test proxy settings",PB_TEST,243,190,86,14
     DEFPUSHBUTTON   "&I feel lucky ;-)",PB_CHANCE,243,208,86,14
     LTEXT           "minutes.",TX_PROXY_USER4,153,54,28,8
+END
+
+IDD_SIGNUP DIALOGEX 0, 0, 318, 159
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sign up for this site"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "1. Enter login or email address for this site, then click Copy and paste value on the website (right-click and Paste or CTRL+V)",TX_FRAME1,47,8,254,18
+    LTEXT           "2. Repeat operation for password. Once sign up completed on the website, click Save.",TX_FRAME2,47,27,254,18
+    LTEXT           "Tip: right click login or password entry fields to use existing logins or generate strong passwords.",TX_FRAME3,93,112,209,18
+    LTEXT           "&Login or e-mail:",IDC_STATIC,17,64,76,8
+    EDITTEXT        TB_ID,93,62,171,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Copier",PB_COPY_ID,271,61,30,14
+    LTEXT           "&Password :",IDC_STATIC,17,83,84,8
+    EDITTEXT        TB_PWD,93,81,171,13,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        TB_PWD_CLEAR,93,81,171,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Copier",PB_COPY_PWD,271,80,30,14
+    CONTROL         "&Reveal password",CK_VIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,100,71,8
+    DEFPUSHBUTTON   "&Save",IDOK,206,137,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,261,137,50,14
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,7,50,295,1
 END
 
 
@@ -707,6 +728,14 @@ BEGIN
         RIGHTMARGIN, 338
         BOTTOMMARGIN, 214
     END
+
+    IDD_SIGNUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 311
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -740,6 +769,22 @@ BEGIN
     END
 END
 
+IDM_ID_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Cancel",                     IDM_SWUNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Cut",                        IDM_SWCUT
+        MENUITEM "C&opy",                       IDM_SWCOPY
+        MENUITEM "&Paste",                      IDM_SWPASTE
+        MENUITEM "&Clear selection",            IDM_SWCLEARSELECTION
+        MENUITEM SEPARATOR
+        MENUITEM "&Select all",                 IDM_SWSELECTALL
+        MENUITEM SEPARATOR
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -762,6 +807,11 @@ BEGIN
 END
 
 PSP_BROWSER AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SIGNUP AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -1055,6 +1105,13 @@ BEGIN
     IDS_CONFIRM_RESET       "Do you really want to reset your safebox ? All your configurations will be deleted and downloaded again from the server."
     IDS_CLOSE_APPNSITES_BEFORE_PWDCHG 
                             "Please close 'swSSO web sites and applications management' window to start automatic password change on this application."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MENU_SIGNUP         "Sign up for this site..."
+    IDS_ERROR_URL           "Cannot read URL. Please open your browser in foreground and retry."
+    IDS_TITLE_SIGNUP        "Sign up for:"
 END
 
 #endif    // English resources
@@ -1387,11 +1444,11 @@ BEGIN
     LTEXT           "Copiez ici les informations reçues de votre support ou utilisez le bouton Ouvrir, puis cliquez sur valider. Pour regénérer les informations à envoyer au support, cliquez sur le bouton ""Regénérer le challenge""",TX_FRAME,46,3,273,26
 END
 
-IDD_SAVE_NEW_APP_PWD DIALOG 0, 0, 277, 131
+IDD_SAVE_NEW_APP_PWD DIALOGEX 0, 0, 277, 131
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOPMOST
 CAPTION "swSSO - Mise en coffre du nouveau mot de passe"
-FONT 8, "Tahoma"
+FONT 8, "Tahoma", 0, 0, 0x0
 BEGIN
     LTEXT           "&Nouveau mot de passe :",IDC_STATIC,7,95,84,8
     EDITTEXT        TB_PWD,92,93,146,13,ES_PASSWORD | ES_AUTOHSCROLL
@@ -1456,7 +1513,7 @@ BEGIN
     PUSHBUTTON      "&Ouvrir",PB_OUVRIR,280,147,50,14
     EDITTEXT        TX_PORTAL,99,120,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT        TX_CONFIGFILE,99,151,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Copyright © 2004-2019 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Copyright © 2004-2020 - Sylvain Werdefroy",-1,47,24,155,10
     LTEXT           "Statistiques",TX_STATISTIQUES,7,196,41,10
     LTEXT           "Nombre de SSO réalisés :",-1,17,210,82,8
     LTEXT           "0",TX_NBSSO,99,210,230,8
@@ -1467,7 +1524,7 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,40,28,11
-    LTEXT           "1.23b1 (08/08/2019)",TX_ABOUT,47,12,157,8
+    LTEXT           "1.23b2 (22/11/2019)",TX_ABOUT,47,12,157,8
     LTEXT           "Fichier swSSO Mobile :",TX_PORTAL2,17,120,78,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -1567,6 +1624,27 @@ BEGIN
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,256,1
 END
 
+IDD_SIGNUP DIALOGEX 0, 0, 318, 159
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "S'inscrire sur ce site"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "1. Saisissez l'identifiant ou l'adresse e-mail pour ce site, puis cliquez sur Copier et enfin collez la valeur sur le site (clic-droit / coller ou CTRL+V).",TX_FRAME1,47,8,254,18
+    LTEXT           "2. Répétez l'opération avec le mot de passe puis, une fois l'enregistrement finalisé sur le site, cliquez sur Enregistrer.",TX_FRAME2,47,27,254,18
+    LTEXT           "Astuce : gagnez du temps, faites clic-droit sur les champs Identifiant et Mot de passe, puis laissez-vous guider !",TX_FRAME3,93,112,209,18
+    LTEXT           "&Identifiant ou e-mail :",IDC_STATIC,17,64,76,8
+    EDITTEXT        TB_ID,93,62,171,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Copier",PB_COPY_ID,271,61,30,14
+    LTEXT           "&Mot de passe :",IDC_STATIC,17,83,84,8
+    EDITTEXT        TB_PWD,93,81,171,13,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        TB_PWD_CLEAR,93,81,171,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Copier",PB_COPY_PWD,271,80,30,14
+    CONTROL         "&Afficher en clair",CK_VIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,100,71,8
+    DEFPUSHBUTTON   "&Enregistrer",IDOK,206,137,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,261,137,50,14
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,7,50,295,1
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1592,6 +1670,14 @@ BEGIN
     BEGIN
     END
 
+    IDD_CHANGE_PWD, DIALOG
+    BEGIN
+    END
+
+    IDD_CONFIRM_NEW_APP_PWD, DIALOG
+    BEGIN
+    END
+
     IDD_FORCE_CHANGE_PWD, DIALOG
     BEGIN
     END
@@ -1609,6 +1695,10 @@ BEGIN
     END
 
     IDD_PWD_ADMIN_ASK, DIALOG
+    BEGIN
+    END
+
+    IDD_SAVE_NEW_APP_PWD, DIALOG
     BEGIN
     END
 
@@ -1636,6 +1726,14 @@ BEGIN
 
     IDD_ASK_AD_PWD, DIALOG
     BEGIN
+    END
+
+    IDD_SIGNUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 311
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1670,6 +1768,22 @@ BEGIN
     END
 END
 
+IDM_ID_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Annuler",                    IDM_SWUNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Couper",                     IDM_SWCUT
+        MENUITEM "Co&pier",                     IDM_SWCOPY
+        MENUITEM "C&oller",                     IDM_SWPASTE
+        MENUITEM "&Supprimer",                  IDM_SWCLEARSELECTION
+        MENUITEM SEPARATOR
+        MENUITEM "Sélectionner &tout",          IDM_SWSELECTALL
+        MENUITEM SEPARATOR
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1697,6 +1811,16 @@ BEGIN
 END
 
 PSP_BROWSER AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SIGNUP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SAVE_NEW_APP_PWD AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -2002,6 +2126,13 @@ BEGIN
     IDS_CONFIRM_RESET       "Confirmez-vous la réinitialisation du coffre ? Toutes vos configurations seront supprimées et rechargées depuis le serveur."
     IDS_CLOSE_APPNSITES_BEFORE_PWDCHG 
                             "Veuillez fermer la fenêtre de gestion des sites et applications de swSSO pour permettre le changement automatique de votre mot de passe"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MENU_SIGNUP         "S'inscrire sur ce site..."
+    IDS_ERROR_URL           "Impossible de lire l'URL de ce site. Veuillez mettre le navigateur au premier plan et réessayer."
+    IDS_TITLE_SIGNUP        "Inscription sur le site :"
 END
 
 #endif    // French resources

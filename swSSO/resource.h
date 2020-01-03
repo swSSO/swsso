@@ -2,6 +2,8 @@
 // Microsoft Visual C++ generated include file.
 // Used by resource.rc
 //
+#define IDM_PWD_MENU1                   1
+#define IDM_ID_MENU                     1
 #define IDAPPLY                         3
 #define IDD_CHALLENGE                   101
 #define IDD_RESPONSE                    102
@@ -185,6 +187,7 @@
 #define IMG_ID3                         40003
 #define LV_DOMAINS                      40003
 #define TX_STATIC                       40003
+#define TX_FRAME4                       40003
 #define IDS_COMBOTYPE3                  40004
 #define IMG_ID4                         40004
 #define TX_APP_NAME                     40004
@@ -401,6 +404,7 @@
 #define IDS_UPLOAD_DOMAIN_OK            42015
 #define IDS_UPLOAD_DOMAIN_KO            42016
 #define IDS_DOMAIN_ALREADY_EXISTS       42017
+#define IDD_SIGNUP                      42017
 #define IDS_RENAME_DOMAIN_OK            42018
 #define IDS_UPLOAD_DOMAIN_KO2           42019
 #define IDS_RENAME_DOMAIN_KO            42019
@@ -436,19 +440,24 @@
 #define IDS_NO                          42045
 #define IDS_CONFIRM_RESET               42046
 #define IDS_CLOSE_APPNSITES_BEFORE_PWDCHG 42047
+#define IDS_MENU_SIGNUP                 42048
+#define IDS_ERROR_URL                   42049
+#define IDS_TITLE_SIGNUP                42050
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005
 #define TX_COFFRE                       -19530
+#define PB_COPY_PWD                     46007
+#define PB_COPY_ID                      46008
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        42017
+#define _APS_NEXT_RESOURCE_VALUE        42019
 #define _APS_NEXT_COMMAND_VALUE         44000
-#define _APS_NEXT_CONTROL_VALUE         46007
+#define _APS_NEXT_CONTROL_VALUE         46008
 #define _APS_NEXT_SYMED_VALUE           48000
 #endif
 #endif

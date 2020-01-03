@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -38,6 +38,7 @@ void SSOActivate(HWND w);
 int RefreshRights(BOOL bForced,BOOL bReportSync);
 
 extern unsigned int gMsgTaskbarRestart;
+extern HWND gwSignUp;
 
 #define TRAY_MENU_ACTIVER    1
 #define TRAY_MENU_PROPRIETES 2
@@ -53,4 +54,5 @@ extern unsigned int gMsgTaskbarRestart;
 #define TRAY_MENU_REFRESH_RIGHTS 12
 #define TRAY_MENU_AIDE	13
 #define TRAY_MENU_ASK_THIS_APP	14
+#define TRAY_MENU_SIGNUP 15
 #define TRAY_PASTE_PASSWORD 99

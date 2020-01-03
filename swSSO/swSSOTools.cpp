@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -43,6 +43,7 @@ char gcszK3[]="33333333";
 char gszComputedValue[256+1];
 HWND gwMessageBox3B=NULL;
 BOOL gbLastRequestOnFailOverServer=FALSE;
+char gszDistinctIds[NB_MAX_DISTINCT_IDS][LEN_ID+1];
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -2541,3 +2542,140 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
+
+
+//-----------------------------------------------------------------------------
+// GetDistinctIds()
+//-----------------------------------------------------------------------------
+// Construit une liste de tous les Id distincts
+//-----------------------------------------------------------------------------
+int GetDistinctIds(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int iNbDistinctIds=0;
+	int i,j;
+	bool bFound;
+
+	for (i=0;i<giNbActions;i++)
+	{
+		if (*gptActions[i].szId1Value!=0)
+		{
+			// recherche si on l'a déjà
+			bFound=FALSE;
+			for (j=0;j<iNbDistinctIds;j++)
+			{
+				if (strcmp(gptActions[i].szId1Value,gszDistinctIds[j])==0) { bFound=TRUE; continue; }
+			}
+			if (!bFound)
+			{
+				if (iNbDistinctIds>=NB_MAX_DISTINCT_IDS) goto end;
+				iNbDistinctIds++;
+				strcpy_s(gszDistinctIds[iNbDistinctIds-1],LEN_ID+1,gptActions[i].szId1Value);
+			}
+		}
+	}
+end:
+	TRACE((TRACE_LEAVE,_F_, "iNbDistinctIds=%d",iNbDistinctIds));
+	return iNbDistinctIds;
+}
+
+//-----------------------------------------------------------------------------
+// UniversalGetURL()
+//-----------------------------------------------------------------------------
+// Récupère l'URL quel que soit le navigateur
+//-----------------------------------------------------------------------------
+char* UniversalGetURL(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	char *pszURL=NULL;
+	char szClassName[128+1];
+
+	GetClassName(w,szClassName,sizeof(szClassName));
+	TRACE((TRACE_DEBUG,_F_,"szClassName=%s",szClassName));
+
+	if (strcmp(szClassName,"IEFrame")==0 || // IE
+		strcmp(szClassName,"#32770")==0 ||  // Network Connect
+		strcmp(szClassName,"rctrl_renwnd32")==0 || // Outlook 97 à 2003 (au moins, à vérifier pour 2007)
+		strcmp(szClassName,"OpusApp")==0 || // Word 97 à 2003 (au moins, à vérifier pour 2007)
+		strcmp(szClassName,"ExploreWClass")==0 || strcmp(szClassName,"CabinetWClass")==0) // Explorateur Windows
+	{
+		pszURL=GetIEURL(w,TRUE);
+	}
+	else if (strcmp(szClassName,gcszMozillaUIClassName)==0) // FF3
+	{
+		pszURL=GetFirefoxURL(w,NULL,FALSE,NULL,BROWSER_FIREFOX3,TRUE);
+	}
+	else if (strcmp(szClassName,gcszMozillaClassName)==0) // FF4
+	{
+		pszURL=GetFirefoxURL(w,NULL,FALSE,NULL,BROWSER_FIREFOX4,TRUE);
+	}
+	else if (strcmp(szClassName,"Maxthon2_Frame")==0) // Maxthon
+	{
+		pszURL=GetMaxthonURL();
+	}
+	else if (strncmp(szClassName,"Chrome_WidgetWin_",17)==0) // ISSUE#77 : Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
+	{
+		pszURL=GetChromeURL(w);
+		if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
+		if (pszURL==NULL || *pszURL==0) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
+	}
+	else if (strcmp(szClassName,"ApplicationFrameWindow")==0) 
+	{
+		IUIAutomationElement *pDocument=NULL;
+		pszURL=GetEdgeURL(w,&pDocument);
+		if (pDocument!=NULL) pDocument->Release();
+	}
+	else // autre ??
+	{
+		TRACE((TRACE_ERROR,_F_,"Unknown class : %s !",szClassName));
+	}
+	if (pszURL!=NULL)
+	{
+		TRACE((TRACE_INFO,_F_,"URL trouvee  = %s",pszURL));
+	}
+
+	TRACE((TRACE_LEAVE,_F_, "pszURL=0x%08lx",pszURL));
+	return pszURL;
+}
+
+//-----------------------------------------------------------------------------
+// UniversalGetFQDN()
+//-----------------------------------------------------------------------------
+// Récupère le FQDN dans l'URL
+//-----------------------------------------------------------------------------
+char* UniversalGetFQDN(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	char *pszFQDN=NULL;
+	char *pszURL=NULL;
+	char *p;
+	int lenURL;
+
+	// récupère l'URL complète
+	pszURL=UniversalGetURL(w);
+	if (pszURL==NULL) goto end;
+
+	// alloue la chaine pszFQDN
+	lenURL=strlen(pszURL);
+	pszFQDN=(char*)malloc(lenURL+1);
+	if (pszFQDN==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenURL+1)); goto end; }
+
+	// recopie l'URL dans FQDN en supprimant http:// ou https:// si présent
+	if (_strnicmp(pszURL,"http://",7)==0)
+		strcpy_s(pszFQDN,lenURL+1,pszURL+7);
+	else if (_strnicmp(pszURL,"https://",8)==0)
+		strcpy_s(pszFQDN,lenURL+1,pszURL+8);
+	else
+		strcpy_s(pszFQDN,lenURL+1,pszURL);
+
+	// tronque au premier / rencontré
+	p=strstr(pszFQDN,"/");
+	if (p!=NULL) *p=0;
+	
+	TRACE((TRACE_INFO,_F_,"FQDN = %s",pszFQDN));	
+end:
+	if (pszURL!=NULL) free(pszURL);
+	TRACE((TRACE_LEAVE,_F_, "pszURL=0x%08lx",pszFQDN));
+	return pszFQDN;
+}
+			

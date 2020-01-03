@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
 //
 //							 http://www.swsso.fr
 //                   
@@ -90,11 +90,15 @@ char gcszADPassword[]="%ADPASSWORD%";
 
 #define TB_PWD_SUBCLASS_ID 1
 #define TB_PWD_CLEAR_SUBCLASS_ID 2
+#define TB_ID_SUBCLASS_ID 3
 static BOOL gbPwdSubClass=FALSE;
 static BOOL gbPwdClearSubClass=FALSE;
+static BOOL gbIdSubClass=FALSE;
 BOOL gbAtLeastOneAppAdded=FALSE;
 
 BOOL gbIsChanging=FALSE;
+
+T_SUBCLASS_DATA gSubClassData;
 
 typedef struct {
 	int iNbModified;
@@ -3129,7 +3133,6 @@ LRESULT CALLBACK PwdProc(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR uIdSubclas
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	UNREFERENCED_PARAMETER(uIdSubclass);
-	UNREFERENCED_PARAMETER(dwRefData);
 	LRESULT lrc=FALSE;
 	POINT pt;
 	HMENU hMenu=NULL;
@@ -3137,6 +3140,7 @@ LRESULT CALLBACK PwdProc(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR uIdSubclas
 	BOOL bTrackPopupMenu;
 	char szPwd[20+1];
 	int iPwdLen,iPwdType;
+	T_SUBCLASS_DATA *pSubclassData=(T_SUBCLASS_DATA *)dwRefData;
 	switch (msg)
 	{
 		case WM_CONTEXTMENU:
@@ -3175,12 +3179,21 @@ LRESULT CALLBACK PwdProc(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR uIdSubclas
 				case IDM_GENERATE_SPECIALCHARS_12:
 				case IDM_GENERATE_SPECIALCHARS_15:
 				case IDM_GENERATE_SPECIALCHARS_20:
-					if (!gbShowPwd)
+					if (pSubclassData->gw==gwAppNsites)
 					{
-						gbShowPwd=TRUE;
-						gbShowGeneratedPwd=TRUE;
-						ShowWindow(GetDlgItem(gwAppNsites,TB_PWD),SW_HIDE);
-						ShowWindow(GetDlgItem(gwAppNsites,TB_PWD_CLEAR),SW_SHOW);
+						if (!gbShowPwd)
+						{
+							gbShowPwd=TRUE;
+							gbShowGeneratedPwd=TRUE;
+							ShowWindow(GetDlgItem(pSubclassData->gw,TB_PWD),SW_HIDE);
+							ShowWindow(GetDlgItem(pSubclassData->gw,TB_PWD_CLEAR),SW_SHOW);
+						}
+					}
+					else if (pSubclassData->gw==gwSignUp)
+					{
+						ShowWindow(GetDlgItem(pSubclassData->gw,TB_PWD),SW_HIDE);
+						ShowWindow(GetDlgItem(pSubclassData->gw,TB_PWD_CLEAR),SW_SHOW);
+						CheckDlgButton(pSubclassData->gw,CK_VIEW,BST_CHECKED);
 					}
 					if (bTrackPopupMenu==IDM_GENERATE_ALPHANUM_10)			{ iPwdLen=10; iPwdType=PWDTYPE_ALPHA|PWDTYPE_NUM; }
 					else if (bTrackPopupMenu==IDM_GENERATE_ALPHANUM_12)		{ iPwdLen=12; iPwdType=PWDTYPE_ALPHA|PWDTYPE_NUM; }
@@ -3192,7 +3205,7 @@ LRESULT CALLBACK PwdProc(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR uIdSubclas
 					else if (bTrackPopupMenu==IDM_GENERATE_SPECIALCHARS_20) { iPwdLen=20; iPwdType=PWDTYPE_ALPHA|PWDTYPE_NUM|PWDTYPE_SPECIALCHARS; }
 					else goto end;
 					swGenerateRandomPwd(szPwd,iPwdLen,iPwdType);
-					SetDlgItemText(gwAppNsites,TB_PWD_CLEAR,szPwd);
+					SetDlgItemText(pSubclassData->gw,TB_PWD_CLEAR,szPwd);
 					SecureZeroMemory(szPwd,sizeof(szPwd));
 					break;
 		   }
@@ -3224,6 +3237,76 @@ end:
 	return lrc;
 } 
 
+LRESULT CALLBACK IdProc(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	UNREFERENCED_PARAMETER(uIdSubclass);
+	
+	LRESULT lrc=FALSE;
+	POINT pt;
+	HMENU hMenu=NULL;
+	HMENU hPopupMenu=NULL;
+	BOOL bTrackPopupMenu;
+	int i,iNbIds;
+	T_SUBCLASS_DATA *pSubclassData=(T_SUBCLASS_DATA *)dwRefData;
+	switch (msg)
+	{
+		case WM_CONTEXTMENU:
+		{
+			hMenu=LoadMenu(ghInstance,MAKEINTRESOURCE(IDM_ID_MENU));
+			if (hMenu==NULL) { TRACE((TRACE_ERROR,_F_,"LoadMenu(IDM_ID_MENU)")); goto end; }
+			hPopupMenu=GetSubMenu(hMenu,0);
+			iNbIds=GetDistinctIds();
+			for (i=0;i<iNbIds;i++)
+			{
+				InsertMenu(hPopupMenu,(UINT)-1,MF_BYPOSITION,50000+i,gszDistinctIds[i]);
+			}
+			if (hPopupMenu==NULL) { TRACE((TRACE_ERROR,_F_,"GetSubMenu()")); goto end; }
+			GetCursorPos(&pt);
+			bTrackPopupMenu=TrackPopupMenu(hPopupMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON,pt.x, pt.y, 0, w, NULL);
+			if (bTrackPopupMenu==IDM_SWUNDO)
+				SendMessage(w,EM_UNDO,0,0);
+			else if (bTrackPopupMenu==IDM_SWCUT)
+				SendMessage(w,WM_CUT,0,0);
+			else if (bTrackPopupMenu==IDM_SWCOPY)
+				SendMessage(w,WM_COPY,0,0);
+			else if (bTrackPopupMenu==IDM_SWPASTE)
+				SendMessage(w, WM_PASTE,0,0);
+			else if (bTrackPopupMenu==IDM_SWCLEARSELECTION)
+				SendMessage(w,WM_CLEAR,0,0);
+			else if (bTrackPopupMenu==IDM_SWSELECTALL)
+				SendMessage(w,EM_SETSEL,0,-1);
+			else if (bTrackPopupMenu>=50000 && bTrackPopupMenu<50000+NB_MAX_DISTINCT_IDS)
+			{
+				SetDlgItemText(pSubclassData->gw,TB_ID,gszDistinctIds[bTrackPopupMenu-50000]);
+			}
+		   lrc=TRUE;
+		}
+		break;
+		case WM_INITMENUPOPUP:
+		{
+			UINT uBegSel,uEndSel;
+			if (!SendMessage(w, EM_CANUNDO, 0, 0)) EnableMenuItem( (HMENU) wp, IDM_SWUNDO, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+			SendMessage (w, EM_GETSEL, (UINT)&uBegSel, (UINT)&uEndSel);
+			if (uBegSel == uEndSel)
+			{
+				EnableMenuItem( (HMENU) wp, IDM_SWCUT, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+				EnableMenuItem( (HMENU) wp, IDM_SWCOPY, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+				EnableMenuItem( (HMENU) wp, IDM_SWCLEARSELECTION, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+			}
+			if (!IsClipboardFormatAvailable(CF_TEXT)) EnableMenuItem( (HMENU) wp, IDM_PASTE, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+			if (SendMessage(w, WM_GETTEXTLENGTH , (WPARAM)-1, 0) == (LRESULT)(uEndSel - uBegSel)) EnableMenuItem( (HMENU) wp, IDM_SELECTALL, MF_BYCOMMAND | MF_DISABLED| MF_GRAYED );
+		}
+		lrc=DefSubclassProc(w,msg,wp,lp);
+		break;
+	default:
+		lrc=DefSubclassProc(w,msg,wp,lp);
+	}
+end:
+   if (hMenu!=NULL) DestroyMenu(hMenu);
+	TRACE((TRACE_LEAVE,_F_, "lrc=%ld",lrc));
+	return lrc;
+} 
 //-----------------------------------------------------------------------------
 // OnInitDialog()
 //-----------------------------------------------------------------------------
@@ -3386,8 +3469,10 @@ void OnInitDialog(HWND w,T_APPNSITES *ptAppNsites)
 	if (giSetForegroundTimer==giTimer) giSetForegroundTimer=21;
 	SetTimer(w,giSetForegroundTimer,100,NULL);
 
-	gbPwdSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)PwdProc,TB_PWD_SUBCLASS_ID,NULL);
-	gbPwdClearSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD_CLEAR),(SUBCLASSPROC)PwdProc,TB_PWD_CLEAR_SUBCLASS_ID,NULL);
+	gSubClassData.gw=w;
+	gbPwdSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)PwdProc,TB_PWD_SUBCLASS_ID,(DWORD_PTR)&gSubClassData);
+	gbPwdClearSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD_CLEAR),(SUBCLASSPROC)PwdProc,TB_PWD_CLEAR_SUBCLASS_ID,(DWORD_PTR)&gSubClassData);
+	gbIdSubClass=SetWindowSubclass(GetDlgItem(w,TB_ID),(SUBCLASSPROC)IdProc,TB_ID_SUBCLASS_ID,(DWORD_PTR)&gSubClassData);
 
 	InitTooltip(w); // ISSUE#111
 	
@@ -4577,6 +4662,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		case WM_DESTROY:
 			if (gbPwdSubClass) RemoveWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)PwdProc,TB_PWD_SUBCLASS_ID);
 			if (gbPwdClearSubClass) RemoveWindowSubclass(GetDlgItem(w,TB_PWD_CLEAR),(SUBCLASSPROC)PwdProc,TB_PWD_CLEAR_SUBCLASS_ID);
+			if (gbIdSubClass) RemoveWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)IdProc,TB_ID_SUBCLASS_ID);
 			if (ghTabBrush!=NULL) { DeleteObject(ghTabBrush); ghTabBrush=NULL; }
 			TermTooltip(); // ISSUE#111
 			break;
