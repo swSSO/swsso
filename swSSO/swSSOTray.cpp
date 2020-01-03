@@ -83,10 +83,6 @@ static void ShowContextMenu(HWND w)
 	// ISSUE#99 / 0.99B1 : ajout de gbShowMenu_AddThisApp pour dissocier gbShowMenu_AddApp
 	// if (gbShowMenu_AddApp) 
 	
-	//if (gbShowMenu_SignUp)
-	{
-		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_SIGNUP,GetString(IDS_MENU_SIGNUP));
-	}
 	if (gbShowMenu_AddThisApp)
 	{
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_THIS_APPLI,GetString(IDS_MENU_THIS_APPLI));
@@ -101,6 +97,10 @@ static void ShowContextMenu(HWND w)
 		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_CHANGEAPPPWD,GetString(IDS_MENU_CHANGEAPPPWD));
 	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION | MF_SEPARATOR, 0,"");
+	if (gbShowMenu_SignUp)
+	{
+		InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_SIGNUP,GetString(IDS_MENU_SIGNUP));
+	}
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_APPNSITES,GetString(IDS_MENU_APPNSITES));
 	InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_PROPRIETES,GetString(IDS_MENU_PROP));
 	if (gbShowMenu_Help) InsertMenu(hMenu, (UINT)-1, MF_BYPOSITION, TRAY_MENU_AIDE,GetString(IDS_MENU_AIDE)); // ISSUE#306
@@ -399,6 +399,11 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					break;
 				case TRAY_MENU_SIGNUP:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_SIGNUP"));
+					if (!gbSSOActif && !gbReactivateWithoutPwd)
+					{
+						if (AskPwd(NULL,TRUE)!=0) goto end;
+						SSOActivate(w);
+					}
 					SignUpForThisSite();
 					break;
 				case TRAY_MENU_QUITTER:
@@ -1165,6 +1170,7 @@ static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			int cx;
 			int cy;
 			RECT rect;
+			SetWindowPos(w,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 			SetWindowText(w,(char*)lp);
 			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
 			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
