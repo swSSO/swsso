@@ -39,7 +39,7 @@
 
 // Un peu de globales...
 const char gcszCurrentVersion[]="122";	// 101 = 1.01
-const char gcszCurrentBeta[]="1232";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
+const char gcszCurrentBeta[]="1234";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
 HWND gwChooseConfig=NULL;
@@ -917,6 +917,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 					TRACE((TRACE_ERROR,_F_,"Ancienne methode de configuration non supportee avec Chrome"));
 					goto suite;
 				}*/
+				ForceChromeAccessibility(w);
 				pszURL=GetChromeURL(w);
 				if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
 				// finalement GetChromeURL51 marche bien, pas la peine de faire NewGetChromeURL qui casse ISSUE#266

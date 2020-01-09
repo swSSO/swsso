@@ -5026,6 +5026,7 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 	}
 	else if (strncmp(szClassName,"Chrome_WidgetWin_",17)==0) // ISSUE#77 : Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
 	{
+		ForceChromeAccessibility(w);
 		// ISSUE#215 : nouvelle gestion des popups pour Chrome 36+ (c'était merdique avant je ne conserve pas la compatibilité)	
 		pszURL=GetChromePopupURL(w);
 		if (pszURL==NULL) // pas de popup trouvée, c'est du contenu chrome Web

@@ -33,6 +33,7 @@
 
 #include "stdafx.h"
 IAccessible *gpAccessibleChromeURL=NULL;
+//DEFINE_GUID(IID_IAccessible2,0xE89F726E, 0xC4F4, 0x4c19, 0xbb, 0x19, 0xb6, 0x47, 0xd7, 0xfa, 0x84, 0x78);	
 
 //-----------------------------------------------------------------------------
 // GetChromePopupURL()
@@ -643,3 +644,46 @@ void ChromeAccSelect(HWND w,IAccessible *pTextField)
 end:
 	TRACE((TRACE_LEAVE,_F_,""));
 }
+
+//-----------------------------------------------------------------------------
+// ForceChromeAccessibility()
+//-----------------------------------------------------------------------------
+// Demande un pointeur IAccessible2 : suffit à activer l'accessibilité Chrome
+//-----------------------------------------------------------------------------
+void ForceChromeAccessibility(HWND w)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	HRESULT hr;
+	IAccessible *pAccessible=NULL;
+	IServiceProvider *pService = NULL; 
+	IUnknown *pAccessible2 = NULL; 
+	GUID IID_IAccessible2;
+	
+	hr=AccessibleObjectFromWindow(w,(DWORD)OBJID_CLIENT,IID_IAccessible,(void**)&pAccessible);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx",hr)); goto end; }
+	hr=pAccessible->QueryInterface(IID_IServiceProvider,(void **)&pService); 
+	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"QueryInterface(IID_IServiceProvider)=0x%08lx",hr)); goto end; }
+	
+	IID_IAccessible2.Data1=0xE89F726E;
+	IID_IAccessible2.Data2=0xC4F4;
+	IID_IAccessible2.Data3=0x4c19;
+	IID_IAccessible2.Data4[0]=0xbb;
+	IID_IAccessible2.Data4[1]=0x19;
+	IID_IAccessible2.Data4[2]=0xb6;
+	IID_IAccessible2.Data4[3]=0x47;
+	IID_IAccessible2.Data4[4]=0xd7;
+	IID_IAccessible2.Data4[5]=0xfa;
+	IID_IAccessible2.Data4[6]=0x84;
+	IID_IAccessible2.Data4[7]=0x78;
+	hr = pService->QueryService(IID_IAccessible2,IID_IAccessible2,(void**)&pAccessible2); 
+	TRACE((TRACE_DEBUG,_F_,"QueryService(IID_IAccessible2)=0x%08lx",hr));
+end:
+	if (pAccessible!=NULL) pAccessible->Release();
+	if (pAccessible2!=NULL) pAccessible2->Release();
+	if (pService!=NULL) pService->Release();
+	TRACE((TRACE_LEAVE,_F_, ""));
+	return;
+}
+
+	
+		

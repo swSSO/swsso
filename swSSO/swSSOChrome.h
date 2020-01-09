@@ -38,6 +38,8 @@ char *NewGetChromeURL(HWND w,IAccessible *pInAccessible,BOOL bGetAccessible,IAcc
 extern IAccessible *gpAccessibleChromeURL;
 void ChromeAccSelect(HWND w,IAccessible *pTextField);
 // int SSOChromePopup(HWND w,int iAction,HWND wChromePopup);
+void ForceChromeAccessibility(HWND w);
+
 
 
 

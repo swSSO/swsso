@@ -2025,6 +2025,7 @@ static int CALLBACK EnumBrowserProc(HWND w, LPARAM lp)
 	}
 	else if ((strncmp(szClassName,"Chrome_WidgetWin_",17)==0)  && (pEnumBrowser->iPopupType==POPUP_CHROME)) // Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
 	{
+		ForceChromeAccessibility(w);
 		pszURL=GetChromeURL(w);
 		if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
 		// ISSUE#382 : avec Chrome 69, GetChromeURL et  GetChromeURL51 ne fonctionnent pas, il faut NewGetChromeURL
@@ -2615,6 +2616,7 @@ char* UniversalGetURL(HWND w)
 	}
 	else if (strncmp(szClassName,"Chrome_WidgetWin_",17)==0) // ISSUE#77 : Chrome 20+ : Chrome_WidgetWin_0 -> Chrome_WidgetWin_
 	{
+		ForceChromeAccessibility(w);
 		pszURL=GetChromeURL(w);
 		if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
 		if (pszURL==NULL || *pszURL==0) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
