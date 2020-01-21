@@ -924,6 +924,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				// ISSUE#381 : si, il faut le faire sinon ne fonctionne pas avec les sites lancés en mode application
 				// ISSUE#382 : avec Chrome 69, GetChromeURL et  GetChromeURL51 ne fonctionnent pas, il faut NewGetChromeURL
 				if (pszURL==NULL || *pszURL==0) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
+				if (pszURL==NULL || *pszURL==0) { Sleep(100); pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); } // Suite à ISSUE#404, Chrome n'a pas eu le temps de monter l'interface IAccessible après l'appel à ForceChromeAccessibility
 				if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto suite; }
 			}
 			// ISSUE#347 : prise en compte de EDGE avec UIA

@@ -5036,6 +5036,7 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 			if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
 			// ISSUE#382 : avec Chrome 69, GetChromeURL et  GetChromeURL51 ne fonctionnent pas, il faut NewGetChromeURL
 			if (pszURL==NULL || *pszURL==0) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
+			if (pszURL==NULL || *pszURL==0) { Sleep(100); pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); } // Suite à ISSUE#404, Chrome n'a pas eu le temps de monter l'interface IAccessible après l'appel à ForceChromeAccessibility
 			if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 			// ISSUE#142 : si pszURL=NULL, mieux vaut s'arrêter même si en fait ça ne crashe pas car bien géré partout
 			// ISSUE#155

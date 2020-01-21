@@ -2030,6 +2030,7 @@ static int CALLBACK EnumBrowserProc(HWND w, LPARAM lp)
 		if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
 		// ISSUE#382 : avec Chrome 69, GetChromeURL et  GetChromeURL51 ne fonctionnent pas, il faut NewGetChromeURL
 		if (pszURL==NULL || *pszURL==0) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
+		if (pszURL==NULL || *pszURL==0) { Sleep(100); pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); } // Suite à ISSUE#404, Chrome n'a pas eu le temps de monter l'interface IAccessible après l'appel à ForceChromeAccessibility
 		if (gpAccessibleChromeURL!=NULL) { gpAccessibleChromeURL->Release(); gpAccessibleChromeURL=NULL; }
 		if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"URL Chrome non trouvee : on passe !")); goto end; }
 	}
@@ -2620,6 +2621,7 @@ char* UniversalGetURL(HWND w)
 		pszURL=GetChromeURL(w);
 		if (pszURL==NULL) pszURL=GetChromeURL51(w); // ISSUE#282
 		if (pszURL==NULL || *pszURL==0) pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); // ISSUE#314
+		if (pszURL==NULL || *pszURL==0) { Sleep(100); pszURL=NewGetChromeURL(w,NULL,FALSE,NULL); } // Suite à ISSUE#404, Chrome n'a pas eu le temps de monter l'interface IAccessible après l'appel à ForceChromeAccessibility
 	}
 	else if (strcmp(szClassName,"ApplicationFrameWindow")==0) 
 	{
