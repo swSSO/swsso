@@ -1,0 +1,1715 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#define PRODUCT_NAME "swSSO"
+#define PRODUCT_NAME_DEBUG "swSSO (debug)"
+#define EXECUTABLE_NAME "swSSO.exe"
+#include "windows.h"
+#include "..\swSSOCommonFiles\versioninfo.rc"
+#endif
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_EXCLAMATION         BITMAP                  ".\\exclamation.bmp"
+
+IDB_LOGO                BITMAP                  "swsso-v5 52x44.bmp"
+
+IDB_LOGO_FONDBLANC50    BITMAP                  "logo-50.bmp"
+
+IDB_LOGO_FONDBLANC90    BITMAP                  "logo-90.bmp"
+
+IDB_LOUPE               BITMAP                  "loupe.bmp"
+
+IDB_QUESTION            BITMAP                  ".\\question.bmp"
+
+IDB_TVIMAGES            BITMAP                  "tvImages.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_CURSOR_HAND         CURSOR                  "hand.cur"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SYSTRAY_ACTIVE      ICON                    "SystrayActive.ico"
+
+IDI_HELP                ICON                    ".\\help-8bits.ico"
+
+IDI_LOGO                ICON                    "logo.ICO"
+
+IDI_LOUPE               ICON                    ".\\loupe-8bits.ico"
+
+IDI_SYSTRAY_ADMIN_ACTIVE ICON                    ".\\SystrayAdminActive.ico"
+
+IDI_SYSTRAY_ADMIN_INACTIVE ICON                    ".\\SystrayAdminInactive.ico"
+
+IDI_SYSTRAY_INACTIVE    ICON                    "SystrayInactive.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+1                       RT_MANIFEST             ".\\manifest.xml"
+
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PWD DIALOGEX 0, 0, 235, 106
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Password Manager"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,210,1
+    LTEXT           "Please enter your master password below:",TX_FRAME,41,11,193,10
+    EDITTEXT        TB_PWD,50,45,178,13,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Re&member me on this computer",CK_SAVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,63,167,11
+    DEFPUSHBUTTON   "OK",IDOK,124,85,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,178,85,50,14
+    LTEXT           "&Password:",IDC_STATIC,9,47,38,10
+END
+
+IDD_APPNSITES DIALOGEX 0, 0, 438, 310
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "swSSO - Web site manager"
+FONT 8, "Tahoma", 400, 0, 0x0
+BEGIN
+    CTEXT           "ADMINISTRATION MODE",TX_MODE_ADMIN,7,2,429,15,SS_CENTERIMAGE | NOT WS_VISIBLE
+    ICON            "",IMG_ID,418,18,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID2,415,57,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID3,417,70,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID4,416,86,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_TYPE,9,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_TITRE,32,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_URL,55,286,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID_ID,80,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_PWD_ID,106,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_VALIDATION,129,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_LANCEMENT,154,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID2_TYPE,179,286,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID2_ID,197,287,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID3_TYPE,226,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID3_ID,243,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID4_TYPE,264,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID4_ID,283,287,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_PWD_GROUP,332,286,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
+    ICON            "",IMG_AUTO_LOCK,357,286,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
+    ICON            "",IMG_KBSIM,309,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_PWD,419,36,18,16,SS_NOTIFY,WS_EX_TRANSPARENT
+    CONTROL         "Tree1",TV_APPLICATIONS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,15,29,168,202
+    CONTROL         "Tab1",TAB_APPLICATIONS,"SysTabControl32",0x0,7,7,181,235
+    CONTROL         "Tab1",TAB_IDPWD,"SysTabControl32",0x0,197,7,16,85
+    CONTROL         "Tab1",TAB_CONFIG,"SysTabControl32",0x0,197,98,15,169
+    LTEXT           "&Username",TX_ID,203,25,38,8
+    EDITTEXT        TB_ID,259,23,158,13,ES_AUTOHSCROLL
+    CONTROL         "&AD username",CK_AD_ID,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_GROUP | WS_TABSTOP,213,92,61,8
+    LTEXT           "&Password",TX_PWD,203,39,44,8
+    EDITTEXT        TB_PWD,259,37,133,13,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "A&D password",CK_AD_PWD,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_GROUP | WS_TABSTOP,278,92,70,8
+    EDITTEXT        TB_PWD_CLEAR,265,42,133,13,ES_AUTOHSCROLL
+    LTEXT           "&2nd id",TX_ID2,203,52,57,8
+    EDITTEXT        TB_ID2,259,50,158,13,ES_AUTOHSCROLL
+    LTEXT           "&3rd id",TX_ID3,203,66,53,8
+    EDITTEXT        TB_ID3,259,64,158,13,ES_AUTOHSCROLL
+    LTEXT           "&4th id",TX_ID4,203,80,52,8
+    EDITTEXT        TB_ID4,259,77,158,13,ES_AUTOHSCROLL
+    LTEXT           "Typ&e",TX_TYPE,209,102,17,8
+    COMBOBOX        CB_TYPE,280,101,140,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Window title",TX_TITRE,209,115,62,8
+    EDITTEXT        TB_TITRE,281,113,128,13,ES_AUTOHSCROLL
+    LTEXT           "&URL",TX_URL,209,125,16,8
+    EDITTEXT        TB_URL,281,124,128,13,ES_AUTOHSCROLL
+    CONTROL         "&Keyboard simulated input",CK_KBSIM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,201,137,100,10
+    EDITTEXT        TB_KBSIM,303,134,128,55,ES_MULTILINE | WS_VSCROLL
+    LTEXT           "Username &entry field",TX_ID_ID,209,148,61,8
+    EDITTEXT        TB_ID_ID,281,144,128,13,ES_AUTOHSCROLL
+    LTEXT           "Password entry &field",TX_PWD_ID,209,160,67,8
+    EDITTEXT        TB_PWD_ID,281,157,128,13,ES_AUTOHSCROLL
+    LTEXT           "&Submit",TX_VALIDATION,212,173,32,8
+    EDITTEXT        TB_VALIDATION,281,170,128,13,ES_AUTOHSCROLL
+    LTEXT           "&Command line",TX_LANCEMENT,211,261,40,8
+    EDITTEXT        TB_LANCEMENT,282,258,128,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse",PB_PARCOURIR,399,258,38,14
+    LTEXT           "2nd id type",TX_ID2_TYPE,211,183,70,8
+    COMBOBOX        CB_ID2_TYPE,282,182,140,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "2nd id name",TX_ID2_ID,210,199,68,8
+    EDITTEXT        TB_ID2_ID,282,194,128,13,ES_AUTOHSCROLL
+    LTEXT           "3rd id type",TX_ID3_TYPE,211,209,70,8
+    COMBOBOX        CB_ID3_TYPE,282,208,140,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "3rd id name",TX_ID3_ID,210,219,67,8
+    EDITTEXT        TB_ID3_ID,282,216,128,13,ES_AUTOHSCROLL
+    LTEXT           "4th id type",TX_ID4_TYPE,211,237,70,8
+    COMBOBOX        CB_ID4_TYPE,282,231,140,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "4th id name",TX_ID4_ID,211,250,67,8
+    LTEXT           "Password group",TX_PWD_GROUP,213,271,74,8,NOT WS_VISIBLE
+    EDITTEXT        TB_ID4_ID,283,247,128,13,ES_AUTOHSCROLL
+    EDITTEXT        TB_PWD_GROUP,285,270,128,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    CONTROL         "&Detect connection errors",CK_AUTO_LOCK,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,17,272,180,8
+    DEFPUSHBUTTON   "OK",IDOK,7,253,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,62,253,50,14
+    PUSHBUTTON      "&Apply",IDAPPLY,121,253,50,14
+    ICON            "",IMG_LOUPE,407,36,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    CONTROL         "",TV_DOMAINS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,22,33,168,202
+    LTEXT           "This application belongs to a password group. Any password change for this username will be applied on all configurations belonging to this group (same highlight color).",TX_INFO_PWD_GROUP,345,92,691,8,NOT WS_VISIBLE
+    ICON            "",IMG_AUTO_PUBLISH,379,287,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
+    LTEXT           "This configuration will not sign you in automatically, but it's a safe place to store your logins and passwords.",TX_COFFRE,212,282,206,18
+    CONTROL         "",LV_DOMAIN_CONFIGS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,199,15,174,137
+END
+
+IDD_CHANGE_IDS DIALOGEX 0, 0, 268, 160
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Ids and password"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "&Username:",CK_ID1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,47,59,10
+    EDITTEXT        TB_ID1,63,45,197,13,ES_AUTOHSCROLL | WS_DISABLED
+    CONTROL         "&Password:",CK_PWD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,65,68,10
+    EDITTEXT        TB_PWD,63,63,197,13,ES_PASSWORD | ES_AUTOHSCROLL | WS_DISABLED
+    CONTROL         "&2nd id:",CK_ID2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,83,77,10
+    EDITTEXT        TB_ID2,63,82,197,13,ES_AUTOHSCROLL | WS_DISABLED
+    CONTROL         "&3rd id:",CK_ID3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,101,77,10
+    EDITTEXT        TB_ID3,63,100,197,13,ES_AUTOHSCROLL | WS_DISABLED
+    CONTROL         "&4th id:",CK_ID4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,120,77,10
+    EDITTEXT        TB_ID4,63,119,197,13,ES_AUTOHSCROLL | WS_DISABLED
+    DEFPUSHBUTTON   "OK",IDOK,157,140,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,211,140,50,14
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,251,1
+    LTEXT           "Please enter new username, password and/or ids for all applications belonging to the selected category:",TX_FRAME,47,7,214,18
+END
+
+IDD_CHANGE_PWD DIALOGEX 0, 0, 261, 124
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Change password"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,249,1
+    LTEXT           "&Current password:",IDC_STATIC,7,45,72,10
+    EDITTEXT        TB_OLD_PWD,89,43,165,13,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&New password:",IDC_STATIC,7,63,79,10
+    EDITTEXT        TB_NEW_PWD1,89,61,165,13,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "C&onfirm new password:",IDC_STATIC,7,82,78,10
+    EDITTEXT        TB_NEW_PWD2,89,79,165,13,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,151,103,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,205,103,50,14
+    LTEXT           "Please enter your new password below:",TX_FRAME,44,11,214,10
+END
+
+IDD_CHOOSE_CONFIG DIALOGEX 0, 0, 295, 229
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Choose account"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,294,1
+    CONTROL         "",LV_CONFIGS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SORTASCENDING | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,38,282,169
+    DEFPUSHBUTTON   "OK",IDOK,186,211,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,240,211,49,14
+    LTEXT           "Please select the account you want to usen, then click OK:",TX_FRAME,44,11,242,10
+END
+
+IDD_ID_AND_PWD DIALOGEX 0, 0, 266, 167
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - New application"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CTEXT           "Use an existing account",TX_EXISTING,6,149,111,9,0,WS_EX_TRANSPARENT
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,254,1
+    LTEXT           "TX_FRAME",TX_FRAME,47,6,215,20
+    LTEXT           "&Username:",IDC_STATIC,7,46,49,9
+    EDITTEXT        TB_ID,128,44,131,12,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,7,66,49,9
+    EDITTEXT        TB_PWD,128,64,131,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,153,146,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,207,146,50,14
+    EDITTEXT        TX_ID2,6,86,117,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        TB_ID2,128,84,131,12,ES_AUTOHSCROLL
+    EDITTEXT        TX_ID3,6,106,117,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        TB_ID3,128,104,131,12,ES_AUTOHSCROLL
+    EDITTEXT        TX_ID4,6,126,117,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        TB_ID4,128,124,131,12,ES_AUTOHSCROLL
+END
+
+IDD_LAUNCH_APP DIALOGEX 0, 0, 250, 316
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "swSSO - Web site launcher"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "Tree1",TV_APPLICATIONS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,8,7,233,279
+    DEFPUSHBUTTON   "&Start",IDOK,139,290,50,14
+    PUSHBUTTON      "&Close",IDCANCEL,193,290,49,14
+    CONTROL         "&Always visible",CK_VISIBLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,290,61,10
+END
+
+IDD_MESSAGEBOX3B DIALOGEX 0, 0, 300, 102
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,288,1
+    LTEXT           "TX_SUBTITLE",TX_SUBTITLE,43,7,246,16
+    DEFPUSHBUTTON   "PB_B1",PB_B1,55,82,60,14
+    PUSHBUTTON      "PB_B2",PB_B2,119,82,60,14
+    PUSHBUTTON      "IDCANCEL",IDCANCEL,183,82,60,14
+    LTEXT           "TX_MESSAGE ligne 1\r\nligne2\r\nligne3\r\nligne4",TX_MESSAGE,43,41,250,32
+    ICON            "",STATIC_ICONE,11,41,20,20
+    LTEXT           "MAIL TO",TX_MAILTO,43,73,250,9,NOT WS_VISIBLE
+END
+
+IDD_MESSAGEBOX3BLINK DIALOGEX 0, 0, 301, 95
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,288,1
+    LTEXT           "TX_SUBTITLE",TX_SUBTITLE,43,7,246,16
+    DEFPUSHBUTTON   "PB_B1",PB_B1,55,76,60,14
+    PUSHBUTTON      "PB_B2",PB_B2,119,76,60,14
+    PUSHBUTTON      "IDCANCEL",IDCANCEL,183,76,60,14
+    LTEXT           "TX_MESSAGE ligne 1\r\nligne2",TX_MESSAGE,43,41,250,18
+    ICON            "",STATIC_ICONE,11,41,21,20
+    LTEXT           "MAIL TO",TX_MAILTO,43,59,250,9,NOT WS_VISIBLE
+END
+
+IDD_SELECT_ACCOUNT DIALOGEX 0, 0, 250, 316
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "swSSO - Select account"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,193,290,49,14
+    DEFPUSHBUTTON   "OK",IDOK,139,290,50,14
+    CONTROL         "Tree1",TV_APPLICATIONS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,8,7,233,279
+END
+
+IDD_SIMPLE_PWD_CHOICE DIALOGEX 0, 0, 284, 168
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Password manager"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,271,1
+    CTEXT           "Welcome!",TX_FRAME,41,11,188,12
+    LTEXT           "Master password:",TX_PWD1,11,81,62,8
+    EDITTEXT        TB_PWD1,81,79,188,13,ES_PASSWORD | ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "Confirm password:",TX_PWD2,11,98,62,8
+    EDITTEXT        TB_PWD2,81,96,188,13,ES_PASSWORD | ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "&Remember me on this computer (your password will never be prompted, unless you use swSSO on another computer or if you reinstall Windows)",CK_SAVE,
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,11,118,260,25
+    DEFPUSHBUTTON   "OK",IDOK,167,148,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,220,148,50,14
+    LTEXT           "Before beginning, you must define a master password. It will be used to protect all your web sites and applications passwords. Choose a strong password, but don't forget it, there is no way to recover it!",TX_FRAME1,10,40,266,32,NOT WS_GROUP
+END
+
+PSP_ABOUT DIALOGEX 0, 0, 339, 229
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "About swSSO"
+FONT 8, "Tahoma", 400, 0, 0x0
+BEGIN
+    PUSHBUTTON      "&License",PB_LICENCE,280,60,50,14
+    PUSHBUTTON      "&Browse",PB_PARCOURIR,279,100,50,14
+    PUSHBUTTON      "&Open",PB_OUVRIR,279,131,50,14
+    EDITTEXT        TX_PORTAL,98,104,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT        TX_CONFIGFILE,98,135,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    LTEXT           "Copyright © 2004-2020 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Statistics",TX_STATISTIQUES,6,189,31,10
+    LTEXT           "Number of connections:",-1,17,203,77,8
+    LTEXT           "0",TX_NBSSO,101,203,230,8
+    CTEXT           "https://www.swsso.com",TX_URL,206,16,95,10,0,WS_EX_TRANSPARENT
+    LTEXT           "Informations",TX_INFORMATIONS,7,84,44,11
+    LTEXT           "Encryption:",-1,17,119,79,8
+    LTEXT           "???",TX_PWDENCRYPTED,101,119,171,8
+    LTEXT           "Configuration file:",TX_CONFIGFILE2,17,135,81,8
+    LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,59,262,18
+    LTEXT           "License",TX_LICENCE,7,43,28,11
+    LTEXT           "1.23b4 (1/9/2020)",TX_ABOUT,47,12,154,8
+    LTEXT           "swSSO Mobile file:",TX_PORTAL2,17,104,75,8
+    CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,48,248,1
+    CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,89,218,1
+    CONTROL         "",IDC_SEP_STATISTIQUES,"Static",SS_ETCHEDHORZ,42,194,251,1
+    LTEXT           "Number of applications:",-1,17,171,76,8
+    LTEXT           "0",TX_NBAPP,101,171,160,8
+    LTEXT           "Safebox content",TX_COFFRE,6,156,56,10
+    CONTROL         "",IDC_SEP_COFFRE,"Static",SS_ETCHEDHORZ,66,161,254,1
+END
+
+PSP_BROWSER DIALOGEX 0, 0, 338, 214
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Browsers"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    LTEXT           "If you don't want to use swSSO with a brower, uncheck it!",TX_STATIC,17,99,298,10
+    CONTROL         "&Chrome",CK_CHROME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,63,45,8
+    CONTROL         "",IDC_SEP_SECURITE,"Static",SS_ETCHEDHORZ,77,14,252,1
+    LTEXT           "Supported browsers",TX_BROWSER,7,10,66,8
+    CONTROL         "&Firefox",CK_FIREFOX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,45,43,8
+    CONTROL         "&Internet Explorer",CK_IE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,27,76,8
+    CONTROL         "&Edge",CK_EDGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,81,45,8
+    LTEXT           "&Language:",TX_PROXY_USER2,19,162,38,8
+    COMBOBOX        CB_LANGUE,59,160,68,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Require ma&ster password after",TX_PROXY_USER3,19,142,100,8
+    EDITTEXT        TB_MASTER_PWD_EXPIRATION,122,140,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",SPIN_MASTER_PWD_EXPIRATION,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,142,139,12,14
+    LTEXT           "Miscellaneous",TX_SECURITE,9,121,44,8
+    CONTROL         "",IDC_SEP_SECURITE2,"Static",SS_ETCHEDHORZ,59,125,256,1
+    LTEXT           "minutes.",TX_PROXY_USER4,155,142,28,8
+END
+
+IDD_SIGNUP DIALOGEX 0, 0, 318, 159
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sign up for this site"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "1. Enter login or email address for this site, then click Copy and paste value on the website (right-click and Paste or CTRL+V)",TX_FRAME1,47,8,254,18
+    LTEXT           "2. Repeat operation for password. Once sign up completed on the website, click Save.",TX_FRAME2,47,27,254,18
+    LTEXT           "Tip: right click login or password entry fields to use existing logins or generate strong passwords.",TX_FRAME3,93,112,209,18
+    LTEXT           "&Login or e-mail:",IDC_STATIC,17,64,76,8
+    EDITTEXT        TB_ID,93,62,171,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Copier",PB_COPY_ID,271,61,30,14
+    LTEXT           "&Password :",IDC_STATIC,17,83,84,8
+    EDITTEXT        TB_PWD,93,81,171,13,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        TB_PWD_CLEAR,93,81,171,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Copier",PB_COPY_PWD,271,80,30,14
+    CONTROL         "&Reveal password",CK_VIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,100,71,8
+    DEFPUSHBUTTON   "&Save",IDOK,206,137,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,261,137,50,14
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,7,50,295,1
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PWD, DIALOG
+    BEGIN
+        RIGHTMARGIN, 234
+    END
+
+    IDD_APPNSITES, DIALOG
+    BEGIN
+    END
+
+    IDD_CHANGE_IDS, DIALOG
+    BEGIN
+    END
+
+    IDD_CHANGE_PWD, DIALOG
+    BEGIN
+    END
+
+    IDD_CHOOSE_CONFIG, DIALOG
+    BEGIN
+    END
+
+    IDD_ID_AND_PWD, DIALOG
+    BEGIN
+    END
+
+    IDD_LAUNCH_APP, DIALOG
+    BEGIN
+    END
+
+    IDD_MESSAGEBOX3B, DIALOG
+    BEGIN
+    END
+
+    IDD_MESSAGEBOX3BLINK, DIALOG
+    BEGIN
+        RIGHTMARGIN, 300
+        BOTTOMMARGIN, 92
+    END
+
+    IDD_SELECT_ACCOUNT, DIALOG
+    BEGIN
+    END
+
+    IDD_SIMPLE_PWD_CHOICE, DIALOG
+    BEGIN
+    END
+
+    PSP_ABOUT, DIALOG
+    BEGIN
+        RIGHTMARGIN, 338
+        BOTTOMMARGIN, 223
+    END
+
+    PSP_BROWSER, DIALOG
+    BEGIN
+    END
+
+    IDD_SIGNUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 311
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_PWD_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Cancel",                     IDM_SWUNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Cut",                        IDM_SWCUT
+        MENUITEM "C&opy",                       IDM_SWCOPY
+        MENUITEM "&Paste",                      IDM_SWPASTE
+        MENUITEM "&Clear selection",            IDM_SWCLEARSELECTION
+        MENUITEM SEPARATOR
+        MENUITEM "&Select all",                 IDM_SWSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Random (length: 10)",        IDM_GENERATE_SPECIALCHARS_10
+        MENUITEM "&Random (length: 12)",        IDM_GENERATE_SPECIALCHARS_12
+        MENUITEM "&Random (length: 15)",        IDM_GENERATE_SPECIALCHARS_15
+        MENUITEM "&Random (length: 20)",        IDM_GENERATE_SPECIALCHARS_20
+        MENUITEM "&Random (length: 10 letters and numbers only)", IDM_GENERATE_ALPHANUM_10
+        MENUITEM "&Random (length: 12 letters and numbers only)", IDM_GENERATE_ALPHANUM_12
+        MENUITEM "&Random (length: 15 letters and numbers only)", IDM_GENERATE_ALPHANUM_15
+        MENUITEM "&Random (length: 20 letters and numbers only)", IDM_GENERATE_ALPHANUM_20
+    END
+END
+
+IDM_ID_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Cancel",                     IDM_SWUNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Cut",                        IDM_SWCUT
+        MENUITEM "C&opy",                       IDM_SWCOPY
+        MENUITEM "&Paste",                      IDM_SWPASTE
+        MENUITEM "&Clear selection",            IDM_SWCLEARSELECTION
+        MENUITEM SEPARATOR
+        MENUITEM "&Select all",                 IDM_SWSELECTALL
+        MENUITEM SEPARATOR
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_APPNSITES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+PSP_ABOUT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+PSP_BROWSER AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SIGNUP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PWD AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_LAUNCH_APP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_BADPWD              "Bad password. Please try again."
+    IDS_DEFAULT_PORTAL      "None (select browse to define it)"
+    IDS_COMBOTYPE1          "Web site"
+    IDS_COMBOTYPE2          "Browser authentication popup"
+    IDS_COMBOTYPE3          "Windows app"
+    IDS_OLDVERSION          "0.42 or less"
+    IDS_PP_ENCRYPTED        "AES-256 & PBKDF2 (master password)"
+    IDS_DELETE              "Do you really want to delete %s?\r\nThis configuration will also be deleted from the server."
+    IDS_MENU_ACTIVER        "&Enable"
+    IDS_MENU_AJOUTER_APPLI  "A&dd an application"
+    IDS_MENU_SUPPRIMER      "&Delete"
+    IDS_MENU_DESACTIVER     "&Disable"
+    IDS_MENU_QUITTER        "&Exit"
+    IDS_MENU_PROP           "&Options..."
+    IDS_ACTIVE              "swSSO [Enabled]"
+    IDS_DESACTIVE           "swSSO [Disabled]"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MENU_MDP            "&Password..."
+    IDS_CHANGE_PWD_FAILED   "Password change failed."
+    IDS_CHANGE_PWD_OK       "Your master password has been changed."
+    IDS_MENU_PORTAL         "P&ortal..."
+    IDS_MENU_THIS_APPLI     "Add this web site..."
+    IDS_CONFIG_NOT_FOUND    "Configuration not found. Do you want to edit it manually?"
+    IDS_NEW_VERSION         "An update is available (%c.%c%c%s). Do you want to open swSSO web site to download it?"
+    IDS_MENU_DEPLACER       "&Move to..."
+    IDS_CONFIG_ALREADY_EXISTS 
+                            "Username and password are already defined for this application. What do you want to do?\r\n\r\n- Replace existing configuration: select Yes.\r\n- Keep existing configuration and add a new one (existing configuration will be disabled): select No.\r\n- Keep existing configuration without adding the new one: select Cancel."
+    IDS_CONFIG_PROXY        "Failed to connect to swSSO server."
+    IDS_MENU_APPNSITES      "Web sites management..."
+    IDS_VALUE               "%s :"
+    IDS_MENU_RENOMMER       "&Rename"
+    IDS_COMBOIDTYPE1        "Entry field (html : input)"
+    IDS_COMBOIDTYPE2        "Combo box (html : select)"
+    IDS_NON_CLASSE          "Unclassified"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NEW_CATEG           "New folder"
+    IDS_MENU_AJOUTER_CATEG  "Add a new &folder"
+    IDS_NEW_APP             "New application"
+    IDS_APPNAME_ALREADY_EXISTS 
+                            "Application already exists. Please choose another name."
+    IDS_CATEGNAME_ALREADY_EXISTS 
+                            "Folder already exists. Please choose another name."
+    IDS_CATEG_NOT_EMPTY     "Cannot delete folder (please delete applications first)."
+    IDS_PASSWORD_POLICY_MESSAGE 
+                            "Your new password does not meet policy requirements (minimal length: 8 ; at least an upper and a lowercase letter and a number)."
+    IDS_CATEG_NOT_REMOVABLE "This folder cannot be deleted."
+    IDS_FORCE_CHANGE        "This is your current password. Please choose a new one."
+    IDS_PWD_CHANGED_RECENTLY 
+                            "You are now allowed to change your password now. You must wait %d days between two changes."
+    IDS_NEW_APP_PWD         "Please enter a new password for this application: %s"
+    IDS_CONFIG_EXISTS_SUBTITLE "Username and password already defined."
+    IDS_CONFIG_EXISTS_MESSAGE 
+                            "What do you want to do?\r\n- Remplace existing parameters?\r\n- Keep existing parameters and add this new parameters?"
+    IDS_CONFIG_EXISTS_B1    "&Replace"
+    IDS_CONFIG_EXISTS_B2    "&Add"
+    IDS_CONFIG_EXISTS_B3    "Cancel"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DESACTIVATE_MESSAGE "In case you have changed your password in the application, you must change it in swSSO too.\r\nIf not, you can retry now or pause swSSO for one minute and retry later."
+    IDS_MESSAGEBOX_TITLE    "swSSO - Password Manager"
+    IDS_DESACTIVATE_SUBTITLE "swSSO failed to connect to\r\n%s"
+    IDS_DESACTIVATE_B1      "&Retry"
+    IDS_DESACTIVATE_B2      "&Password..."
+    IDS_DESACTIVATE_B3      "P&ause"
+    IDS_ERROR_MESSAGE_INI_FILE 
+                            "Cannot read configuration file. Please contact your technical support."
+    IDS_GENERIC_STARTING_ERROR 
+                            "Cannot start swSSO. Please contact your technical support."
+    IDS_MENU_UPLOADER       "Upload"
+    IDS_UPLOAD_OK           "Upload successful."
+    IDS_UPLOAD_NOK          "Upload on server failed."
+    IDS_PROXY_OK            "Connection succeeded."
+    IDS_PROXY_NOK           "Connection failed. Please check proxy parameters."
+    IDS_MENU_SSO_NOW        "Connect to this web site"
+    IDS_ID2                 "2nd id"
+    IDS_ID3                 "3rd id"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ID4                 "4th id"
+    IDS_MENU_DUPLIQUER      "&Duplicate"
+    IDS_RECOVERYSTOREPWDFAILED 
+                            "An unexpected error occured. If you forget your password, your helpdesk will not be able to reset it.\r\nPlease contact immediately your technical support."
+    IDS_BADPWD2             "Bad password"
+    IDS_TITRE_APPNSITES     "swSSO - Web site manager"
+    IDS_MENU_CHANGER_IDS    "Username and password..."
+    IDS_CHANGER_IDS         "Do you really want to modify username, ids and password for \r\n%d applications?"
+    IDS_MULTI_UPLOAD_OK     "Upload successful:\r\n- Uploaded: %d\r\n- Skipped: %d"
+    IDS_GET_ALL_CONFIGS_ERROR 
+                            "Cannot download configurations. No local change has been made."
+    IDS_GET_ALL_CONFIGS     "Do you want to download all configurations available?"
+    IDS_LAUNCH_APP          "Navigate to this web site"
+    IDS_LAUNCH_ONE_APP      "Start an application..."
+    IDS_NO_LAUNCH_PATH      "Command line not defined. Cannot start this application."
+    IDS_GETCONFIGS_RESULT   "- Added: %d\r\n- Updated: %d\r\n- Diabled: %d\r\n- Deleted: %d"
+    IDS_DELETION_FORBIDDEN  "This is an enterprise configuration. Deletion is forbidden."
+    IDS_IDANDPWDTEXT_NEW    "Please enter username and password for:\r\n%s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_IDANDPWDTITLE_NEW   "swSSO - New application"
+    IDS_IDANDPWDTEXT_MISSING 
+                            "Username and password are not defined for:\r\n%s"
+    IDS_IDANDPWDTITLE_MISSING "swSSO - Missing informations"
+    IDS_LAUNCH_APP_ERROR    "Cannot start application (error %d) :\r\n- Application: %s\r\n- Parameters: %s"
+    IDS_COMBOTYPE4          "Web site (easy mode)"
+    IDS_MENU_AJOUTER_COMPTE "Add accou&nt"
+    IDS_ERROR_INI_SAV       "Cannot save configuration file (erreur %d).\r\nIf this file already exists, please delete it and restart swSSO:\r\n%s."
+    IDS_ERROR_INI_RESTORED  "Not used"
+    IDS_ERROR_INI_NOT_RESTORED "Not used"
+    IDS_MENU_UPLOADER_VERS  "Upload to..."
+    IDS_TAB_APPLICATIONS    "Web site and applications"
+    IDS_TAB_IDPWD1          "Username and password"
+    IDS_TAB_IDPWD2          "More ids..."
+    IDS_TAB_CONFIG1         "Configuration"
+    IDS_TAB_CONFIG2         "More options..."
+    IDS_INFO_WINDOWS_SSO_MIGRATION 
+                            "swSSO will ask for your master password for the last time."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_WINDOWS_SSO_MIGRATION 
+                            "swSSO cannot use your Windows account. Please restart your computer."
+    IDS_ERROR_WINDOWS_SSO_LOGON 
+                            "Cannot start swSSO. Please restart your computer."
+    IDS_ERROR_WINDOWS_SSO_VER 
+                            "Please connect once with your master password before trying to switch to Windows password mode."
+    IDS_SYNCHRO_PWD_OK      "Switch to Windows password mode succeeded."
+    IDS_ERROR_WINDOWS_SSO_LOGON2 
+                            "Cannot start swSSO.\r\nSelect OK to start recovery procedure or Cancel to quit swSSO."
+    IDS_RECOVERY_ENCRYPTED_OK "Recovery successful!"
+    IDS_RECOVERY_WINDOWS_OK "Recovery successful!"
+    IDS_RECOVERY_ERROR      "Recovery failed!"
+    IDS_RECOVERY_ERROR_FORMAT "Bad response format."
+    IDS_RECOVERY_NEW_PWD    "Please enter your new password below:"
+    IDS_ERROR_BADRESPONSEFILE "Bad response file."
+    IDS_PP_WINDOWS          "AES-256 & PBKDF2 (Windows password)"
+    IDS_PLEASE_ENTER_WINDOWS_PASSWORD 
+                            "Please enter your Windows password below:"
+    IDS_MENU_CHANGEAPPPWD   "Change password for this application"
+    IDS_MSG_CHANGE_APP_PWD_1 
+                            "If necessary, paste your current password into the application ""current password"" entry field using %s"
+    IDS_MSG_CHANGE_APP_PWD_2 
+                            "If necessary, paste your current password into the application ""current password"" entry field using %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TIP_TB_ID           "Your username for this application"
+    IDS_TIP_TB_PWD          "Your password for this application. Clic the magnifying glass to reveal."
+    IDS_TIP_CB_TYPE         "Window type: select 'Web site (easy mode)' to configure a Internet or Intranet site."
+    IDS_TIP_TB_TITRE        "Full or partial title of the window. Joker '*' is allowed at beginning and/or middle and/or end of string. Examples: *title, title*, *title*, t*e"
+    IDS_TIP_TB_URL          "Full or partial URL. Joker '*' is allowed at beginning and/or middle and/or end of string. Examples: *google.com, *g*gle.c*, http://www.google.*"
+    IDS_TIP_TB_ID_ID        "Easy mode: relative position of username entry field compared to password entry field. Example: -1 if username field is situated just before password field."
+    IDS_TIP_TB_PWD_ID       "Easy mode: absolute position of password entry field. Usually, a login form has only one password field. In this cas, value 1 is OK."
+    IDS_TIP_TB_VALIDATION   "Easy mode: keyboard input to simulate to submit login form. Examples: [ENTER] or [TAB][ENTER]"
+    IDS_TIP_TB_LANCEMENT    "(Optional) Only if you want to use application launcher: command line to execute to start application"
+    IDS_TIP_TB_ID2          "(Optional) 2nd id. Examples: birthday, postal code..."
+    IDS_TIP_TB_ID3          "(Optional) 3rd id. Examples: birthday, postal code..."
+    IDS_TIP_TB_ID4          "(Optional) 4th id. Examples: birthday, postal code..."
+    IDS_TIP_CB_ID2_TYPE     "(Optional) 2nd id type: 'input field' ou 'combo box'. If you use easy mode, always choose 'Input field'"
+    IDS_TIP_TB_ID2_ID       "(Optional) Easy mode: relative position of 2nd id entry field compared to password entry field. Example: -1 if 2nd id field is situated just before password field."
+    IDS_TIP_CB_ID3_TYPE     "(Optional) 3rd id type: 'input field' ou 'combo box'. If you use easy mode, always choose 'Input field'"
+    IDS_TIP_TB_ID3_ID       "(Optional) Easy mode: relative position of 3rd id entry field compared to password entry field. Example: -1 if 3rd id field is situated just before password field."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TIP_CB_ID4_TYPE     "(Optional) 4th id type: 'input field' ou 'combo box'. If you use easy mode, always choose 'Input field'"
+    IDS_TIP_TB_ID4_ID       "(Optional) Easy mode: relative position of 4th id entry field compared to password entry field. Example: -1 if 4th id field is situated just before password field."
+    IDS_TIP_TB_KBSIM        "(Optional) Simulated keyboard input. Use [ID] for username, [PWD] for password, [TAB] to simulate TAB key press, [ENTER]to simulate ENTER key press"
+    IDS_BTN_RETRY           "Unused"
+    IDS_BTN_FORGOT          "Unused"
+    IDS_CONFIRM_NEWPWD_MSG  "Do you really want to save your new password?"
+    IDS_CONFIRM_NEWPWD_TITLE "swSSO - Save new password"
+    IDS_TIP_LOUPE           "Click here to reveal your password. Click again to mask it."
+    IDS_MSG_CONFIRM_PWD_SAVE 
+                            "Do you really want to save your new password for application %s?"
+    IDS_MSG_MAX_CONFIGS     "Technical error: you cannot add any new application."
+    IDS_WARNING_AD_PWD      "Warning: if you don't enter your new Windows password, swSSO will not be able to connect you to some applications.\r\nDo you want to continue anyway?"
+    IDS_MENU_UPLOADER_IDPWD "Upload with username and password"
+    IDS_MENU_UPLOADER_IDPWD_VERS "Upload with username and password to..."
+    IDS_TIP_PWD_GROUP       "(Administrator only) Used to group configurations sharing the same ids and password."
+    IDS_TIP_AUTO_LOCK       "If unchecked, swSSO will retry indefinitely to authenticate to this application, even if it fails. Be carefull, your account may be locked if a wrong password is entered too many times."
+    IDS_DECOUPLAGE_WINDOWS  "Please enter your Windows password below:"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PP_NOMASTERPWD      "AES-256 & PBKDF2 (no master password)"
+    IDS_MENU_MDP_WINDOWS    "&Windows password..."
+    IDS_ERROR_WINDOWS_SSO_LOGON3 
+                            "Cannot start swSSO.\r\nPlease close and open your session again."
+    IDS_MSG_CHANGE_APP_PWD_3 
+                            "Then paste this password into the application ""new password"" and ""confirm password"" entry fields using %s"
+    IDS_MENU_REFRESH_RIGHTS "Update permissions"
+    IDS_REFRESH_RIGHTS_DONE "Permissions updated."
+    IDS_REFRESH_RIGHTS_ERROR "Failed to update permissions."
+    IDS_ADMIN_PWD_STORE_ERROR "Failed to save administrator password."
+    IDS_ADMIN_PWD_STORE_OK  "Administrator password saved."
+    IDS_CLOSE_APPNSITES_FIRST 
+                            "Please close 'Web sites and applications management' window first."
+    IDS_COMBOIDTYPE3        "Text label to find in the authentication form"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DELETE_CONFIG_ON_SERVER_OK "Configuration deleted on the server."
+    IDS_DELETE_CONFIG_ON_SERVER_KO 
+                            "Failed to delete configuration on the server."
+    IDS_DELETE_CATEG        "DO you really want to delete %s?\r\nWarning: it will also be delete on the server."
+    IDS_DELETE_CATEG_ON_SERVER_OK "Category deleted on the server."
+    IDS_DELETE_CATEG_ON_SERVER_KO "Failed to delete category on the server."
+    IDS_DELETE_CATEG_NOT_EXISTING 
+                            "Information: category does not exist on the server."
+    IDS_SYSTRAY_ADMIN       "swSSO - Admin mode"
+    IDS_TAB_DOMAINS         "Domains"
+    IDS_MENU_ADD_DOMAIN     "Add a new domain"
+    IDS_DELETE_DOMAIN_CONFIRM 
+                            "Do you really want to delete %s?\r\nWarning: it will also be delete on the server."
+    IDS_DELETE_DOMAIN_OK    "Domain deleted on the server."
+    IDS_DELETE_DOMAIN_KO    "Failed to delete domain on the server. Please check if all applications have been removed from this domain."
+    IDS_NEW_DOMAIN          "New domain"
+    IDS_MSG_MAX_DOMAINS     "Technical error: you cannot add any new domain."
+    IDS_UPLOAD_DOMAIN_OK    "Upload successfull."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UPLOAD_DOMAIN_KO    "Upload failed."
+    IDS_DOMAIN_ALREADY_EXISTS 
+                            "This domain already exists. Please choose another domain name."
+    IDS_RENAME_DOMAIN_OK    "Rename successfull on the server."
+    IDS_RENAME_DOMAIN_KO    "Rename failed."
+    IDS_TX_INFO_PWD_GROUP   "This application belongs to a password group. Any password change for username %s will be applied on all configurations belonging to this group (same highlight color)."
+    IDS_IDANDPWDTITLE_NEWACCOUNT "Add a new account"
+    IDS_IDANDPWDTEXT_NEWACCOUNT "Username and password for new account:\r\n%s"
+    IDS_FERMER              "&Close"
+    IDS_AJOUTER             "&Add"
+    IDS_RECOVER_WEBSERVICE_ERROR 
+                            "An unexpected error occurred concerning your password and the recovery service is anunvailable. Please try again later or call your technical support."
+    IDS_TRANSCRYPT_ERROR    "An unexpected error occurred on %d configurations. Your ids and passwords have been discarded, so you will be prompted at next application login.\r\nAffected configurations are marked with a black circle in the Web sites and applications management window."
+    IDS_COMBOTYPE5          "Windows app (easy mode)"
+    IDS_MENU_AIDE           "&Help..."
+    IDS_NOTIFY_TITLE_UPGRADED "swSSO udpated!"
+    IDS_NOTIFY_TEXT_UPGRADED "New version: %c.%c%c"
+    IDS_NOTIFY_TEXT_UPGRADED_BETA "New version: %c.%c%c BETA %c"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DEFAULT             "OS language"
+    IDS_TIP_AUTO_PUBLISH    "If checked, this configuration will be automatically downloaded by all users belonging to the domain. You must set GetAutoPublishedConfigsAtStart=1 in EnterpriseOptions."
+    IDS_MENU_ASK_THIS_APP   "Request configuration of this application..."
+    IDS_SUBTITLE_CONFIG_NOT_FOUND "Configuration not found"
+    IDS_MENU_AJOUTER_COFFRE "Save a login / password"
+    IDS_NEW_COFFRE          "Account"
+    IDS_APP_ALREADY_EXISTS  "A configuration with the same id already exists and will be disabled. Do you want to proceed?"
+    IDS_SERVER_ADMIN_BAD_PWD 
+                            "Cannot connect to swSSO server (bad password). Please contact a super admin to reset your swSSO password. In the meantime, you can work locally. "
+    IDS_SERVER_ADMIN_LOCKED "Your swSSO account is locked. Please contact a super admin to unlock it. In the meantime, you can work locally."
+    IDS_CHANGE_ADMIN_PWD_OK "Password change successfull"
+    IDS_CHANGE_ADMIN_PWD_KO "Your password has been changed on your computer but cannot be changed on server. Please contact a super admin to reset it."
+    IDS_SERVER_ADMIN_LOGIN_KO 
+                            "Authentication failed on server: you can work locally, but you won't be able to publish configurations."
+    IDS_YES                 "Yes"
+    IDS_NO                  "No"
+    IDS_CONFIRM_RESET       "Do you really want to reset your safebox ? All your configurations will be deleted and downloaded again from the server."
+    IDS_CLOSE_APPNSITES_BEFORE_PWDCHG 
+                            "Please close 'swSSO web sites and applications management' window to start automatic password change on this application."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MENU_SIGNUP         "Sign up for this site..."
+    IDS_ERROR_URL           "Cannot read URL. Please open your browser in foreground and retry."
+    IDS_TITLE_SIGNUP        "Sign up for:"
+END
+
+#endif    // English resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// French resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PWD DIALOGEX 0, 0, 267, 106
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Gestionnaire de mots de passe"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,242,1
+    LTEXT           "Veuillez saisir ci-dessous votre mot de passe swSSO :",TX_FRAME,44,11,214,10
+    EDITTEXT        TB_PWD,60,45,200,13,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "&Ne plus me demander mon mot de passe sur cet ordinateur",CK_SAVE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,60,63,199,11
+    DEFPUSHBUTTON   "OK",IDOK,156,85,50,14,WS_DISABLED
+    PUSHBUTTON      "Annuler",IDCANCEL,210,85,50,14
+    LTEXT           "&Mot de passe :",IDC_STATIC,9,47,48,10
+END
+
+IDD_APPNSITES DIALOGEX 0, 0, 438, 310
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "swSSO - Gestion des sites web"
+FONT 8, "Tahoma", 400, 0, 0x0
+BEGIN
+    CTEXT           "MODE ADMINISTRATEUR",TX_MODE_ADMIN,7,2,429,15,SS_CENTERIMAGE | NOT WS_VISIBLE
+    ICON            "",IMG_ID,1016,18,18,16,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID2,415,57,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID3,417,70,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID4,416,86,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_TYPE,9,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_TITRE,32,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_URL,55,286,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID_ID,80,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_PWD_ID,106,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_VALIDATION,129,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_LANCEMENT,154,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID2_TYPE,179,286,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID2_ID,197,287,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID3_TYPE,226,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID3_ID,243,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID4_TYPE,264,285,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_ID4_ID,283,287,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_PWD_GROUP,332,286,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
+    ICON            "",IMG_AUTO_LOCK,357,286,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
+    ICON            "",IMG_KBSIM,309,284,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    ICON            "",IMG_PWD,419,36,18,16,SS_NOTIFY,WS_EX_TRANSPARENT
+    CONTROL         "Tree1",TV_APPLICATIONS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,15,29,168,202
+    CONTROL         "Tab1",TAB_APPLICATIONS,"SysTabControl32",0x0,7,7,181,235
+    CONTROL         "Tab1",TAB_IDPWD,"SysTabControl32",0x0,197,7,16,85
+    CONTROL         "Tab1",TAB_CONFIG,"SysTabControl32",0x0,197,98,15,169
+    LTEXT           "&Identifiant",TX_ID,203,25,38,8
+    EDITTEXT        TB_ID,259,23,158,13,ES_AUTOHSCROLL
+    CONTROL         "Identi&fiant AD",CK_AD_ID,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_GROUP | WS_TABSTOP,213,92,61,8
+    LTEXT           "&Mot de passe",TX_PWD,203,39,44,8
+    EDITTEXT        TB_PWD,259,37,133,13,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Mot &de passe AD",CK_AD_PWD,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_GROUP | WS_TABSTOP,278,92,70,8
+    EDITTEXT        TB_PWD_CLEAR,265,42,133,13,ES_AUTOHSCROLL
+    LTEXT           "&2ème identifiant",TX_ID2,203,52,57,8
+    EDITTEXT        TB_ID2,259,50,158,13,ES_AUTOHSCROLL
+    LTEXT           "&3ème identifiant",TX_ID3,203,66,53,8
+    EDITTEXT        TB_ID3,259,64,158,13,ES_AUTOHSCROLL
+    LTEXT           "&4ème identifiant",TX_ID4,203,80,52,8
+    EDITTEXT        TB_ID4,259,77,158,13,ES_AUTOHSCROLL
+    LTEXT           "Typ&e",TX_TYPE,209,102,17,8
+    COMBOBOX        CB_TYPE,280,101,140,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Titre de la fenêtre",TX_TITRE,209,115,62,8
+    EDITTEXT        TB_TITRE,281,113,128,13,ES_AUTOHSCROLL
+    LTEXT           "&URL",TX_URL,209,125,16,8
+    EDITTEXT        TB_URL,281,124,128,13,ES_AUTOHSCROLL
+    CONTROL         "&Simulation de frappe clavier",CK_KBSIM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,201,137,100,10
+    EDITTEXT        TB_KBSIM,303,134,128,55,ES_MULTILINE | WS_VSCROLL
+    LTEXT           "&Champ identifiant",TX_ID_ID,209,148,61,8
+    EDITTEXT        TB_ID_ID,281,144,128,13,ES_AUTOHSCROLL
+    LTEXT           "C&hamp mot de passe",TX_PWD_ID,209,160,67,8
+    EDITTEXT        TB_PWD_ID,281,157,128,13,ES_AUTOHSCROLL
+    LTEXT           "&Validation",TX_VALIDATION,212,173,32,8
+    EDITTEXT        TB_VALIDATION,281,170,128,13,ES_AUTOHSCROLL
+    LTEXT           "&Lancement",TX_LANCEMENT,211,261,40,8
+    EDITTEXT        TB_LANCEMENT,282,258,128,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Parcourir",PB_PARCOURIR,399,258,38,14
+    LTEXT           "Type 2ème identifiant",TX_ID2_TYPE,211,183,70,8
+    COMBOBOX        CB_ID2_TYPE,282,182,140,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Nom 2ème identifiant",TX_ID2_ID,210,199,68,8
+    EDITTEXT        TB_ID2_ID,282,194,128,13,ES_AUTOHSCROLL
+    LTEXT           "Type 3ème identifiant",TX_ID3_TYPE,211,209,70,8
+    COMBOBOX        CB_ID3_TYPE,282,208,140,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Nom 3ème identifiant",TX_ID3_ID,210,219,67,8
+    EDITTEXT        TB_ID3_ID,282,216,128,13,ES_AUTOHSCROLL
+    LTEXT           "Type 4ème identifiant",TX_ID4_TYPE,211,237,70,8
+    COMBOBOX        CB_ID4_TYPE,282,231,140,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Nom 4ème identifiant",TX_ID4_ID,211,250,67,8
+    LTEXT           "Groupe (mot de passe)",TX_PWD_GROUP,213,271,74,8,NOT WS_VISIBLE
+    EDITTEXT        TB_ID4_ID,283,247,128,13,ES_AUTOHSCROLL
+    EDITTEXT        TB_PWD_GROUP,285,270,128,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    CONTROL         "&Détecter les erreurs de connexion à cette application",CK_AUTO_LOCK,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,17,272,180,8
+    DEFPUSHBUTTON   "OK",IDOK,7,253,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,62,253,50,14
+    PUSHBUTTON      "&Appliquer",IDAPPLY,121,253,50,14
+    ICON            "",IMG_LOUPE,407,36,20,20,SS_NOTIFY,WS_EX_TRANSPARENT
+    CONTROL         "",TV_DOMAINS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,22,33,168,202
+    LTEXT           "Cette application appartient à un groupement de mot de passe. Le changement de mot de passe de cet identifiant sera également réalisé dans tous vos enregistrements de ce groupe (surlignés de la même couleur).",TX_INFO_PWD_GROUP,345,92,691,8,NOT WS_VISIBLE
+    ICON            "",IMG_AUTO_PUBLISH,377,286,20,20,SS_NOTIFY | NOT WS_VISIBLE,WS_EX_TRANSPARENT
+    LTEXT           "Ce type de configuration ne réalise pas d'authentification automatique, mais vous permet de mémoriser des identifiants et mots de passe de façon sécurisée.",TX_COFFRE,213,278,204,24
+    CONTROL         "",LV_DOMAIN_CONFIGS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,199,15,174,137
+END
+
+IDD_CHANGE_IDS DIALOG 0, 0, 268, 160
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Identifiants et mot de passe"
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "&Identifiant :",CK_ID1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,47,59,10
+    EDITTEXT        TB_ID1,93,45,167,13,ES_AUTOHSCROLL | WS_DISABLED
+    CONTROL         "&Mot de passe :",CK_PWD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,65,68,10
+    EDITTEXT        TB_PWD,93,63,167,13,ES_PASSWORD | ES_AUTOHSCROLL | WS_DISABLED
+    CONTROL         "&2ème identifiant :",CK_ID2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,83,77,10
+    EDITTEXT        TB_ID2,93,82,167,13,ES_AUTOHSCROLL | WS_DISABLED
+    CONTROL         "&3ème identifiant :",CK_ID3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,101,77,10
+    EDITTEXT        TB_ID3,93,100,167,13,ES_AUTOHSCROLL | WS_DISABLED
+    CONTROL         "&4ème identifiant :",CK_ID4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,120,77,10
+    EDITTEXT        TB_ID4,93,119,167,13,ES_AUTOHSCROLL | WS_DISABLED
+    DEFPUSHBUTTON   "OK",IDOK,157,140,50,14,WS_DISABLED
+    PUSHBUTTON      "Annuler",IDCANCEL,211,140,50,14
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,251,1
+    LTEXT           "Saisissez les nouveaux identifiants et mot de passe à utiliser pour toutes les applications de cette catégorie :",TX_FRAME,47,7,214,18
+END
+
+IDD_CHANGE_PWD DIALOG 0, 0, 261, 124
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Changement de mot de passe"
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,249,1
+    LTEXT           "&Mot de passe actuel :",IDC_STATIC,7,45,72,10
+    EDITTEXT        TB_OLD_PWD,89,43,165,13,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Nouveau mot de passe :",IDC_STATIC,7,63,79,10
+    EDITTEXT        TB_NEW_PWD1,89,61,165,13,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirmation :",IDC_STATIC,7,82,50,10
+    EDITTEXT        TB_NEW_PWD2,89,79,165,13,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,151,103,50,14,WS_DISABLED
+    PUSHBUTTON      "Annuler",IDCANCEL,205,103,50,14
+    LTEXT           "Vous pouvez ici changer votre mot de passe swSSO.",TX_FRAME,44,11,214,10
+END
+
+IDD_CHOOSE_CONFIG DIALOG 0, 0, 295, 229
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Choix du compte"
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,294,1
+    CONTROL         "",LV_CONFIGS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SORTASCENDING | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,38,282,169
+    DEFPUSHBUTTON   "OK",IDOK,186,211,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,240,211,49,14
+    LTEXT           "Veuillez sélectionner le compte à utiliser puis cliquer sur OK :",TX_FRAME,44,11,242,10
+END
+
+IDD_ID_AND_PWD DIALOG 0, 0, 266, 167
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Ajout d'une application"
+FONT 8, "Tahoma"
+BEGIN
+    CTEXT           "Je veux utiliser des informations de connexion existantes",TX_EXISTING,6,146,111,18,0,WS_EX_TRANSPARENT
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,254,1
+    LTEXT           "TX_FRAME",TX_FRAME,47,6,215,20
+    LTEXT           "&Identifiant :",IDC_STATIC,7,46,49,9
+    EDITTEXT        TB_ID,128,44,131,12,ES_AUTOHSCROLL
+    LTEXT           "&Mot de passe :",IDC_STATIC,7,66,49,9
+    EDITTEXT        TB_PWD,128,64,131,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,153,146,50,14,WS_DISABLED
+    PUSHBUTTON      "Annuler",IDCANCEL,207,146,50,14
+    EDITTEXT        TX_ID2,6,86,117,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        TB_ID2,128,84,131,12,ES_AUTOHSCROLL
+    EDITTEXT        TX_ID3,6,106,117,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        TB_ID3,128,104,131,12,ES_AUTOHSCROLL
+    EDITTEXT        TX_ID4,6,126,117,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        TB_ID4,128,124,131,12,ES_AUTOHSCROLL
+END
+
+IDD_LAUNCH_APP DIALOGEX 0, 0, 250, 316
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "swSSO - Lanceur"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "Tree1",TV_APPLICATIONS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,8,7,233,279
+    DEFPUSHBUTTON   "&Lancer",IDOK,139,290,50,14
+    PUSHBUTTON      "&Fermer",IDCANCEL,193,290,49,14
+    CONTROL         "&Toujours visible",CK_VISIBLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,290,61,10
+END
+
+IDD_MESSAGEBOX3B DIALOGEX 0, 0, 300, 102
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,288,1
+    LTEXT           "TX_SUBTITLE",TX_SUBTITLE,43,7,246,16
+    DEFPUSHBUTTON   "PB_B1",PB_B1,55,82,60,14
+    PUSHBUTTON      "PB_B2",PB_B2,119,82,60,14
+    PUSHBUTTON      "IDCANCEL",IDCANCEL,183,82,60,14
+    LTEXT           "TX_MESSAGE ligne 1\r\nligne2\r\nligne3\r\nligne4",TX_MESSAGE,43,41,250,32
+    ICON            "",STATIC_ICONE,11,41,20,20
+    LTEXT           "MAIL TO",TX_MAILTO,43,73,250,9,NOT WS_VISIBLE
+END
+
+IDD_SELECT_ACCOUNT DIALOG 0, 0, 250, 316
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "swSSO - Sélectionner un identifiant"
+FONT 8, "Tahoma"
+BEGIN
+    PUSHBUTTON      "Annuler",IDCANCEL,193,290,49,14
+    DEFPUSHBUTTON   "OK",IDOK,139,290,50,14
+    CONTROL         "Tree1",TV_APPLICATIONS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_TABSTOP,8,7,233,279
+END
+
+IDD_SIMPLE_PWD_CHOICE DIALOG 0, 0, 284, 168
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "swSSO - Gestionnaire de mots de passe"
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,271,1
+    CTEXT           "Bienvenue dans swSSO !",TX_FRAME,41,11,188,12
+    LTEXT           "Mot de passe :",TX_PWD1,11,81,50,8
+    EDITTEXT        TB_PWD1,65,79,204,13,ES_PASSWORD | ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "Confirmation :",TX_PWD2,11,98,50,8
+    EDITTEXT        TB_PWD2,65,96,204,13,ES_PASSWORD | ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "&Se souvenir de mon mot de passe sur cet ordinateur (vous devrez néanmoins fournir votre mot de passe si vous utilisez swSSO sur un autre ordinateur ou si vous réinstallez Windows)",CK_SAVE,
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,11,118,260,25
+    DEFPUSHBUTTON   "OK",IDOK,167,148,50,14,WS_DISABLED
+    PUSHBUTTON      "Annuler",IDCANCEL,220,148,50,14
+    LTEXT           "Vous devez définir un mot de passe qui sera utilisé pour protéger vos informations de connexion à vos sites et applications. Choisissez un mot de passe complexe, mais surtout ne le perdez pas, il n'existe aucun moyen pour le récupérer !",TX_FRAME1,10,40,268,32,NOT WS_GROUP
+END
+
+PSP_ABOUT DIALOGEX 0, 0, 339, 229
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "A propos de swSSO"
+FONT 8, "Tahoma", 400, 0, 0x0
+BEGIN
+    PUSHBUTTON      "&Licence",PB_LICENCE,280,59,50,14
+    PUSHBUTTON      "&Parcourir",PB_PARCOURIR,281,97,50,14
+    PUSHBUTTON      "&Ouvrir",PB_OUVRIR,281,128,50,14
+    EDITTEXT        TX_PORTAL,100,101,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT        TX_CONFIGFILE,100,132,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    LTEXT           "Copyright © 2004-2020 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Statistiques",TX_STATISTIQUES,8,187,41,10
+    LTEXT           "Nombre de SSO réalisés :",-1,18,203,82,8
+    LTEXT           "0",TX_NBSSO,100,203,230,8
+    CTEXT           "https://www.swsso.fr",TX_URL,206,16,95,10,0,WS_EX_TRANSPARENT
+    LTEXT           "Informations",TX_INFORMATIONS,7,85,44,11
+    LTEXT           "Algorithme chiffrement :",-1,18,116,79,8
+    LTEXT           "???",TX_PWDENCRYPTED,102,116,171,8
+    LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,18,132,81,8
+    LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,58,259,18
+    LTEXT           "Licence",TX_LICENCE,7,42,28,11
+    LTEXT           "1.23b4 (09/01/2020)",TX_ABOUT,47,12,157,8
+    LTEXT           "Fichier swSSO Mobile :",TX_PORTAL2,18,101,78,8
+    CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,47,248,1
+    CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,90,217,1
+    CONTROL         "",IDC_SEP_STATISTIQUES,"Static",SS_ETCHEDHORZ,52,192,245,1
+    LTEXT           "Applications actives :",-1,18,168,68,8
+    LTEXT           "0",TX_NBAPP,100,168,88,8
+    LTEXT           "Contenu du coffre",TX_COFFRE,8,152,63,10
+    CONTROL         "",IDC_SEP_COFFRE,"Static",SS_ETCHEDHORZ,72,157,245,1
+END
+
+PSP_BROWSER DIALOGEX 0, 0, 338, 214
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Navigateurs"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    LTEXT           "Si vous ne souhaitez pas que swSSO gère les mots de passe pour certains navigateurs, vous pouvez les décocher ici. Sinon, veillez à bien désactiver l'enregistrement des mots de passe dans les options de votre navigateur.",TX_STATIC,17,99,298,30
+    CONTROL         "&Chrome",CK_CHROME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,64,45,8
+    CONTROL         "",IDC_SEP_SECURITE,"Static",SS_ETCHEDHORZ,111,14,221,1
+    LTEXT           "Navigateurs gérés par swSSO",TX_BROWSER,7,10,98,8
+    CONTROL         "&Firefox",CK_FIREFOX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,46,43,8
+    CONTROL         "&Internet Explorer",CK_IE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,17,28,76,8
+    CONTROL         "&Edge",CK_EDGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,82,45,8
+    LTEXT           "&Ne pas me redemander mon mot de passe pendant",TX_PROXY_USER3,18,151,164,8
+    EDITTEXT        TB_MASTER_PWD_EXPIRATION,186,149,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",SPIN_MASTER_PWD_EXPIRATION,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,206,148,12,14
+    LTEXT           "&Langue :",TX_PROXY_USER2,18,169,28,8
+    COMBOBOX        CB_LANGUE,54,167,80,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Divers",TX_SECURITE,9,135,21,8
+    CONTROL         "",IDC_SEP_SECURITE3,"Static",SS_ETCHEDHORZ,33,139,299,1
+    LTEXT           "minutes.",TX_PROXY_USER4,218,151,28,8
+END
+
+IDD_MESSAGEBOX3BLINK DIALOGEX 0, 0, 301, 95
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,288,1
+    LTEXT           "TX_SUBTITLE",TX_SUBTITLE,43,7,246,16
+    DEFPUSHBUTTON   "PB_B1",PB_B1,55,76,60,14
+    PUSHBUTTON      "PB_B2",PB_B2,119,76,60,14
+    PUSHBUTTON      "IDCANCEL",IDCANCEL,183,76,60,14
+    LTEXT           "TX_MESSAGE ligne 1\r\nligne2",TX_MESSAGE,43,41,250,18
+    ICON            "",STATIC_ICONE,11,41,21,20
+    LTEXT           "MAIL TO",TX_MAILTO,43,59,250,9,NOT WS_VISIBLE
+END
+
+IDD_SIGNUP DIALOGEX 0, 0, 318, 159
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "S'inscrire sur ce site"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "1. Saisissez l'identifiant ou l'adresse e-mail pour ce site, puis cliquez sur Copier et enfin collez la valeur sur le site (clic-droit / coller ou CTRL+V).",TX_FRAME1,47,8,254,18
+    LTEXT           "2. Répétez l'opération avec le mot de passe puis, une fois l'enregistrement finalisé sur le site, cliquez sur Enregistrer.",TX_FRAME2,47,27,254,18
+    LTEXT           "Astuce : gagnez du temps, faites clic-droit sur les champs Identifiant et Mot de passe, puis laissez-vous guider !",TX_FRAME3,93,112,209,18
+    LTEXT           "&Identifiant ou e-mail :",IDC_STATIC,17,64,76,8
+    EDITTEXT        TB_ID,93,62,171,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Copier",PB_COPY_ID,271,61,30,14
+    LTEXT           "&Mot de passe :",IDC_STATIC,17,83,84,8
+    EDITTEXT        TB_PWD,93,81,171,13,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        TB_PWD_CLEAR,93,81,171,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Copier",PB_COPY_PWD,271,80,30,14
+    CONTROL         "&Afficher en clair",CK_VIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,100,71,8
+    DEFPUSHBUTTON   "&Enregistrer",IDOK,206,137,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,261,137,50,14
+    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,7,50,295,1
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PWD, DIALOG
+    BEGIN
+    END
+
+    IDD_APPNSITES, DIALOG
+    BEGIN
+    END
+
+    IDD_CHANGE_IDS, DIALOG
+    BEGIN
+    END
+
+    IDD_CHANGE_PWD, DIALOG
+    BEGIN
+    END
+
+    IDD_ID_AND_PWD, DIALOG
+    BEGIN
+    END
+
+    IDD_LAUNCH_APP, DIALOG
+    BEGIN
+    END
+
+    IDD_MESSAGEBOX3B, DIALOG
+    BEGIN
+    END
+
+    PSP_ABOUT, DIALOG
+    BEGIN
+        RIGHTMARGIN, 331
+        BOTTOMMARGIN, 222
+    END
+
+    PSP_BROWSER, DIALOG
+    BEGIN
+        RIGHTMARGIN, 332
+    END
+
+    IDD_MESSAGEBOX3BLINK, DIALOG
+    BEGIN
+        RIGHTMARGIN, 300
+        BOTTOMMARGIN, 92
+    END
+
+    IDD_SIGNUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 311
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_PWD_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Annuler",                    IDM_SWUNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Couper",                     IDM_SWCUT
+        MENUITEM "Co&pier",                     IDM_SWCOPY
+        MENUITEM "C&oller",                     IDM_SWPASTE
+        MENUITEM "&Supprimer",                  IDM_SWCLEARSELECTION
+        MENUITEM SEPARATOR
+        MENUITEM "Sélectionner &tout",          IDM_SWSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Générer (10 caractères)",    IDM_GENERATE_SPECIALCHARS_10
+        MENUITEM "&Générer (12 caractères)",    IDM_GENERATE_SPECIALCHARS_12
+        MENUITEM "&Générer (15 caractères)",    IDM_GENERATE_SPECIALCHARS_15
+        MENUITEM "&Générer (20 caractères)",    IDM_GENERATE_SPECIALCHARS_20
+        MENUITEM "&Générer (10 lettres et chiffres)", IDM_GENERATE_ALPHANUM_10
+        MENUITEM "&Générer (12 lettres et chiffres)", IDM_GENERATE_ALPHANUM_12
+        MENUITEM "&Générer (15 lettres et chiffres)", IDM_GENERATE_ALPHANUM_15
+        MENUITEM "&Générer (20 lettres et chiffres)", IDM_GENERATE_ALPHANUM_20
+    END
+END
+
+IDM_ID_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Annuler",                    IDM_SWUNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Couper",                     IDM_SWCUT
+        MENUITEM "Co&pier",                     IDM_SWCOPY
+        MENUITEM "C&oller",                     IDM_SWPASTE
+        MENUITEM "&Supprimer",                  IDM_SWCLEARSELECTION
+        MENUITEM SEPARATOR
+        MENUITEM "Sélectionner &tout",          IDM_SWSELECTALL
+        MENUITEM SEPARATOR
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_APPNSITES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+PSP_ABOUT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+PSP_BROWSER AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SIGNUP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PWD AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_LAUNCH_APP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_BADPWD              "Mot de passe incorrect."
+    IDS_DEFAULT_PORTAL      "Aucun (cliquez sur parcourir pour le définir)"
+    IDS_COMBOTYPE1          "Site Web"
+    IDS_COMBOTYPE2          "Popup d'authentification du navigateur"
+    IDS_COMBOTYPE3          "Fenêtre Windows"
+    IDS_OLDVERSION          "0.42 ou inférieure"
+    IDS_PP_ENCRYPTED        "AES-256 et PBKDF2 (mot de passe maître)"
+    IDS_DELETE              "Confirmez-vous la suppression de la configuration %s ?\r\nAttention, cette configuration sera également supprimée du serveur."
+    IDS_MENU_ACTIVER        "&Activer"
+    IDS_MENU_AJOUTER_APPLI  "A&jouter une application"
+    IDS_MENU_SUPPRIMER      "&Supprimer"
+    IDS_MENU_DESACTIVER     "&Désactiver"
+    IDS_MENU_QUITTER        "&Quitter"
+    IDS_MENU_PROP           "&Options..."
+    IDS_ACTIVE              "swSSO [Activé]"
+    IDS_DESACTIVE           "swSSO [Désactivé]"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MENU_MDP            "&Mot de passe..."
+    IDS_CHANGE_PWD_FAILED   "Le changement du mot de passe a échoué."
+    IDS_CHANGE_PWD_OK       "Votre mot de passe a été modifié.\r\nTous les mots de passe de vos applications ont été rechiffrés avec ce nouveau mot de passe."
+    IDS_MENU_PORTAL         "P&ortail swSSO..."
+    IDS_MENU_THIS_APPLI     "Ajouter ce site web..."
+    IDS_CONFIG_NOT_FOUND    "La configuration pour ce site n'a pas été trouvée. Voulez-vous la faire manuellement ?"
+    IDS_NEW_VERSION         "Une version plus récente de swSSO a été trouvée (%c.%c%c%s). Voulez-vous visiter le site Internet pour la télécharger ?"
+    IDS_MENU_DEPLACER       "&Déplacer vers..."
+    IDS_CONFIG_ALREADY_EXISTS 
+                            "Vous avez déjà défini un identifiant et un mot de passe pour ce site. Que souhaitez-vous faire ?\r\n\r\n- Remplacer la configuration actuelle par la nouvelle : cliquez sur Oui.\r\n- Ajouter la nouvelle configuration, tout en conservant la configuration actuelle (cette dernière sera désactivée) : cliquez sur Non.\r\n- Conserver l'ancienne configuration sans ajouter la nouvelle : cliquez sur Annuler."
+    IDS_CONFIG_PROXY        "Impossible de joindre le serveur swSSO."
+    IDS_MENU_APPNSITES      "Gestion des sites web..."
+    IDS_VALUE               "%s :"
+    IDS_MENU_RENOMMER       "&Renommer"
+    IDS_COMBOIDTYPE1        "Champ de saisie (html : input)"
+    IDS_COMBOIDTYPE2        "Liste de choix (html : select)"
+    IDS_NON_CLASSE          "Non classé"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NEW_CATEG           "Nouvelle catégorie"
+    IDS_MENU_AJOUTER_CATEG  "Ajouter une &catégorie"
+    IDS_NEW_APP             "Nouvelle application"
+    IDS_APPNAME_ALREADY_EXISTS 
+                            "Une application porte déjà ce nom. Veuillez en choisir un autre."
+    IDS_CATEGNAME_ALREADY_EXISTS 
+                            "Une catégorie porte déjà ce nom. Veuillez en choisir un autre."
+    IDS_CATEG_NOT_EMPTY     "Impossible de supprimer une catégorie contenant des applications."
+    IDS_PASSWORD_POLICY_MESSAGE 
+                            "Votre nouveau mot de passe doit avoir une longueur minimale de 8 caractères et contenir au moins 1 minuscule, 1 majuscule et 1 chiffre."
+    IDS_CATEG_NOT_REMOVABLE "Cette catégorie ne peut pas être supprimée."
+    IDS_FORCE_CHANGE        "Vous avez saisi votre mot de passe actuel. Vous devez choisir un mot de passe différent."
+    IDS_PWD_CHANGED_RECENTLY 
+                            "Vous ne pouvez pas changer votre mot de passe maintenant. Vous devez respecter un intervalle d'au moins %d jour(s) entre deux changements."
+    IDS_NEW_APP_PWD         "Veuillez saisir le nouveau mot de passe de l'application %s"
+    IDS_CONFIG_EXISTS_SUBTITLE 
+                            "Vous avez déjà défini un identifiant et un mot de passe pour ce site dans votre base de mots de passe."
+    IDS_CONFIG_EXISTS_MESSAGE 
+                            "Que souhaitez-vous faire :\r\n- Remplacer les paramètres existants ?\r\n- Ajouter ces nouveaux paramètres tout en conservant ceux existants ?"
+    IDS_CONFIG_EXISTS_B1    "&Remplacer"
+    IDS_CONFIG_EXISTS_B2    "&Ajouter"
+    IDS_CONFIG_EXISTS_B3    "Annuler"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DESACTIVATE_MESSAGE "Si vous pensez qu'il s'agit d'une erreur de l'application, swSSO peut réessayer.\r\nSi vous avez changé votre mot de passe dans l'application, vous devez le changer maintenant dans swSSO.\r\nSinon, vous pouvez suspendre le SSO pour une minute et réessayer plus tard."
+    IDS_MESSAGEBOX_TITLE    "swSSO - Gestionnaire de mots de passe"
+    IDS_DESACTIVATE_SUBTITLE 
+                            "swSSO n'a pas réussi à vous connecter à l'application\r\n%s"
+    IDS_DESACTIVATE_B1      "&Réessayer"
+    IDS_DESACTIVATE_B2      "&Mot de passe..."
+    IDS_DESACTIVATE_B3      "&Suspendre"
+    IDS_ERROR_MESSAGE_INI_FILE 
+                            "Une erreur est survenue lors de la lecture du fichier de configuration.\r\nMerci de contacter le support."
+    IDS_GENERIC_STARTING_ERROR 
+                            "Une erreur est survenue au démarrage de swSSO.\r\nMerci de contacter le support."
+    IDS_MENU_UPLOADER       "Publier"
+    IDS_UPLOAD_OK           "La configuration du SSO pour cette application a bien été publiée sur le serveur."
+    IDS_UPLOAD_NOK          "Erreur : aucune information n'a pu être publiée sur le serveur."
+    IDS_PROXY_OK            "Test réussi, vos paramètres proxy sont corrects !"
+    IDS_PROXY_NOK           "Impossible de joindre le serveur swSSO. Veuillez vérifier vos paramètres proxy."
+    IDS_MENU_SSO_NOW        "Se connecter sur ce site web"
+    IDS_ID2                 "2nd identifiant"
+    IDS_ID3                 "3ème identifiant"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ID4                 "4ème identifiant"
+    IDS_MENU_DUPLIQUER      "&Dupliquer"
+    IDS_RECOVERYSTOREPWDFAILED 
+                            "Une erreur est survenue. En cas d'oubli de votre mot de passe,\r\nil ne sera pas possible de le récupérer.\r\n\r\nVeuillez contacter votre support."
+    IDS_BADPWD2             "Mot de passe incorrect"
+    IDS_TITRE_APPNSITES     "swSSO - Gestion des sites web"
+    IDS_MENU_CHANGER_IDS    "Identifiants et mot de passe..."
+    IDS_CHANGER_IDS         "Confirmez-vous la modification des identifiants et/ou du mot de passe des\r\n%d applications de cette catégorie ?"
+    IDS_MULTI_UPLOAD_OK     "Les configurations de cette catégorie ont été publiées sur le serveur.\r\nRésultat détaillé :\r\n- Configurations publiées : %d\r\n- Configurations ignorées : %d"
+    IDS_GET_ALL_CONFIGS_ERROR 
+                            "Une erreur est survenue lors de la lecture des configurations sur le serveur.\r\nAucune configuration n'a été ajoutée ou modifiée localement."
+    IDS_GET_ALL_CONFIGS     "Souhaitez-vous récupérer toutes les configurations disponibles sur le serveur ?"
+    IDS_LAUNCH_APP          "Ouvrir ce site web"
+    IDS_LAUNCH_ONE_APP      "Lancer une application..."
+    IDS_NO_LAUNCH_PATH      "Vous n'avez pas défini de commande de lancement pour cette application."
+    IDS_GETCONFIGS_RESULT   "- Configurations ajoutées : %d\r\n- Configurations modifiées : %d\r\n- Configurations désactivées : %d\r\n- Configurations supprimées : %d"
+    IDS_DELETION_FORBIDDEN  "Ceci est une configuration entreprise. Elle ne peut pas être supprimée."
+    IDS_IDANDPWDTEXT_NEW    "Veuillez saisir vos informations de connexion à :\r\n%s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_IDANDPWDTITLE_NEW   "swSSO - Ajout d'une application"
+    IDS_IDANDPWDTEXT_MISSING 
+                            "Vous n'avez pas défini vos informations de connexion à :\r\n%s"
+    IDS_IDANDPWDTITLE_MISSING "swSSO - Informations manquantes"
+    IDS_LAUNCH_APP_ERROR    "L'application n'a pas pu être lancée (erreur %d) :\r\n- Application : %s\r\n- Paramètres : %s"
+    IDS_COMBOTYPE4          "Site Web (configuration simplifiée)"
+    IDS_MENU_AJOUTER_COMPTE "Ajouter un co&mpte"
+    IDS_ERROR_INI_SAV       "swSSO n'a pas pu sauvegarder votre fichier de configuration (erreur %d).\r\nSi le fichier suivant existe déjà, supprimez-le et relancez swSSO :\r\n%s\r\nEn cas de doute contactez le support."
+    IDS_ERROR_INI_RESTORED  "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été restauré, vous pouvez continuer à utiliser la version 0.92 de swSSO.\r\nMerci de signaler ce problème au support."
+    IDS_ERROR_INI_NOT_RESTORED 
+                            "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été sauvegardé ici :\r\n%s\r\n. Renommez-le en swsso.ini pour continuer à utiliser la version 0.92 de swSSO.\r\nMerci néanmoins de ce problème au support."
+    IDS_MENU_UPLOADER_VERS  "Publier vers..."
+    IDS_TAB_APPLICATIONS    "Sites et applications"
+    IDS_TAB_IDPWD1          "Identifiant et mot de passe"
+    IDS_TAB_IDPWD2          "Identifiants complémentaires"
+    IDS_TAB_CONFIG1         "Configuration"
+    IDS_TAB_CONFIG2         "Champs complémentaires"
+    IDS_INFO_WINDOWS_SSO_MIGRATION 
+                            "swSSO va vous demander une dernière fois votre mot de passe.\r\nLes fois suivantes, vous serez directement connecté avec votre compte Windows."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_WINDOWS_SSO_MIGRATION 
+                            "swSSO ne peut pas utiliser votre compte Windows.\r\nVeuillez redémarrer votre poste de travail avant de réessayer."
+    IDS_ERROR_WINDOWS_SSO_LOGON 
+                            "Erreur au démarrage de swSSO.\r\nVeuillez redémarrer votre poste de travail avant de réessayer.\r\nSi le problème persiste, contactez votre support."
+    IDS_ERROR_WINDOWS_SSO_VER 
+                            "Veuillez vous connecter une première fois avec votre mot de passe swSSO avant de demander l'intégration à votre compte Windows."
+    IDS_SYNCHRO_PWD_OK      "La synchronisation avec votre mot de passe Windows a bien été réalisée."
+    IDS_ERROR_WINDOWS_SSO_LOGON2 
+                            "Erreur au démarrage de swSSO.\r\nCliquez sur OK pour démarrer la procédure de secours ou sur Annuler pour quitter swSSO."
+    IDS_RECOVERY_ENCRYPTED_OK 
+                            "La procédure de réinitialisation de mot de passe est terminée, vous pouvez continuer à utiliser swSSO avec le nouveau mot de passe que vous avez défini."
+    IDS_RECOVERY_WINDOWS_OK "La procédure de secours est terminée !"
+    IDS_RECOVERY_ERROR      "Une erreur est survenue, la procédure de secours a échoué."
+    IDS_RECOVERY_ERROR_FORMAT "Le format de la réponse est incorrect."
+    IDS_RECOVERY_NEW_PWD    "Veuillez définir votre nouveau mot de passe."
+    IDS_ERROR_BADRESPONSEFILE "Ce fichier ne contient pas de réponse valide."
+    IDS_PP_WINDOWS          "AES-256 et PBKDF2 (mot de passe Windows)"
+    IDS_PLEASE_ENTER_WINDOWS_PASSWORD 
+                            "Veuillez saisir ci-dessous votre mot de passe Windows :"
+    IDS_MENU_CHANGEAPPPWD   "Changer le mot de passe de cette application"
+    IDS_MSG_CHANGE_APP_PWD_1 
+                            "Si votre ancien mot de passe n'a pas été automatiquement saisi, vous pouvez le coller dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison %s"
+    IDS_MSG_CHANGE_APP_PWD_2 
+                            "Si nécessaire, vous pouvez coller l'ancien mot de passe dans le champ ""ancien mot de passe"" de l'application en utilisant la combinaison %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TIP_TB_ID           "Votre identifiant pour cette application"
+    IDS_TIP_TB_PWD          "Votre mot de passe pour cette application. Cliquez sur la loupe pour le révéler."
+    IDS_TIP_CB_TYPE         "Type de la fenêtre : choisir 'Site Web (configuration simplifiée)' pour configurer un site Internet ou une application Intranet"
+    IDS_TIP_TB_TITRE        "Titre complet ou partiel de la fenêtre. Le caractère joker '*' est accepté en début et/ou milieu et/ou fin de chaîne. Exemples : *titre, titre*, *titre*, ti*re"
+    IDS_TIP_TB_URL          "URL complète ou partielle de l'application. Le caractère joker '*' est accepté en début et/ou milieu et/ou fin. Exemples : *google.fr, *g*gle.f*, http://www.google.*"
+    IDS_TIP_TB_ID_ID        "En configuration simplifiée : position relative du champ identifiant par rapport au champ mot de passe. Exemple : -1 si le champ identifiant se trouve juste avant le champ mot de passe."
+    IDS_TIP_TB_PWD_ID       "En configuration simplifiée : position absolue du champ mot de passe. En général, il n'y a qu'un seul champ de mot de passe et la valeur 1 convient."
+    IDS_TIP_TB_VALIDATION   "En configuration simplifiée : séquence de simulation de frappe clavier à exécuter pour valider la saisie. Exemple : [ENTER]"
+    IDS_TIP_TB_LANCEMENT    "(Optionnel) Définit la ligne de commande à exécuter pour lancer l'application si vous utilisez le lanceur d'application swSSO."
+    IDS_TIP_TB_ID2          "(Optionnel) Votre identifiant n°2 pour cette application. Exemple : date de naissance, code postal..."
+    IDS_TIP_TB_ID3          "(Optionnel) Votre identifiant n°3 pour cette application. Exemple : date de naissance, code postal..."
+    IDS_TIP_TB_ID4          "(Optionnel) Votre identifiant n°4 pour cette application. Exemple : date de naissance, code postal..."
+    IDS_TIP_CB_ID2_TYPE     "(Optionnel) Type du champ identifiant n°2 : 'champ de saisie' ou 'liste de choix'. En configuration simplifiée, choisir 'champ de saisie'"
+    IDS_TIP_TB_ID2_ID       "(Optionnel) En configuration simplifiée : position relative du champ identifiant n°2 par rapport au champ mot de passe. Exemple : 1 si ce champ se trouve juste après le champ mot de passe."
+    IDS_TIP_CB_ID3_TYPE     "(Optionnel) Type du champ identifiant n°3 : 'champ de saisie' ou 'liste de choix'. En configuration simplifiée, choisir 'champ de saisie'"
+    IDS_TIP_TB_ID3_ID       "(Optionnel) En configuration simplifiée : position relative du champ identifiant n°3 par rapport au champ mot de passe. Exemple : -1 si ce champ se trouve juste avant le champ mot de passe."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TIP_CB_ID4_TYPE     "(Optionnel) Type du champ identifiant n°4 : 'champ de saisie' ou 'liste de choix'. En configuration simplifiée, choisir 'champ de saisie'"
+    IDS_TIP_TB_ID4_ID       "(Optionnel) En configuration simplifiée : position relative du champ identifiant n°4 par rapport au champ mot de passe. Exemple : 2 si ce champ est le 2nd champ après le champ mot de passe."
+    IDS_TIP_TB_KBSIM        "Permet définir un script de saisie automatique. Exemple : [ID] saisit l'identifiant, [PWD] saisit le mot de passe, [TAB] simule un appui sur la touche TAB, [ENTER] simule un appui sur la touche ENTER."
+    IDS_BTN_RETRY           "Réessayer"
+    IDS_BTN_FORGOT          "Oublié ?"
+    IDS_CONFIRM_NEWPWD_MSG  "Voulez-vous vraiment enregistrer votre nouveau mot de passe ?"
+    IDS_CONFIRM_NEWPWD_TITLE "swSSO - Enregistrement du mot de passe"
+    IDS_TIP_LOUPE           "Cliquez pour révéler votre mot de passe. Cliquez à nouveau pour le masquer."
+    IDS_MSG_CONFIRM_PWD_SAVE 
+                            "Voulez-vous vraiment enregistrer votre nouveau mot de passe pour l'application %s ?"
+    IDS_MSG_MAX_CONFIGS     "Erreur : le nombre maximum d'applications est dépassé. Il n'est plus possible d'ajouter de nouvelles applications."
+    IDS_WARNING_AD_PWD      "Si vous ne saisissez pas votre nouveau mot de passe Windows, la connexion à certaines applications ne fonctionnera plus.\r\nVoulez-vous continuer sans saisir le mot de passe Windows ?"
+    IDS_MENU_UPLOADER_IDPWD "Publier avec login et mdp"
+    IDS_MENU_UPLOADER_IDPWD_VERS "Publier avec login et mdp vers..."
+    IDS_TIP_PWD_GROUP       "(Administrateur seulement) Regroupement de plusieurs configurations partageant le même mot de passe."
+    IDS_TIP_AUTO_LOCK       "Attention, en décochant cette case, vous autorisez swSSO à réessayer indéfiniment de vous connecter sur cette application (risque de blocage de votre compte si le mot de passe est incorrect)"
+    IDS_DECOUPLAGE_WINDOWS  "Votre mot de passe pour lancer swSSO est votre mot de passe Windows. Veuillez le saisir ci-dessous :"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PP_NOMASTERPWD      "AES-256 et PBKDF2 (sans mot de passe maître)"
+    IDS_MENU_MDP_WINDOWS    "&Mot de passe Windows..."
+    IDS_ERROR_WINDOWS_SSO_LOGON3 
+                            "Erreur au démarrage de swSSO.\r\nVeuillez fermer et rouvrir votre session Windows.\r\nSi le problème persiste, contactez votre support."
+    IDS_MSG_CHANGE_APP_PWD_3 
+                            "Collez ensuite ce mot de passe dans les champs ""nouveau mot de passe"" de l'application avec la combinaison %s"
+    IDS_MENU_REFRESH_RIGHTS "Rafraîchir mes droits"
+    IDS_REFRESH_RIGHTS_DONE "Vos droits ont bien été mis à jour."
+    IDS_REFRESH_RIGHTS_ERROR 
+                            "Une erreur est survenue. Vos droits n'ont pas été mis à jour."
+    IDS_ADMIN_PWD_STORE_ERROR 
+                            "Une erreur est survenue. Le mot de passe administrateur n'a pas été enregistré."
+    IDS_ADMIN_PWD_STORE_OK  "Le mot de passe administrateur a bien été enregistré."
+    IDS_CLOSE_APPNSITES_FIRST 
+                            "Veuillez fermer la fenêtre de gestion des sites et applications puis réessayez."
+    IDS_COMBOIDTYPE3        "Label à vérifier dans la page"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DELETE_CONFIG_ON_SERVER_OK 
+                            "La configuration a bien été supprimée du serveur."
+    IDS_DELETE_CONFIG_ON_SERVER_KO 
+                            "Une erreur est survenue. La configuration n'a pas été supprimée."
+    IDS_DELETE_CATEG        "Confirmez-vous la suppression de la catégorie %s ?\r\nAttention, cette catégorie sera également supprimée du serveur."
+    IDS_DELETE_CATEG_ON_SERVER_OK 
+                            "La catégorie a bien été supprimée du serveur."
+    IDS_DELETE_CATEG_ON_SERVER_KO 
+                            "Une erreur est survenue. La catégorie n'a pas été supprimée."
+    IDS_DELETE_CATEG_NOT_EXISTING 
+                            "Cette catégorie n'avait pas encore été publiée sur le serveur. Elle a simplement été supprimée localement."
+    IDS_SYSTRAY_ADMIN       "swSSO Administrateur"
+    IDS_TAB_DOMAINS         "Domaines"
+    IDS_MENU_ADD_DOMAIN     "Ajouter un domaine"
+    IDS_DELETE_DOMAIN_CONFIRM 
+                            "Confirmez-vous la suppression du domaine %s ?\r\nAttention, le domaine sera également supprimé du serveur."
+    IDS_DELETE_DOMAIN_OK    "Le domaine a bien été supprimé du serveur."
+    IDS_DELETE_DOMAIN_KO    "Le domaine n'a pas pu être supprimé du serveur. Vérifiez qu'il n'y a plus d'applications publiées sur ce domaine."
+    IDS_NEW_DOMAIN          "Nouveau domaine"
+    IDS_MSG_MAX_DOMAINS     "Erreur : le nombre maximum de domaines est dépassé. Il n'est plus possible d'ajouter de nouveaux domaines."
+    IDS_UPLOAD_DOMAIN_OK    "Le domaine a bien été publié sur le serveur."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UPLOAD_DOMAIN_KO    "Une erreur est survenue. Le domaine n'a pas été publié sur le serveur."
+    IDS_DOMAIN_ALREADY_EXISTS 
+                            "Un domaine porte déjà ce nom. Veuillez en choisir un autre."
+    IDS_RENAME_DOMAIN_OK    "Le domaine a bien été renommé sur le serveur."
+    IDS_RENAME_DOMAIN_KO    "Une erreur est survenue. Le domaine n'a pas été renommé."
+    IDS_TX_INFO_PWD_GROUP   "Cette application appartient à un groupement de mot de passe. Le changement de mot de passe de l'identifiant %s sera également réalisé dans tous vos enregistrements de ce groupe (surlignés de la même couleur)."
+    IDS_IDANDPWDTITLE_NEWACCOUNT "Ajout d'un compte"
+    IDS_IDANDPWDTEXT_NEWACCOUNT 
+                            "Informations de connexion pour le nouveau compte de :\r\n%s"
+    IDS_FERMER              "&Fermer"
+    IDS_AJOUTER             "&Ajouter"
+    IDS_RECOVER_WEBSERVICE_ERROR 
+                            "Votre mot de passe swSSO est désynchronisé et le service de resynchronisation est injoignable. Veuillez retenter ultérieurement ou contacter votre support."
+    IDS_TRANSCRYPT_ERROR    "Une erreur est survenue sur %d configurations : vos identifiants ont été perdus et vous seront donc demandés lors de la prochaine connexion à ces applications.\r\nLes configurations concernées sont précédées d'un rond noir dans la fenêtre de gestion des sites et applications."
+    IDS_COMBOTYPE5          "Fenêtre Windows (configuration simplifiée)"
+    IDS_MENU_AIDE           "A&ide..."
+    IDS_NOTIFY_TITLE_UPGRADED "swSSO a été mis à jour"
+    IDS_NOTIFY_TEXT_UPGRADED 
+                            "La version %c.%c%c a été installée sur votre poste de travail"
+    IDS_NOTIFY_TEXT_UPGRADED_BETA 
+                            "La version %c.%c%c BETA %c a été installée sur votre poste de travail"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DEFAULT             "Langue du système"
+    IDS_TIP_AUTO_PUBLISH    "Permet de publier automatiquement cette configuration (pensez à configurer la clé GetAutoPublishedConfigsAtStart)"
+    IDS_MENU_ASK_THIS_APP   "Demander l'ajout de cette application..."
+    IDS_SUBTITLE_CONFIG_NOT_FOUND "Configuration non trouvée"
+    IDS_MENU_AJOUTER_COFFRE "Mettre un compte au coffre"
+    IDS_NEW_COFFRE          "Compte"
+    IDS_APP_ALREADY_EXISTS  "La configuration que vous venez de définir existe déjà avec le même identifiant. Si vous continuez, la configuration existante sera automatiquement désactivée."
+    IDS_SERVER_ADMIN_BAD_PWD 
+                            "Impossible de se connecter au serveur swSSO avec ce mot de passe administrateur. Veuillez contacter un super administrateur pour réinitialiser votre mot de passe swSSO. En attendant, vous pouvez travailler localement."
+    IDS_SERVER_ADMIN_LOCKED "Votre compte administrateur est verrouillé sur le serveur swSSO. Veuillez contacter un super administrateur pour le déverrouiller. En attendant, vous pouvez travailler localement."
+    IDS_CHANGE_ADMIN_PWD_OK "Votre mot de passe administrateur a bien été modifié en local et sur le serveur"
+    IDS_CHANGE_ADMIN_PWD_KO "Votre mot de passe administrateur a bien été modifié en local mais n'a pas pu être synchronisé sur le serveur.\r\nVeuillez contacter un super administrateur pour le réinitialiser."
+    IDS_SERVER_ADMIN_LOGIN_KO 
+                            "Authentification impossible sur le serveur : vous pouvez travailler localement, mais ne pourrez pas publier des configurations."
+    IDS_YES                 "Oui"
+    IDS_NO                  "Non"
+    IDS_CONFIRM_RESET       "Confirmez-vous la réinitialisation du coffre ? Toutes vos configurations seront supprimées et rechargées depuis le serveur."
+    IDS_CLOSE_APPNSITES_BEFORE_PWDCHG 
+                            "Veuillez fermer la fenêtre de gestion des sites et applications de swSSO pour permettre le changement automatique de votre mot de passe"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MENU_SIGNUP         "S'inscrire sur ce site web..."
+    IDS_ERROR_URL           "Impossible de lire l'URL de ce site. Veuillez mettre le navigateur au premier plan et réessayer."
+    IDS_TITLE_SIGNUP        "Inscription sur le site :"
+END
+
+#endif    // French resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// French (France) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define PRODUCT_NAME ""swSSO""\r\n"
+    "#define PRODUCT_NAME_DEBUG ""swSSO (debug)""\r\n"
+    "#define EXECUTABLE_NAME ""swSSO.exe""\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""..\\swSSOCommonFiles\\versioninfo.rc""\r\n"
+    "#endif\r\n"
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // French (France) resources
+/////////////////////////////////////////////////////////////////////////////
+
+

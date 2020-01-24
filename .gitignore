@@ -204,3 +204,6 @@ $RECYCLE.BIN/
 /.vs/swSSO/v15/Browse.VC.opendb
 /.vs/swSSO/v15/Browse.VC.db
 /.vs
+/swSSOLight/Release/swSSOLight.tlog
+/swSSOLight/Debug
+/swSSOLight/Release

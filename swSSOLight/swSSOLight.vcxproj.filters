@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\swSSO">
+      <UniqueIdentifier>{a6ade818-985f-4550-953f-d3ff9afcc258}</UniqueIdentifier>
+      <Extensions>cpp</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLightConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLightTray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLightAppNsites.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLightLogs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLightTools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swSSOLightPolicies.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOChrome.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOCrypt.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOEdge.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOFirefox.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOFirefoxTools.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOIETools.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOLaunchApp.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOMobile.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOProtectMemory.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOSelectAccount.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOTrace.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOWeb.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOWin.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOXeb.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOLightConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOLightTray.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOLightAppNsites.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOLightLogs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOLightTools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOLightPolicies.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="exclamation.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="swsso-v5 52x44.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="logo-50.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="logo-90.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="loupe.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="question.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="tvImages.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="SystrayActive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="help-8bits.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="logo.ICO">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="loupe-8bits.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="SystrayAdminActive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="SystrayAdminInactive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="SystrayInactive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="hand.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="manifest.xml" />
+  </ItemGroup>
+</Project>
