@@ -608,8 +608,11 @@ int SignUpForThisSite(void)
 	char szTitle[512+1];
 	int lenFQDN;
 	HWND w;
-	
-	if (swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle))==NULL) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
+	char *pszURL=NULL;
+
+	pszURL=swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle));
+	if (pszURL==NULL) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
+	free(pszURL);pszURL=NULL;
 
 	pszFQDN=UniversalGetFQDN(w);
 	if (pszFQDN==NULL || *pszFQDN==0) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }

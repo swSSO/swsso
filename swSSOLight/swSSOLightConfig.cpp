@@ -2496,7 +2496,9 @@ void ReactivateApplicationFromCurrentWindow(void)
 	char szClassName[128+1];
 	char *pszURL=NULL;
 
-	if (swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle))==NULL) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
+	pszURL=swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle));
+	if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
+	free(pszURL);pszURL=NULL;
 
 	GetClassName(w,szClassName,sizeof(szClassName));
     TRACE((TRACE_DEBUG,_F_,"szClassName          =%s",szClassName));
@@ -2683,7 +2685,9 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 	BOOL bServerAvailable=FALSE;
 	int iBrowser=BROWSER_NONE;
 
-	if (swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle))==NULL) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
+	pszURL=swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle));
+	if (pszURL==NULL) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
+	free(pszURL);pszURL=NULL;
 
 	// Récupérer l'URL pour IE, Firefox et popup Firefox (ne pas faire pour fenêtres Windows et popup IE)
 	GetClassName(w,szClassName,sizeof(szClassName));
