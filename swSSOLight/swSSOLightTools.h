@@ -46,7 +46,7 @@ char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr
 char *HTTPEncodeParam(char *pszToEncode);
 char *HTTPDecodeParam(char *pszToDecode);
 char *HTTPEncodeURL(char *pszToEncode);
-int swGetTopWindowWithURL(HWND *w, char *szTitle,int sizeofTitle);
+char* swGetTopWindowWithURL(HWND *w, char *szTitle,int sizeofTitle);
 BOOL GetConfigBoolValue(char *szSection,char *szItem,BOOL bDefault,BOOL bWriteIfNotFound);
 void Help(void);
 char *strnistr (const char *szStringToBeSearched,

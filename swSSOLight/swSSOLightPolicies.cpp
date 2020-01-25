@@ -135,7 +135,7 @@ char gszLogFileName[_MAX_PATH+1];			// 0.93 : chemin complet du fichier de log
 int  giLogLevel=LOG_LEVEL_NONE;				// 0.93 : niveau de log
 BOOL giStat=0;								// 0.99 : statistiques - ISSUE#106 + ISSUE#244
 char gszWelcomeMessage[512+1];				// 1.01 : message de définition du mot de passe maitre dans la fenêtre bienvenue - ISSUE#146
-int  giMaxConfigs=500;						// 1.01 : nb max de configurations - ISSUE#149
+int  giMaxConfigs=1000;						// 1.01 : nb max de configurations - ISSUE#149
 BOOL gbServerHTTPS=FALSE;						// 1.03 - ISSUE#162
 int  giServerPort=INTERNET_DEFAULT_HTTP_PORT;	// 1.03 - ISSUE#162
 BOOL gbUseADPasswordForAppLogin=FALSE;			// 1.03 - permet d'utiliser %ADPASSWORD% dans le champ mot de passe (n'utilise pas (encore) swSSOCM --> le mdp AD est demandé à l'utilisateur)

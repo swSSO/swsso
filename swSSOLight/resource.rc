@@ -340,7 +340,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,11,118,260,25
     DEFPUSHBUTTON   "OK",IDOK,167,148,50,14,WS_DISABLED
     PUSHBUTTON      "Cancel",IDCANCEL,220,148,50,14
-    LTEXT           "Before beginning, you must define a master password. It will be used to protect all your web sites and applications passwords. Choose a strong password, but don't forget it, there is no way to recover it!",TX_FRAME1,10,40,266,32,NOT WS_GROUP
+    LTEXT           "Before beginning, you must define a master password. It will be used to protect all your web site credentials. Choose a strong password, but don't forget it, there is no way to recover it!",TX_FRAME1,10,40,266,32,NOT WS_GROUP
 END
 
 PSP_ABOUT DIALOGEX 0, 0, 339, 229
@@ -576,6 +576,11 @@ BEGIN
     0
 END
 
+IDD_SIMPLE_PWD_CHOICE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -593,7 +598,7 @@ BEGIN
     IDS_PP_ENCRYPTED        "AES-256 & PBKDF2 (master password)"
     IDS_DELETE              "Do you really want to delete %s?\r\nThis configuration will also be deleted from the server."
     IDS_MENU_ACTIVER        "&Enable"
-    IDS_MENU_AJOUTER_APPLI  "A&dd an application"
+    IDS_MENU_AJOUTER_APPLI  "A&dd an new web site"
     IDS_MENU_SUPPRIMER      "&Delete"
     IDS_MENU_DESACTIVER     "&Disable"
     IDS_MENU_QUITTER        "&Exit"
@@ -604,7 +609,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MENU_MDP            "&Password..."
+    IDS_MENU_MDP            "&Password"
     IDS_CHANGE_PWD_FAILED   "Password change failed."
     IDS_CHANGE_PWD_OK       "Your master password has been changed."
     IDS_MENU_PORTAL         "P&ortal..."
@@ -665,7 +670,7 @@ BEGIN
     IDS_UPLOAD_NOK          "Upload on server failed."
     IDS_PROXY_OK            "Connection succeeded."
     IDS_PROXY_NOK           "Connection failed. Please check proxy parameters."
-    IDS_MENU_SSO_NOW        "Connect to this web site"
+    IDS_MENU_SSO_NOW        "Login to this web site"
     IDS_ID2                 "2nd id"
     IDS_ID3                 "3rd id"
 END
@@ -705,7 +710,7 @@ BEGIN
     IDS_ERROR_INI_RESTORED  "Not used"
     IDS_ERROR_INI_NOT_RESTORED "Not used"
     IDS_MENU_UPLOADER_VERS  "Upload to..."
-    IDS_TAB_APPLICATIONS    "Web site and applications"
+    IDS_TAB_APPLICATIONS    "Web sites"
     IDS_TAB_IDPWD1          "Username and password"
     IDS_TAB_IDPWD2          "More ids..."
     IDS_TAB_CONFIG1         "Configuration"
@@ -869,7 +874,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MENU_SIGNUP         "Sign up for this site..."
+    IDS_MENU_SIGNUP         "Sign up for this site"
     IDS_ERROR_URL           "Cannot read URL. Please open your browser in foreground and retry."
     IDS_TITLE_SIGNUP        "Sign up for:"
 END
@@ -1101,10 +1106,10 @@ BEGIN
     CONTROL         "Tree1",TV_APPLICATIONS,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_NOTOOLTIPS | WS_BORDER | WS_TABSTOP,8,7,233,279
 END
 
-IDD_SIMPLE_PWD_CHOICE DIALOG 0, 0, 284, 168
+IDD_SIMPLE_PWD_CHOICE DIALOGEX 0, 0, 284, 168
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "swSSO - Gestionnaire de mots de passe"
-FONT 8, "Tahoma"
+FONT 8, "Tahoma", 0, 0, 0x0
 BEGIN
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,271,1
     CTEXT           "Bienvenue dans swSSO !",TX_FRAME,41,11,188,12
@@ -1116,7 +1121,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,11,118,260,25
     DEFPUSHBUTTON   "OK",IDOK,167,148,50,14,WS_DISABLED
     PUSHBUTTON      "Annuler",IDCANCEL,220,148,50,14
-    LTEXT           "Vous devez définir un mot de passe qui sera utilisé pour protéger vos informations de connexion à vos sites et applications. Choisissez un mot de passe complexe, mais surtout ne le perdez pas, il n'existe aucun moyen pour le récupérer !",TX_FRAME1,10,40,268,32,NOT WS_GROUP
+    LTEXT           "Vous devez définir un mot de passe qui sera utilisé pour protéger vos informations de connexion à vos sites web. Choisissez un mot de passe complexe, mais surtout ne le perdez pas, il n'existe aucun moyen pour le récupérer !",TX_FRAME1,10,40,268,32,NOT WS_GROUP
 END
 
 PSP_ABOUT DIALOGEX 0, 0, 339, 229
@@ -1246,6 +1251,10 @@ BEGIN
     BEGIN
     END
 
+    IDD_SIMPLE_PWD_CHOICE, DIALOG
+    BEGIN
+    END
+
     PSP_ABOUT, DIALOG
     BEGIN
         RIGHTMARGIN, 331
@@ -1355,6 +1364,11 @@ BEGIN
     0
 END
 
+IDD_SIMPLE_PWD_CHOICE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1372,29 +1386,29 @@ BEGIN
     IDS_PP_ENCRYPTED        "AES-256 et PBKDF2 (mot de passe maître)"
     IDS_DELETE              "Confirmez-vous la suppression de la configuration %s ?\r\nAttention, cette configuration sera également supprimée du serveur."
     IDS_MENU_ACTIVER        "&Activer"
-    IDS_MENU_AJOUTER_APPLI  "A&jouter une application"
+    IDS_MENU_AJOUTER_APPLI  "A&jouter un site web"
     IDS_MENU_SUPPRIMER      "&Supprimer"
     IDS_MENU_DESACTIVER     "&Désactiver"
     IDS_MENU_QUITTER        "&Quitter"
-    IDS_MENU_PROP           "&Options..."
+    IDS_MENU_PROP           "&Options"
     IDS_ACTIVE              "swSSO [Activé]"
     IDS_DESACTIVE           "swSSO [Désactivé]"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MENU_MDP            "&Mot de passe..."
+    IDS_MENU_MDP            "&Mot de passe"
     IDS_CHANGE_PWD_FAILED   "Le changement du mot de passe a échoué."
     IDS_CHANGE_PWD_OK       "Votre mot de passe a été modifié.\r\nTous les mots de passe de vos applications ont été rechiffrés avec ce nouveau mot de passe."
     IDS_MENU_PORTAL         "P&ortail swSSO..."
-    IDS_MENU_THIS_APPLI     "Ajouter ce site web..."
+    IDS_MENU_THIS_APPLI     "Ajouter ce site web"
     IDS_CONFIG_NOT_FOUND    "La configuration pour ce site n'a pas été trouvée. Voulez-vous la faire manuellement ?"
     IDS_NEW_VERSION         "Une version plus récente de swSSO a été trouvée (%c.%c%c%s). Voulez-vous visiter le site Internet pour la télécharger ?"
     IDS_MENU_DEPLACER       "&Déplacer vers..."
     IDS_CONFIG_ALREADY_EXISTS 
                             "Vous avez déjà défini un identifiant et un mot de passe pour ce site. Que souhaitez-vous faire ?\r\n\r\n- Remplacer la configuration actuelle par la nouvelle : cliquez sur Oui.\r\n- Ajouter la nouvelle configuration, tout en conservant la configuration actuelle (cette dernière sera désactivée) : cliquez sur Non.\r\n- Conserver l'ancienne configuration sans ajouter la nouvelle : cliquez sur Annuler."
     IDS_CONFIG_PROXY        "Impossible de joindre le serveur swSSO."
-    IDS_MENU_APPNSITES      "Gestion des sites web..."
+    IDS_MENU_APPNSITES      "Gestion des sites web"
     IDS_VALUE               "%s :"
     IDS_MENU_RENOMMER       "&Renommer"
     IDS_COMBOIDTYPE1        "Champ de saisie (html : input)"
@@ -1487,7 +1501,7 @@ BEGIN
     IDS_ERROR_INI_NOT_RESTORED 
                             "La migration des algorithmes de chiffrement a échoué.\r\nVotre fichier de configuration a été sauvegardé ici :\r\n%s\r\n. Renommez-le en swsso.ini pour continuer à utiliser la version 0.92 de swSSO.\r\nMerci néanmoins de ce problème au support."
     IDS_MENU_UPLOADER_VERS  "Publier vers..."
-    IDS_TAB_APPLICATIONS    "Sites et applications"
+    IDS_TAB_APPLICATIONS    "Sites web"
     IDS_TAB_IDPWD1          "Identifiant et mot de passe"
     IDS_TAB_IDPWD2          "Identifiants complémentaires"
     IDS_TAB_CONFIG1         "Configuration"
@@ -1660,7 +1674,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MENU_SIGNUP         "S'inscrire sur ce site web..."
+    IDS_MENU_SIGNUP         "S'inscrire sur ce site web"
     IDS_ERROR_URL           "Impossible de lire l'URL de ce site. Veuillez mettre le navigateur au premier plan et réessayer."
     IDS_TITLE_SIGNUP        "Inscription sur le site :"
 END

@@ -4880,13 +4880,10 @@ suite:
 	// construction du titre
 	if (iType==WEBSSO || iType==XEBSSO) // tronque la fin du titre qui contient le nom du navigateur
 	{
-		// firefox
 		p=strstr(pszTitle," - Mozilla Firefox");
 		if (p!=NULL) *p=0;
-		// chrome
 		p=strstr(pszTitle," - Google Chrome");
 		if (p!=NULL) *p=0;
-		// ie
 		pszIEWindowTitle=GetIEWindowTitle();
 		if (pszIEWindowTitle!=NULL)
 		{
@@ -4899,8 +4896,11 @@ suite:
 			if (p!=NULL) *p=0;
 			p=strstr(pszTitle," - Windows Internet Explorer");
 			if (p!=NULL) *p=0;
+			p=strstr(pszTitle," - Internet Explorer");
+			if (p!=NULL) *p=0;
 		}
-		// maxthon
+		p=strstr(pszTitle,"?- Microsoft Edge");
+		if (p!=NULL) *p=0;
 		p=strstr(pszTitle," - Maxthon");
 		if (p!=NULL) *p=0;
 	}

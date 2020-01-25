@@ -598,35 +598,33 @@ end:
 // swGetTopWindowWithURL
 // ----------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------
-int swGetTopWindowWithURL(HWND *w, char *szTitle,int sizeofTitle)
+char* swGetTopWindowWithURL(HWND *w, char *szTitle,int sizeofTitle)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 
-	int rc=-1;
 	int i=0;
 	char *pszURL=NULL;
 	
 	*w=GetTopWindow(HWND_DESKTOP);
-	while (rc!=0 && *w!=NULL)
+	while (pszURL==NULL && *w!=NULL)
 	{
 		if (IsWindowVisible(*w))
 		{
 			GetWindowText(*w,szTitle,sizeofTitle);
 			if (*szTitle!=0) // si titre non vide, le compare à la liste des fenêtres exclues (#110)
 			{
-				rc=0;
 				if (strcmp(szTitle,"swSSO - Lanceur d'applications")==0 || 
 					strcmp(szTitle,"swSSO - Application launcher")==0) // 1.20b2 : ajout de la traduction...
 				{
 					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
-					rc=-1;
+					goto suite;
 				}
-				if ((rc==0) && (giOSVersion==OS_WINDOWS_VISTA || giOSVersion==OS_WINDOWS_7 || giOSVersion==OS_WINDOWS_8))
+				if ((giOSVersion==OS_WINDOWS_VISTA || giOSVersion==OS_WINDOWS_7 || giOSVersion==OS_WINDOWS_8))
 				{
 					if (strcmp(szTitle,"Démarrer")==0 || strcmp(szTitle,"Start")==0)
 					{
 						TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
-						rc=-1;
+						goto suite;
 					}
 				}
 				// ISSUE#143 : exclut la fenêtre gestion des sites et applications
@@ -634,7 +632,7 @@ int swGetTopWindowWithURL(HWND *w, char *szTitle,int sizeofTitle)
 					swStringMatch(szTitle,"swSSO - Web site manager*")) // 1.20b2 : ajout de la traduction...
 				{
 					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
-					rc=-1;
+					goto suite;
 				}
 				// ISSUE#347 : exclut les fenêtres techniques de Edge
 				if (strcmp(szTitle,"Microsoft Edge")==0 ||
@@ -643,22 +641,29 @@ int swGetTopWindowWithURL(HWND *w, char *szTitle,int sizeofTitle)
 					strcmp(szTitle,"Quick Launch")==0)
 				{
 					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
-					rc=-1;
+					goto suite;
 				}
 				// vérifie si c'est un navigateur et qu'on obtient bien l'URL
 				pszURL=UniversalGetURL(*w);
-				if (pszURL==NULL || *pszURL==0) rc=-1;
-				if (pszURL!=NULL) { free(pszURL); pszURL=NULL; }
+				if (pszURL!=NULL) 
+				{ 
+					if (*pszURL==0) // URL vide, c'est pas mieux que NULL... il faut continuer
+					{
+						free(pszURL); pszURL=NULL; goto suite;
+					}
+				}
+				// Si on est ici, c'est qu'on a une URL non vide.
 			}
 		}
-		if (rc!=0) *w=GetNextWindow(*w,GW_HWNDNEXT);
+suite:
+		if (pszURL==NULL) *w=GetNextWindow(*w,GW_HWNDNEXT);
 	}
-	if (rc==0)
+	if (pszURL!=NULL)
 	{
 		TRACE((TRACE_INFO,_F_,"Fenêtre trouvée : %s",szTitle));
 	}
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
+	TRACE((TRACE_LEAVE,_F_, "pszURL=0x%08lx",pszURL));
+	return pszURL;
 }
 
 // ----------------------------------------------------------------------------------

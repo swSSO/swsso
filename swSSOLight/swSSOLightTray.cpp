@@ -176,23 +176,47 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_MDP"));
 					WindowChangeMasterPwd(FALSE);
 					break;
-				case TRAY_MENU_THIS_APPLI:
+				/*case TRAY_MENU_THIS_APPLI:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_THIS_APPLI"));
 					if (giNbActions>=giMaxConfigs) { MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
 					AddApplicationFromCurrentWindow(FALSE);
-					break;
+					break;*/
 				case TRAY_MENU_SSO_NOW:
-					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_SSO_NOW"));
-					if (giNbActions>=giMaxConfigs) { MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
-					AddApplicationFromCurrentWindow(FALSE);
-					/*ReactivateApplicationFromCurrentWindow();
-					if (giTimer==0) // solution de secours du bug #98 (le timer ne s'est pas déclenché)
-					{
-						TRACE((TRACE_ERROR,_F_,"*************************************************"));
-						TRACE((TRACE_ERROR,_F_,"************ Le timer etait arrete ! ************"));
-						TRACE((TRACE_ERROR,_F_,"*************************************************"));
-						LaunchTimer();
-					}*/
+					{	
+						TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_SSO_NOW"));
+						// regarde si la config existe déjà
+						char *pszURL=NULL;
+						char szTitle[LEN_TITLE+1];
+						int i;
+						BOOL bFound=FALSE;
+						HWND w;
+						pszURL=swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle));
+						if (pszURL!=NULL)
+						{
+							for (i=0;i<giNbActions;i++)
+							{
+								if (!gptActions[i].bSafe && *gptActions[i].szURL!=0 && swURLMatch(pszURL,gptActions[i].szURL))
+								{
+									// trouvé la config, si le SSO n'a pas été déclenché il faut le réactiver
+									bFound=TRUE;
+									ReactivateApplicationFromCurrentWindow();
+									if (giTimer==0) // solution de secours du bug #98 (le timer ne s'est pas déclenché)
+									{
+										TRACE((TRACE_ERROR,_F_,"*************************************************"));
+										TRACE((TRACE_ERROR,_F_,"************ Le timer etait arrete ! ************"));
+										TRACE((TRACE_ERROR,_F_,"*************************************************"));
+										LaunchTimer();
+									}
+								}
+							}
+							free(pszURL);
+							if (!bFound) // config non trouvée, on l'ajoute
+							{
+								if (giNbActions>=giMaxConfigs) { MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
+								AddApplicationFromCurrentWindow(FALSE);
+							}
+						}
+					}	
 					break;
 				case TRAY_MENU_SIGNUP:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_MENU_SIGNUP"));
@@ -585,7 +609,7 @@ int SignUpForThisSite(void)
 	int lenFQDN;
 	HWND w;
 	
-	if (swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle))!=0) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
+	if (swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle))==NULL) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
 
 	pszFQDN=UniversalGetFQDN(w);
 	if (pszFQDN==NULL || *pszFQDN==0) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }

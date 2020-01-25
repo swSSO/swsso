@@ -2496,7 +2496,7 @@ void ReactivateApplicationFromCurrentWindow(void)
 	char szClassName[128+1];
 	char *pszURL=NULL;
 
-	if (swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle))!=0) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
+	if (swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle))==NULL) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
 
 	GetClassName(w,szClassName,sizeof(szClassName));
     TRACE((TRACE_DEBUG,_F_,"szClassName          =%s",szClassName));
@@ -2600,13 +2600,10 @@ suite:
 	// construction du titre
 	if (iType==WEBSSO || iType==XEBSSO) // tronque la fin du titre qui contient le nom du navigateur
 	{
-		// firefox
 		p=strstr(pszTitle," - Mozilla Firefox");
 		if (p!=NULL) *p=0;
-		// chrome
 		p=strstr(pszTitle," - Google Chrome");
 		if (p!=NULL) *p=0;
-		// ie
 		pszIEWindowTitle=GetIEWindowTitle();
 		if (pszIEWindowTitle!=NULL)
 		{
@@ -2619,8 +2616,11 @@ suite:
 			if (p!=NULL) *p=0;
 			p=strstr(pszTitle," - Windows Internet Explorer");
 			if (p!=NULL) *p=0;
+			p=strstr(pszTitle," - Internet Explorer");
+			if (p!=NULL) *p=0;
 		}
-		// maxthon
+		p=strstr(pszTitle,"?- Microsoft Edge");
+		if (p!=NULL) *p=0;
 		p=strstr(pszTitle," - Maxthon");
 		if (p!=NULL) *p=0;
 	}
@@ -2683,7 +2683,7 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 	BOOL bServerAvailable=FALSE;
 	int iBrowser=BROWSER_NONE;
 
-	if (swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle))!=0) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
+	if (swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle))==NULL) { TRACE((TRACE_ERROR,_F_,"Top Window non trouvee !")); goto end; }
 
 	// Récupérer l'URL pour IE, Firefox et popup Firefox (ne pas faire pour fenêtres Windows et popup IE)
 	GetClassName(w,szClassName,sizeof(szClassName));
