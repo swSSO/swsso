@@ -56,6 +56,15 @@ HWND gwSaveNewAppPwdDialogProc=NULL;
 HWND gwConfirmNewAppPwdDialogProc=NULL;
 HWND gwSignUp=NULL;
 
+HWND gwBrowser;
+
+typedef struct
+{
+	HWND wBrowser;
+	char *pszWindowTitle;
+}
+T_SIGNUP_WINDOW;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -407,54 +416,6 @@ end:
 	TRACE((TRACE_LEAVE, _F_, ""));
 }
 
-HINSTANCE ghinstHotKeyDLL=NULL; 
-HHOOK ghHookKeyboard=NULL;
-
-//-----------------------------------------------------------------------------
-// InstallHotKey()
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-int InstallHotKey(void)
-{
-	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=-1;
-	HOOKPROC hookproc=NULL;
-
-	ghinstHotKeyDLL=LoadLibrary("swSSOHotKey.dll"); 
-	if (ghinstHotKeyDLL==NULL)  { TRACE((TRACE_ERROR, _F_, "LoadLibrary(swSSOHotKey.dll)", GetLastError())); goto end; }
-
-	hookproc=(HOOKPROC)GetProcAddress(ghinstHotKeyDLL,"KeyboardProc"); 
-	if (hookproc==NULL) { TRACE((TRACE_ERROR, _F_, "GetProcAddress(KeyboardProc)", GetLastError())); goto end; }
-
-	ghHookKeyboard=SetWindowsHookEx(WH_KEYBOARD,hookproc,ghinstHotKeyDLL,0);
-	if (ghHookKeyboard==NULL) { TRACE((TRACE_ERROR, _F_, "SetWindowsHookEx(WH_KEYBOARD)", GetLastError())); goto end; }
-
-	rc=0;
-end:
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
-}
-
-//-----------------------------------------------------------------------------
-// UninstallHotKey()
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-int UninstallHotKey(void)
-{
-	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=-1;
-	
-	if (ghHookKeyboard!=NULL) { UnhookWindowsHookEx(ghHookKeyboard); ghHookKeyboard=NULL; }
-
-	if (ghinstHotKeyDLL!=NULL) { FreeLibrary(ghinstHotKeyDLL); ghinstHotKeyDLL=NULL; }
-
-	rc=0;
-//end:
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
-}
 //-----------------------------------------------------------------------------
 // SignUpDialogProc()
 //-----------------------------------------------------------------------------
@@ -462,7 +423,6 @@ int UninstallHotKey(void)
 //-----------------------------------------------------------------------------
 static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
-	UNREFERENCED_PARAMETER(lp);
 	CheckIfQuitMessage(msg);
 	int rc=FALSE;
 	switch (msg)
@@ -473,8 +433,9 @@ static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			int cx;
 			int cy;
 			RECT rect;
+			char szPwd[LEN_PWD+1];
 			SetWindowPos(w,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
-			SetWindowText(w,(char*)lp);
+			SetWindowText(w,((T_SIGNUP_WINDOW*)lp)->pszWindowTitle);
 			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
 			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
 			// limitation champs de saisie
@@ -492,7 +453,14 @@ static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			gbPwdSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)PwdProc,TB_PWD_SUBCLASS_ID,(DWORD_PTR)&gSubClassData);
 			gbPwdClearSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD_CLEAR),(SUBCLASSPROC)PwdProc,TB_PWD_CLEAR_SUBCLASS_ID,(DWORD_PTR)&gSubClassData);
 			gbIdSubClass=SetWindowSubclass(GetDlgItem(w,TB_ID),(SUBCLASSPROC)IdProc,TB_ID_SUBCLASS_ID,(DWORD_PTR)&gSubClassData);
-			
+	
+			swGenerateRandomPwd(szPwd,12,PWDTYPE_ALPHA|PWDTYPE_NUM|PWDTYPE_SPECIALCHARS);
+			ShowWindow(GetDlgItem(w,TB_PWD),SW_HIDE);
+			ShowWindow(GetDlgItem(w,TB_PWD_CLEAR),SW_SHOW);			
+			SetDlgItemText(w,TB_PWD_CLEAR,szPwd);
+			SecureZeroMemory(szPwd,sizeof(szPwd));
+			CheckDlgButton(w,CK_VIEW,BST_CHECKED);
+
 			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
 			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
 			if (giRefreshTimer==giTimer) giRefreshTimer=11;
@@ -550,7 +518,11 @@ static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case PB_COPY_PWD:
 				{
 					GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,gszNewAppPwd,LEN_PWD+1);
-					ClipboardCopy(gszNewAppPwd);
+					if (BrowserFillPasswords(gwBrowser,gszNewAppPwd)!=0)
+					{
+						MessageBox(w,GetString(IDS_FILL_PWD_ERROR),"swSSO",MB_OK | MB_ICONSTOP);
+						ClipboardCopy(gszNewAppPwd); // ajouter un message d'erreur qui dit que le mdp est dans le presse papier...
+					}
 					SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
 					break;
 				}
@@ -592,6 +564,8 @@ static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	return rc;
 }
 
+
+
 //-----------------------------------------------------------------------------
 // SignUpForThisSite()
 //-----------------------------------------------------------------------------
@@ -603,26 +577,25 @@ int SignUpForThisSite(void)
 	int rc=-1;
 	char *pszEncryptedPassword=NULL;
 	char *pszFQDN=NULL;
-	char *pszWindowTitle=NULL;
 	char szAppName[LEN_APPLICATION_NAME+1];
 	char szTitle[512+1];
 	int lenFQDN;
-	HWND w;
 	char *pszURL=NULL;
+	T_SIGNUP_WINDOW tSignupWindow;
 
-	pszURL=swGetTopWindowWithURL(&w,szTitle,sizeof(szTitle));
+	pszURL=swGetTopWindowWithURL(&gwBrowser,szTitle,sizeof(szTitle));
 	if (pszURL==NULL) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
 	free(pszURL);pszURL=NULL;
 
-	pszFQDN=UniversalGetFQDN(w);
+	pszFQDN=UniversalGetFQDN(gwBrowser);
 	if (pszFQDN==NULL || *pszFQDN==0) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
 	
 	lenFQDN=strlen(pszFQDN);
-	pszWindowTitle=(char*)malloc(lenFQDN+50);
-	if (pszWindowTitle==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenFQDN+50)); goto end; }
-	sprintf_s(pszWindowTitle,lenFQDN+50,"%s %s",GetString(IDS_TITLE_SIGNUP),pszFQDN);
+	tSignupWindow.pszWindowTitle=(char*)malloc(lenFQDN+50);
+	if (tSignupWindow.pszWindowTitle==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenFQDN+50)); goto end; }
+	sprintf_s(tSignupWindow.pszWindowTitle,lenFQDN+50,"%s %s",GetString(IDS_TITLE_SIGNUP),pszFQDN);
 	
-	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_SIGNUP),NULL,SignUpDialogProc,(LPARAM)pszWindowTitle)==IDOK)
+	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_SIGNUP),NULL,SignUpDialogProc,(LPARAM)&tSignupWindow)==IDOK)
 	{
 		if (giNbActions>=giMaxConfigs) { MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
 		ZeroMemory(&gptActions[giNbActions],sizeof(T_ACTION));

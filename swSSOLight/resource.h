@@ -403,6 +403,8 @@
 #define IDS_MENU_SIGNUP                 42048
 #define IDS_ERROR_URL                   42049
 #define IDS_TITLE_SIGNUP                42050
+#define IDS_STRING42051                 42051
+#define IDS_FILL_PWD_ERROR              42051
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005

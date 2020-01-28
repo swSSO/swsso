@@ -237,6 +237,7 @@
     <ClCompile Include="swSSOAdmin.cpp" />
     <ClCompile Include="swSSOAdminNoPwd.cpp" />
     <ClCompile Include="swSSOAppNsites.cpp" />
+    <ClCompile Include="swSSOBrowser.cpp" />
     <ClCompile Include="swSSOChrome.cpp" />
     <ClCompile Include="swSSOConfig.cpp" />
     <ClCompile Include="swSSOCrypt.cpp" />
@@ -273,6 +274,7 @@
     <ClInclude Include="swSSOAdmin.h" />
     <ClInclude Include="swSSOAdminNoPwd.h" />
     <ClInclude Include="swSSOAppNsites.h" />
+    <ClInclude Include="swSSOBrowser.h" />
     <ClInclude Include="swSSOChrome.h" />
     <ClInclude Include="swSSOConfig.h" />
     <ClInclude Include="swSSOCrypt.h" />

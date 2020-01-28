@@ -89,6 +89,7 @@
 #include "swSSOAdmin.h"
 #include "swSSOMobile.h"
 #include "swSSOProtectMemory.h"
+#include "swSSOBrowser.h"
 
 
 

@@ -57,6 +57,15 @@ HWND gwSaveNewAppPwdDialogProc=NULL;
 HWND gwConfirmNewAppPwdDialogProc=NULL;
 HWND gwSignUp=NULL;
 
+HWND gwBrowser;
+
+typedef struct
+{
+	HWND wBrowser;
+	char *pszWindowTitle;
+}
+T_SIGNUP_WINDOW;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -1159,6 +1168,220 @@ end:
 //-----------------------------------------------------------------------------
 static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 {
+	CheckIfQuitMessage(msg);
+	int rc=FALSE;
+	switch (msg)
+	{
+		case WM_INITDIALOG:
+		{
+			TRACE((TRACE_DEBUG,_F_, "WM_INITDIALOG"));
+			int cx;
+			int cy;
+			RECT rect;
+			char szPwd[LEN_PWD+1];
+			SetWindowPos(w,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+			SetWindowText(w,((T_SIGNUP_WINDOW*)lp)->pszWindowTitle);
+			SendMessage(w,WM_SETICON,ICON_BIG,(LPARAM)ghIconAltTab);
+			SendMessage(w,WM_SETICON,ICON_SMALL,(LPARAM)ghIconSystrayActive); 
+			// limitation champs de saisie
+			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,LEN_PWD,0);
+			SendMessage(GetDlgItem(w,TB_PWD_CLEAR),EM_LIMITTEXT,LEN_PWD,0);
+			// positionnement en bas à droite de l'écran, près de l'icone swSSO
+			cx = GetSystemMetrics( SM_CXSCREEN );
+			cy = GetSystemMetrics( SM_CYSCREEN );
+			TRACE((TRACE_INFO,_F_,"SM_CXSCREEN=%d SM_CYSCREEN=%d",cx,cy));
+			GetWindowRect(w,&rect);
+			SetWindowPos(w,NULL,cx-(rect.right-rect.left)-100,cy-(rect.bottom-rect.top)-100,0,0,SWP_NOSIZE | SWP_NOZORDER);
+			MACRO_SET_SEPARATOR_90;
+			RevealPasswordField(w,FALSE);
+			gSubClassData.gw=w;
+			gbPwdSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)PwdProc,TB_PWD_SUBCLASS_ID,(DWORD_PTR)&gSubClassData);
+			gbPwdClearSubClass=SetWindowSubclass(GetDlgItem(w,TB_PWD_CLEAR),(SUBCLASSPROC)PwdProc,TB_PWD_CLEAR_SUBCLASS_ID,(DWORD_PTR)&gSubClassData);
+			gbIdSubClass=SetWindowSubclass(GetDlgItem(w,TB_ID),(SUBCLASSPROC)IdProc,TB_ID_SUBCLASS_ID,(DWORD_PTR)&gSubClassData);
+	
+			swGenerateRandomPwd(szPwd,12,PWDTYPE_ALPHA|PWDTYPE_NUM|PWDTYPE_SPECIALCHARS);
+			ShowWindow(GetDlgItem(w,TB_PWD),SW_HIDE);
+			ShowWindow(GetDlgItem(w,TB_PWD_CLEAR),SW_SHOW);			
+			SetDlgItemText(w,TB_PWD_CLEAR,szPwd);
+			SecureZeroMemory(szPwd,sizeof(szPwd));
+			CheckDlgButton(w,CK_VIEW,BST_CHECKED);
+
+			// magouille suprême : pour gérer les cas rares dans lesquels la peinture du bandeau & logo se fait mal
+			// on active un timer d'une seconde qui exécutera un invalidaterect pour forcer la peinture
+			if (giRefreshTimer==giTimer) giRefreshTimer=11;
+			SetTimer(w,giRefreshTimer,200,NULL);
+			gwSignUp=w;
+			break;
+		}
+		case WM_TIMER:
+			TRACE((TRACE_INFO,_F_,"WM_TIMER (refresh)"));
+			if (giRefreshTimer==(int)wp) 
+			{
+				KillTimer(w,giRefreshTimer);
+				InvalidateRect(w,NULL,FALSE);
+				SetForegroundWindow(w); 
+			}
+			break;
+		case WM_CTLCOLORSTATIC:
+			int ctrlID;
+			ctrlID=GetDlgCtrlID((HWND)lp);
+			switch(ctrlID)
+			{
+				case TX_FRAME1:
+				case TX_FRAME2:
+					SetBkMode((HDC)wp, TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
+			}
+			break;
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+				{
+					GetDlgItemText(w,TB_ID,gszNewAppId,LEN_ID+1);
+					GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,gszNewAppPwd,LEN_PWD+1);
+					EndDialog(w,LOWORD(wp));
+					break;
+				}
+				case IDCANCEL:
+				{
+					EndDialog(w,LOWORD(wp));
+					break;
+				}
+				case CK_VIEW:
+				{
+					RevealPasswordField(w,IsDlgButtonChecked(w,CK_VIEW));
+					break;
+				}
+				case PB_COPY_ID:
+				{
+					GetDlgItemText(w,TB_ID,gszNewAppId,LEN_ID+1);
+					ClipboardCopy(gszNewAppId);
+					break;
+				}
+				case PB_COPY_PWD:
+				{
+					GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,gszNewAppPwd,LEN_PWD+1);
+					if (BrowserFillPasswords(gwBrowser,gszNewAppPwd)!=0)
+					{
+						MessageBox(w,GetString(IDS_FILL_PWD_ERROR),"swSSO",MB_OK | MB_ICONSTOP);
+						ClipboardCopy(gszNewAppPwd); // ajouter un message d'erreur qui dit que le mdp est dans le presse papier...
+					}
+					SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
+					break;
+				}
+				case TB_ID:
+				case TB_PWD:
+				case TB_PWD_CLEAR:
+				{
+					if (HIWORD(wp)==EN_CHANGE)
+					{
+						char szId[LEN_PWD+1];
+						int lenId,lenPwd;
+						char szPwd[LEN_PWD+1];
+						lenId=GetDlgItemText(w,TB_ID,szId,LEN_ID+1);
+						lenPwd=GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,szPwd,LEN_PWD+1);
+						SecureZeroMemory(szPwd,LEN_PWD+1);
+						EnableWindow(GetDlgItem(w,IDOK),(lenPwd==0 || lenId==0) ? FALSE : TRUE);
+					}
+					break;
+				}
+			}
+			break;
+		case WM_HELP:
+			Help();
+			break;
+		case WM_PAINT:
+			DrawLogoBar(w,90,ghLogoFondBlanc90);
+			rc = TRUE;
+			break;
+		case WM_ACTIVATE:
+			InvalidateRect(w,NULL,FALSE);
+			break;
+		case WM_DESTROY:
+			if (gbPwdSubClass) RemoveWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)PwdProc,TB_PWD_SUBCLASS_ID);
+			if (gbPwdClearSubClass) RemoveWindowSubclass(GetDlgItem(w,TB_PWD_CLEAR),(SUBCLASSPROC)PwdProc,TB_PWD_CLEAR_SUBCLASS_ID);
+			if (gbIdSubClass) RemoveWindowSubclass(GetDlgItem(w,TB_PWD),(SUBCLASSPROC)IdProc,TB_ID_SUBCLASS_ID);
+			gwSignUp=NULL;
+			break;
+	}
+	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// SignUpForThisSite()
+//-----------------------------------------------------------------------------
+// Accompagnement à l'inscription sur un site
+//-----------------------------------------------------------------------------
+int SignUpForThisSite(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char *pszEncryptedPassword=NULL;
+	char *pszFQDN=NULL;
+	char szAppName[LEN_APPLICATION_NAME+1];
+	char szTitle[512+1];
+	int lenFQDN;
+	char *pszURL=NULL;
+	T_SIGNUP_WINDOW tSignupWindow;
+
+	pszURL=swGetTopWindowWithURL(&gwBrowser,szTitle,sizeof(szTitle));
+	if (pszURL==NULL) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
+	free(pszURL);pszURL=NULL;
+
+	pszFQDN=UniversalGetFQDN(gwBrowser);
+	if (pszFQDN==NULL || *pszFQDN==0) { MessageBox(NULL,GetString(IDS_ERROR_URL),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
+	
+	lenFQDN=strlen(pszFQDN);
+	tSignupWindow.pszWindowTitle=(char*)malloc(lenFQDN+50);
+	if (tSignupWindow.pszWindowTitle==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenFQDN+50)); goto end; }
+	sprintf_s(tSignupWindow.pszWindowTitle,lenFQDN+50,"%s %s",GetString(IDS_TITLE_SIGNUP),pszFQDN);
+	
+	if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_SIGNUP),NULL,SignUpDialogProc,(LPARAM)&tSignupWindow)==IDOK)
+	{
+		if (giNbActions>=giMaxConfigs) { MessageBox(NULL,GetString(IDS_MSG_MAX_CONFIGS),"swSSO",MB_OK | MB_ICONSTOP); goto end; }
+		ZeroMemory(&gptActions[giNbActions],sizeof(T_ACTION));
+		gptActions[giNbActions].tLastSSO=-1;
+		gptActions[giNbActions].wLastSSO=NULL;
+		gptActions[giNbActions].iWaitFor=giWaitBeforeNewSSO;
+		gptActions[giNbActions].bActive=FALSE;
+		gptActions[giNbActions].bAutoLock=TRUE;
+		gptActions[giNbActions].bConfigSent=FALSE;
+		gptActions[giNbActions].iPwdGroup=-1;
+		gptActions[giNbActions].bSafe=TRUE;
+		gptActions[giNbActions].iCategoryId=0;
+		strcpy_s(gptActions[giNbActions].szURL,pszFQDN);
+		pszFQDN[LEN_APPLICATION_NAME]=0; // tronque le FQDN au cas où
+		strcpy_s(szAppName,LEN_APPLICATION_NAME+1,pszFQDN);
+		GenerateApplicationName(giNbActions,szAppName);
+		strcpy_s(gptActions[giNbActions].szId1Value,LEN_ID+1,gszNewAppId);
+		pszEncryptedPassword=swCryptEncryptString(gszNewAppPwd,ghKey1);
+		if (pszEncryptedPassword==NULL) goto end;
+		strcpy_s(gptActions[giNbActions].szPwdEncryptedValue,sizeof(gptActions[giNbActions].szPwdEncryptedValue),pszEncryptedPassword);
+		free(pszEncryptedPassword); // forcément pas NULL sinon on ne serait pas là
+		pszEncryptedPassword=NULL;
+		giNbActions++;
+		SaveApplications();
+	}
+end:
+	if (pszFQDN==NULL) free(pszFQDN);
+	ClipboardDelete();
+	SecureZeroMemory(gszNewAppId,LEN_ID+1);
+	SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
+	if (pszEncryptedPassword!=NULL) free(pszEncryptedPassword);
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
+#if 0
+//-----------------------------------------------------------------------------
+// SignUpDialogProc()
+//-----------------------------------------------------------------------------
+// DialogProc de la fenêtre d'inscription sur un site
+//-----------------------------------------------------------------------------
+static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
+{
 	UNREFERENCED_PARAMETER(lp);
 	CheckIfQuitMessage(msg);
 	int rc=FALSE;
@@ -1247,7 +1470,11 @@ static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case PB_COPY_PWD:
 				{
 					GetDlgItemText(w,IsDlgButtonChecked(w,CK_VIEW)?TB_PWD_CLEAR:TB_PWD,gszNewAppPwd,LEN_PWD+1);
-					ClipboardCopy(gszNewAppPwd);
+					if (BrowserFillPasswords(gwBrowser,gszNewAppPwd)!=0)
+					{
+						MessageBox(w,GetString(IDS_FILL_PWD_ERROR),"swSSO",MB_OK | MB_ICONSTOP);
+						ClipboardCopy(gszNewAppPwd); // ajouter un message d'erreur qui dit que le mdp est dans le presse papier...
+					}
 					SecureZeroMemory(gszNewAppPwd,LEN_PWD+1);
 					break;
 				}
@@ -1288,6 +1515,8 @@ static int CALLBACK SignUpDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 	}
 	return rc;
 }
+
+
 //-----------------------------------------------------------------------------
 // SignUpForThisSite()
 //-----------------------------------------------------------------------------
@@ -1350,3 +1579,4 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
+#endif

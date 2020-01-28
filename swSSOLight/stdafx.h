@@ -85,5 +85,5 @@
 #include "..\swSSO\swSSOSelectAccount.h"
 #include "..\swSSO\swSSOMobile.h"
 #include "..\swSSO\swSSOProtectMemory.h"
-
+#include "..\swSSO\swSSOBrowser.h"
 

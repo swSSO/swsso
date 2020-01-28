@@ -523,7 +523,7 @@ BEGIN
     LTEXT           "Configuration file:",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "swSSO is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.",-1,17,55,262,18
     LTEXT           "License",TX_LICENCE,7,40,28,11
-    LTEXT           "1.23b4 (1/9/2020)",TX_ABOUT,47,12,154,8
+    LTEXT           "1.23b5 (1/28/2020)",TX_ABOUT,47,12,154,8
     LTEXT           "swSSO Mobile file:",TX_PORTAL2,17,120,75,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -600,13 +600,13 @@ BEGIN
     LTEXT           "1. Enter login or email address for this site, then click Copy and paste value on the website (right-click and Paste or CTRL+V)",TX_FRAME1,47,8,254,18
     LTEXT           "2. Repeat operation for password. Once sign up completed on the website, click Save.",TX_FRAME2,47,27,254,18
     LTEXT           "Tip: right click login or password entry fields to use existing logins or generate strong passwords.",TX_FRAME3,93,112,209,18
-    LTEXT           "&Login or e-mail:",IDC_STATIC,17,64,76,8
+    LTEXT           "&Login or e-mail:",IDC_STATIC,17,64,71,8
     EDITTEXT        TB_ID,93,62,171,13,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Copier",PB_COPY_ID,271,61,30,14
-    LTEXT           "&Password :",IDC_STATIC,17,83,84,8
+    PUSHBUTTON      "&Copy",PB_COPY_ID,271,61,30,14
+    LTEXT           "&Password :",IDC_STATIC,17,83,67,8
     EDITTEXT        TB_PWD,93,81,171,13,ES_PASSWORD | ES_AUTOHSCROLL
     EDITTEXT        TB_PWD_CLEAR,93,81,171,13,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Copier",PB_COPY_PWD,271,80,30,14
+    PUSHBUTTON      "&Fill in",PB_COPY_PWD,271,80,30,14
     CONTROL         "&Reveal password",CK_VIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,100,71,8
     DEFPUSHBUTTON   "&Save",IDOK,206,137,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,261,137,50,14
@@ -1112,6 +1112,7 @@ BEGIN
     IDS_MENU_SIGNUP         "Sign up for this site..."
     IDS_ERROR_URL           "Cannot read URL. Please open your browser in foreground and retry."
     IDS_TITLE_SIGNUP        "Sign up for:"
+    IDS_FILL_PWD_ERROR      "Cannot paste the password automatically. Please paste it manually using CTRL+V."
 END
 
 #endif    // English resources
@@ -1524,7 +1525,7 @@ BEGIN
     LTEXT           "Fichier de configuration :",TX_CONFIGFILE2,17,151,81,8
     LTEXT           "Ce logiciel est libre, vous pouvez le redistribuer et/ou le modifier selon les termes de la Licence Publique Générale GNU publiée par la Free Software Foundation.",-1,17,55,259,18
     LTEXT           "Licence",TX_LICENCE,7,40,28,11
-    LTEXT           "1.23b4 (09/01/2020)",TX_ABOUT,47,12,157,8
+    LTEXT           "1.23b5 (28/01/2020)",TX_ABOUT,47,12,157,8
     LTEXT           "Fichier swSSO Mobile :",TX_PORTAL2,17,120,78,8
     CONTROL         "",IDC_SEP_LICENCE,"Static",SS_ETCHEDHORZ,35,45,248,1
     CONTROL         "",IDC_SEP_INFORMATIONS,"Static",SS_ETCHEDHORZ,52,82,218,1
@@ -1632,13 +1633,13 @@ BEGIN
     LTEXT           "1. Saisissez l'identifiant ou l'adresse e-mail pour ce site, puis cliquez sur Copier et enfin collez la valeur sur le site (clic-droit / coller ou CTRL+V).",TX_FRAME1,47,8,254,18
     LTEXT           "2. Répétez l'opération avec le mot de passe puis, une fois l'enregistrement finalisé sur le site, cliquez sur Enregistrer.",TX_FRAME2,47,27,254,18
     LTEXT           "Astuce : gagnez du temps, faites clic-droit sur les champs Identifiant et Mot de passe, puis laissez-vous guider !",TX_FRAME3,93,112,209,18
-    LTEXT           "&Identifiant ou e-mail :",IDC_STATIC,17,64,76,8
+    LTEXT           "&Identifiant ou e-mail :",IDC_STATIC,17,64,74,8
     EDITTEXT        TB_ID,93,62,171,13,ES_AUTOHSCROLL
     PUSHBUTTON      "&Copier",PB_COPY_ID,271,61,30,14
-    LTEXT           "&Mot de passe :",IDC_STATIC,17,83,84,8
+    LTEXT           "&Mot de passe :",IDC_STATIC,17,83,70,8
     EDITTEXT        TB_PWD,93,81,171,13,ES_PASSWORD | ES_AUTOHSCROLL
     EDITTEXT        TB_PWD_CLEAR,93,81,171,13,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Copier",PB_COPY_PWD,271,80,30,14
+    PUSHBUTTON      "&Remplir",PB_COPY_PWD,271,80,30,14
     CONTROL         "&Afficher en clair",CK_VIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,100,71,8
     DEFPUSHBUTTON   "&Enregistrer",IDOK,206,137,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,261,137,50,14
@@ -2133,6 +2134,7 @@ BEGIN
     IDS_MENU_SIGNUP         "S'inscrire sur ce site..."
     IDS_ERROR_URL           "Impossible de lire l'URL de ce site. Veuillez mettre le navigateur au premier plan et réessayer."
     IDS_TITLE_SIGNUP        "Inscription sur le site :"
+    IDS_FILL_PWD_ERROR      "Le mot de passe n'a pas pu être rempli sur le site web. Il a été placé dans le presse papier, vous pouvez le coller sur le site web avec CTRL+V."
 END
 
 #endif    // French resources

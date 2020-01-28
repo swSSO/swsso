@@ -689,6 +689,77 @@ int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle)
 }
 
 // ----------------------------------------------------------------------------------
+// swGetTopWindowWithURL
+// ----------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------
+char* swGetTopWindowWithURL(HWND *w, char *szTitle,int sizeofTitle)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+
+	char *pszURL=NULL;
+	
+	*w=GetTopWindow(HWND_DESKTOP);
+	while (pszURL==NULL && *w!=NULL)
+	{
+		if (IsWindowVisible(*w))
+		{
+			GetWindowText(*w,szTitle,sizeofTitle);
+			if (*szTitle!=0) // si titre non vide, le compare à la liste des fenêtres exclues (#110)
+			{
+				if (strcmp(szTitle,"swSSO - Lanceur d'applications")==0 || 
+					strcmp(szTitle,"swSSO - Application launcher")==0) // 1.20b2 : ajout de la traduction...
+				{
+					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
+					goto suite;
+				}
+				if ((giOSVersion==OS_WINDOWS_VISTA || giOSVersion==OS_WINDOWS_7 || giOSVersion==OS_WINDOWS_8))
+				{
+					if (strcmp(szTitle,"Démarrer")==0 || strcmp(szTitle,"Start")==0)
+					{
+						TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
+						goto suite;
+					}
+				}
+				// ISSUE#143 : exclut la fenêtre gestion des sites et applications
+				if (swStringMatch(szTitle,"swSSO - Gestion des sites web*") ||
+					swStringMatch(szTitle,"swSSO - Web site manager*")) // 1.20b2 : ajout de la traduction...
+				{
+					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
+					goto suite;
+				}
+				// ISSUE#347 : exclut les fenêtres techniques de Edge
+				if (strcmp(szTitle,"Microsoft Edge")==0 ||
+					strcmp(szTitle,"Hôte contextuel")==0 ||
+					strcmp(szTitle,"Contextual host")==0 ||
+					strcmp(szTitle,"Quick Launch")==0)
+				{
+					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
+					goto suite;
+				}
+				// vérifie si c'est un navigateur et qu'on obtient bien l'URL
+				pszURL=UniversalGetURL(*w);
+				if (pszURL!=NULL) 
+				{ 
+					if (*pszURL==0) // URL vide, c'est pas mieux que NULL... il faut continuer
+					{
+						free(pszURL); pszURL=NULL; goto suite;
+					}
+				}
+				// Si on est ici, c'est qu'on a une URL non vide.
+			}
+		}
+suite:
+		if (pszURL==NULL) *w=GetNextWindow(*w,GW_HWNDNEXT);
+	}
+	if (pszURL!=NULL)
+	{
+		TRACE((TRACE_INFO,_F_,"Fenêtre trouvée : %s",szTitle));
+	}
+	TRACE((TRACE_LEAVE,_F_, "pszURL=0x%08lx",pszURL));
+	return pszURL;
+}
+
+// ----------------------------------------------------------------------------------
 // GetConfigBoolValue()
 // ----------------------------------------------------------------------------------
 // Lecture d'une valeur YES | NO et si pas trouvé retourne + écrit la valeur par défaut

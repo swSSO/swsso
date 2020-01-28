@@ -114,6 +114,9 @@
     <ClCompile Include="swSSOLightPolicies.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\swSSO\swSSOBrowser.cpp">
+      <Filter>Source Files\swSSO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc">
