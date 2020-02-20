@@ -598,7 +598,7 @@ CAPTION "Sign up for this site"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "1. Enter login or email address for this site, then click Copy and paste value on the website (right-click and Paste or CTRL+V)",TX_FRAME1,47,8,254,18
-    LTEXT           "2. Repeat operation for password. Once sign up completed on the website, click Save.",TX_FRAME2,47,27,254,18
+    LTEXT           "2. Enter password and click Fill in button to fill password fields. Once signed up, click Save.",TX_FRAME2,47,27,254,18
     LTEXT           "Tip: right click login or password entry fields to use existing logins or generate strong passwords.",TX_FRAME3,93,112,209,18
     LTEXT           "&Login or e-mail:",IDC_STATIC,17,64,71,8
     EDITTEXT        TB_ID,93,62,171,13,ES_AUTOHSCROLL
@@ -1631,7 +1631,7 @@ CAPTION "S'inscrire sur ce site"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "1. Saisissez l'identifiant ou l'adresse e-mail pour ce site, puis cliquez sur Copier et enfin collez la valeur sur le site (clic-droit / coller ou CTRL+V).",TX_FRAME1,47,8,254,18
-    LTEXT           "2. Répétez l'opération avec le mot de passe puis, une fois l'enregistrement finalisé sur le site, cliquez sur Enregistrer.",TX_FRAME2,47,27,254,18
+    LTEXT           "2. Saisissez le mot de passe puis cliquez sur Remplir pour remplir le formulaire sur le site. Une fois l'enregistrement finalisé, cliquez sur Enregistrer.",TX_FRAME2,47,27,254,18
     LTEXT           "Astuce : gagnez du temps, faites clic-droit sur les champs Identifiant et Mot de passe, puis laissez-vous guider !",TX_FRAME3,93,112,209,18
     LTEXT           "&Identifiant ou e-mail :",IDC_STATIC,17,64,74,8
     EDITTEXT        TB_ID,93,62,171,13,ES_AUTOHSCROLL
