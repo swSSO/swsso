@@ -4435,7 +4435,8 @@ int SaveApplications(void)
 	hf=CreateFile(gszCfgFile,GENERIC_READ|GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hf==INVALID_HANDLE_VALUE) 
 	{
-		TRACE((TRACE_ERROR,_F_,"CreateFile(CREATE_ALWAYS,%s)",gszCfgFile)); goto end;
+		TRACE((TRACE_ERROR,_F_,"CreateFile(CREATE_ALWAYS,%ld,%s)",GetLastError(),gszCfgFile)); 
+		goto end;
 	}
 	if (!WriteFile(hf,pszHeader,strlen(pszHeader),&dw,NULL)) 
 	{ 
