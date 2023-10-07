@@ -36,6 +36,13 @@ Voici quelques premières explications très simples sur les paramètres de l’
 - Champ mot de passe : cette valeur indique le rang du champ mot de passe à remplir s’il y a plusieurs champs mot de passe dans la page. Dans 99% des cas, il n’y a qu’un seul champ de type mot de passe et vous pourrez laisser la valeur 1, qui signifie que le champ à renseigner est le 1er champ mot de passe de la page. Si c’est le 2nd champ mot de passe qui vous intéresse, mettez cette valeur à 2.
 - Validation : la valeur [ENTER] indique que swSSO doit frapper la touche ENTER après avoir saisi l’identifiant et le mot de passe. Si vous constatez que pour valider la saisie du formulaire il faut d’abord taper sur la touche TAB pour sélectionner le bouton de validation puis taper ENTER, saisissez [TAB][ENTER].
 
+## Et sur mon smartphone, je fais comment ?
+
+Grace à swSSO Mobile, vous accédez également à vos mots de passe depuis votre smartphone !
+Reportez-vous à la [documentation](https://swsso.000webhostapp.com/doc/swSSOMobile.pdf) et suivez la procédure !
+
+> **Les URLs indiquées dans le document ne sont plus bonnees :** remplacez https://www.swsso.fr par https://swsso.000webhostapp.com et https://www.swsso.fr/mobile par https://swsso.000webhostapp.com/mobile
+
 ## Version entreprise
 
 La version Entreprise de swSSO apporte de nombreux compléments indispensables pour l’utilisation de swSSO en entreprise :
