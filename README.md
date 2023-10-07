@@ -34,6 +34,19 @@ Voici quelques premières explications très simples sur les paramètres de l’
 - Champ mot de passe : cette valeur indique le rang du champ mot de passe à remplir s’il y a plusieurs champs mot de passe dans la page. Dans 99% des cas, il n’y a qu’un seul champ de type mot de passe et vous pourrez laisser la valeur 1, qui signifie que le champ à renseigner est le 1er champ mot de passe de la page. Si c’est le 2nd champ mot de passe qui vous intéresse, mettez cette valeur à 2.
 - Validation : la valeur [ENTER] indique que swSSO doit frapper la touche ENTER après avoir saisi l’identifiant et le mot de passe. Si vous constatez que pour valider la saisie du formulaire il faut d’abord taper sur la touche TAB pour sélectionner le bouton de validation puis taper ENTER, saisissez [TAB][ENTER].
 
+## Version entreprise
+
+La version Entreprise de swSSO apporte de nombreux compléments indispensables pour l’utilisation de swSSO en entreprise :
+- Un serveur de configuration, à héberger par vos soins (technologie PHP/MySQL) ;
+- La possibilité de coupler swSSO à l’authentification Windows ;
+- Un outil de déblocage en cas de perte du mot de passe maître ou de désynchronisation du mot de passe Windows ;
+- La possibilité de définir une politique de sécurité pour le mot de passe maître : longueur minimale, composition (nombre minimal de minuscules, majuscules, chiffres et caractères spéciaux), fréquence de renouvellement...
+- La possibilité de brider des interfaces de configuration du client, afin de limiter les droits des utilisateurs ;
+
+Tous les modules ainsi que le guide d’administration sont disponibles [dans la section Release](https://github.com/swSSO/swsso/releases/latest). 
+
+Et tout comme la version grand public, la version Entreprise est gratuite et distribuée sous licence GPL. Si vous avez un projet et que vous avez besoin d'aide, n'hésitez pas à me contacter !
+
 ## About swSSO
 swSSO is an E-SSO (Enterprise Single Sign-On) / password manager software: it stores all your user names and passwords in a secure file and automatically fills in login forms.
 It runs on Windows XP, Vista, 7, 8, 10 and 11 and is compatible with both web sites (Google Chrome, Firefox, Internet Explorer and Edge) and client-side applications.
