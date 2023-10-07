@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-//               swSSO - http://www.swsso.fr - sylvain@swsso.fr
+//                     swSSO - https://github.com/swSSO
 //-----------------------------------------------------------------------------
 
 // vérifie le mot de passe et génère la clé de déchiffrement

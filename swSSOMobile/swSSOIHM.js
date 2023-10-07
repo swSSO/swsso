@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-//               swSSO - http://www.swsso.fr - sylvain@swsso.fr
+//                     swSSO - https://github.com/swSSO
 //-----------------------------------------------------------------------------
 
 // Aiguillage et initialisations des pages

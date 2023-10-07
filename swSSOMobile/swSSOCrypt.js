@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-//               swSSO - http://www.swsso.fr - sylvain@swsso.fr
+//                     swSSO - https://github.com/swSSO
 //-----------------------------------------------------------------------------
 
 // conversion d'une chaine hexa en ascii

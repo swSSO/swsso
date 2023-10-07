@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-//               swSSO - http://www.swsso.fr - sylvain@swsso.fr
+//                     swSSO - https://github.com/swSSO
 //-----------------------------------------------------------------------------
  
  function googleAuth(strPostAction) 
@@ -11,7 +11,7 @@
     form.setAttribute('action',oauth2Endpoint);
 
     var params = {'client_id': strCID,
-                  'redirect_uri': 'https://www.swsso.fr/mobile/',  // test : http://www.mytasks.fr:82/mobile/ | prod : https://www.swsso.fr/mobile/
+                  'redirect_uri': 'https://swsso.000webhostapp.com/mobile/',  // test : http://www.mytasks.fr:82/mobile/ | prod : https://swsso.000webhostapp.com/mobile/ | prod old : https://www.swsso.fr/mobile/
                   'scope': 'https://www.googleapis.com/auth/drive.file',
                   'state': strPostAction,
                   'include_granted_scopes': 'true',
