@@ -24,7 +24,9 @@ Ouvrez votre navigateur et rendez-vous sur la page de connexion du site web ou d
 
 Saisissez votre identifiant dans le champ identifiant et le mot de passe dans le champ mot de passe, puis validez en cliquant sur le bouton OK. Ne modifiez pas les autres champs de cette fenêtre pour le moment.
 
-Vous avez vu ? L’identifiant et le mot de passe que vous venez de taper sont saisis par swSSO dans le formulaire de connexion : votre première configuration est terminée ! Si vous n’avez pas vu swSSO remplir le formulaire, refermez votre navigateur complètement (pas seulement l’onglet concerné) et ouvrez-le à nouveau sur la page de connexion : swSSO saisit votre identifiant et votre mot de passe à votre place !
+Vous avez vu ? L’identifiant et le mot de passe que vous venez de taper sont saisis par swSSO dans le formulaire de connexion : votre première configuration est terminée :tada:
+
+Si vous n’avez pas vu swSSO remplir le formulaire, refermez votre navigateur complètement (pas seulement l’onglet concerné) et ouvrez-le à nouveau sur la page de connexion : swSSO saisit votre identifiant et votre mot de passe à votre place !
 
 ## Pour aller plus loin 
 
