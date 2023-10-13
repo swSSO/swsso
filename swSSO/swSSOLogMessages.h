@@ -8,7 +8,7 @@
 //
 //							 http://www.swsso.fr
 //                   
-//                             sylvain@swsso.fr
+//                       sylvain.werdefroy@gmail.com
 //
 //-----------------------------------------------------------------------------
 // 

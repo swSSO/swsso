@@ -6,9 +6,9 @@
 ;//
 ;//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
 ;//
-;//							 http://www.swsso.fr
+;//
 ;//                   
-;//                             sylvain@swsso.fr
+;//                       sylvain.werdefroy@gmail.com
 ;//
 ;//-----------------------------------------------------------------------------
 ;// 

@@ -98,9 +98,6 @@
     <ClCompile Include="swSSOLogs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="swSSOMain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="swSSOPolicies.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -150,6 +147,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="swSSOBrowser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="swSSOMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

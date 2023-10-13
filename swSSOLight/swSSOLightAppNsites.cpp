@@ -4,11 +4,11 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2023 - Sylvain WERDEFROY
 //
-//							 http://www.swsso.fr
+//
 //                   
-//                             sylvain@swsso.fr
+//                       sylvain.werdefroy@gmail.com
 //
 //-----------------------------------------------------------------------------
 // 

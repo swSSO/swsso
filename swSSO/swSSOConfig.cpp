@@ -4,11 +4,11 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2023 - Sylvain WERDEFROY
 //
-//							 http://www.swsso.fr
+//
 //                   
-//                             sylvain@swsso.fr
+//                       sylvain.werdefroy@gmail.com
 //
 //-----------------------------------------------------------------------------
 // 
@@ -296,18 +296,7 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			GetWindowRect(GetDlgItem(w,TX_URL),&rect);
 			if ((pt.x >= rect.left)&&(pt.x <= rect.right)&& (pt.y >= rect.top) &&(pt.y <= rect.bottom))
 			{
-				char szURL[50];
-				*szURL=0;
-				GetWindowText(GetDlgItem(w,TX_URL),szURL,sizeof(szURL));
-				if (strcmp(szURL,"https://www.swsso.fr")==0)
-				{
-					strcpy_s(szURL,"https://www.swsso.fr/?page_id=201");
-				}
-				else
-				{
-					strcpy_s(szURL,"https://www.swsso.fr/?page_id=31929");
-				}
-				ShellExecute(NULL,"open",szURL,NULL,"",SW_SHOW );
+				ShellExecute(NULL,"open", "https://github.com/swSSO",NULL,"",SW_SHOW );
 			}
 			break;
 		}

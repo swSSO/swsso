@@ -1,9 +1,9 @@
 //-----------------------------------------------------------------------------
 //                                  swSSO
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
-//                Copyright (C) 2004-2020 - Sylvain WERDEFROY
-//							 http://www.swsso.fr
-//                             sylvain@swsso.fr
+//                Copyright (C) 2004-2023 - Sylvain WERDEFROY
+//
+//                       sylvain.werdefroy@gmail.com
 //-----------------------------------------------------------------------------
 //  This file is part of swSSO.
 //  swSSO is free software: you can redistribute it and/or modify
