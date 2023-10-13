@@ -6,8 +6,6 @@
 //
 //                Copyright (C) 2004-2023 - Sylvain WERDEFROY
 //
-//
-//                   
 //                       sylvain.werdefroy@gmail.com
 //
 //-----------------------------------------------------------------------------
@@ -715,7 +713,7 @@ static int CALLBACK CheckURLProc(HWND w, LPARAM lp)
 	int iAction;
 	iAction=((T_CHECK_URL*)lp)->iAction;
 	int rc=TRUE;
-	char szCtrlURL[128+1];
+	char szCtrlURL[500+1];
 	HRESULT hr;
 	IAccessible *pAccessible=NULL;
 	BSTR bstrName=NULL;
@@ -739,7 +737,7 @@ static int CALLBACK CheckURLProc(HWND w, LPARAM lp)
 			hr=pAccessible->get_accName(vtMe,&bstrName);
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pAccessible->get_accName()=0x%08lx",hr)); goto end; }
 			TRACE((TRACE_DEBUG,_F_,"Libelle=%S",bstrName));
-			wsprintf(szCtrlURL,"%S",bstrName); // waouh le beau risque de buffer overflow :-)
+			sprintf_s(szCtrlURL,sizeof(szCtrlURL),"%S",bstrName); // ISSUE#408
 		}
 		if (*szCtrlURL!=0) // // libellé trouvé, on vérifie que c'est le bon 
 		{
