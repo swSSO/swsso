@@ -96,8 +96,8 @@ extern BOOL gbInternetUseProxy;		// 0.80 : utilise un proxy pour se connecter à 
 extern char gszProxyURL[];			// 0.80 : URL du proxy
 extern char gszProxyUser[];			// 0.80 : compte utilisateur pour authentification proxy
 extern char gszProxyPwd[];			// 0.80 : mot de passe pour authentification proxy
-extern char gszServerAddress[];		// 0.80 : adresse du serveur pour stockage configs ("ws.swsso.fr" par défaut)
-extern char gszWebServiceAddress[];	// 0.80 : adresse du serveur pour stockage configs ("/webservice5.php" par défaut)
+extern char gszServerAddress[];		// 0.80 : adresse du serveur pour stockage configs ("swsso.000webhostapp.com" par défaut)
+extern char gszWebServiceAddress[];	// 0.80 : adresse du serveur pour stockage configs ("/webservice6.php" par défaut)
 extern HWND gwPropertySheet;		// 0.83 : handle de la fenetre de config (pour masquage sur désactivation)
 extern int gx,gy,gcx,gcy;			// 0.85 : positionnement de la fenêtre sites et applications
 extern int gx2,gy2,gcx2,gcy2,gbLaunchTopMost; // 0.91 : positionnement de la fenêtre de lancement d'application

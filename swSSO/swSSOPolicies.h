@@ -267,8 +267,8 @@ extern int giPwdPolicy_MinRules;
 #define LOG_LEVEL_INFO_MANAGED	3 // infos pour configurations managées uniquement
 #define LOG_LEVEL_INFO_ALL		4 // infos tout
 
-extern char gszServerAddress[];			// 0.80 : adresse du serveur pour stockage configs ("ws.swsso.fr" par défaut)
-extern char gszWebServiceAddress[];		// 0.80 : adresse du serveur pour stockage configs ("/webservice5.php" par défaut)
+extern char gszServerAddress[];			// 0.80 : adresse du serveur pour stockage configs ("swsso.000webhostapp.com" par défaut)
+extern char gszWebServiceAddress[];		// 0.80 : adresse du serveur pour stockage configs ("/webservice6.php" par défaut)
 extern char gszErrorMessageIniFile[]; 	// 0.88 : message d'erreur en cas de corruption swsso.ini
 extern char gszErrorServerNotAvailable[];   // 0.90 : serveur non joignable / pb config proxy
 extern char gszErrorServerConfigNotFound[]; // 0.90 : configuration demandée non trouvée

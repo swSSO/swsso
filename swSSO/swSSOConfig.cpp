@@ -1288,7 +1288,7 @@ int GetConfigHeader()
 	bCheckVersion=gbInternetCheckVersion_DefaultValue;
 	if (bCheckVersion)
 	{
-		bCheckVersion=strcmp(gszServerAddress,"ws.swsso.fr")==0; 	// ISSUE#134
+		bCheckVersion=strcmp(gszServerAddress,"swsso.000webhostapp.com")==0; 	// ISSUE#134
 	}
 	gbInternetCheckVersion=GetConfigBoolValue("swSSO","internetCheckVersion",bCheckVersion,TRUE);
 	gbInternetCheckBeta=GetConfigBoolValue("swSSO","internetCheckBeta",gbInternetCheckBeta_DefaultValue,TRUE);
@@ -5402,10 +5402,7 @@ void InternetCheckVersion()
 	{
 		if (MessageBox(NULL,szMsg,"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES)
 		{
-			if (bBeta)
-				ShellExecute(NULL,"open","http://www.swsso.fr/download/beta",NULL,"",SW_SHOW );
-			else
-				ShellExecute(NULL,"open","http://www.swsso.fr",NULL,"",SW_SHOW );
+			ShellExecute(NULL,"open","https://github.com/swSSO/swsso/releases/latest",NULL,"",SW_SHOW );
 		}
 	}
 end:
