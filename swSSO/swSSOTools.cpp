@@ -654,6 +654,13 @@ int swGetTopWindow(HWND *w, char *szTitle,int sizeofTitle)
 					TRACE((TRACE_INFO,_F_, "Fenêtre exclue : %s",szTitle));
 					rc=-1;
 				}
+				// ISSUE#409 : exclut la fenêtre de la barre de taches / icones masquées
+				if (strcmp(szTitle, "Fenêtre de dépassement de capacité de la barre d’état système.")==0 ||
+					strcmp(szTitle, "System tray overflow window.")==0)
+				{
+					TRACE((TRACE_INFO, _F_, "Fenêtre exclue : %s", szTitle));
+					rc = -1;
+				}
 				// ISSUE#347 : exclut les fenêtres techniques de Edge
 				if (strcmp(szTitle,"Microsoft Edge")==0 ||
 					strcmp(szTitle,"Hôte contextuel")==0 ||

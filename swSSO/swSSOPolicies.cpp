@@ -693,6 +693,12 @@ void LoadPolicies(void)
 
 		RegCloseKey(hKey);
 	}
+	else // 1.24 - si serveur non renseigné, on est sur une version perso, on interdit get/put config
+	{
+		gbEnableOption_GetConfig = FALSE;
+		gbEnableOption_ManualPutConfig = FALSE;
+	}
+
 	//--------------------------------------------------------------
 	// EXCLUDED WINDOWS
 	//--------------------------------------------------------------
