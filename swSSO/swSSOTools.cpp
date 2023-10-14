@@ -167,7 +167,7 @@ end:
 // Exécute la requête HTTP passée en paramètre
 // L'appelant doit libérer le resultat !
 // ----------------------------------------------------------------------------------
-char *HTTPRequestOneServer(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr)
+char *HTTPRequestOneServer(const char *pszServer,	// [in] FQDN du serveur (www.swsso.fr)
 				  int iPort,						// [in] port
 				  BOOL bHTTPS,						// [in] TRUE=https, FALSE=http
 				  const char *pszAddress,			// [in] adresse du service (/webservice5.php)
@@ -843,8 +843,8 @@ end:
 	if (!bFound)
 	{
 		// 4ème essai : pointe vers le site web
-		rc=(int)ShellExecute(NULL,"open","http://www.swsso.fr/?page_id=108",NULL,"",SW_SHOW );
-		TRACE((TRACE_INFO,_F_,"ShellExecute(www.swsso.fr)=%d",rc)); 
+		rc=(int)ShellExecute(NULL,"open","https://github.com/swSSO",NULL,"",SW_SHOW );
+		TRACE((TRACE_INFO,_F_,"ShellExecute(https://github.com/swSSO)=%d",rc)); 
 	}
 	TRACE((TRACE_LEAVE,_F_, ""));
 }
