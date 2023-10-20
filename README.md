@@ -41,7 +41,7 @@ Voici quelques premières explications très simples sur les paramètres de l’
 Grace à swSSO Mobile, vous accédez également à vos mots de passe depuis votre smartphone !
 Reportez-vous à la [documentation](https://swsso.000webhostapp.com/doc/swSSOMobile.pdf) et suivez la procédure !
 
-> **Les URLs indiquées dans le document ne sont plus bonnees :** remplacez https://www.swsso.fr par https://swsso.000webhostapp.com et https://www.swsso.fr/mobile par https://swsso.000webhostapp.com/mobile
+> **Les URLs indiquées dans le document ne sont plus bonnes :** remplacez https://www.swsso.fr par https://swsso.000webhostapp.com et https://www.swsso.fr/mobile par https://swsso.000webhostapp.com/mobile
 
 ## Version entreprise
 
