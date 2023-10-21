@@ -51,7 +51,7 @@ int  swCryptInit();
 void swCryptTerm();
 
 int  swCryptDeriveKey(BYTE *pSalt,const char *pszMasterPwd,HCRYPTKEY *phKey);
-void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString);
+void swCryptEncodeBase64(const unsigned char* pSrcData, int lenSrcData, char* pszDestString, int sizeofDestString);
 int swCryptDecodeBase64(const char *szSrcString,char *pDestData,int lenDestData);
 
 int swCryptGetPrivateKeyFromSZData(char *szSaltData,char *szPrivateKeyData,char *szPassword,HCRYPTKEY *phPrivateKey);

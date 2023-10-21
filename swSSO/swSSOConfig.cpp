@@ -162,10 +162,10 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			}
 			char s[100];
 			// 0.63BETA5 : détail nb sso popups
-			wsprintf(s,"%d (%d web - %d popups - %d windows)",guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,guiNbWEBSSO,guiNbPOPSSO,guiNbWINSSO);
+			sprintf_s(s,sizeof(s),"%d (%d web - %d popups - %d windows)",guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,guiNbWEBSSO,guiNbPOPSSO,guiNbWINSSO);
 			SetDlgItemText(w,TX_NBSSO,s);
 			GetNbActiveApps(&iNbActiveApps,&iNbActiveAppsFromServer);
-			wsprintf(s,"%d / %d",iNbActiveApps,giNbActions);
+			sprintf_s(s,sizeof(s),"%d / %d",iNbActiveApps,giNbActions);
 			SetDlgItemText(w,TX_NBAPP,s);
 			SetDlgItemText(w,TX_CONFIGFILE,gszCfgFile);
 
@@ -214,9 +214,9 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			if (gbEnableOption_ViewServerInfos)
 			{
 				if (gbLastRequestOnFailOverServer)
-					wsprintf(buf2048,"%s%s",gszServerAddress2,gszWebServiceAddress2);
+					sprintf_s(buf2048,sizeof(buf2048),"%s%s",gszServerAddress2,gszWebServiceAddress2);
 				else
-					wsprintf(buf2048,"%s%s",gszServerAddress,gszWebServiceAddress);
+					sprintf_s(buf2048,sizeof(buf2048),"%s%s",gszServerAddress,gszWebServiceAddress);
 				SetDlgItemText(w,TX_SERVER,buf2048);
 			}
 			else
@@ -793,10 +793,10 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				if (*gptActions[params->iAction].szId2Name==0)
 				{
 					strcpy_s(buf100,sizeof(buf100),GetString(IDS_ID2));
-					wsprintf(buf2048,GetString(IDS_VALUE),buf100);
+					sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_VALUE),buf100);
 				}
 				else
-					wsprintf(buf2048,GetString(IDS_VALUE),gptActions[params->iAction].szId2Name);
+					sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_VALUE),gptActions[params->iAction].szId2Name);
 				SetDlgItemText(w,TX_ID2,buf2048);
 			}
 			if (!gbDontAskId3)
@@ -804,10 +804,10 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				if (*gptActions[params->iAction].szId3Name==0)
 				{
 					strcpy_s(buf100,sizeof(buf100),GetString(IDS_ID3));
-					wsprintf(buf2048,GetString(IDS_VALUE),buf100);
+					sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_VALUE),buf100);
 				}
 				else
-					wsprintf(buf2048,GetString(IDS_VALUE),gptActions[params->iAction].szId3Name);
+					sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_VALUE),gptActions[params->iAction].szId3Name);
 				SetDlgItemText(w,TX_ID3,buf2048);
 			}
 			if (!gbDontAskId4)
@@ -815,10 +815,10 @@ int CALLBACK IdAndPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				if (*gptActions[params->iAction].szId4Name==0)
 				{
 					strcpy_s(buf100,sizeof(buf100),GetString(IDS_ID4));
-					wsprintf(buf2048,GetString(IDS_VALUE),buf100);
+					sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_VALUE),buf100);
 				}
 				else
-					wsprintf(buf2048,GetString(IDS_VALUE),gptActions[params->iAction].szId4Name);
+					sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_VALUE),gptActions[params->iAction].szId4Name);
 				SetDlgItemText(w,TX_ID4,buf2048);
 			}
 			// positionnement et dimensionnement de la fenêtre + replacement des boutons OK / Cancel
@@ -1732,12 +1732,12 @@ int StoreMasterPwd(const char *szPwd)
 	if (swPBKDF2(PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),szPwd,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
 
 	// encodage base64 et stockage des sels et du mot de passe dans le fichier .ini
-	swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2KeySalt);
+	swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2KeySalt,sizeof(szPBKDF2KeySalt));
 	WritePrivateProfileString("swSSO","keySalt",szPBKDF2KeySalt,gszCfgFile);
 	if (giPwdProtection==PP_ENCRYPTED)
 	{
-		swCryptEncodeBase64(gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,szPBKDF2PwdSalt);
-		swCryptEncodeBase64(PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),szPBKDF2ConfigPwd);
+		swCryptEncodeBase64(gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,szPBKDF2PwdSalt,sizeof(szPBKDF2PwdSalt));
+		swCryptEncodeBase64(PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),szPBKDF2ConfigPwd,sizeof(szPBKDF2ConfigPwd));
 		WritePrivateProfileString("swSSO","pwdSalt",szPBKDF2PwdSalt,gszCfgFile);
 		WritePrivateProfileString("swSSO","pwdValue",szPBKDF2ConfigPwd,gszCfgFile);
 	}
@@ -1787,7 +1787,7 @@ int DPAPIStoreMasterPwd(const char *szPwd)
 	// encodage base64 et écriture dans swsso.ini
 	pszBase64=(char*)malloc(DataOut.cbData*2+1);
 	if (pszBase64==NULL) goto end;
-	swCryptEncodeBase64(DataOut.pbData,DataOut.cbData,pszBase64);
+	swCryptEncodeBase64(DataOut.pbData,DataOut.cbData,pszBase64,DataOut.cbData*2+1);
 
 	WritePrivateProfileString("swSSO",szKey,pszBase64,gszCfgFile);
 	StoreIniEncryptedHash(); // ISSUE#164
@@ -1865,7 +1865,7 @@ int GenWriteCheckSynchroValue(void)
 	// Chiffre  avec la clé ghKey1
 	if (swCryptEncryptData(bufSynchroValue,bufSynchroValue+16,64,ghKey1)!=0) goto end;
 	// Encode en faux base 64
-	swCryptEncodeBase64(bufSynchroValue,16+64+16,szSynchroValue);
+	swCryptEncodeBase64(bufSynchroValue,16+64+16,szSynchroValue,sizeof(szSynchroValue));
 	// Ecrit dans le .ini
 	WritePrivateProfileString("swSSO","CheckSynchro",szSynchroValue,gszCfgFile);
 	StoreIniEncryptedHash(); // ISSUE#164
@@ -1952,9 +1952,9 @@ int InitWindowsSSO(void)
 	}
 	// TODO un jour : analyser la réponse
 	// Ecrit les sels dans le .ini
-	swCryptEncodeBase64(gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,szPBKDF2Salt);
+	swCryptEncodeBase64(gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,szPBKDF2Salt,sizeof(szPBKDF2Salt));
 	WritePrivateProfileString("swSSO","pwdSalt",szPBKDF2Salt,gszCfgFile);
-	swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2Salt);
+	swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2Salt,sizeof(szPBKDF2Salt));
 	WritePrivateProfileString("swSSO","keySalt",szPBKDF2Salt,gszCfgFile);
 
 	// Demande le keydata à swssosvc
@@ -2568,7 +2568,7 @@ int WindowChangeMasterPwd(BOOL bForced)
 			{
 				char szMsg[255+1];
 				bChangePwdAllowed=FALSE;
-				wsprintf(szMsg,GetString(IDS_PWD_CHANGED_RECENTLY),giPwdPolicy_MinAge);
+				sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_PWD_CHANGED_RECENTLY),giPwdPolicy_MinAge);
 				MessageBox(NULL,szMsg,"swSSO",MB_OK|MB_ICONEXCLAMATION);
 			}
 		}
@@ -2630,7 +2630,7 @@ int SaveMasterPwdLastChange(void)
 		goto end;
 	}
 	time(&t);
-	wsprintf(szTime,"%ld",t);
+	sprintf_s(szTime,sizeof(szTime),"%lld",t);
 	TRACE((TRACE_INFO,_F_,"szTime=%s",szTime));
 	pszEncryptedTime=swCryptEncryptString(szTime,ghKey1);
 	if (pszEncryptedTime==NULL) goto end;
@@ -2958,7 +2958,7 @@ static int CALLBACK ChangeApplicationPasswordDialogProc(HWND w,UINT msg,WPARAM w
 			SendMessage(GetDlgItem(w,TB_NEW_PWD1),EM_LIMITTEXT,LEN_PWD,0);
 			SendMessage(GetDlgItem(w,TB_NEW_PWD2),EM_LIMITTEXT,LEN_PWD,0);
 			//SetDlgItemText(w,TX_APP_NAME,gptActions[lp].szApplication);
-			wsprintf(buf2048,GetString(IDS_NEW_APP_PWD),gptActions[lp].szApplication);
+			sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_NEW_APP_PWD),gptActions[lp].szApplication);
 			SetDlgItemText(w,TX_FRAME,buf2048);
 			// titre en gras
 			SetTextBold(w,TX_FRAME);
@@ -3079,78 +3079,6 @@ void SavePortal()
 {
 	SaveJSON(gszCfgPortal);
 }
-
-#if 0
-void SavePortal()
-{
-	TRACE((TRACE_ENTER,_F_,"%s",gszCfgPortal));
-	FILE *hf=NULL;
-	char szTmpURL[LEN_URL+1]; // ISSUE#375
-	char szCategoryIndex[8+1];
-	int iCategory;
-	int lenURL;
-	int i,j;
-	int iNbActionsInConfig;
-	int iCategoryPortalIndex;
-
-	if (*gszCfgPortal==0) goto end;
-
-	errno_t err=fopen_s(&hf,gszCfgPortal,"w");
-	if (err!=0)
-	{
-		TRACE((TRACE_ERROR,_F_,"Cannot open file for writing : '%s'",gszCfgPortal));
-		goto end;
-	}
-	
-	fputs("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n",hf);
-	fputs("<?xml-stylesheet type=\"text/xsl\" href=\"./swsso.xsl\"?>\n",hf); 
-	fputs("<swsso>\n",hf);
-
-	iCategoryPortalIndex=0;
-	for (j=0;j<giNbCategories;j++)
-	{
-		TRACE((TRACE_DEBUG,_F_,"Categorie n°%d Identifiant %d",j,gptCategories[j].id));
-		iNbActionsInConfig=0;
-		for (i=0;i<giNbActions;i++)
-		{
-			// appli de cette catégorie ?
-			if (gptActions[i].iCategoryId!=gptCategories[j].id) goto nextAction;
-			// appli affichage dans le portail ?
-			if (!gptActions[i].bActive || strstr(gptActions[i].szURL,"http")==NULL) goto nextAction;
-			// ajout dans le portail
-			iNbActionsInConfig++;
-			fputs("\t<app>\n",hf);
-			iCategory=GetCategoryIndex(gptActions[i].iCategoryId);
-			if (iCategory!=-1)
-			{
-				fputs("\t\t<categoryLabel>",hf); fputs(gptCategories[iCategory].szLabel,hf); fputs("</categoryLabel>\n",hf);
-				wsprintf(szCategoryIndex,"%d",iCategoryPortalIndex);
-				fputs("\t\t<categoryIndex>",hf); fputs(szCategoryIndex,hf); fputs("</categoryIndex>\n",hf);
-				wsprintf(szCategoryIndex,"%d",gptActions[i].iCategoryId);
-				fputs("\t\t<categoryId>",hf); fputs(szCategoryIndex,hf); fputs("</categoryId>\n",hf);
-			}
-			fputs("\t\t<label>",hf); fputs(gptActions[i].szApplication,hf); fputs("</label>\n",hf);
-			fputs("\t\t<url><![CDATA[",hf); // supprimer l'* en fin d'URL si présente
-			lenURL=strlen(gptActions[i].szURL);
-			memcpy(szTmpURL,gptActions[i].szURL,lenURL+1);
-			if (szTmpURL[lenURL-1]=='*') szTmpURL[lenURL-1]=0;
-			fputs(szTmpURL,hf); 
-			fputs("]]></url>\n",hf);
-			fputs("\t\t<title><![CDATA[",hf); fputs(gptActions[i].szTitle,hf); fputs("]]></title>\n",hf);
-			fputs("\t</app>\n",hf);
-			TRACE((TRACE_DEBUG,_F_,"fputs(application '%s')",gptActions[i].szApplication));
-nextAction:
-			; // ligne vide volontaire
-		}
-		if (iNbActionsInConfig!=0) iCategoryPortalIndex++;
-	}
-
-	fputs("</swsso>\n",hf);
-end:
-	if (hf!=NULL) fclose(hf);
-	TRACE((TRACE_LEAVE,_F_, ""));
-}
-#endif
 
 // ----------------------------------------------------------------------------------
 // StoreNodeValue()
@@ -4394,7 +4322,7 @@ int GetAutoPublishConfigsFromServer(void)
 		pos=0;
 		for (i=0;i<giNbActions;i++)
 		{
-			pos+=wsprintf(pszIds+pos,"%d,",gptActions[i].iConfigId);
+			pos+=sprintf_s(pszIds+pos,sizeofIdsList-pos,"%d,",gptActions[i].iConfigId);
 		}
 		*(pszIds+pos-1)=0; // supprime la virgule
 		bstrXML=LookForConfig("","",pszIds,"",FALSE,FALSE,FALSE,UNK,TRUE);
@@ -4480,7 +4408,7 @@ int GetNewOrModifiedConfigsFromServer(BOOL bForced)
 			pos=0;
 			for (i=0;i<giNbActions;i++)
 			{
-				pos+=wsprintf(pszIds+pos,"%d,",gptActions[i].iConfigId);
+				pos+=sprintf_s(pszIds+pos,sizeofIdsList-pos,"%d,",gptActions[i].iConfigId);
 			}
 			*(pszIds+pos-1)=0; // supprime la virgule
 			bstrXML=LookForConfig("","",pszIds,bForced?"20000101000000":gszLastConfigUpdate,
@@ -4710,14 +4638,14 @@ void ReportConfigSync(int iErrorMessage,BOOL bShowMessage, BOOL bShowIfZero)
 			char szNbConfigsModified[5];
 			char szNbConfigsDisabled[5];
 			char szNbConfigsDeleted[5];
-			wsprintf(szNbConfigsAdded,"%d",gtConfigSync.iNbConfigsAdded);
-			wsprintf(szNbConfigsModified,"%d",gtConfigSync.iNbConfigsModified);
-			wsprintf(szNbConfigsDisabled,"%d",gtConfigSync.iNbConfigsDisabled);
-			wsprintf(szNbConfigsDeleted,"%d",gtConfigSync.iNbConfigsDeleted);
+			sprintf_s(szNbConfigsAdded,sizeof(szNbConfigsAdded),"%d",gtConfigSync.iNbConfigsAdded);
+			sprintf_s(szNbConfigsModified,sizeof(szNbConfigsModified),"%d",gtConfigSync.iNbConfigsModified);
+			sprintf_s(szNbConfigsDisabled,sizeof(szNbConfigsDisabled),"%d",gtConfigSync.iNbConfigsDisabled);
+			sprintf_s(szNbConfigsDeleted,sizeof(szNbConfigsDeleted),"%d",gtConfigSync.iNbConfigsDeleted);
 			swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_CONFIG_UPDATE,szNbConfigsAdded,szNbConfigsModified,szNbConfigsDisabled,szNbConfigsDeleted,0);
 			if (bShowMessage) 
 			{
-				// wsprintf(buf2048,GetString(IDS_GETCONFIGS_RESULT),gtConfigSync.iNbConfigsAdded,gtConfigSync.iNbConfigsModified,gtConfigSync.iNbConfigsDisabled,gtConfigSync.iNbConfigsDeleted);
+				// sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_GETCONFIGS_RESULT),gtConfigSync.iNbConfigsAdded,gtConfigSync.iNbConfigsModified,gtConfigSync.iNbConfigsDisabled,gtConfigSync.iNbConfigsDeleted);
 				// MessageBox(NULL,buf2048,"swSSO",MB_ICONINFORMATION | MB_OK);
 				NOTIFYICONDATA nid;
 				ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
@@ -5219,9 +5147,6 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 		params.bCenter=FALSE;
 		params.iAction=giNbActions;
 		params.iTitle=IDS_IDANDPWDTITLE_NEW;
-		// ISSUE#37 0.92B8 : déplacé plus bas pour que le szApplication soit toujours bien renseigné.
-		//wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_NEW),gptActions[giNbActions].szApplication);
-		//if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),NULL,IdAndPwdDialogProc,(LPARAM)&params)!=IDOK) {rc=-2; goto end; }
 		// si pas de nom trouvé sur le serveur, associe par défaut le titre
 		// ISSUE#37 0.92B8 en supprimant l'*
 		if (*gptActions[giNbActions].szApplication==0)
@@ -5230,7 +5155,7 @@ int AddApplicationFromCurrentWindow(BOOL bJustDisplayTheMessage)
 			int len=strlen(gptActions[giNbActions].szApplication);
 			if (len>0) { if (gptActions[giNbActions].szApplication[len-1]=='*') gptActions[giNbActions].szApplication[len-1]=0; }
 		}
-		wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_NEW),gptActions[giNbActions].szApplication);
+		sprintf_s(params.szText,sizeof(params.szText),GetString(IDS_IDANDPWDTEXT_NEW),gptActions[giNbActions].szApplication);
 		// ISSUE#334
 		//if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),NULL,IdAndPwdDialogProc,(LPARAM)&params)!=IDOK) {rc=-2; goto end; }
 		if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),w,IdAndPwdDialogProc,(LPARAM)&params)!=IDOK) 
@@ -5361,7 +5286,7 @@ void InternetCheckVersion()
 			if (iInternetVersion>iCurrentVersion)
 			{
 				bNewVersion=TRUE;
-				wsprintf(szMsg,GetString(IDS_NEW_VERSION),pReleaseVersion[0],pReleaseVersion[1],pReleaseVersion[2],"");
+				sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_NEW_VERSION),pReleaseVersion[0],pReleaseVersion[1],pReleaseVersion[2],"");
 			}
 		}
 	}
@@ -5377,7 +5302,7 @@ void InternetCheckVersion()
 				if (iInternetVersion>iCurrentVersion)
 				{
 					bNewVersion=TRUE;
-					wsprintf(szMsg,GetString(IDS_NEW_VERSION),pReleaseVersion[0],pReleaseVersion[1],pReleaseVersion[2],"");
+					sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_NEW_VERSION),pReleaseVersion[0],pReleaseVersion[1],pReleaseVersion[2],"");
 				}
 			}
 		}
@@ -5391,10 +5316,10 @@ void InternetCheckVersion()
 			{
 				bNewVersion=TRUE;
 				if (pBetaVersion[3]>'0' && pBetaVersion[3]<='9') // c'est une version beta qui est en ligne
-					wsprintf(szBeta," beta %c",pBetaVersion[3]);
+					sprintf_s(szBeta,sizeof(szBeta)," beta %c",pBetaVersion[3]);
 				else if (pBetaVersion[3]>='A' && pBetaVersion[3]<='Z')
-					wsprintf(szBeta," beta %d",pBetaVersion[3]-'A'+10);
-				wsprintf(szMsg,GetString(IDS_NEW_VERSION),pBetaVersion[0],pBetaVersion[1],pBetaVersion[2],szBeta);
+					sprintf_s(szBeta,sizeof(szBeta)," beta %d",pBetaVersion[3]-'A'+10);
+				sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_NEW_VERSION),pBetaVersion[0],pBetaVersion[1],pBetaVersion[2],szBeta);
 			}
 		}
 	}

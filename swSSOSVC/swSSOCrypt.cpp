@@ -353,13 +353,13 @@ void swCryptDestroyKey(HCRYPTKEY hKey)
 //-----------------------------------------------------------------------------
 // TODO : faire un vrai encodage base64
 //-----------------------------------------------------------------------------
-void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString)
+void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString,int sizeofDestString)
 {
 	TRACE((TRACE_ENTER,_F_,""));
 	int i;
     for (i=0;i<lenSrcData;i++) 
     {
-		wsprintf(pszDestString+2*i,"%02X",pSrcData[i]);
+		sprintf_s(pszDestString+2*i,sizeofDestString-2*i,"%02X",pSrcData[i]);
 	}
 	TRACE((TRACE_LEAVE,_F_,""));
 }
@@ -588,7 +588,7 @@ char *swCryptEncryptString(const char *pszSource,HCRYPTKEY hKey)
 
 	pszDest=(char*)malloc(lenDest); // sera libéré par l'appelant
 	if (pszDest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenDest)); goto end; }
-	swCryptEncodeBase64(pSourceCopy,lenSourceCopy,pszDest);
+	swCryptEncodeBase64(pSourceCopy,lenSourceCopy,pszDest,lenDest);
 
 	TRACE((TRACE_DEBUG,_F_,"pszDest=%s",pszDest));
 

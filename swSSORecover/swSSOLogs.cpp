@@ -107,7 +107,7 @@ int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszP
 		GetLocalTime(&horodate);
 		lenComputerName=sizeof(szComputerName); GetComputerName(szComputerName,&lenComputerName);
 
-		len=wsprintf(szHeader,"%02d/%02d-%02d:%02d:%02d:%03d %s@%s [%d] ",
+		len=sprintf_s(szHeader,sizeof(szHeader),"%02d/%02d-%02d:%02d:%02d:%03d %s@%s [%d] ",
 			(int)horodate.wDay,(int)horodate.wMonth,
 			(int)horodate.wHour,(int)horodate.wMinute,(int)horodate.wSecond,(int)horodate.wMilliseconds,
 			szUserName,szComputerName,LOWORD(dwMsg)); 

@@ -62,8 +62,8 @@ int SaveJSON(char *szFullpathname)
 	hf=CreateFile(szFullpathname,GENERIC_READ|GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hf==INVALID_HANDLE_VALUE) { TRACE((TRACE_ERROR,_F_,"CreateFile(CREATE_ALWAYS,%s)",szFullpathname)); goto end; }
 	// stockage des sels
-	swCryptEncodeBase64(gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,szPBKDF2PwdSalt);
-	swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2KeySalt);
+	swCryptEncodeBase64(gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,szPBKDF2PwdSalt,sizeof(szPBKDF2PwdSalt));
+	swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2KeySalt,sizeof(szPBKDF2KeySalt));
 	sprintf_s(szBuf,sizeof(szBuf),"{\n\"strPwdSalt\":\"%s\",\n\"strKeySalt\":\"%s\",",szPBKDF2PwdSalt,szPBKDF2KeySalt);
 	if (!WriteFile(hf,szBuf,strlen(szBuf),&dw,NULL)) { TRACE((TRACE_ERROR,_F_,"WriteFile(%s),len=%d",szBuf,strlen(szBuf))); goto end; }
 	// stockage du pbkdf2 du mdp maitre (PP_ENCRYPTED) ou de la valeur de vérification (PP_WINDOWS)
@@ -82,7 +82,7 @@ int SaveJSON(char *szFullpathname)
 		// Chiffre  avec la clé ghKey1
 		if (swCryptEncryptData(bufCheckSynchroValue,bufCheckSynchroValue+16,64,ghKey1)!=0) goto end;
 		// Encode en faux base 64
-		swCryptEncodeBase64(bufCheckSynchroValue,16+64+16,szCheckSynchroValue);
+		swCryptEncodeBase64(bufCheckSynchroValue,16+64+16,szCheckSynchroValue,sizeof(szCheckSynchroValue));
 		sprintf_s(szBuf,sizeof(szBuf),"\n\"strCheckSynchroValue\":\"%s\",",szCheckSynchroValue);
 	}
 	if (!WriteFile(hf,szBuf,strlen(szBuf),&dw,NULL)) { TRACE((TRACE_ERROR,_F_,"WriteFile(%s),len=%d",szBuf,strlen(szBuf))); goto end; }

@@ -52,9 +52,9 @@ void main(int argc,char **argv)
 		goto end;
 	}
 	iKeyId=atoi(argv[1]);
-	wsprintf(szPublicKeyFilex64,szPublicKeyFormatx64,iKeyId);
-	wsprintf(szPublicKeyFilex86,szPublicKeyFormatx86,iKeyId);
-	wsprintf(szPrivateKeyFile,szPrivateKeyFormat,iKeyId);
+	sprintf_s(szPublicKeyFilex64,sizeof(szPublicKeyFilex64),szPublicKeyFormatx64,iKeyId);
+	sprintf_s(szPublicKeyFilex86,sizeof(szPublicKeyFilex86),szPublicKeyFormatx86,iKeyId);
+	sprintf_s(szPrivateKeyFile,sizeof(szPrivateKeyFile),szPrivateKeyFormat,iKeyId);
 	
 	hf=CreateFile(szPrivateKeyFile,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hf!=INVALID_HANDLE_VALUE) { printf("Error: file %s already exists\n",szPrivateKeyFile); goto end; }

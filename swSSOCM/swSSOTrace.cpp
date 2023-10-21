@@ -119,7 +119,7 @@ void swTraceOpen(void)
 		{
 			char szTemp[_MAX_PATH+1];
 			ExpandFileName(szValue,szTemp,_MAX_PATH+1); // ISSUE#291
-			if (*szTemp!=0) wsprintf(gszTraceFileName,"%s-%08lx",szTemp,GetTickCount());
+			if (*szTemp!=0) sprintf_s(gszTraceFileName,sizeof(gszTraceFileName),"%s-%08lx",szTemp,GetTickCount());
 		}
 	}
 	if (*gszTraceFileName==0) goto end; // pas de fichier spécifié, pas de traces
@@ -131,7 +131,7 @@ void swTraceOpen(void)
 	// se positionne à la fin du fichier
 	SetFilePointer(ghfTrace,0,0,FILE_END);
 	// entete
-	len=wsprintf(gszTraceBuf,"=================== TRACES INITIALISEES : level=%d ===================\r\n",giTraceLevel);
+	len= sprintf_s(gszTraceBuf,sizeof(gszTraceBuf),"=================== TRACES INITIALISEES : level=%d ===================\r\n",giTraceLevel);
 	WriteFile(ghfTrace,gszTraceBuf,len,&dw,NULL);
 end:
 	if (hKey!=NULL) RegCloseKey(hKey);
@@ -174,7 +174,6 @@ void swTraceWrite(int iLevel,char *szFunction,char *szTrace, ...)
 {
 	int len;
 	SYSTEMTIME horodate;
-	char *psz=gszTraceBuf;
 	DWORD dw;
 
 	if (ghfTrace==INVALID_HANDLE_VALUE) goto end;
@@ -189,12 +188,12 @@ void swTraceWrite(int iLevel,char *szFunction,char *szTrace, ...)
 
 	// en-tête : horodate + niveau + nom de la fonction
 	GetLocalTime(&horodate);
-	len=wsprintf(psz,"%02d/%02d-%02d:%02d:%02d:%03d %s %s ",
+	len=sprintf_s(gszTraceBuf,sizeof(gszTraceBuf),"%02d/%02d-%02d:%02d:%02d:%03d %s %s ",
 		(int)horodate.wDay,(int)horodate.wMonth,
 		(int)horodate.wHour,(int)horodate.wMinute,(int)horodate.wSecond,(int)horodate.wMilliseconds,
 		swGetTraceLevelLabel(iLevel),szFunction);
 	// trace
-	len+=wvsprintf(gszTraceBuf+len,szTrace,(char *)(&szTrace+1));
+	len+=vsprintf_s(gszTraceBuf+len,sizeof(gszTraceBuf)-len,szTrace,(char *)(&szTrace+1));
 	// retour chariot
 	memcpy(gszTraceBuf+len,"\r\n\0",3);
 	len+=2;
@@ -213,7 +212,6 @@ void swTraceWriteBuffer(int iLevel,char *szFunction,unsigned char *pBuffer,int l
 	int len;
 	int i,iBinOffset,iCharOffset;
 	SYSTEMTIME horodate;
-	char *psz=gszTraceBuf;
 	DWORD dw;
 
 	if (ghfTrace==INVALID_HANDLE_VALUE) goto end;
@@ -228,12 +226,12 @@ void swTraceWriteBuffer(int iLevel,char *szFunction,unsigned char *pBuffer,int l
 
 	// en-tête : horodate + niveau + nom de la fonction
 	GetLocalTime(&horodate);
-	len=wsprintf(psz,"%02d/%02d-%02d:%02d:%02d:%03d %s %s ",
+	len=sprintf_s(gszTraceBuf,sizeof(gszTraceBuf),"%02d/%02d-%02d:%02d:%02d:%03d %s %s ",
 		(int)horodate.wDay,(int)horodate.wMonth,
 		(int)horodate.wHour,(int)horodate.wMinute,(int)horodate.wSecond,(int)horodate.wMilliseconds,
 		swGetTraceLevelLabel(iLevel),szFunction);
 	// trace
-	len+=wvsprintf(gszTraceBuf+len,szTrace,(char *)(&szTrace+1));
+	len+=vsprintf_s(gszTraceBuf+len,sizeof(gszTraceBuf)-len,szTrace,(char *)(&szTrace+1));
 	// retour chariot
 	memcpy(gszTraceBuf+len,"\r\n\0",3);
 	len+=2;
@@ -247,7 +245,7 @@ void swTraceWriteBuffer(int iLevel,char *szFunction,unsigned char *pBuffer,int l
 		goto end;
 	}
 	// trace de la longueur
-	len=wsprintf(gszTraceBuf,"lenBuffer=%d\r\n",lenBuffer);
+	len=sprintf_s(gszTraceBuf,sizeof(gszTraceBuf),"lenBuffer=%d\r\n",lenBuffer);
 	WriteFile(ghfTrace,gszTraceBuf,len,&dw,NULL);
 	// préformatage
 	strcpy_s(gszTraceBuf,sizeof(gszTraceBuf),"                                                |                 \r\n");
@@ -264,9 +262,9 @@ void swTraceWriteBuffer(int iLevel,char *szFunction,unsigned char *pBuffer,int l
 			iCharOffset=50;
 			memset(gszTraceBuf,' ',len-2);
 		}
-		wsprintf(gszTraceBuf+iBinOffset,"%02x",(unsigned char)(pBuffer[i]));
+		sprintf_s(gszTraceBuf+iBinOffset,sizeof(gszTraceBuf)-iBinOffset,"%02x",(unsigned char)(pBuffer[i]));
 		iBinOffset+=2;
-		gszTraceBuf[iBinOffset]=' '; // a été écrasé par le 0 du wsprintf
+		gszTraceBuf[iBinOffset]=' '; // a été écrasé par le 0 du sprintf_s
 		if (pBuffer[i]>=32 && pBuffer[i]<=127)
 			gszTraceBuf[iCharOffset]=pBuffer[i];
 		else

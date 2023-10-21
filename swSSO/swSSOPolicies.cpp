@@ -711,7 +711,7 @@ void LoadPolicies(void)
 		rc=0;
 		while (giNbExcludedWindows<MAX_EXCLUDED_WINDOWS && rc==0)
 		{
-			wsprintf(sz,"%d",giNbExcludedWindows);
+			sprintf_s(sz,sizeof(sz),"%d",giNbExcludedWindows);
 			dwValueType=REG_SZ;
 			dwValueSize=sizeof(szValue);
 			rc=RegQueryValueEx(hKey,sz,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);
@@ -912,7 +912,7 @@ void LoadPolicies(void)
 		char *pszR=NULL,*pszG=NULL,*pszB=NULL,*pContext=NULL;
 		while (giNbPwdGroupColors<MAX_COLORS && rc==0)
 		{
-			wsprintf(szId,"%d",giNbPwdGroupColors);
+			sprintf_s(szId,sizeof(szId),"%d",giNbPwdGroupColors);
 			dwValueType=REG_SZ;
 			dwValueSize=sizeof(szValue);
 			rc=RegQueryValueEx(hKey,szId,NULL,&dwValueType,(LPBYTE)szValue,&dwValueSize);

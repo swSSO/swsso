@@ -324,10 +324,10 @@ static void PublishToSavePosition(HWND w)
 	gy3=rect.top;
 	gcx3=rect.right-rect.left;
 	gcy3=rect.bottom-rect.top;
-	wsprintf(s,"%d",gx3);  WritePrivateProfileString("swSSO","x3",s,gszCfgFile);
-	wsprintf(s,"%d",gy3);  WritePrivateProfileString("swSSO","y3",s,gszCfgFile);
-	wsprintf(s,"%d",gcx3); WritePrivateProfileString("swSSO","cx3",s,gszCfgFile);
-	wsprintf(s,"%d",gcy3); WritePrivateProfileString("swSSO","cy3",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gx3);  WritePrivateProfileString("swSSO","x3",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gy3);  WritePrivateProfileString("swSSO","y3",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gcx3); WritePrivateProfileString("swSSO","cx3",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gcy3); WritePrivateProfileString("swSSO", "cy3", s, gszCfgFile);
 
 end:
 	StoreIniEncryptedHash(); // ISSUE#164
@@ -1082,10 +1082,10 @@ static void SaveWindowPos(HWND w)
 	gy=rect.top;
 	gcx=rect.right-rect.left;
 	gcy=rect.bottom-rect.top;
-	wsprintf(s,"%d",gx);  WritePrivateProfileString("swSSO","x",s,gszCfgFile);
-	wsprintf(s,"%d",gy);  WritePrivateProfileString("swSSO","y",s,gszCfgFile);
-	wsprintf(s,"%d",gcx); WritePrivateProfileString("swSSO","cx",s,gszCfgFile);
-	wsprintf(s,"%d",gcy); WritePrivateProfileString("swSSO","cy",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gx);  WritePrivateProfileString("swSSO","x",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gy);  WritePrivateProfileString("swSSO","y",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gcx); WritePrivateProfileString("swSSO","cx",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gcy); WritePrivateProfileString("swSSO","cy",s,gszCfgFile);
 
 	// 0.92B4 : sauvegarde aussi l'état du collapse de la liste
 	*buf2048=0;
@@ -1102,7 +1102,7 @@ static void SaveWindowPos(HWND w)
 			if (iCategIndex!=-1) gptCategories[iCategIndex].bExpanded=(uiItemState & TVIS_EXPANDED);
 			if (!(uiItemState & TVIS_EXPANDED))
 			{ 
-				wsprintf(s,"%d",iCategId); 
+				sprintf_s(s,sizeof(s),"%d",iCategId);
 				strcat_s(buf2048,sizeof(buf2048),s); 
 				strcat_s(buf2048,sizeof(buf2048),":");
 			}
@@ -1284,7 +1284,7 @@ void GenerateApplicationName(int iAction,char *pszProposition)
 				bUniqueNameFound=FALSE;
 				iUniqueId++;
 				pszProposition[LEN_APPLICATION_NAME-7]=0; // laisse de la place pour id unique ! (bug #116)
-				wsprintf(szApplication,"%s (%d)",pszProposition,iUniqueId);
+				sprintf_s(szApplication,sizeof(szApplication),"%s (%d)",pszProposition,iUniqueId);
 				goto suite;
 			}
 		}
@@ -1321,7 +1321,7 @@ void GenerateCategoryName(int iCategory,char *pszProposition)
 				TRACE((TRACE_INFO,_F_,"CategName %s already exists",szCategory));
 				bUniqueNameFound=FALSE;
 				iUniqueId++;
-				wsprintf(szCategory,"%s (%d)",pszProposition,iUniqueId);
+				sprintf_s(szCategory,sizeof(szCategory),"%s (%d)",pszProposition,iUniqueId);
 				goto suite;
 			}
 		}
@@ -1360,7 +1360,7 @@ void GenerateDomainName(int iDomain,char *pszProposition)
 				bUniqueNameFound=FALSE;
 				iUniqueId++;
 				pszProposition[LEN_DOMAIN-7]=0; // laisse de la place pour id unique ! (bug #116)
-				wsprintf(szDomain,"%s (%d)",pszProposition,iUniqueId);
+				sprintf_s(szDomain,sizeof(szDomain),"%s (%d)",pszProposition,iUniqueId);
 				goto suite;
 			}
 		}
@@ -1667,7 +1667,7 @@ static int CALLBACK ChangeCategIdsDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp
 				{
 					char *pszEncryptedPassword=NULL;
 					char szMsg[250];
-					wsprintf(szMsg,GetString(IDS_CHANGER_IDS),gIds.iNbModified);
+					sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_CHANGER_IDS),gIds.iNbModified);
 					if (MessageBox(w,szMsg,"swSSO",MB_YESNO | MB_ICONQUESTION)==IDYES)
 					{
 						gIds.bId1Modified=(IsDlgButtonChecked(w,CK_ID1)==BST_CHECKED);
@@ -1799,7 +1799,7 @@ void LaunchSelectedApp(HWND w)
 	rc=(int)ShellExecute(NULL,"open",szCmd,pszParams,"",SW_SHOW);
 	if (rc<=32) 
 	{
-		wsprintf(buf2048,GetString(IDS_LAUNCH_APP_ERROR),rc,szCmd,pszParams==NULL?"":pszParams);
+		sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_LAUNCH_APP_ERROR),rc,szCmd,pszParams==NULL?"":pszParams);
 		MessageBox(w,buf2048,"swSSO",MB_OK | MB_ICONSTOP); 
 	}
 
@@ -1917,7 +1917,7 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 			char szMsg[500];
 			HCURSOR hCursorOld=NULL;
 			hCursorOld=SetCursor(ghCursorWait);
-			wsprintf(szMsg,GetString(IDS_DELETE_CATEG),gptCategories[iCategory].szLabel);
+			sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_DELETE_CATEG),gptCategories[iCategory].szLabel);
 			if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
 			if (DeleteCategOnServer(iCategory)==0)
 			{
@@ -1930,10 +1930,6 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 			}
 			if (hCursorOld!=NULL) SetCursor(hCursorOld);
 		}
-		// effacement dans le fichier : ne me semble plus utile depuis que le fichier est réécrit 
-		// complètement à chaque sauvegarde => supprimé en 0.90B1
-		// wsprintf(szCategoryId,"%d",iCategoryId);
-		// WritePrivateProfileString("swSSO-Categories",szCategoryId,NULL,gszCfgFile);
 		// effacement dans la table : en fait, décalage de toutes les actions > à celle à effacer
 		for (i=iCategory;i<giNbCategories-1;i++)
 		{
@@ -1977,7 +1973,7 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 			char szMsg[500];
 			HCURSOR hCursorOld=NULL;
 			hCursorOld=SetCursor(ghCursorWait);
-			wsprintf(szMsg,GetString(IDS_DELETE),gptActions[iAction].szApplication);
+			sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_DELETE),gptActions[iAction].szApplication);
 			if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
 			if (DeleteConfigOnServer(iAction)==0)
 			{
@@ -1991,7 +1987,7 @@ int TVRemoveSelectedAppOrCateg(HWND w)
 			if (hCursorOld!=NULL) SetCursor(hCursorOld);
 		}
 		// ISSUE#159 : on ne demande plus de confirmation puisque la suppression est annulable
-		// wsprintf(szMsg,GetString(IDS_DELETE),gptActions[iAction].szApplication);
+		// sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_DELETE),gptActions[iAction].szApplication);
 		// if (MessageBox(w,szMsg,"swSSO",MB_YESNO | MB_ICONQUESTION)==IDNO) goto end;
 		TRACE((TRACE_INFO,_F_,"SUPPRESSION application %ld",iAction));
 		// effacement dans le fichier : ne me semble plus utile depuis que le fichier est réécrit 
@@ -2093,7 +2089,7 @@ int TVDuplicateSelectedApp(HWND w,BOOL bKeepId)
 		params.bCenter=TRUE;
 		params.iAction=giNbActions-1;
 		params.iTitle=IDS_IDANDPWDTITLE_NEWACCOUNT;
-		wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_NEWACCOUNT),gptActions[iAction].szApplication);
+		sprintf_s(params.szText,sizeof(params.szText),GetString(IDS_IDANDPWDTEXT_NEWACCOUNT),gptActions[iAction].szApplication);
 		gbDontAskId=(*gptActions[iAction].szId1Name==0);
 		gbDontAskId2=(*gptActions[iAction].szId2Name==0);
 		gbDontAskId3=(*gptActions[iAction].szId3Name==0);
@@ -2469,7 +2465,7 @@ int SaveCategories(void)
 
 	for (i=0;i<giNbCategories;i++)
 	{
-		wsprintf(szCategId,"%d",gptCategories[i].id);
+		sprintf_s(szCategId,sizeof(szCategId),"%d",gptCategories[i].id);
 		TRACE((TRACE_INFO,_F_,"id=%s label=%s",szCategId,gptCategories[i].szLabel));
 		WritePrivateProfileString("swSSO-Categories",szCategId,gptCategories[i].szLabel,gszCfgFile);
 	}
@@ -2650,7 +2646,7 @@ void ShowApplicationDetails(HWND w,int iAction)
 
 	if (gbShowGeneratedPwd) { gbShowGeneratedPwd=FALSE; gbShowPwd=FALSE; }
 
-	wsprintf(buf2048,GetString(IDS_TX_INFO_PWD_GROUP),gptActions[iAction].szId1Value);	
+	sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_TX_INFO_PWD_GROUP),gptActions[iAction].szId1Value);	
 	SetDlgItemText(w,TX_INFO_PWD_GROUP,buf2048);
 	
 	ShowWindow(GetDlgItem(w,TX_INFO_PWD_GROUP),((gptActions[iAction].iPwdGroup!=-1) && (gptActions[iAction].iPwdGroup<giNbPwdGroupColors))?SW_SHOW:SW_HIDE);
@@ -2757,12 +2753,12 @@ void ShowApplicationDetails(HWND w,int iAction)
 		time_t t;
 		if (gptActions[iAction].tLastSSO==-1) t=-1;
 		else t=time(NULL)-gptActions[iAction].tLastSSO;
-		// wsprintf(buf2048,"swSSO [id=%d | i=%d | categ=%d | domain=%d | t=%ld]",gptActions[iAction].iConfigId,iAction,gptActions[iAction].iCategoryId,gptActions[iAction].iDomainId,t);
-		wsprintf(buf2048,"swSSO [id=%d | i=%d | categ=%d | t=%ld]",gptActions[iAction].iConfigId,iAction,gptActions[iAction].iCategoryId,t);
+		// sprintf_s(buf2048,sizeof(buf2048),"swSSO [id=%d | i=%d | categ=%d | domain=%d | t=%ld]",gptActions[iAction].iConfigId,iAction,gptActions[iAction].iCategoryId,gptActions[iAction].iDomainId,t);
+		sprintf_s(buf2048,sizeof(buf2048),"swSSO [id=%d | i=%d | categ=%d | t=%lld]",gptActions[iAction].iConfigId,iAction,gptActions[iAction].iCategoryId,t);
 	}
 	else
 	{
-		wsprintf(buf2048,"%s [%s]",GetString(IDS_TITRE_APPNSITES),gptActions[iAction].szApplication);		
+		sprintf_s(buf2048,sizeof(buf2048),"%s [%s]",GetString(IDS_TITRE_APPNSITES),gptActions[iAction].szApplication);		
 	}
 	// ISSUE#348
 	if (gbAdmin)
@@ -4682,7 +4678,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 		case WM_COMMAND:		// ------------------------------------------------------- WM_COMMAND
 			TRACE((TRACE_DEBUG,_F_,"WM_COMMAND LOWORD(wp)=0x%04x HIWORD(wp)=%d lp=%d",LOWORD(wp),HIWORD(wp),lp));
 			// ISSUE#114
-			if (!IsWindowEnabled(GetDlgItem(w,IDAPPLY)) & !gbIsChanging)
+			if (!IsWindowEnabled(GetDlgItem(w,IDAPPLY)) && !gbIsChanging)
 			{
 				if ((HIWORD(wp)==EN_CHANGE) || (HIWORD(wp)==CBN_SELCHANGE))
 				{
@@ -4949,7 +4945,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							{
 								char szId1Value[LEN_ID+1];
 								GetDlgItemText(w,TB_ID,szId1Value,sizeof(szId1Value));
-								wsprintf(buf2048,GetString(IDS_TX_INFO_PWD_GROUP),szId1Value);	
+								sprintf_s(buf2048,sizeof(buf2048),GetString(IDS_TX_INFO_PWD_GROUP),szId1Value);	
 								SetDlgItemText(w,TX_INFO_PWD_GROUP,buf2048);
 							}
 						}
@@ -5184,13 +5180,13 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						iDomain=TVItemGetLParam(w,hItem);
 						if (iDomain!=-1) 
 						{
-							wsprintf(buf2048,"%s [%d]",gtabDomains[iDomain].szDomainLabel,gtabDomains[iDomain].iDomainId);
+							sprintf_s(buf2048,sizeof(buf2048),"%s [%d]",gtabDomains[iDomain].szDomainLabel,gtabDomains[iDomain].iDomainId);
 							SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
 							FillDomainConfigs(w,gtabDomains[iDomain].iDomainId);
 						}
 						else
 						{
-							wsprintf(buf2048,"%s [%d]",gtabDomains[0].szDomainLabel,gtabDomains[0].iDomainId);
+							sprintf_s(buf2048,sizeof(buf2048),"%s [%d]",gtabDomains[0].szDomainLabel,gtabDomains[0].iDomainId);
 							SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
 							FillDomainConfigs(w,gtabDomains[0].iDomainId);
 						}
@@ -5220,7 +5216,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 								int iCategIndex=GetCategoryIndex(pnmtv->itemNew.lParam);
 								if (iCategIndex!=-1)
 								{
-									wsprintf(buf2048,"swSSO [id=%ld | i=%ld]",gptCategories[iCategIndex].id,iCategIndex);
+									sprintf_s(buf2048,sizeof(buf2048),"swSSO [id=%ld | i=%ld]",gptCategories[iCategIndex].id,iCategIndex);
 									SetWindowText(w,buf2048);
 								}
 							}
@@ -5230,7 +5226,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 								int iCategIndex=GetCategoryIndex(pnmtv->itemNew.lParam);
 								if (iCategIndex!=-1)
 								{
-									wsprintf(buf2048,"%s [%d]",gptCategories[iCategIndex].szLabel,gptCategories[iCategIndex].id);
+									sprintf_s(buf2048,sizeof(buf2048),"%s [%d]",gptCategories[iCategIndex].szLabel,gptCategories[iCategIndex].id);
 									SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
 								}
 							}
@@ -5250,7 +5246,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							iDomain=TVItemGetLParam(w,hItem);
 							if (iDomain!=-1) 
 							{
-								wsprintf(buf2048,"swSSO [id=%d]",gtabDomains[iDomain].iDomainId);
+								sprintf_s(buf2048,sizeof(buf2048),"swSSO [id=%d]",gtabDomains[iDomain].iDomainId);
 								SetWindowText(w,buf2048);
 							}
 						}
@@ -5267,13 +5263,13 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							iDomain=TVItemGetLParam(w,hItem);
 							if (iDomain!=-1) 
 							{
-								wsprintf(buf2048,"%s [%d]",gtabDomains[iDomain].szDomainLabel,gtabDomains[iDomain].iDomainId);
+								sprintf_s(buf2048,sizeof(buf2048),"%s [%d]",gtabDomains[iDomain].szDomainLabel,gtabDomains[iDomain].iDomainId);
 								SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
 								FillDomainConfigs(w,gtabDomains[iDomain].iDomainId);
 							}
 							else
 							{
-								wsprintf(buf2048,"%s [%d]",gtabDomains[0].szDomainLabel,gtabDomains[0].iDomainId);
+								sprintf_s(buf2048,sizeof(buf2048),"%s [%d]",gtabDomains[0].szDomainLabel,gtabDomains[0].iDomainId);
 								SetDlgItemText(w,TX_MODE_ADMIN,buf2048);
 								FillDomainConfigs(w,gtabDomains[0].iDomainId);
 							}
@@ -5343,7 +5339,7 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 										// 0.90B1 : on prend en compte tout de suite le renommage (la suppression des WriteProfileString le permet)
 										strcpy_s(gptActions[iAction].szApplication,LEN_APPLICATION_NAME+1,ptvdi->item.pszText);
 										// 0.90 : affichage de l'application en cours de modification dans la barre de titre
-										wsprintf(buf2048,"%s [%s]",GetString(IDS_TITRE_APPNSITES),gptActions[iAction].szApplication);
+										sprintf_s(buf2048,sizeof(buf2048),"%s [%s]",GetString(IDS_TITRE_APPNSITES),gptActions[iAction].szApplication);
 										SetWindowText(w,buf2048);
 
 										SetWindowLong(w, DWL_MSGRESULT, TRUE);
@@ -5777,7 +5773,7 @@ void DeleteDomain(HWND w)
 	iDomain=TVItemGetLParam(w,hItem);
 	if (iDomain==-1) goto end;
 
-	wsprintf(szMsg,GetString(IDS_DELETE_DOMAIN_CONFIRM),gtabDomains[iDomain].szDomainLabel);
+	sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_DELETE_DOMAIN_CONFIRM),gtabDomains[iDomain].szDomainLabel);
 	if (MessageBox(w,szMsg,"swSSO",MB_YESNOCANCEL | MB_ICONQUESTION)!=IDYES) goto end;
 
 	hCursorOld=SetCursor(ghCursorWait);

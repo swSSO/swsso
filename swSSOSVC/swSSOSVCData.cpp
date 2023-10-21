@@ -364,7 +364,7 @@ BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 	if (GetFileHash(szCallingProcess,bufHashValue)!=0) goto end;
 
 	// Convertit le hash en hexa (maintenant que tout le monde sait que ma fonction d'encodage en base 64 n'en sera jamais une, je l'utilise pour faire de l'encodage hexa)
-	swCryptEncodeBase64(bufHashValue,32,szBufHashValue);
+	swCryptEncodeBase64(bufHashValue,32,szBufHashValue,sizeof(szBufHashValue));
 	TRACE((TRACE_INFO,_F_,"szBufHashValue=%s",szBufHashValue));
 
 	// Lit les hashs autorisés à appeler SVC (en base de registre)

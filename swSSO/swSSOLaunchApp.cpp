@@ -77,10 +77,10 @@ static void SaveWindowPos(HWND w)
 	gy2=rect.top;
 	gcx2=rect.right-rect.left;
 	gcy2=rect.bottom-rect.top;
-	wsprintf(s,"%d",gx2);  WritePrivateProfileString("swSSO","x2",s,gszCfgFile);
-	wsprintf(s,"%d",gy2);  WritePrivateProfileString("swSSO","y2",s,gszCfgFile);
-	wsprintf(s,"%d",gcx2); WritePrivateProfileString("swSSO","cx2",s,gszCfgFile);
-	wsprintf(s,"%d",gcy2); WritePrivateProfileString("swSSO","cy2",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gx2);  WritePrivateProfileString("swSSO","x2",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gy2);  WritePrivateProfileString("swSSO","y2",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gcx2); WritePrivateProfileString("swSSO","cx2",s,gszCfgFile);
+	sprintf_s(s,sizeof(s),"%d",gcy2); WritePrivateProfileString("swSSO","cy2",s,gszCfgFile);
 	WritePrivateProfileString("swSSO","LaunchTopMost",gbLaunchTopMost?"YES":"NO",gszCfgFile);
 	StoreIniEncryptedHash(); // ISSUE#164
 end:

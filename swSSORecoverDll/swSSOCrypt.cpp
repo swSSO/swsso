@@ -345,13 +345,13 @@ int swKeystoreGetFirstPrivateKey(char *szPassword,HCRYPTKEY *phPrivateKey)
 // Et maintenant, pour des raisons de compatibilité ascendante, je préfère
 // laisser comme ça pour l'instant... Comme d'hab, le provisoire dure ;-)
 //-----------------------------------------------------------------------------
-void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString)
+void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString,int sizeofDestString)
 {
 	TRACE((TRACE_ENTER,_F_,""));
 	int i;
     for (i=0;i<lenSrcData;i++) 
     {
-		wsprintf(pszDestString+2*i,"%02X",pSrcData[i]);
+		sprintf_s(pszDestString+2*i,sizeofDestString-2*i,"%02X",pSrcData[i]);
 	}
 	TRACE((TRACE_LEAVE,_F_,""));
 }
@@ -813,7 +813,7 @@ char *swCryptEncryptAES(BYTE *pData,DWORD dwLenData,HCRYPTKEY hKey)
 	dwLenDest=dwLenDataToEncrypt*2+1;
 	pszDest=(char*)malloc(dwLenDest); // sera libéré par l'appelant
 	if (pszDest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwLenDest)); goto end; }
-	swCryptEncodeBase64(pDataToEncrypt,dwLenDataToEncrypt,pszDest);
+	swCryptEncodeBase64(pDataToEncrypt,dwLenDataToEncrypt,pszDest,dwLenDest);
 	TRACE((TRACE_DEBUG,_F_,"pszDest=%s",pszDest));
 end:
 	if (pDataToEncrypt!=NULL) free(pDataToEncrypt);

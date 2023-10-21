@@ -597,7 +597,7 @@ static int CALLBACK PopChangeAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM l
 			SetDlgItemText(w,TX_ID,gptActions[giLastApplicationSSO].szId1Value);
 			SetDlgItemText(w,TX_APP_NAME,gptActions[giLastApplicationSSO].szApplication);
 			// affiche un message différent si la saisie automatique du mot de passe n'a pas été faite ou n'était pas demandée
-			wsprintf(szMsg,GetString(lp==1?IDS_MSG_CHANGE_APP_PWD_1:IDS_MSG_CHANGE_APP_PWD_2),gszPastePwd_Text);
+			sprintf_s(szMsg,sizeof(szMsg),GetString(lp==1?IDS_MSG_CHANGE_APP_PWD_1:IDS_MSG_CHANGE_APP_PWD_2),gszPastePwd_Text);
 			SetDlgItemText(w,TX_FRAME2,szMsg);
 			// positionnement en bas à droite de l'écran, près de l'icone swSSO
 			cx = GetSystemMetrics( SM_CXSCREEN );
@@ -794,7 +794,7 @@ static int CALLBACK SaveNewAppPwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			SendMessage(GetDlgItem(w,TB_PWD),EM_LIMITTEXT,LEN_PWD,0);
 			SendMessage(GetDlgItem(w,TB_PWD_CLEAR),EM_LIMITTEXT,LEN_PWD,0);
 			// personnalise le message avec la bonne combinaison de touche
-			wsprintf(szMsg,GetString(IDS_MSG_CHANGE_APP_PWD_3),gszPastePwd_Text);
+			sprintf_s(szMsg,sizeof(szMsg),GetString(IDS_MSG_CHANGE_APP_PWD_3),gszPastePwd_Text);
 			SetDlgItemText(w,TX_FRAME2,szMsg);
 			// Avertissement en gras
 			SetTextBold(w, TX_FRAME3);

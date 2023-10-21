@@ -104,7 +104,7 @@ static int RecoveryEncryptData(char *pData,DWORD dwDataLen,char **ppszEncryptedD
 	*ppszEncryptedData=(char*)malloc(dwEncryptedDataLen*2+1);
 	if (*ppszEncryptedData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwEncryptedDataLen*2+1)); goto end; }
 
-	swCryptEncodeBase64(pEncryptedData,dwEncryptedDataLen,*ppszEncryptedData);
+	swCryptEncodeBase64(pEncryptedData,dwEncryptedDataLen,*ppszEncryptedData,dwEncryptedDataLen*2+1);
 	rc=0;
 end:
 	if (pEncryptedData!=NULL) free(pEncryptedData);
@@ -476,7 +476,7 @@ int RecoveryChangeAESKeyData(int iKeyId)
 
 	// construit les recovery infos à écrire dans le .ini : KpubID:(MasterPwd+UserId)Kpub
 	giRecoveryInfosKeyId=giRecoveryKeyId;
-	wsprintf(gszRecoveryInfos,"%04d:",giRecoveryKeyId);
+	sprintf_s(gszRecoveryInfos,sizeof(gszRecoveryInfos),"%04d:",giRecoveryKeyId);
 	strcpy_s(gszRecoveryInfos+5,sizeof(gszRecoveryInfos)-5,pszEncryptedData);
 	TRACE((TRACE_DEBUG,_F_,"gszRecoveryInfos=%s",gszRecoveryInfos));
 	WritePrivateProfileString("swSSO","recoveryInfos",gszRecoveryInfos,gszCfgFile);
@@ -614,7 +614,7 @@ int RecoveryChallenge(HWND w)
 			// encodage base 64 et stockage dans le .ini
 			pszKsData=(char*)malloc(dwKsDataLen*2+1);
 			if (pszKsData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwKsDataLen*2+1)); goto end; }
-			swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData);
+			swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData,dwKsDataLen*2+1);
 			WritePrivateProfileString("swSSO","recoveryRunning",pszKsData,gszCfgFile);
 			StoreIniEncryptedHash(); // ISSUE#164
 			swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,NULL,0);
@@ -640,7 +640,7 @@ int RecoveryChallenge(HWND w)
 		// encodage base 64 et stockage dans le .ini
 		pszKsData=(char*)malloc(dwKsDataLen*2+1);
 		if (pszKsData==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",dwKsDataLen*2+1)); goto end; }
-		swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData);
+		swCryptEncodeBase64(pKsData,dwKsDataLen,pszKsData,dwKsDataLen*2+1);
 		WritePrivateProfileString("swSSO","recoveryRunning",pszKsData,gszCfgFile);
 		StoreIniEncryptedHash(); // ISSUE#164
 		swLogEvent(EVENTLOG_INFORMATION_TYPE,MSG_RECOVERY_STARTED,NULL,NULL,NULL,NULL,0);

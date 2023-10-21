@@ -155,11 +155,11 @@ int LogMessage(char *szLogMessage, ...)
 	SetFilePointer(hf,0,0,FILE_END);
 	// en-tête : horodate + niveau + nom de la fonction
 	GetLocalTime(&horodate);
-	len=wsprintf(szLog,"%02d/%02d-%02d:%02d:%02d:%03d ",
+	len=sprintf_s(szLog,sizeof(szLog),"%02d/%02d-%02d:%02d:%02d:%03d ",
 		(int)horodate.wDay,(int)horodate.wMonth,
 		(int)horodate.wHour,(int)horodate.wMinute,(int)horodate.wSecond,(int)horodate.wMilliseconds);
 	// log
-	len+=wvsprintf(szLog+len,szLogMessage,(char *)(&szLogMessage+1));
+	len+=vsprintf_s(szLog+len,sizeof(szLog)-len,szLogMessage,(char *)(&szLogMessage+1));
 	// retour chariot
 	memcpy(szLog+len,"\r\n\0",3);
 	len+=2;

@@ -825,9 +825,9 @@ end:
 	{
 		// 2ème essai : swSSO vX.YY - Manuel utilisateur.pdf
 		if (strcmp(gcszCurrentBeta,"0000")==0) // pas de beta, ouvre le manuel de la release
-			wsprintf(szHelpFile+len,"swSSO v%c.%c%c - Manuel utilisateur.pdf",gcszCurrentVersion[0],gcszCurrentVersion[1],gcszCurrentVersion[2]);
+			sprintf_s(szHelpFile+len,sizeof(szHelpFile)-len,"swSSO v%c.%c%c - Manuel utilisateur.pdf",gcszCurrentVersion[0],gcszCurrentVersion[1],gcszCurrentVersion[2]);
 		else // ouvre le manuel de la beta
-			wsprintf(szHelpFile+len,"swSSO v%c.%c%c - Manuel utilisateur.pdf",gcszCurrentBeta[0],gcszCurrentBeta[1],gcszCurrentBeta[2]);
+			sprintf_s(szHelpFile+len,sizeof(szHelpFile)-len,"swSSO v%c.%c%c - Manuel utilisateur.pdf",gcszCurrentBeta[0],gcszCurrentBeta[1],gcszCurrentBeta[2]);
 		rc=(int)ShellExecute(NULL,"open",szHelpFile,NULL,"",SW_SHOW);
 		TRACE((TRACE_INFO,_F_,"ShellExecute(%s)=%d",szHelpFile,rc));
 		if (rc>32) bFound=TRUE;

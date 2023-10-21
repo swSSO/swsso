@@ -229,7 +229,7 @@ int MailResponse(void)
 	lenMailTo=50+strlen(gszFormattedResponseForSave)+strlen(gpszMailBodyAfter)+strlen(gpszMailBodyBefore)+strlen(gpszMailSubject);
 	pszMailTo=(char*)malloc(lenMailTo);
 	if (pszMailTo==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",lenMailTo)); goto end; }
-	wsprintf(pszMailTo,"mailto:?subject=%s&body=%s%s%s%s%s",gpszMailSubject,gpszMailBodyBefore,"%0D%0D",gszFormattedResponseForSave,"%0D",gpszMailBodyAfter);
+	sprintf_s(pszMailTo,lenMailTo,"mailto:?subject=%s&body=%s%s%s%s%s",gpszMailSubject,gpszMailBodyBefore,"%0D%0D",gszFormattedResponseForSave,"%0D",gpszMailBodyAfter);
 	ShellExecute(NULL,"open",pszMailTo,NULL,"",SW_SHOW );
 	
 	rc=0;

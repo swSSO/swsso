@@ -56,7 +56,7 @@ int  swCryptInit();
 void swCryptTerm();
 void swCryptDestroyKey(HCRYPTKEY hKey);
 int  swCryptSaltAndHashPassword(char *bufSalt, const char *szPwd,char **pszHashedPwd, int iNbIterations,bool bV72);
-void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString);
+void swCryptEncodeBase64(const unsigned char* pSrcData, int lenSrcData, char* pszDestString, int sizeofDestString);
 int swCryptDecodeBase64(const char *szSrcString,char *pDestData,int lenDestData);
 
 BOOL swIsPBKDF2KeySaltReady(void);

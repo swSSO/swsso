@@ -54,10 +54,10 @@ int CheckAdminPwd(char *szPwd)
 
 	hCursorOld=SetCursor(ghCursorWait);
 
-	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szSalt);
-	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szSalt+16);
-	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szSalt+32);
-	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szSalt+48);
+	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szSalt,sizeof(szSalt));
+	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szSalt+16,sizeof(szSalt)-16);
+	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szSalt+32,sizeof(szSalt)-32);
+	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szSalt+48,sizeof(szSalt)-48);
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szSalt,strlen(szSalt),"szSalt :"));
 	sprintf_s(szParams,sizeof(szParams),"?action=checkadminpwd&salt=%s&pwd=%s",szSalt,szPwd);
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,
@@ -91,10 +91,10 @@ int StoreAdminPwd(char *szNewPwd)
 
 	hCursorOld=SetCursor(ghCursorWait);
 
-	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szSalt);
-	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szSalt+16);
-	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szSalt+32);
-	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szSalt+48);
+	swCryptEncodeBase64((const unsigned char*)gcszK1,8,szSalt,sizeof(szSalt));
+	swCryptEncodeBase64((const unsigned char*)gcszK2,8,szSalt+16,sizeof(szSalt)-16);
+	swCryptEncodeBase64((const unsigned char*)gcszK3,8,szSalt+32,sizeof(szSalt)-32);
+	swCryptEncodeBase64((const unsigned char*)gcszK4,8,szSalt+48,sizeof(szSalt)-48);
 	TRACE_BUFFER((TRACE_DEBUG,_F_,(unsigned char*)szSalt,strlen(szSalt),"szSalt :"));
 	sprintf_s(szParams,sizeof(szParams),"?action=setadminpwd&salt=%s&pwd=%s",szSalt,szNewPwd);
 	pszResult=HTTPRequest(gszServerAddress,giServerPort,gbServerHTTPS,gszWebServiceAddress,

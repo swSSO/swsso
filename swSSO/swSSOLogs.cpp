@@ -103,7 +103,7 @@ int swLogEvent(WORD wType,DWORD dwMsg,char *pszParam1,char *pszParam2,char *pszP
 		GetLocalTime(&horodate);
 		
 
-		len=wsprintf(szHeader,"%02d/%02d-%02d:%02d:%02d:%03d %s@%s [%d] ",
+		len=sprintf_s(szHeader,sizeof(szHeader),"%02d/%02d-%02d:%02d:%02d:%03d %s@%s [%d] ",
 			(int)horodate.wDay,(int)horodate.wMonth,
 			(int)horodate.wHour,(int)horodate.wMinute,(int)horodate.wSecond,(int)horodate.wMilliseconds,
 			gszUserName,gszComputerName,LOWORD(dwMsg)); 
@@ -205,7 +205,7 @@ int swStat(void)
 	lenHash=HASH_LEN;
 	if (!CryptGetHashParam(hHash,HP_HASHVAL,bufHashValue,&lenHash,0)) { TRACE((TRACE_ERROR,_F_,"CryptGetHashParam(HP_HASHVAL)=0x%08lx",GetLastError())); goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,bufHashValue,lenHash,"hash"));
-	swCryptEncodeBase64(bufHashValue,HASH_LEN,szHashValue);
+	swCryptEncodeBase64(bufHashValue,HASH_LEN,szHashValue,sizeof(szHashValue));
 
 	// tronque le computer name
 	strncpy_s(szTruncatedComputerName,sizeof(szTruncatedComputerName),gszComputerName,7);
@@ -221,7 +221,7 @@ int swStat(void)
 		}
 
 		// SHA1(USERNAME);date dernière connexion réussie AAAAMMJJ;nb applis actives;nbsssoréalisés;nb applis actives enrôlées depuis le serveur
-		len=wsprintf(buf2048,"%s;%04d%02d%02d;%d;%d;%d;%s",
+		len=sprintf_s(buf2048,sizeof(buf2048),"%s;%04d%02d%02d;%d;%d;%d;%s",
 			(giStat & 0x10)?gszUserName:szHashValue,
 			(int)gLastLoginTime.wYear,(int)gLastLoginTime.wMonth,(int)gLastLoginTime.wDay,
 			iNbActiveApps,guiNbWINSSO+guiNbWEBSSO+guiNbPOPSSO,iNbActiveAppsFromServer,(giStat & 0x10)?gszComputerName:szTruncatedComputerName); 

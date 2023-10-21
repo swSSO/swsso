@@ -682,7 +682,7 @@ int AskMissingValues(HWND w,int i,int iPopupType)
 		params.bCenter=TRUE;
 		params.iAction=i;
 		params.iTitle=IDS_IDANDPWDTITLE_MISSING;
-		wsprintf(params.szText,GetString(IDS_IDANDPWDTEXT_MISSING),gptActions[i].szApplication);
+		sprintf_s(params.szText,sizeof(params.szText),GetString(IDS_IDANDPWDTEXT_MISSING),gptActions[i].szApplication);
 					
 		// ISSUE#334
 		// if (DialogBoxParam(ghInstance,MAKEINTRESOURCE(IDD_ID_AND_PWD),HWND_DESKTOP,IdAndPwdDialogProc,(LPARAM)&params)==IDOK)
@@ -1067,7 +1067,7 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 								params.wParent=w;
 								params.iTitleString=IDS_MESSAGEBOX_TITLE;
 								params.bVCenterSubTitle=FALSE;
-								wsprintf(szSubTitle,GetString(IDS_DESACTIVATE_SUBTITLE),gptActions[i].szApplication);
+								sprintf_s(szSubTitle,sizeof(szSubTitle),GetString(IDS_DESACTIVATE_SUBTITLE),gptActions[i].szApplication);
 								params.szSubTitle=szSubTitle;
 								strcpy_s(szMsg,sizeof(szMsg),GetString(IDS_DESACTIVATE_MESSAGE));
 								params.szMessage=szMsg;
@@ -1950,11 +1950,11 @@ void CheckIfUpgraded(void)
 			strcpy_s(nid.szInfoTitle,sizeof(nid.szInfoTitle),GetString(IDS_NOTIFY_TITLE_UPGRADED));
 			if (strcmp(gcszCurrentBeta,"0000")==0)
 			{
-				wsprintf(bufRequest,GetString(IDS_NOTIFY_TEXT_UPGRADED),gcszCurrentVersion[0],gcszCurrentVersion[1],gcszCurrentVersion[2]);
+				sprintf_s(bufRequest,sizeof(bufRequest),GetString(IDS_NOTIFY_TEXT_UPGRADED),gcszCurrentVersion[0],gcszCurrentVersion[1],gcszCurrentVersion[2]);
 			}
 			else
 			{
-				wsprintf(bufRequest,GetString(IDS_NOTIFY_TEXT_UPGRADED_BETA),gcszCurrentBeta[0],gcszCurrentBeta[1],gcszCurrentBeta[2],gcszCurrentBeta[3]);
+				sprintf_s(bufRequest,sizeof(bufRequest),GetString(IDS_NOTIFY_TEXT_UPGRADED_BETA),gcszCurrentBeta[0],gcszCurrentBeta[1],gcszCurrentBeta[2],gcszCurrentBeta[3]);
 			}
 			strcpy_s(nid.szInfo,sizeof(nid.szInfo),bufRequest);
 			Shell_NotifyIcon(NIM_MODIFY, &nid); 

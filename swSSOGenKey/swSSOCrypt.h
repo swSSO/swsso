@@ -38,9 +38,9 @@ extern HCRYPTPROV ghProv;
 int  swCryptInit();
 void swCryptTerm();
 int  swCryptExportKey(HCRYPTKEY hRSAKey, int iKeyId, char *szPassword, char *szPublicKeyFilex86, char *szPublicKeyFilex64, char* szPrivateKeyFile);
-void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString);
+void swCryptEncodeBase64(const unsigned char* pSrcData, int lenSrcData, char* pszDestString, int sizeofDestString);
 int swCryptDecodeBase64(const char *szSrcString,char *pDestData,int lenDestData);
-void swGenRegBinValue(const unsigned char *pSrcData,int lenSrcData,char *pszDestString);
+void swGenRegBinValue(const unsigned char *pSrcData,int lenSrcData,char *pszDestString,int sizeofDestString);
 int swCryptDeriveKey(const char *pszPwd,HCRYPTKEY *phKey);
 
 

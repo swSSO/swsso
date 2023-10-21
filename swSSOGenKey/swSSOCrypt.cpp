@@ -137,7 +137,7 @@ int swCryptExportKey(HCRYPTKEY hRSAKey, int iKeyId, char *szPassword, char *szPu
 	// génération du fichier .reg contenant la clé publique à partir du PUBLICKEYBLOB
 	pszPub=(char*)malloc(dwDataPubLen*3+1);
 	if (pszPub==NULL) { printf("Erreur d'allocation memoire (%d)\n",dwDataPubLen*3+1); goto end; }
-	swGenRegBinValue(pDataPub,dwDataPubLen,pszPub);
+	swGenRegBinValue(pDataPub,dwDataPubLen,pszPub,dwDataPubLen*3+1);
 
 	// x86
 	hf=CreateFile(szPublicKeyFilex86,GENERIC_READ|GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
@@ -145,7 +145,7 @@ int swCryptExportKey(HCRYPTKEY hRSAKey, int iKeyId, char *szPassword, char *szPu
 	strcpy_s(gszBuf,sizeof(gszBuf),"Windows Registry Editor Version 5.00\r\n\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\swSSO\\EnterpriseOptions]\r\n");
 	brc=WriteFile(hf,gszBuf,strlen(gszBuf),&dw,NULL);
 	if (!brc) { printf("Erreur d'ecriture dans le fichier %s (%d)\n",szPublicKeyFilex86,GetLastError()); goto end; }
-	wsprintf(gszBuf,"\"RecoveryKeyId\"=dword:%08lx\r\n\"RecoveryKeyValue\"=hex:",iKeyId);
+	sprintf_s(gszBuf,sizeof(gszBuf),"\"RecoveryKeyId\"=dword:%08lx\r\n\"RecoveryKeyValue\"=hex:",iKeyId);
 	brc=WriteFile(hf,gszBuf,strlen(gszBuf),&dw,NULL);
 	if (!brc) { printf("Erreur d'ecriture dans le fichier %s (%d)\n",szPublicKeyFilex86,GetLastError()); goto end; }
 	brc=WriteFile(hf,pszPub,strlen(pszPub),&dw,NULL);
@@ -158,7 +158,7 @@ int swCryptExportKey(HCRYPTKEY hRSAKey, int iKeyId, char *szPassword, char *szPu
 	strcpy_s(gszBuf,sizeof(gszBuf),"Windows Registry Editor Version 5.00\r\n\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\swSSO\\EnterpriseOptions]\r\n");
 	brc=WriteFile(hf,gszBuf,strlen(gszBuf),&dw,NULL);
 	if (!brc) { printf("Erreur d'ecriture dans le fichier %s (%d)\n",szPublicKeyFilex64,GetLastError()); goto end; }
-	wsprintf(gszBuf,"\"RecoveryKeyId\"=dword:%08lx\r\n\"RecoveryKeyValue\"=hex:",iKeyId);
+	sprintf_s(gszBuf,sizeof(gszBuf),"\"RecoveryKeyId\"=dword:%08lx\r\n\"RecoveryKeyValue\"=hex:",iKeyId);
 	brc=WriteFile(hf,gszBuf,strlen(gszBuf),&dw,NULL);
 	if (!brc) { printf("Erreur d'ecriture dans le fichier %s (%d)\n",szPublicKeyFilex64,GetLastError()); goto end; }
 	brc=WriteFile(hf,pszPub,strlen(pszPub),&dw,NULL);
@@ -179,16 +179,16 @@ int swCryptExportKey(HCRYPTKEY hRSAKey, int iKeyId, char *szPassword, char *szPu
 	// génération du fichier de clé privée à partir du PRIVATEKEYBLOB
 	pszPriv=(char*)malloc(dwDataPrivLen*2+1);
 	if (pszPriv==NULL) { printf("Erreur d'allocation memoire (%d)\n",dwDataPrivLen*2+1); goto end; }	
-	swCryptEncodeBase64(pDataPriv,dwDataPrivLen,pszPriv);
+	swCryptEncodeBase64(pDataPriv,dwDataPrivLen,pszPriv,dwDataPrivLen*2+1);
 
 	hf=CreateFile(szPrivateKeyFile,GENERIC_READ|GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hf==INVALID_HANDLE_VALUE) { printf("Erreur de creation du fichier %s (%d)\n",szPrivateKeyFile,GetLastError()); goto end; }
 
-	wsprintf(gszBuf,"%04d:",iKeyId);
+	sprintf_s(gszBuf,sizeof(gszBuf),"%04d:",iKeyId);
 	brc=WriteFile(hf,gszBuf,strlen(gszBuf),&dw,NULL);
 	if (!brc) { printf("Erreur d'ecriture dans le fichier %s (%d)\n",szPrivateKeyFile,GetLastError()); goto end; }
 
-	swCryptEncodeBase64(gPBKDF2KeySalt,PBKDF2_SALT_LEN,gszBuf);
+	swCryptEncodeBase64(gPBKDF2KeySalt,PBKDF2_SALT_LEN,gszBuf,sizeof(gszBuf));
 	brc=WriteFile(hf,gszBuf,strlen(gszBuf),&dw,NULL);
 	if (!brc) { printf("Erreur d'ecriture dans le fichier %s (%d)\n",gszBuf,GetLastError()); goto end; }
 
@@ -216,14 +216,14 @@ end:
 //-----------------------------------------------------------------------------
 // Génération d'une valeur binaire pour fichier .reg
 //-----------------------------------------------------------------------------
-void swGenRegBinValue(const unsigned char *pSrcData,int lenSrcData,char *pszDestString)
+void swGenRegBinValue(const unsigned char *pSrcData,int lenSrcData,char *pszDestString,int sizeofDestString)
 {
 	int i;
     for (i=0;i<lenSrcData-1;i++) 
     {
-		wsprintf(pszDestString+3*i,"%02X,",pSrcData[i]);
+		sprintf_s(pszDestString+3*i,sizeofDestString-3*i,"%02X,",pSrcData[i]);
 	}
-	wsprintf(pszDestString+3*i,"%02X",pSrcData[i]);
+	sprintf_s(pszDestString+3*i,sizeofDestString-3*i,"%02X",pSrcData[i]);
 }
 
 //-----------------------------------------------------------------------------
@@ -234,13 +234,15 @@ void swGenRegBinValue(const unsigned char *pSrcData,int lenSrcData,char *pszDest
 // Et maintenant, pour des raisons de compatibilité ascendante, je préfère
 // laisser comme ça pour l'instant... Comme d'hab, le provisoire dure ;-)
 //-----------------------------------------------------------------------------
-void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString)
+void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString,int sizeofDestString)
 {
+	TRACE((TRACE_ENTER,_F_,""));
 	int i;
     for (i=0;i<lenSrcData;i++) 
     {
-		wsprintf(pszDestString+2*i,"%02X",pSrcData[i]);
+		sprintf_s(pszDestString+2*i,sizeofDestString-2*i,"%02X",pSrcData[i]);
 	}
+	TRACE((TRACE_LEAVE,_F_,""));
 }
 
 //-----------------------------------------------------------------------------

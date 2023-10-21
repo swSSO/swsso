@@ -125,7 +125,7 @@ int RecoveryChallenge(HWND w,char *szFormattedChallenge,char *szFormattedRespons
 	TRACE_BUFFER((TRACE_DEBUG,_F_,pDecryptedChallengePart2,lenDecryptedChallengePart2,"pDecryptedChallengePart2")); 
 	
 	// affiche le nom de l'utilisateur et demande confirmation
-	wsprintf(gbufMsg,GetString(IDS_CONFIRM_USER),(char*)(pChallengePart1+AES256_KEY_LEN));
+	sprintf_s(gbufMsg,sizeof(gbufMsg),GetString(IDS_CONFIRM_USER),(char*)(pChallengePart1+AES256_KEY_LEN));
 	if (MessageBox(w,gbufMsg,"swSSO",MB_ICONEXCLAMATION|MB_OKCANCEL)!=IDOK)
 	{
 		rc=ERR_CANCEL; goto end;

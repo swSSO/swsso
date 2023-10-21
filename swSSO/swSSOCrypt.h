@@ -56,7 +56,7 @@ extern HCRYPTPROV ghProv;
 int  swCryptInit();
 void swCryptTerm();
 int  swCryptSaltAndHashPassword(char *bufSalt, const char *szPwd,char **pszHashedPwd, int iNbIterations,bool bV72);
-void swCryptEncodeBase64(const unsigned char *pSrcData,int lenSrcData,char *pszDestString);
+void swCryptEncodeBase64(const unsigned char* pSrcData, int lenSrcData, char* pszDestString, int sizeofDestString);
 int swCryptDecodeBase64(const char *szSrcString,char *pDestData,int lenDestData);
 
 int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufSalt,int bufSaltLen,int iNbIterations);
