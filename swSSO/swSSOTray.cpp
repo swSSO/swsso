@@ -50,7 +50,9 @@ static BOOL gbPwdSubClass=FALSE;
 static BOOL gbPwdClearSubClass=FALSE;
 static BOOL gbIdSubClass=FALSE;
 
-static char *gpszClipboardPassword=NULL;
+char* gpszClipboardPassword = NULL; // pour la fonction d'assistance au changement de mot de passe
+char* gpszClipboardPassword2 = NULL; // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
+
 
 HWND gwPopChangeAppPwdDialogProc=NULL;
 HWND gwSaveNewAppPwdDialogProc=NULL;
@@ -433,6 +435,16 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				case TRAY_PASTE_PASSWORD:
 					TRACE((TRACE_INFO,_F_, "WM_COMMAND + TRAY_PASTE_PASSWORD gpszClipboardPassword=0x%08lx",gpszClipboardPassword));
 					if (gpszClipboardPassword!=NULL) KBSim(NULL,FALSE,0,gpszClipboardPassword,TRUE);
+					break;
+				case TRAY_PASTE_PASSWORD2:
+					if (gpszClipboardPassword2!=NULL) // ISSUE#410
+					{ 
+						UninstallHotKey(); 
+						KBSim(NULL,FALSE,0,gpszClipboardPassword2,TRUE);
+						SecureZeroMemory(gpszClipboardPassword2,strlen(gpszClipboardPassword2)); 
+						free(gpszClipboardPassword2); 
+						gpszClipboardPassword2=NULL;
+					}
 					break;
 			}
 			break;

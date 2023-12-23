@@ -5426,6 +5426,23 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 						LPNMTVKEYDOWN ptvkd = (LPNMTVKEYDOWN)lp;
 						switch (ptvkd->wVKey)
 						{
+							// ISSUE#410
+							case 0x43: // Touche C
+								if (wp == TV_APPLICATIONS && (GetKeyState(VK_CONTROL) & 0x8000)) // CTRL + C
+								{
+									int iAction;
+									HTREEITEM hItem=TreeView_GetSelection(GetDlgItem(w,TV_APPLICATIONS));
+									iAction=TVItemGetLParam(w,hItem);
+									if (AskPwd(w,FALSE)!=0) goto end;
+									if (iAction!=-1) 
+									{
+										if (gpszClipboardPassword2!=NULL) { SecureZeroMemory(gpszClipboardPassword2,strlen(gpszClipboardPassword2)); free(gpszClipboardPassword2); gpszClipboardPassword2=NULL; }
+										gpszClipboardPassword2=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+										if (InstallHotKey()!=0) goto end;
+										ClipboardDelete();
+									}
+								}
+								break;
 							case VK_F2:
 								{
 									if (wp==TV_APPLICATIONS)
