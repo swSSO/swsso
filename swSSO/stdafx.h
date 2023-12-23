@@ -58,6 +58,7 @@
 #define SECURITY_WIN32
 #include <Security.h>
 #include <uiautomation.h>
+//#include <webauthn.h>
 
 #include "resource.h"
 #include "swSSOTrace.h"
@@ -90,7 +91,7 @@
 #include "swSSOMobile.h"
 #include "swSSOProtectMemory.h"
 #include "swSSOBrowser.h"
-
+//#include "swSSOWebAuthN.h"
 
 
 
