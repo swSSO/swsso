@@ -31,7 +31,7 @@
 
 #include "stdafx.h"
 #define TRAY_PASTE_PASSWORD 99 // pour la fonction d'assistance au changement de mot de passe
-#define TRAY_PASTE_PASSWORD2 98 // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
+#define TRAY_PASTE_IDORPASSWORD 98 // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
 
 //-----------------------------------------------------------------------------
 // KeyboardProc()
@@ -57,7 +57,7 @@ SWSSOHOTKEY_API LRESULT CALLBACK KeyboardProc(int code,WPARAM wp,LPARAM lp)
 			// il faut relacher les touches sinon la saisie se passe mal ensuite !
 			keybd_event(VK_CONTROL, LOBYTE(MapVirtualKey(VK_CONTROL, 0)), KEYEVENTF_KEYUP, 0);
 			TRACE((TRACE_DEBUG, _F_, "PostMessage to HWND=0x%08lx", w));
-			PostMessage(w, WM_COMMAND, MAKEWORD(TRAY_PASTE_PASSWORD2, 0), 0);
+			PostMessage(w, WM_COMMAND, MAKEWORD(TRAY_PASTE_IDORPASSWORD, 0), 0);
 		}
 		else // assistance au changement de mot de passe
 		{

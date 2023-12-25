@@ -5072,7 +5072,25 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 			switch(GetDlgCtrlID((HWND)lp))
 			{
 				case TX_ID:
+					if (giPasteIdOrPassword==0) // rien
+						SetTextColor((HDC)wp,RGB(0,0,0));
+					else if (giPasteIdOrPassword==1) // Id
+						SetTextColor((HDC)wp,RGB(255,0,0));
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
 				case TX_PWD:
+					if (giPasteIdOrPassword==0) // rien
+						SetTextColor((HDC)wp,RGB(0,0,0));
+					else if (giPasteIdOrPassword==2) // Pwd
+						SetTextColor((HDC)wp,RGB(255,0,0));
+					if (ghTabBrush==NULL)
+						rc=(int)GetStockObject(DC_BRUSH);
+					else
+						rc=(int)ghTabBrush;
+					SetBkMode((HDC)wp,TRANSPARENT);
+					rc=(int)GetStockObject(HOLLOW_BRUSH);
+					break;
 				case TX_TYPE:
 				case TX_ID2:
 				case TX_ID3:
@@ -5204,6 +5222,10 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 							GetApplicationDetails(w,pnmtv->itemOld.lParam);
 							TVUpdateItemState(w,pnmtv->itemOld.hItem,pnmtv->itemOld.lParam);
 						}
+						// reset les infos de copier-coller d'id/pwd (ISSUE#410)
+						giPasteIdOrPassword=0;
+						if (gpszPasteIdOrPassword!=NULL) { SecureZeroMemory(gpszPasteIdOrPassword,strlen(gpszPasteIdOrPassword)); free(gpszPasteIdOrPassword); gpszPasteIdOrPassword=NULL; }
+						InvalidateRect(w,NULL,FALSE);
 						// affichage des infos de l'appli nouvellement sélectionnée
 						hParentItem=TreeView_GetParent(GetDlgItem(w,TV_APPLICATIONS),pnmtv->itemNew.hItem);
 						if (hParentItem==NULL) // c'est une catégorie 
@@ -5436,10 +5458,23 @@ static int CALLBACK AppNsitesDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 									if (AskPwd(w,FALSE)!=0) goto end;
 									if (iAction!=-1) 
 									{
-										if (gpszClipboardPassword2!=NULL) { SecureZeroMemory(gpszClipboardPassword2,strlen(gpszClipboardPassword2)); free(gpszClipboardPassword2); gpszClipboardPassword2=NULL; }
-										gpszClipboardPassword2=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-										if (InstallHotKey()!=0) goto end;
-										ClipboardDelete();
+										if (gpszPasteIdOrPassword!=NULL) { SecureZeroMemory(gpszPasteIdOrPassword,strlen(gpszPasteIdOrPassword)); free(gpszPasteIdOrPassword); gpszPasteIdOrPassword=NULL; }
+										if (giPasteIdOrPassword==0 || giPasteIdOrPassword==2) // on va copier/coller l'id
+										{
+											giPasteIdOrPassword=1;
+											gpszPasteIdOrPassword=(char*)malloc(LEN_ID+1);
+											strcpy_s(gpszPasteIdOrPassword,LEN_ID+1,gptActions[iAction].szId1Value);
+											if (InstallHotKey()!=0) goto end;
+											ClipboardDelete();
+										}
+										else if (giPasteIdOrPassword==1) // on va copier/coller le pwd
+										{
+											giPasteIdOrPassword=2;
+											gpszPasteIdOrPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
+											if (InstallHotKey()!=0) goto end;
+											ClipboardDelete();
+										}
+										InvalidateRect(w,NULL,FALSE);
 									}
 								}
 								break;

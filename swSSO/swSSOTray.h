@@ -40,7 +40,9 @@ int RefreshRights(BOOL bForced,BOOL bReportSync);
 extern unsigned int gMsgTaskbarRestart;
 extern HWND gwSignUp;
 extern char* gpszClipboardPassword ; // pour la fonction d'assistance au changement de mot de passe
-extern char* gpszClipboardPassword2 ; // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
+extern char* gpszPasteId; // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
+extern int giPasteIdOrPassword; // 0=Id, 1=Pwd
+extern char* gpszPasteIdOrPassword; // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
 
 int InstallHotKey(void);
 int UninstallHotKey(void);
@@ -61,4 +63,4 @@ int UninstallHotKey(void);
 #define TRAY_MENU_ASK_THIS_APP	14
 #define TRAY_MENU_SIGNUP 15
 #define TRAY_PASTE_PASSWORD 99 // pour la fonction d'assistance au changement de mot de passe
-#define TRAY_PASTE_PASSWORD2 98 // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
+#define TRAY_PASTE_IDORPASSWORD 98 // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
