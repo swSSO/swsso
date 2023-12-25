@@ -103,7 +103,7 @@ BOOL gbEnableOption_Reset=FALSE;
 BOOL gbShowMenu_SignUp=TRUE;
 
 // REGKEY_PASSWORD_POLICY
-int giPwdPolicy_MinLength=8;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
+int giPwdPolicy_MinLength=12;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
 int giPwdPolicy_MinLetters=1;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
 int giPwdPolicy_MinUpperCase=1;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
 int giPwdPolicy_MinLowerCase=1;		// 1.12B4 - TI-TIE1 : politique de mot de passe imposée par défaut
