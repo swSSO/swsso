@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "swSSO"
-#define MyAppVersion "1.23"
+#define MyAppVersion "1.24"
 #define MyAppURL "www.swsso.fr"
 #define MyAppExeName "swSSO.exe"
 
@@ -34,11 +34,11 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Name: "startupicon"; Description: "{cm:CreateStartupIcon}"
 
 [Files]
-Source: "E:\swSSO\Dev\Release\swSSO.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
-Source: "E:\swSSO\Dev\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: not IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
-Source: "E:\swSSO\Dev\Release\swSSOSVC.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
-Source: "E:\swSSO\Dev\x64\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
-Source: "E:\swSSO\Dev\Release\swSSOHotKey.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "c:\dev\swSSO\Release\swSSO.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "c:\dev\swSSO\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: not IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
+Source: "c:\dev\swSSO\Release\swSSOSVC.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "c:\dev\swSSO\x64\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
+Source: "c:\dev\swSSO\Release\swSSOHotKey.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "%appdata%\swSSO\swSSO.ini"
