@@ -52,7 +52,7 @@ La version Entreprise de swSSO apporte de nombreux compléments indispensables p
 - La possibilité de définir une politique de sécurité pour le mot de passe maître : longueur minimale, composition (nombre minimal de minuscules, majuscules, chiffres et caractères spéciaux), fréquence de renouvellement...
 - La possibilité de brider des interfaces de configuration du client, afin de limiter les droits des utilisateurs ;
 
-Tous les modules ainsi que le guide d’administration sont disponibles [dans la section Release](https://github.com/swSSO/swsso/releases/latest). 
+Tous les modules ainsi que le guide d’administration sont disponibles [dans la section Release](https://github.com/swSSO/swsso/releases/). Vous y trouverez aussi les pré-release.
 
 Et tout comme la version grand public, la version Entreprise est gratuite et distribuée sous licence GPL. Si vous avez un projet et que vous avez besoin d'aide, n'hésitez pas à me contacter !
 
