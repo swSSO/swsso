@@ -42,7 +42,7 @@ extern HWND gwSignUp;
 extern char* gpszClipboardPassword ; // pour la fonction d'assistance au changement de mot de passe
 extern char* gpszPasteId; // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
 extern int giPasteIdOrPassword; // 0=Id, 1=Pwd
-extern char* gpszPasteIdOrPassword; // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
+extern int giActionPasteIdOrPassword; // id de l'action dont on va copier l'id ou le pwd
 
 int InstallHotKey(void);
 int UninstallHotKey(void);

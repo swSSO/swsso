@@ -874,7 +874,7 @@ BEGIN
                             "Folder already exists. Please choose another name."
     IDS_CATEG_NOT_EMPTY     "Cannot delete folder (please delete applications first)."
     IDS_PASSWORD_POLICY_MESSAGE 
-                            "Your new password does not meet policy requirements (minimal length: 8 ; at least an upper and a lowercase letter and a number)."
+                            "Your new password does not meet policy requirements (minimal length 12, at least an upper and a lowercase letter and a number)."
     IDS_CATEG_NOT_REMOVABLE "This folder cannot be deleted."
     IDS_FORCE_CHANGE        "This is your current password. Please choose a new one."
     IDS_PWD_CHANGED_RECENTLY 
@@ -1884,7 +1884,7 @@ BEGIN
                             "Une catégorie porte déjà ce nom. Veuillez en choisir un autre."
     IDS_CATEG_NOT_EMPTY     "Impossible de supprimer une catégorie contenant des applications."
     IDS_PASSWORD_POLICY_MESSAGE 
-                            "Votre nouveau mot de passe doit avoir une longueur minimale de 8 caractères et contenir au moins 1 minuscule, 1 majuscule et 1 chiffre."
+                            "Votre nouveau mot de passe doit avoir une longueur minimale de 12 caractères et contenir au moins 1 minuscule, 1 majuscule et 1 chiffre."
     IDS_CATEG_NOT_REMOVABLE "Cette catégorie ne peut pas être supprimée."
     IDS_FORCE_CHANGE        "Vous avez saisi votre mot de passe actuel. Vous devez choisir un mot de passe différent."
     IDS_PWD_CHANGED_RECENTLY 

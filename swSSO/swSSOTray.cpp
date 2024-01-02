@@ -53,7 +53,7 @@ static BOOL gbIdSubClass=FALSE;
 char* gpszClipboardPassword = NULL; // pour la fonction d'assistance au changement de mot de passe
 char* gpszPasteId = NULL; // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
 int giPasteIdOrPassword=0; // 0=Id, 1=Pwd
-char* gpszPasteIdOrPassword = NULL; // pour le copier-coller depuis la treewiew de la fenêtre de gestion des sites
+int giActionPasteIdOrPassword=-1; // id de l'action dont on va copier l'id ou le pwd
 
 
 HWND gwPopChangeAppPwdDialogProc=NULL;
@@ -439,13 +439,26 @@ static LRESULT CALLBACK MainWindowProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					if (gpszClipboardPassword!=NULL) KBSim(NULL,FALSE,0,gpszClipboardPassword,TRUE);
 					break;
 				case TRAY_PASTE_IDORPASSWORD:
-					if (giPasteIdOrPassword!=0 && gpszPasteIdOrPassword!=NULL) // ISSUE#410
+					if (giPasteIdOrPassword!=0 && giActionPasteIdOrPassword!=-1) // ISSUE#410
 					{ 
+						char *pszPasteIdOrPassword=NULL;
 						UninstallHotKey(); 
-						KBSim(NULL,FALSE,0,gpszPasteIdOrPassword,TRUE);
-						SecureZeroMemory(gpszPasteIdOrPassword,strlen(gpszPasteIdOrPassword));
-						free(gpszPasteIdOrPassword);
-						gpszPasteIdOrPassword=NULL;
+						if (giPasteIdOrPassword==1) // colle l'id
+						{
+							pszPasteIdOrPassword=(char*)malloc(LEN_ID+1);
+							if (pszPasteIdOrPassword!=NULL) strcpy_s(pszPasteIdOrPassword,LEN_ID+1,gptActions[giActionPasteIdOrPassword].szId1Value);
+						}
+						else if (giPasteIdOrPassword==2) // colle le pwd
+						{
+							pszPasteIdOrPassword=swCryptDecryptString(gptActions[giActionPasteIdOrPassword].szPwdEncryptedValue,ghKey1);
+						}
+						if (pszPasteIdOrPassword!=NULL)
+						{
+							KBSim(NULL,FALSE,0,pszPasteIdOrPassword,TRUE);
+							SecureZeroMemory(pszPasteIdOrPassword,strlen(pszPasteIdOrPassword));
+							free(pszPasteIdOrPassword);
+							giActionPasteIdOrPassword=-1;
+						}
 					}
 					break;
 			}
