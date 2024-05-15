@@ -16,7 +16,7 @@ Ce mot de passe vous sera demandé à chaque lancement de swSSO, sauf si vous co
 
 Validez en cliquant sur OK, une icône SSO apparaît dans la barre des tâches. Un clic-droit sur cette icône donne accès à l’ensemble des fonctionnalités de swSSO. 
 
-> **Remarque importante pour les utilisateurs de navigateurs basés sur Chromium (Chrome, Opera, Edge...)** : vous devez changer la ligne de commande de lancement de votre navigateur pour ajouter --force-renderer-accessibility=form-controls
+> **Remarque importante pour les utilisateurs de navigateurs basés sur Chromium (Chrome, Opera, Edge...)** : vous devez changer la ligne de commande de lancement de votre navigateur pour ajouter --force-renderer-accessibility
 
 Ouvrez votre navigateur et rendez-vous sur la page de connexion du site web ou de l'application que vous souhaitez automatiser. Laissez bien votre navigateur ouvert en premier plan, faîtes clic-droit sur l’icône swSSO et choisissez le menu « Ajouter cette application… ». Cette fenêtre s'ouvre :
 
