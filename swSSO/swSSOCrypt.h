@@ -33,6 +33,7 @@
 
 #define SALT_LEN 128		// longueur du sel appliqué au mdp maitre avant hash (versions < 0.93)
 #define HASH_LEN 20			// SHA1=160 bits
+#define SHA256_LEN 32		// SHA1=256 bits
 #define PBKDF2_SALT_LEN	64	// longueur du sel utilisé avec PBKDF2 (512 bits)
 #define PBKDF2_PWD_LEN 32	// 256 bits
 #define AES256_KEY_LEN 32   // 256 bits
@@ -59,7 +60,7 @@ int  swCryptSaltAndHashPassword(char *bufSalt, const char *szPwd,char **pszHashe
 void swCryptEncodeBase64(const unsigned char* pSrcData, int lenSrcData, char* pszDestString, int sizeofDestString);
 int swCryptDecodeBase64(const char *szSrcString,char *pDestData,int lenDestData);
 
-int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufSalt,int bufSaltLen,int iNbIterations);
+int swPBKDF2(BYTE *bufResult,int bufResultLen,const char *szPwd,const BYTE *bufSalt,int bufSaltLen,int iNbIterations,BOOL bSHA256);
 
 BOOL swIsPBKDF2KeySaltReady(void);
 BOOL swIsPBKDF2PwdSaltReady(void);

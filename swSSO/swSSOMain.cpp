@@ -2492,6 +2492,12 @@ askpwd:
 	// lecture des applications configurées
 	if (LoadApplications()==-1) { iError=-2; goto end; }
 
+	// ISSUE#412 : si version >=125, passage en à 600 000 itérations PBKDF2 HMAC256
+	if (atoi(gszCfgVersion)<125) // ancienne version, il faut migrer !
+	{
+		MigrateFrom093To125();
+	}
+
 	// vérifie la date de dernier changement de mot de passe
 	// attention, comme il y a transchiffrement des id&pwd et des mdp proxy, il 
 	// faut bien que ces infos aient été lues avant un éventuel changement de mot de passe imposé !

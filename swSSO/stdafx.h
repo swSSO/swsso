@@ -59,6 +59,7 @@
 #include <Security.h>
 #include <uiautomation.h>
 //#include <webauthn.h>
+#include <bcrypt.h>
 
 #include "resource.h"
 #include "swSSOTrace.h"

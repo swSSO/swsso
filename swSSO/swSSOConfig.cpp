@@ -100,7 +100,7 @@ char *gpszTitleBeingAdded=NULL;
 
 T_SALT gSalts; // sels pour le stockage du mdp primaire et la dérivation de clé de chiffrement des mdp secondaires
 int giActionIdPwdAsked=-1;
-const char gcszCfgVersion[]="093";
+const char gcszCfgVersion[]="125";
 
 T_CONFIG_SYNC gtConfigSync;
 
@@ -108,6 +108,7 @@ typedef BOOL (WINAPI *SETPROCESSPREFERREDUILANGUAGES)(DWORD dwFlags,PCZZWSTR pws
 typedef BOOL (WINAPI *GETUSERPREFERREDUILANGUAGES)(DWORD dwFlags,PULONG pulNumLanguages,PZZWSTR pwszLanguagesBuffer, PULONG pcchLanguagesBuffer);
 
 int giMasterPwdExpiration;
+BYTE gPBKDF2ConfigPwd[PBKDF2_PWD_LEN];
 
 HWND gwChangeApplicationPassword=NULL;
 
@@ -1729,7 +1730,7 @@ int StoreMasterPwd(const char *szPwd)
 	if (!swIsPBKDF2PwdSaltReady()) { TRACE((TRACE_ERROR,_F_,"swIsPBKDF2SaltReady()=FALSE")); goto end; }
 
 	// calcule le hash du nouveau mot de passe maitre 
-	if (swPBKDF2(PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),szPwd,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+	if (swPBKDF2(PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),szPwd,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,600000,TRUE)!=0) goto end;
 
 	// encodage base64 et stockage des sels et du mot de passe dans le fichier .ini
 	swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2KeySalt,sizeof(szPBKDF2KeySalt));
@@ -2224,7 +2225,14 @@ int CheckMasterPwd(const char *szPwd)
 	TRACE_BUFFER((TRACE_DEBUG,_F_,PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),"PBKDF2ConfigPwd"));
 
 	// calcul du hash
-	if (swPBKDF2((BYTE*)PBKDF2UserPwd,sizeof(PBKDF2UserPwd),szPwd,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000)!=0) goto end;
+	if (atoi(gszCfgVersion)<125)
+	{
+		if (swPBKDF2((BYTE*)PBKDF2UserPwd,sizeof(PBKDF2UserPwd),szPwd,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,10000,FALSE)!=0) goto end;
+	}
+	else
+	{
+		if (swPBKDF2((BYTE*)PBKDF2UserPwd,sizeof(PBKDF2UserPwd),szPwd,gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,600000,TRUE)!=0) goto end;
+	}
 	TRACE_BUFFER((TRACE_DEBUG,_F_,PBKDF2UserPwd,sizeof(PBKDF2UserPwd),"PBKDF2UserPwd"));
 	TRACE_BUFFER((TRACE_DEBUG,_F_,PBKDF2ConfigPwd,sizeof(PBKDF2ConfigPwd),"PBKDF2UserPwd"));
 
@@ -5527,6 +5535,65 @@ int SyncAllConfigsLoginAndPwd(void)
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
 	return rc;
 }
+
+//-----------------------------------------------------------------------------
+// MigrateFrom093To125() -- ISSUE#412 - v1.25
+//-----------------------------------------------------------------------------
+// Migre le fichier .ini de la version 093 à 125
+// En 093 : dérivation de clé PBKDF2 HMAC-SHA1 10.000 itérations
+// En 125 : dérivation de clé PBKDF2 HMAC-SHA256 600.000 itérations
+//-----------------------------------------------------------------------------
+int MigrateFrom093To125(void)
+{
+	TRACE((TRACE_ENTER,_F_,""));
+	int rc=-1;
+
+	// Fait le transchiffrement du fichier .ini de ghKey1 vers ghKey2
+	if (swTranscrypt()!=0) goto end; 
+	// Copie ghKey2 dans ghKey1
+	memcpy(gAESProtectedKeyData[ghKey1],gAESProtectedKeyData[ghKey2],AES256_KEY_LEN);
+	// Enregistrement des infos de recouvrement dans swSSO.ini (AESKeyData+UserId)Kpub
+	if (RecoveryChangeAESKeyData(ghKey1)!=0) goto end;
+	// enregistrement des actions, comme ça les identifiants sont rechiffrés automatiquement avec la nouvelle clé
+	if(SaveApplications()!=0) goto end;
+	strcpy_s(gszCfgVersion,sizeof(gszCfgVersion),"125");
+	if (StoreMigratedMasterPwd()!=0) goto end;
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// StoreMigratedMasterPwd()
+// ----------------------------------------------------------------------------------
+// ISSUE#412
+// Inscription du nouveau hash calculé après migration PBKDF dans section [swSSO]
+// ATTENTION : le sel doit avoir été tiré avant l'appel à cette fonction
+// ----------------------------------------------------------------------------------
+int StoreMigratedMasterPwd(void)
+{
+	TRACE((TRACE_ENTER,_F_, ""));
+	int rc=-1;
+	char szPBKDF2ConfigPwd[PBKDF2_PWD_LEN*2+1];
+	
+	// (le sel doit avoir été tiré avant l'appel à StoreMigratedMasterPwd !)
+	if (!swIsPBKDF2PwdSaltReady()) { TRACE((TRACE_ERROR,_F_,"swIsPBKDF2SaltReady()=FALSE")); goto end; }
+
+	// encodage base64 et stockage des sels et du mot de passe dans le fichier .ini
+	if (giPwdProtection==PP_ENCRYPTED)
+	{
+		swCryptEncodeBase64(gPBKDF2ConfigPwd,PBKDF2_PWD_LEN,szPBKDF2ConfigPwd,sizeof(szPBKDF2ConfigPwd));
+		WritePrivateProfileString("swSSO","pwdValue",szPBKDF2ConfigPwd,gszCfgFile);
+	}
+	WritePrivateProfileString("swSSO","version",gszCfgVersion,gszCfgFile);
+	StoreIniEncryptedHash(); // ISSUE#164
+	rc=0;
+end:
+	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
+	return rc;
+}
+
 
 //////////////////////// WM_PAINT pour bitmap dans onglet about
 #if 0

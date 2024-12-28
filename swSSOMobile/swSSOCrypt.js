@@ -36,6 +36,12 @@ var hmacSHA1 = function (key) {
 	this.encrypt = function () { return hasher.encrypt.apply(hasher, arguments); };
 };
 
+// hmacSHA256
+var hmacSHA256 = function (key) {
+	var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha256);
+	this.encrypt = function () { return hasher.encrypt.apply(hasher, arguments); };
+};
+
 // déchiffre un identifiant ou un mot de passe du swsso.ini
 function decryptString(strKeyValue,strEncryptedIniString)
 {
@@ -67,13 +73,13 @@ function checkPassword(strPwd,strPwdSalt,strKeySalt,strIniPwdValue)
 	var binKeyValue;
 	var binPwdSalt=sjcl.codec.hex.toBits(strPwdSalt);
 	var binKeySalt=sjcl.codec.hex.toBits(strKeySalt);
-	var strPwdValue=sjcl.codec.hex.fromBits(sjcl.misc.pbkdf2(sjcl.codec.hex.toBits(ascii2hexa(strPwd)), binPwdSalt, 10000, 256, hmacSHA1)).toUpperCase();
+	var strPwdValue=sjcl.codec.hex.fromBits(sjcl.misc.pbkdf2(sjcl.codec.hex.toBits(ascii2hexa(strPwd)), binPwdSalt, 600000, 256, hmacSHA256)).toUpperCase();
 	console.log('strPwdValue',strPwdValue);
 	console.log('strIniPwdValue',strIniPwdValue);
 	if (strPwdValue==strIniPwdValue) // mot de passe maitre OK
 	{
 		console.log('password:OK');
-		binKeyValue=sjcl.misc.pbkdf2(sjcl.codec.hex.toBits(ascii2hexa(strPwd)), binKeySalt, 10000, 256, hmacSHA1);
+		binKeyValue=sjcl.misc.pbkdf2(sjcl.codec.hex.toBits(ascii2hexa(strPwd)), binKeySalt, 600000, 256, hmacSHA256);
 		strKeyValue=sjcl.codec.hex.fromBits(binKeyValue);
 	}
 	else

@@ -183,3 +183,7 @@ extern HWND gwChangeApplicationPassword;
 
 int SyncConfigsPwdAndOptionnalyLogin(int iAction);
 int SyncAllConfigsLoginAndPwd(void);
+
+int MigrateFrom093To125(void); // ISSUE#412 - v1.25
+int StoreMigratedMasterPwd(void); // ISSUE#412 - v1.25
+extern BYTE gPBKDF2ConfigPwd[PBKDF2_PWD_LEN];
