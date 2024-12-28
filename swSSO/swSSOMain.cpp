@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2023 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2025 - Sylvain WERDEFROY
 //
 //
 //                   
@@ -38,7 +38,7 @@
 #include "ISimpleDOMDocument_i.c"
 
 // Un peu de globales...
-const char gcszCurrentVersion[]="124";	// 101 = 1.01
+const char gcszCurrentVersion[]="125";	// 101 = 1.01
 const char gcszCurrentBeta[]="0000";	// 1021 = 1.02 beta 1, 0000 pour indiquer qu'il n'y a pas de beta
 
 HWND gwMain=NULL;
