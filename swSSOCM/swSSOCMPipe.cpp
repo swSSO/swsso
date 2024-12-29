@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                Copyright (C) 2004-2016 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2025 - Sylvain WERDEFROY
 //
 //
 //                   
@@ -49,9 +49,9 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	int lenRequest=0;
 	char szLogonDomainName[DOMAIN_LEN];
 	// int lenUserName;
-	int lenLogonDomainName;
+	DWORD lenLogonDomainName;
 	char *p=NULL;
-	
+
 	// Récupération des authentifiants en fonction de la méthode d'authent
 	TRACE((TRACE_DEBUG,_F_,"lpAuthentInfoType=%S",lpAuthentInfoType));
 	if (wcscmp(lpAuthentInfoType,L"MSV1_0:Interactive")==0)
@@ -76,17 +76,28 @@ int swBuildAndSendRequest(LPCWSTR lpAuthentInfoType,LPVOID lpAuthentInfo)
 	memset(szUserName,0,sizeof(szUserName));
 	memset(bufPassword,0,sizeof(bufPassword));
 	memset(szLogonDomainName,0,sizeof(szLogonDomainName));
+	TRACE((TRACE_DEBUG,_F_,"usLogonDomainName.Length=%d",usLogonDomainName.Length));
 	// domaine
 	if (usLogonDomainName.Length==0) // ISSUE#346
 	{
 		TRACE((TRACE_INFO,_F_,"Domaine vide"));
 		lenLogonDomainName=0;
 	}
+	else if (usLogonDomainName.Length==2) // ISSUE#413
+	{
+		TRACE((TRACE_INFO,_F_,"Domaine longueur 2 (sans doute '.'), remplace par le computername"));
+		lenLogonDomainName=sizeof(szLogonDomainName); 
+		if (!GetComputerName(szLogonDomainName,&lenLogonDomainName))
+		{
+			TRACE((TRACE_ERROR,_F_,"GetComputerName(%d), keep usLogonDomainName (length=1)",GetLastError()));
+			strcpy_s(szLogonDomainName,sizeof(szLogonDomainName),".");
+		}
+	}
 	else
 	{
 		ret=WideCharToMultiByte(CP_ACP,0,usLogonDomainName.Buffer,usLogonDomainName.Length/2,szLogonDomainName,sizeof(szLogonDomainName),NULL,NULL);
 		if (ret==0)	{ TRACE((TRACE_ERROR,_F_,"WideCharToMultiByte(usLogonDomainName)=%d",GetLastError())); goto end; }
-		lenLogonDomainName=(int)strlen(szLogonDomainName);
+		lenLogonDomainName=(DWORD)strlen(szLogonDomainName);
 	}
 	TRACE((TRACE_DEBUG,_F_,"szLogonDomainName=%s",szLogonDomainName));
 	// utilisateur

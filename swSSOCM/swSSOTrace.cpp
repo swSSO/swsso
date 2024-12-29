@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                C²opyright (C) 2004-2013 - Sylvain WERDEFROY
+//                C²opyright (C) 2004-2025 - Sylvain WERDEFROY
 //
 //
 //                   
@@ -265,7 +265,7 @@ void swTraceWriteBuffer(int iLevel,char *szFunction,unsigned char *pBuffer,int l
 		sprintf_s(gszTraceBuf+iBinOffset,sizeof(gszTraceBuf)-iBinOffset,"%02x",(unsigned char)(pBuffer[i]));
 		iBinOffset+=2;
 		gszTraceBuf[iBinOffset]=' '; // a été écrasé par le 0 du sprintf_s
-		if (pBuffer[i]>=32 && pBuffer[i]<=127)
+		if (pBuffer[i]>=32 && pBuffer[i]<=126)
 			gszTraceBuf[iCharOffset]=pBuffer[i];
 		else
 			gszTraceBuf[iCharOffset]='.';
