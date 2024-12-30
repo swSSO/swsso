@@ -830,7 +830,7 @@ BEGIN
     IDS_COMBOTYPE2          "Browser authentication popup"
     IDS_COMBOTYPE3          "Windows app"
     IDS_OLDVERSION          "0.42 or less"
-    IDS_PP_ENCRYPTED        "AES-256 & PBKDF2 (master password)"
+    IDS_PP_ENCRYPTED        "AES-256 PBKDF2*10000 (master password)"
     IDS_DELETE              "Do you really want to delete %s?\r\nThis configuration will also be deleted from the server."
     IDS_MENU_ACTIVER        "&Enable"
     IDS_MENU_AJOUTER_APPLI  "A&dd an application"
@@ -971,7 +971,7 @@ BEGIN
     IDS_RECOVERY_ERROR_FORMAT "Bad response format."
     IDS_RECOVERY_NEW_PWD    "Please enter your new password below:"
     IDS_ERROR_BADRESPONSEFILE "Bad response file."
-    IDS_PP_WINDOWS          "AES-256 & PBKDF2 (Windows password)"
+    IDS_PP_WINDOWS          "AES-256 PBKDF2*10000 (Windows password)"
     IDS_PLEASE_ENTER_WINDOWS_PASSWORD 
                             "Please enter your Windows password below:"
     IDS_MENU_CHANGEAPPPWD   "Change password for this application"
@@ -1024,7 +1024,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PP_NOMASTERPWD      "AES-256 & PBKDF2 (no master password)"
+    IDS_PP_NOMASTERPWD      "AES-256 PBKDF2*10000 (no master password)"
     IDS_MENU_MDP_WINDOWS    "&Windows password..."
     IDS_ERROR_WINDOWS_SSO_LOGON3 
                             "Cannot start swSSO.\r\nPlease close and open your session again."
@@ -1113,6 +1113,9 @@ BEGIN
     IDS_ERROR_URL           "Cannot read URL. Please open your browser in foreground and retry."
     IDS_TITLE_SIGNUP        "Sign up for:"
     IDS_FILL_PWD_ERROR      "Cannot paste the password automatically. Please paste it manually using CTRL+V."
+    IDS_PP_ENCRYPTED_600000 "AES-256 PBKDF2*600000 (master password)"
+    IDS_PP_WINDOWS_600000   "AES-256 PBKDF2*600000 (Windows password)"
+    IDS_PP_NOMASTERPWD_600000 "AES-256 PBKDF2*600000 (no master password)"
 END
 
 #endif    // Anglais (neutre) resources
@@ -1840,7 +1843,7 @@ BEGIN
     IDS_COMBOTYPE2          "Popup d'authentification du navigateur"
     IDS_COMBOTYPE3          "Fenêtre Windows"
     IDS_OLDVERSION          "0.42 ou inférieure"
-    IDS_PP_ENCRYPTED        "AES-256 et PBKDF2 (mot de passe maître)"
+    IDS_PP_ENCRYPTED        "AES-256 PBKDF2*10000 (mot de passe maître)"
     IDS_DELETE              "Confirmez-vous la suppression de la configuration %s ?\r\nAttention, cette configuration sera également supprimée du serveur."
     IDS_MENU_ACTIVER        "&Activer"
     IDS_MENU_AJOUTER_APPLI  "A&jouter une application"
@@ -1985,7 +1988,7 @@ BEGIN
     IDS_RECOVERY_ERROR_FORMAT "Le format de la réponse est incorrect."
     IDS_RECOVERY_NEW_PWD    "Veuillez définir votre nouveau mot de passe."
     IDS_ERROR_BADRESPONSEFILE "Ce fichier ne contient pas de réponse valide."
-    IDS_PP_WINDOWS          "AES-256 et PBKDF2 (mot de passe Windows)"
+    IDS_PP_WINDOWS          "AES-256 PBKDF2*10000 (mot de passe Windows)"
     IDS_PLEASE_ENTER_WINDOWS_PASSWORD 
                             "Veuillez saisir ci-dessous votre mot de passe Windows :"
     IDS_MENU_CHANGEAPPPWD   "Changer le mot de passe de cette application"
@@ -2038,7 +2041,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PP_NOMASTERPWD      "AES-256 et PBKDF2 (sans mot de passe maître)"
+    IDS_PP_NOMASTERPWD      "AES-256 PBKDF2*10000 (sans mot de passe maître)"
     IDS_MENU_MDP_WINDOWS    "&Mot de passe Windows..."
     IDS_ERROR_WINDOWS_SSO_LOGON3 
                             "Erreur au démarrage de swSSO.\r\nVeuillez fermer et rouvrir votre session Windows.\r\nSi le problème persiste, contactez votre support."
@@ -2135,6 +2138,10 @@ BEGIN
     IDS_ERROR_URL           "Impossible de lire l'URL de ce site. Veuillez mettre le navigateur au premier plan et réessayer."
     IDS_TITLE_SIGNUP        "Inscription sur le site :"
     IDS_FILL_PWD_ERROR      "Le mot de passe n'a pas pu être rempli sur le site web. Il a été placé dans le presse papier, vous pouvez le coller sur le site web avec CTRL+V."
+    IDS_PP_ENCRYPTED_600000 "AES-256 PBKDF2*600000 (mot de passe maître)"
+    IDS_PP_WINDOWS_600000   "AES-256 PBKDF2*600000 (mot de passe Windows)"
+    IDS_PP_NOMASTERPWD_600000 
+                            "AES-256 PBKDF2*600000 (sans mot de passe maître)"
 END
 
 #endif    // Français (neutre) resources

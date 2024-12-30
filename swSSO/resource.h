@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by resource.rc
+// fichier Include Microsoft Visual C++.
+// Utilisé par resource.rc
 //
 #define IDM_PWD_MENU1                   1
 #define IDM_ID_MENU                     1
@@ -444,6 +444,9 @@
 #define IDS_ERROR_URL                   42049
 #define IDS_TITLE_SIGNUP                42050
 #define IDS_FILL_PWD_ERROR              42051
+#define IDS_PP_ENCRYPTED_600000         42052
+#define IDS_PP_WINDOWS_600000           42053
+#define IDS_PP_NOMASTERPWD_600000       42054
 #define CB_LANGUE                       -19534
 #define SPIN_MASTER_PWD_EXPIRATION      46004
 #define TB_MASTER_PWD_EXPIRATION        46005

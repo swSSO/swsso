@@ -183,16 +183,33 @@ static int CALLBACK PSPAboutProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 				SetWindowText(GetDlgItem(w,TX_DOMAIN),gszDomainLabel);
 
 			// remplit avec les valeurs de config (c'était dans PSN_SETACTIVE avant... ???)
-			if (giPwdProtection==PP_ENCRYPTED)
+			if (atoi(gszCfgVersion)<125)
 			{
-				if (gbNoMasterPwd && gcszK1[0]!='1')
-					SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_NOMASTERPWD));
-				else
-					SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_ENCRYPTED));
+				if (giPwdProtection==PP_ENCRYPTED)
+				{
+					if (gbNoMasterPwd && gcszK1[0]!='1')
+						SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_NOMASTERPWD));
+					else
+						SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_ENCRYPTED));
+				}
+				else 
+				{
+					SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_WINDOWS));
+				}
 			}
-			else 
+			else
 			{
-				SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_WINDOWS));
+				if (giPwdProtection==PP_ENCRYPTED)
+				{
+					if (gbNoMasterPwd && gcszK1[0]!='1')
+						SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_NOMASTERPWD_600000));
+					else
+						SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_ENCRYPTED_600000));
+				}
+				else 
+				{
+					SetDlgItemText(w,TX_PWDENCRYPTED,GetString(IDS_PP_WINDOWS_600000));
+				}
 			}
 
 			if (*gszCfgPortal==0) // pas de portail défini
