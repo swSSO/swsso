@@ -48,25 +48,6 @@ const char gcszSpecialChars[]="&'(-_)=+}]{[,?;.:/!*$";
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
-#if 0
-//-----------------------------------------------------------------------------
-// swXORBuff() : XOR de deux buffer de même taille
-// utilisation des unsigned char pour eviter erreur taille DWORD 32b 64b ?
-// non optimisé
-//-----------------------------------------------------------------------------
-// [in/out]result = buffer à XORer
-// [in] key = clé pour le xor
-// [in] len = longueur du buffer
-//-----------------------------------------------------------------------------
-static void swXORBuff(BYTE *result, BYTE *key, int len)
-{
-    int i;
-    for(i=0; i<len; i++)
-    {
-        result[i] ^= key[i];
-    }
-}
-#endif
 
 //-----------------------------------------------------------------------------
 // swCreateAESKeyFromProtectedKeyData()

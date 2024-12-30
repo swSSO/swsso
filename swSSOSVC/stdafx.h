@@ -41,6 +41,7 @@
 #include "swSSOCrypt.h"
 #include "swSSOProtectMemory.h"
 #include <Psapi.h>
+#include <bcrypt.h>
 
 // swSSOSVCInstall
 bool IsInstalled(void);

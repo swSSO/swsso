@@ -215,7 +215,7 @@ int swSSOMigrationPart1()
 	// Demande le keydata à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
 	LogMessage("INFO  : Communication avec swSSOSVC 2/3");
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
+	memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
 	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
@@ -236,7 +236,7 @@ int swSSOMigrationPart1()
 	// Demande le mot de passe à swSSOSVC : V02:GETPASS:domain(256octets)username(256octets)
 	LogMessage("INFO  : Communication avec swSSOSVC 3/3");
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:GETPASS:",12);
+	memcpy(bufRequest,"V03:GETPASS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 

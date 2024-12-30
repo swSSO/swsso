@@ -538,7 +538,7 @@ int GetADPassword(void)
 	// Demande le mot de passe à swSSOSVC
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPASS:domain(256octets)username(256octets)
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:GETPASS:",12);
+	memcpy(bufRequest,"V03:GETPASS:",12);
 	memcpy(bufRequest+12,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 

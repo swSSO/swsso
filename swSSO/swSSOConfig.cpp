@@ -1886,6 +1886,7 @@ int GenWriteCheckSynchroValue(void)
 	swCryptEncodeBase64(bufSynchroValue,16+64+16,szSynchroValue,sizeof(szSynchroValue));
 	// Ecrit dans le .ini
 	WritePrivateProfileString("swSSO","CheckSynchro",szSynchroValue,gszCfgFile);
+	WritePrivateProfileString("swSSO","version",gszCfgVersion,gszCfgFile);
 	StoreIniEncryptedHash(); // ISSUE#164
 	
 	rc=0;
@@ -1976,10 +1977,10 @@ int InitWindowsSSO(void)
 	WritePrivateProfileString("swSSO","keySalt",szPBKDF2Salt,gszCfgFile);
 
 	// Demande le keydata à swssosvc
-	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
+	// Construit la requête à envoyer à swSSOSVC : V03:GETPHKD:CUR:domain(256octets)username(256octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
+	memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
 	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
@@ -2041,7 +2042,7 @@ int MigrationWindowsSSO(void)
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
+	memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
 	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
@@ -2124,31 +2125,70 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
-	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
-	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+	if (atoi(gszCfgVersion)<125) // ancienne version, dérive ghKey1 avec 10000 itérations HMAC-SHA1 et ghKey2 avec 600000 itérations
 	{
-		bMustReboot=TRUE;
-		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+		// dérive ghKey1
+		memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
+		memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
+		memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
+		if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+		{
+			bMustReboot=TRUE;
+			TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+		}
+		if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
+		{
+			bMustReopenSession=TRUE;
+			TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld",dwLenResponse)); goto end;
+		}
+		memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
+		if (swStoreAESKey(AESKeyData,ghKey1)) goto end;
+		// dérive ghKey2 (servira plus tard pour le transchiffrement = changement d'algo de dérivation PBKDF2)
+		memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
+		memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
+		memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
+		if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+		{
+			bMustReboot=TRUE;
+			TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+		}
+		if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
+		{
+			bMustReopenSession=TRUE;
+			TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld",dwLenResponse)); goto end;
+		}
+		memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
+		if (swStoreAESKey(AESKeyData,ghKey2)) goto end;
 	}
-	if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
+	else // new : dérive ghKey1 avec 600 000 itérations HMAC-SHA256
 	{
-		bMustReopenSession=TRUE;
-		TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld",dwLenResponse)); goto end;
+		memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
+		memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
+		memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
+		if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+		{
+			bMustReboot=TRUE;
+			TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+		}
+		if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
+		{
+			bMustReopenSession=TRUE;
+			TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld",dwLenResponse)); goto end;
+		}
+		// Crée la clé de chiffrement des mots de passe secondaires
+		memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
+		if (swStoreAESKey(AESKeyData,ghKey1)) goto end;
 	}
-	// Crée la clé de chiffrement des mots de passe secondaires
-	memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-	if (swStoreAESKey(AESKeyData,ghKey1)) goto end;
-	
+
 	// Teste que la clé est OK, sinon essaie avec la précédente clé si existante et 
-	// transchiffre le fichier si OK : V02:GETPHKD:OLD:domain(256octets)username(256octets)
+	// transchiffre le fichier si OK : V03:GETPHKD:OLD:domain(256octets)username(256octets)
+	// Note pour ISSUE#412 : le cas où on a à la fois le mdp pas à jour et la migration d'algo PBKDF2 à faire n'est pas géré, la flemme.
 	if (ReadVerifyCheckSynchroValue(ghKey1)!=0)
 	{
 		TRACE((TRACE_INFO,_F_,"ReadVerifyCheckSynchroValue(CUR) failed"));
 		// ISSUE#156 : pour y voir plus clair dans les traces
 		SecureZeroMemory(bufRequest,sizeof(bufRequest));
-		memcpy(bufRequest,"V02:GETPHKD:OLD:",16);
+		memcpy(bufRequest,"V03:GETPHKD:OLD:",16);
 		memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
 		memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,USER_LEN);
 		if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
@@ -2686,7 +2726,7 @@ int ChangeWindowsPwd(void)
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
 	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
+	memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
 	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)==0) 
@@ -5559,6 +5599,9 @@ int SyncAllConfigsLoginAndPwd(void)
 // Migre le fichier .ini de la version 093 à 125
 // En 093 : dérivation de clé PBKDF2 HMAC-SHA1 10.000 itérations
 // En 125 : dérivation de clé PBKDF2 HMAC-SHA256 600.000 itérations
+// ATTENTION : avant d'appeler cette fonction, il faut avoir dérivé les 2 clés :
+// - ghKey1 : clé dérivée avec ancien algo
+// - hgKey2 : clé dérivée avec nouvel algo
 //-----------------------------------------------------------------------------
 int MigrateFrom093To125(void)
 {
@@ -5574,7 +5617,16 @@ int MigrateFrom093To125(void)
 	// enregistrement des actions, comme ça les identifiants sont rechiffrés automatiquement avec la nouvelle clé
 	if(SaveApplications()!=0) goto end;
 	strcpy_s(gszCfgVersion,sizeof(gszCfgVersion),"125");
-	if (StoreMigratedMasterPwd()!=0) goto end;
+
+	if (giPwdProtection==PP_ENCRYPTED)
+	{
+		if (StoreMigratedMasterPwd()!=0) goto end;
+	}
+	else if (giPwdProtection==PP_WINDOWS)
+	{
+		if (GenWriteCheckSynchroValue()!=0) goto end;
+	}
+
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
