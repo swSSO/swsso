@@ -281,7 +281,7 @@ void LoadPolicies(void)
 	// valeurs par défaut pour les chaines de caractères
 	// les valeurs par défaut pour les DWORD sont initialisées dans la déclaration des variables globales
 	strcpy_s(gszPwdPolicy_Message,sizeof(gszPwdPolicy_Message),GetString(IDS_PASSWORD_POLICY_MESSAGE));
-	strcpy_s(gszServerAddress,sizeof(gszServerAddress),"swsso.000webhostapp.com");
+	strcpy_s(gszServerAddress,sizeof(gszServerAddress),"swsso.free.nf");
 	strcpy_s(gszWebServiceAddress,sizeof(gszWebServiceAddress),"/webservice6.php");
 	*gszServerAddress2=0;
 	*gszWebServiceAddress2=0;

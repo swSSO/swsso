@@ -1306,7 +1306,7 @@ int GetConfigHeader()
 	bCheckVersion=gbInternetCheckVersion_DefaultValue;
 	if (bCheckVersion)
 	{
-		bCheckVersion=strcmp(gszServerAddress,"swsso.000webhostapp.com")==0; 	// ISSUE#134
+		bCheckVersion=strcmp(gszServerAddress,"swsso.free.nf")==0; 	// ISSUE#134
 	}
 	gbInternetCheckVersion=GetConfigBoolValue("swSSO","internetCheckVersion",bCheckVersion,TRUE);
 	gbInternetCheckBeta=GetConfigBoolValue("swSSO","internetCheckBeta",gbInternetCheckBeta_DefaultValue,TRUE);
@@ -5626,7 +5626,7 @@ int MigrateFrom093To125(void)
 	{
 		if (GenWriteCheckSynchroValue()!=0) goto end;
 	}
-
+	SavePortal();
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
