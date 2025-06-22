@@ -2,6 +2,33 @@
 //                     swSSO - https://github.com/swSSO
 //-----------------------------------------------------------------------------
 
+// ajout 0.10.049 (ISSUE#414)
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      console.log("Texte copié avec Clipboard API");
+    }).catch(function(err) {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "absolute";
+  textarea.style.left = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  document.body.removeChild(textarea);
+  console.log("Texte copié avec fallback execCommand");
+}
+// fin ajout 0.10.049 (ISSUE#414)
+
 // Affiche la page
 function showPageApp(strKeyValue,strAppli,strDecryptedId,strEncryptedPassword)
 {
@@ -20,7 +47,11 @@ function addButtons(strKeyValue,strAppli,strDecryptedId,strEncryptedPassword)
 	$("#PageAppButtons").empty();
 	if (strDecryptedId!=null)
 	{
-		var btnCopyId=$("<button onclick=\"copyToClipboard('"+strDecryptedId+"')\" class='ui-btn ui-shadow ui-corner-all'>"+strDecryptedId+"</button>");
+		// 0.10.049 (ISSUE#414)
+		// var btnCopyId=$("<button onclick=\"copyToClipboard('"+strDecryptedId+"')\" class='ui-btn ui-shadow ui-corner-all'>"+strDecryptedId+"</button>");
+		//$("#PageAppButtons").append(btnCopyId);
+		var btnCopyId = $("<button class='ui-btn ui-shadow ui-corner-all'>"+strDecryptedId+"</button>");
+		btnCopyId.on("click", function() { copyToClipboard(strDecryptedId); });
 		$("#PageAppButtons").append(btnCopyId);
 	}
 	if (strEncryptedPassword!=null)
