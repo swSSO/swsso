@@ -34,9 +34,9 @@
 extern char gszRes[];
 extern char gszComputedValue[];
 char *GetString(UINT uiString);
-BSTR GetBSTRFromSZ(const char *sz);
+BSTR GetBSTRFromSZ(const char *sz,unsigned int uiCodePage);
 char *GetSZFromBSTR(BSTR bstr);
-BOOL CompareBSTRtoSZ(BSTR bstr,const char *sz);
+BOOL CompareBSTRtoSZ(BSTR bstr,const char *sz,unsigned int uiCodePage);
 char *HTTPRequest(const char *pszServer,			// [in] FQDN du serveur (www.swsso.fr)
 				  int iPort,						// [in] port
 				  BOOL bHTTPS,						// [in] TRUE=https, FALSE=http

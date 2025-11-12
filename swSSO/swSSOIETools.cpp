@@ -176,7 +176,7 @@ static int CALLBACK CheckIEURLEnumChildProc(HWND w, LPARAM lp)
 		else
 		{
 			TRACE((TRACE_INFO,_F_,"readyState=%S",bstrState)); 
-			if (!CompareBSTRtoSZ(bstrState,"complete")) { rc=false; goto end; } // pas fini de charger, on arrête
+			if (!CompareBSTRtoSZ(bstrState,"complete",CP_ACP)) { rc=false; goto end; } // pas fini de charger, on arrête
 		}
 	}
 	// récupère l'URL du document chargé
@@ -263,7 +263,7 @@ static int CALLBACK GetIEURLEnumChildProc(HWND w, LPARAM lp)
 		else
 		{
 			TRACE((TRACE_INFO,_F_,"readyState=%S",bstrState)); 
-			if (!CompareBSTRtoSZ(bstrState,"complete")) { rc=false; goto end; } // pas fini de charger, on arrête
+			if (!CompareBSTRtoSZ(bstrState,"complete",CP_ACP)) { rc=false; goto end; } // pas fini de charger, on arrête
 		}
 	}
 	hr=pHTMLDocument2->get_URL(&bstrURL);

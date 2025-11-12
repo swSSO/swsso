@@ -238,7 +238,7 @@ int GetAllDomains(T_DOMAIN *pgtabDomain)
 						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,NULL,0,&dwStatusCode);
 	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
-	bstrXML=GetBSTRFromSZ(pszResult);
+	bstrXML=GetBSTRFromSZ(pszResult,CP_UTF8);
 	if (bstrXML==NULL) goto end;
 
 	// analyse le contenu XML retourné
@@ -264,12 +264,12 @@ int GetAllDomains(T_DOMAIN *pgtabDomain)
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeName()")); goto end; }
 			TRACE((TRACE_DEBUG,_F_,"<%S>",bstrNodeName));
 			
-			if (CompareBSTRtoSZ(bstrNodeName,"id")) 
+			if (CompareBSTRtoSZ(bstrNodeName,"id",CP_ACP)) 
 			{
 				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
 				pgtabDomain[rc].iDomainId=atoi(tmp);
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"label")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"label",CP_ACP)) 
 			{
 				StoreNodeValue(pgtabDomain[rc].szDomainLabel,sizeof(pgtabDomain[rc].szDomainLabel),pChildElement);
 			}
@@ -337,7 +337,7 @@ int GetConfigDomains(int iConfigId,T_CONFIGS_DOMAIN *pgtabDomain)
 						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,NULL,0,&dwStatusCode);
 	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
-	bstrXML=GetBSTRFromSZ(pszResult);
+	bstrXML=GetBSTRFromSZ(pszResult,CP_UTF8);
 	if (bstrXML==NULL) goto end;
 
 	// analyse le contenu XML retourné
@@ -363,16 +363,16 @@ int GetConfigDomains(int iConfigId,T_CONFIGS_DOMAIN *pgtabDomain)
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeName()")); goto end; }
 			TRACE((TRACE_DEBUG,_F_,"<%S>",bstrNodeName));
 			
-			if (CompareBSTRtoSZ(bstrNodeName,"id")) 
+			if (CompareBSTRtoSZ(bstrNodeName,"id",CP_ACP)) 
 			{
 				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
 				pgtabDomain[rc].iDomainId=atoi(tmp);
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"label")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"label",CP_ACP)) 
 			{
 				StoreNodeValue(pgtabDomain[rc].szDomainLabel,sizeof(pgtabDomain[rc].szDomainLabel),pChildElement);
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"domainAutoPublish")) // si absent, valorisé à FALSE puisque tableau des domaines initialisé à 0 avant l'appel
+			else if (CompareBSTRtoSZ(bstrNodeName,"domainAutoPublish",CP_ACP)) // si absent, valorisé à FALSE puisque tableau des domaines initialisé à 0 avant l'appel
 			{
 				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
 				pgtabDomain[rc].bAutoPublish=atoi(tmp);
@@ -442,7 +442,7 @@ int GetDomainConfigsAutoPublish(int iDomainId,T_DOMAIN_CONFIGS *pgtabConfig)
 						  szParams,L"GET",NULL,0,NULL,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH,-1,NULL,NULL,NULL,0,&dwStatusCode);
 	if (dwStatusCode!=200) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=%d",szParams,dwStatusCode)); goto end; }
 	if (pszResult==NULL) { TRACE((TRACE_ERROR,_F_,"HTTPRequest(%s)=NULL",szParams)); goto end; }
-	bstrXML=GetBSTRFromSZ(pszResult);
+	bstrXML=GetBSTRFromSZ(pszResult,CP_UTF8);
 	if (bstrXML==NULL) goto end;
 
 	// analyse le contenu XML retourné
@@ -468,12 +468,12 @@ int GetDomainConfigsAutoPublish(int iDomainId,T_DOMAIN_CONFIGS *pgtabConfig)
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeName()")); goto end; }
 			TRACE((TRACE_DEBUG,_F_,"<%S>",bstrNodeName));
 			
-			if (CompareBSTRtoSZ(bstrNodeName,"id")) 
+			if (CompareBSTRtoSZ(bstrNodeName,"id",CP_ACP)) 
 			{
 				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
 				pgtabConfig[rc].iConfigId=atoi(tmp);
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"domainAutoPublish")) // si absent, valorisé à FALSE puisque tableau des domaines initialisé à 0 avant l'appel
+			else if (CompareBSTRtoSZ(bstrNodeName,"domainAutoPublish",CP_ACP)) // si absent, valorisé à FALSE puisque tableau des domaines initialisé à 0 avant l'appel
 			{
 				StoreNodeValue(tmp,sizeof(tmp),pChildElement);
 				pgtabConfig[rc].bAutoPublish=atoi(tmp);

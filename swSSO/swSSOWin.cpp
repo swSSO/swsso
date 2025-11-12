@@ -667,7 +667,7 @@ int FillW10PopupFields(HWND w,int iAction,IAccessible *pAccessible)
 					char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue,TRUE);
 					if (pszPassword!=NULL) 
 					{
-						BSTR bstrValue=GetBSTRFromSZ(pszPassword);
+						BSTR bstrValue=GetBSTRFromSZ(pszPassword,CP_ACP);
 						if (bstrValue!=NULL)
 						{
 							hr=pChild->put_accValue(vtSelf,bstrValue);

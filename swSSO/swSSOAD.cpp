@@ -139,7 +139,7 @@ int GetLastADPwdChange2(char *pszLastADPwdChange2,DWORD dwSizeofszLastADPwdChang
 	pszUserRequest=(char*)malloc(sizeUserRequest); 
 	if (pszUserRequest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeUserRequest)); goto end; } // 1.12B2-AC-TIE7
 	sprintf_s(pszUserRequest,sizeUserRequest,"LDAP://%s",pszUserDN);
-	bstrUserRequest=GetBSTRFromSZ(pszUserRequest); if (bstrUserRequest==NULL) goto end;
+	bstrUserRequest=GetBSTRFromSZ(pszUserRequest,CP_ACP); if (bstrUserRequest==NULL) goto end;
 	hr=ADsGetObject(bstrUserRequest,IID_IADsUser,(LPVOID*)&pIAdsUser);
 	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"ADsGetObject(%S,IID_IADsUser) hr=0x%08lx\n",bstrUserRequest,hr)); goto end; }
 	
@@ -179,78 +179,6 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
-
-#if 0 // n'est plus utilisé depuis ISSUE#281, v1.12
-//-----------------------------------------------------------------------------
-// GetLastADPwdChange()
-//-----------------------------------------------------------------------------
-// Récupère la date de dernier changement de mot de passe dans l'AD
-//-----------------------------------------------------------------------------
-int GetLastADPwdChange(char *pszLastADPwdChange)
-{
-	TRACE((TRACE_ENTER,_F_, ""));
-	int rc=-1;
-	
-	HRESULT hr;
-	IADsUser *pIAdsUser=NULL;
-	IADsADSystemInfo *pIADsADSystemInfo=NULL;
-	char *pszUserDN=NULL;
-	BSTR bstrUserDN=NULL;
-	char *pszUserRequest=NULL;
-	BSTR bstrUserRequest=NULL;
-	int sizeUserRequest;
-	
-	DATE dateLastChange;
-	SYSTEMTIME stLastChange;
-
-	// récupération du DN de l'utilisateur
-	hr=CoCreateInstance(CLSID_ADSystemInfo,NULL,CLSCTX_INPROC_SERVER,IID_IADsADSystemInfo,(void**)&pIADsADSystemInfo);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"CoCreateInstance(IID_IADsADSystemInfo) hr=0x%08lx",hr)); goto end; }
-	hr=pIADsADSystemInfo->get_UserName(&bstrUserDN);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pIADsADSystemInfo->get_UserName() hr=0x%08lx",hr)); goto end; }
-	pszUserDN=GetSZFromBSTR(bstrUserDN); if (pszUserDN==NULL) goto end;
-	TRACE((TRACE_INFO,_F_,"pIADsADSystemInfo->get_UserName()=%s",pszUserDN));
-	
-	// récupération de l'objet User dans l'AD
-	sizeUserRequest=10+strlen(pszUserDN);
-	pszUserRequest=(char*)malloc(sizeUserRequest); 
-	if (pszUserRequest==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeUserRequest)); }
-	sprintf_s(pszUserRequest,sizeUserRequest,"LDAP://%s",pszUserDN);
-	bstrUserRequest=GetBSTRFromSZ(pszUserRequest); if (bstrUserRequest==NULL) goto end;
-	hr=ADsGetObject(bstrUserRequest,IID_IADsUser,(LPVOID*)&pIAdsUser);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"ADsGetObject(%S,IID_IADsUser) hr=0x%08lx\n",bstrUserRequest,hr)); goto end; }
-	
-	// lecture de la date de dernier changement de mot de passe
-	hr=pIAdsUser->get_PasswordLastChanged(&dateLastChange);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pUser->get_PasswordLastChanged() hr=0x%08lx\n",hr)); goto end; }
-
-	// conversion pour stockage et comparaison format AAAAMMJJHHMMSS ex:20140730182514
-	VariantTimeToSystemTime(dateLastChange, &stLastChange);
-	sprintf_s(pszLastADPwdChange,14+1,"%04d%02d%02d%02d%02d%02d",
-		(int)stLastChange.wYear,(int)stLastChange.wMonth,(int)stLastChange.wDay,
-		(int)stLastChange.wHour,(int)stLastChange.wMinute,(int)stLastChange.wSecond);
-	TRACE((TRACE_INFO,_F_,"LastAdPwdChange=%s",pszLastADPwdChange));
-
-	rc=0;
-end:
-	// BOUCHON TEST **************************************************
-	/*if (rc!=0)
-	{
-		rc=0;
-		strcpy_s(pszLastADPwdChange,14+1,"20140501120000");
-	}*/
-	// BOUCHON TEST **************************************************
-	if (bstrUserDN!=NULL) SysFreeString(bstrUserDN);
-	if (bstrUserRequest!=NULL) SysFreeString(bstrUserRequest);
-	if (pszUserDN!=NULL) free(pszUserDN);
-	if (pszUserRequest!=NULL) free(pszUserRequest);
-	if (pIADsADSystemInfo!=NULL) pIADsADSystemInfo->Release();
-	if (pIAdsUser!=NULL) pIAdsUser->Release();
-	
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc;
-}
-#endif
 
 //-----------------------------------------------------------------------------
 // AskADPwdDialogProc()

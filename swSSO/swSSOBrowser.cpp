@@ -478,7 +478,7 @@ int BrowserFillPasswords(HWND w,char *pszPwd)
 		iNbTry++;
 	}
 	// Prépare le mot de passe
-	gbstrPwd=GetBSTRFromSZ(pszPwd);
+	gbstrPwd=GetBSTRFromSZ(pszPwd,CP_ACP);
 	if (gbstrPwd==NULL) goto end;
 	// OK, c'est parti
 	lCount=0;

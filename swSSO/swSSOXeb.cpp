@@ -735,7 +735,7 @@ int SSOWebAccessible(HWND w,int *piAction,int iBrowser)
 				if (pszPassword!=NULL) 
 				{
 					// 1.09B2 : essaie de faire put_accValue avant de se rabattre sur la simulation de frappe
-					BSTR bstrValue=GetBSTRFromSZ(pszPassword);
+					BSTR bstrValue=GetBSTRFromSZ(pszPassword,CP_ACP);
 					hr=S_OK;
 					if (bstrValue!=NULL)
 					{

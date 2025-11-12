@@ -3,8 +3,8 @@
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1 VERSIONINFO
-    FILEVERSION     1,2,5,1
-    PRODUCTVERSION  1,2,5,1
+    FILEVERSION     1,2,6,0
+    PRODUCTVERSION  1,2,6,0
     FILEOS          VOS_UNKNOWN
     FILETYPE        VFT_UNKNOWN
     FILESUBTYPE     VFT2_UNKNOWN
@@ -15,9 +15,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
     {
         BLOCK "040C04B0"
         {
-            VALUE "FileVersion", "1.25"
-            VALUE "ProductVersion", "1.25"
-            VALUE "LegalCopyright", "Copyright 2004-2025"
+            VALUE "FileVersion", "1.26"
+            VALUE "ProductVersion", "1.26"
+            VALUE "LegalCopyright", "Copyright 2004-2026"
             VALUE "Comments", ""
             VALUE "CompanyName", "Sylvain WERDEFROY"
 #ifdef TRACES_ACTIVEES

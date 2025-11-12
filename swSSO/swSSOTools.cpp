@@ -74,9 +74,12 @@ char *GetString(UINT uiString)
 // Convertit une sz en BSTR (l'appelant doit libérer avec SysFreeString si !NULL)
 // ----------------------------------------------------------------------------------
 // [in] chaine sz à convertir en BSTR
+// [in] uiCodePage : code page de la SZ : 
+//		- CP_ACP (ANSI)  : pour toutes les chaines du monde Windows
+//		- CP_UTF8 (UTF8) : pour les chaines reçues en réponse à des requêtes aux web services
 // [rc] NULL si échec, la chaine convertie sinon
 // ----------------------------------------------------------------------------------
-BSTR GetBSTRFromSZ(const char *sz)
+BSTR GetBSTRFromSZ(const char *sz,unsigned int uiCodePage)
 {
 	TRACE((TRACE_ENTER,_F_,""));
 	WCHAR *pwc=NULL;
@@ -87,13 +90,13 @@ BSTR GetBSTRFromSZ(const char *sz)
 	// TRACE((TRACE_DEBUG,_F_, "%s",sz));
 
 	// premier appel pour connaitre taille à allouer (le 0 de fin de chaine est inclus)
-	sizeofpwc=MultiByteToWideChar(CP_ACP,0,sz,-1,NULL,0);
+	sizeofpwc=MultiByteToWideChar(uiCodePage,0,sz,-1,NULL,0);
 	if (sizeofpwc==0) { TRACE((TRACE_ERROR,_F_,"MultiByteToWideChar(0)")); goto end; }
 	TRACE((TRACE_INFO,_F_,"MultiByteToWideChar()->rc=%d",sizeofpwc));
 	pwc=(WCHAR *)malloc(sizeofpwc*2); // *2 car 16 bits unicode
 	if (pwc==NULL) { TRACE((TRACE_ERROR,_F_,"malloc(%d)",sizeofpwc)); goto end; }
 	// conversion
-	rc=MultiByteToWideChar(CP_ACP,0,sz,-1,pwc,sizeofpwc);
+	rc=MultiByteToWideChar(uiCodePage,0,sz,-1,pwc,sizeofpwc);
 	if (rc==0) { TRACE((TRACE_ERROR,_F_,"MultiByteToWideChar(%d)",sizeofpwc)); goto end; }
 	// bstrisation
 	bstr=SysAllocString(pwc);
@@ -139,17 +142,19 @@ end:
 // ----------------------------------------------------------------------------------
 // Compare une BSTR à une sz
 // ----------------------------------------------------------------------------------
+// [in] uiCodePage : code page de la SZ : 
+//		- CP_ACP (ANSI)  : pour toutes les chaines du monde Windows
+//		- CP_UTF8 (UTF8) : pour les chaines reçues en réponse à des requêtes aux web services
 // [rc] FALSE si différent ou erreur
 // ----------------------------------------------------------------------------------
-BOOL CompareBSTRtoSZ(BSTR bstr,const char *sz)
+BOOL CompareBSTRtoSZ(BSTR bstr,const char *sz,unsigned int uiCodePage)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	BOOL rc=FALSE;
 	BSTR bstrsz=NULL;
 	int lenbstr,lenbstrsz;
 
-	TRACE((TRACE_DEBUG,_F_, "%S vs %s",bstr,sz));
-	bstrsz=GetBSTRFromSZ(sz); if (bstrsz==NULL) goto end;
+	bstrsz=GetBSTRFromSZ(sz,uiCodePage); if (bstrsz==NULL) goto end;
 	lenbstr=SysStringByteLen(bstr);
 	lenbstrsz=SysStringByteLen(bstrsz);
 	if (lenbstr==lenbstrsz && memcmp(bstr,bstrsz,lenbstr)==0) rc=TRUE;
@@ -159,7 +164,6 @@ end:
 	TRACE((TRACE_LEAVE,_F_, "%d",rc));
 	return rc;
 }
-
 
 // ----------------------------------------------------------------------------------
 // HTTPRequestOneServer
@@ -225,7 +229,7 @@ char *HTTPRequestOneServer(const char *pszServer,	// [in] FQDN du serveur (www.s
 	if (pProxyParams->bInternetUseProxy && *(pProxyParams->szProxyURL)!=0)
 	{
 		TRACE((TRACE_INFO,_F_,"Proxy:%s",pProxyParams->szProxyURL)); 
-		bstrProxyURL=GetBSTRFromSZ(pProxyParams->szProxyURL);
+		bstrProxyURL=GetBSTRFromSZ(pProxyParams->szProxyURL,CP_ACP);
 		if (bstrProxyURL==NULL) goto end;
 		hSession = WinHttpOpen(L"swsso.exe",WINHTTP_ACCESS_TYPE_NAMED_PROXY,bstrProxyURL,WINHTTP_NO_PROXY_BYPASS, 0);
 	}
@@ -239,7 +243,7 @@ char *HTTPRequestOneServer(const char *pszServer,	// [in] FQDN du serveur (www.s
 	WinHttpSetTimeouts(hSession, timeout*1000, timeout*1000, timeout*1000, timeout*1000); 
 	
 	// WinHttpConnect
-	bstrServerAddress=GetBSTRFromSZ(pszServer);
+	bstrServerAddress=GetBSTRFromSZ(pszServer,CP_ACP);
 	if (bstrServerAddress==NULL) goto end;
 	hConnect = WinHttpConnect(hSession,bstrServerAddress,(INTERNET_PORT)iPort, 0); // ISSUE#162 (port configurable)
 	if (hConnect==NULL) { TRACE((TRACE_ERROR,_F_,"WinHttpConnect(%s) - port : %d",pszServer,iPort)); goto end; }
@@ -252,7 +256,7 @@ char *HTTPRequestOneServer(const char *pszServer,	// [in] FQDN du serveur (www.s
 	strcpy_s(pszURLWithParams,sizeofURLWithParams,pszAddress);
 	strcat_s(pszURLWithParams,sizeofURLWithParams,pszParams);
 
-	bstrRequest=GetBSTRFromSZ(pszURLWithParams);
+	bstrRequest=GetBSTRFromSZ(pszURLWithParams,CP_ACP);
 	if (bstrRequest==NULL) goto end;
 	dwFlags=WINHTTP_FLAG_ESCAPE_PERCENT;
 	if (bHTTPS) dwFlags|=WINHTTP_FLAG_SECURE;
@@ -274,9 +278,9 @@ char *HTTPRequestOneServer(const char *pszServer,	// [in] FQDN du serveur (www.s
 
 	if (*(pProxyParams->szProxyUser)!=0)
 	{
-		bstrProxyUser=GetBSTRFromSZ(pProxyParams->szProxyUser);
+		bstrProxyUser=GetBSTRFromSZ(pProxyParams->szProxyUser,CP_ACP);
 		if (bstrProxyUser==NULL) goto end;
-		bstrProxyPwd=GetBSTRFromSZ(pProxyParams->szProxyPwd);
+		bstrProxyPwd=GetBSTRFromSZ(pProxyParams->szProxyPwd,CP_ACP);
 		if (bstrProxyPwd==NULL) goto end;
 		brc=WinHttpSetCredentials(hRequest,WINHTTP_AUTH_TARGET_PROXY,WINHTTP_AUTH_SCHEME_BASIC,bstrProxyUser,bstrProxyPwd,NULL);
 		TRACE((TRACE_INFO,_F_,"WinHttpSetCredentials(user:%s)",pProxyParams->szProxyUser)); 

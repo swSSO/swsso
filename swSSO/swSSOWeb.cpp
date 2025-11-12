@@ -675,7 +675,7 @@ int SSOWeb(HWND w,int *piAction,HWND w2)
 	strcpy_s(szFormName,sizeof(szFormName),gptActions[*piAction].szValidateName);
 
 	// bstrisation du nom du formulaire
-	bstrFormName=GetBSTRFromSZ(gptActions[*piAction].szValidateName); if (bstrFormName==NULL) goto end;
+	bstrFormName=GetBSTRFromSZ(gptActions[*piAction].szValidateName,CP_ACP); if (bstrFormName==NULL) goto end;
 	lenFormName= SysStringByteLen(bstrFormName);
 	TRACE((TRACE_DEBUG,_F_,"bstrFormName='%S' lenFormName=%d",bstrFormName,lenFormName));
 
@@ -683,9 +683,9 @@ int SSOWeb(HWND w,int *piAction,HWND w2)
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ id1 et valeur
-		bstrId1Name=GetBSTRFromSZ(gptActions[*piAction].szId1Name); if (bstrId1Name==NULL) goto end;
+		bstrId1Name=GetBSTRFromSZ(gptActions[*piAction].szId1Name,CP_ACP); if (bstrId1Name==NULL) goto end;
 		lenId1Name= SysStringByteLen(bstrId1Name);
-		bstrId1Value=GetBSTRFromSZ(GetComputedValue(gptActions[*piAction].szId1Value)); if (bstrId1Value==NULL) goto end;
+		bstrId1Value=GetBSTRFromSZ(GetComputedValue(gptActions[*piAction].szId1Value), CP_ACP); if (bstrId1Value==NULL) goto end;
 		lenId1Value=SysStringByteLen(bstrId1Value);
 		TRACE((TRACE_DEBUG,_F_,"bstrId1Name=%S",bstrId1Name));
 	}
@@ -693,9 +693,9 @@ int SSOWeb(HWND w,int *piAction,HWND w2)
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ id2 et valeur
-		bstrId2Name=GetBSTRFromSZ(gptActions[*piAction].szId2Name); if (bstrId2Name==NULL) goto end;
+		bstrId2Name=GetBSTRFromSZ(gptActions[*piAction].szId2Name,CP_ACP); if (bstrId2Name==NULL) goto end;
 		lenId2Name= SysStringByteLen(bstrId2Name);
-		bstrId2Value=GetBSTRFromSZ(gptActions[*piAction].szId2Value); if (bstrId2Value==NULL) goto end;
+		bstrId2Value=GetBSTRFromSZ(gptActions[*piAction].szId2Value,CP_ACP); if (bstrId2Value==NULL) goto end;
 		lenId2Value=SysStringByteLen(bstrId2Value);
 		id2Type=gptActions[*piAction].id2Type;
 		TRACE((TRACE_DEBUG,_F_,"bstrId2Name=%S",bstrId2Name));
@@ -704,9 +704,9 @@ int SSOWeb(HWND w,int *piAction,HWND w2)
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ id3 et valeur
-		bstrId3Name=GetBSTRFromSZ(gptActions[*piAction].szId3Name); if (bstrId3Name==NULL) goto end;
+		bstrId3Name=GetBSTRFromSZ(gptActions[*piAction].szId3Name,CP_ACP); if (bstrId3Name==NULL) goto end;
 		lenId3Name= SysStringByteLen(bstrId3Name);
-		bstrId3Value=GetBSTRFromSZ(gptActions[*piAction].szId3Value); if (bstrId3Value==NULL) goto end;
+		bstrId3Value=GetBSTRFromSZ(gptActions[*piAction].szId3Value,CP_ACP); if (bstrId3Value==NULL) goto end;
 		lenId3Value=SysStringByteLen(bstrId3Value);
 		id3Type=gptActions[*piAction].id3Type;
 		TRACE((TRACE_DEBUG,_F_,"bstrId3Name=%S",bstrId3Name));
@@ -716,9 +716,9 @@ int SSOWeb(HWND w,int *piAction,HWND w2)
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ id4 et valeur
-		bstrId4Name=GetBSTRFromSZ(gptActions[*piAction].szId4Name); if (bstrId4Name==NULL) goto end;
+		bstrId4Name=GetBSTRFromSZ(gptActions[*piAction].szId4Name,CP_ACP); if (bstrId4Name==NULL) goto end;
 		lenId4Name= SysStringByteLen(bstrId4Name);
-		bstrId4Value=GetBSTRFromSZ(gptActions[*piAction].szId4Value); if (bstrId4Value==NULL) goto end;
+		bstrId4Value=GetBSTRFromSZ(gptActions[*piAction].szId4Value,CP_ACP); if (bstrId4Value==NULL) goto end;
 		lenId4Value=SysStringByteLen(bstrId4Value);
 		id4Type=gptActions[*piAction].id4Type;
 		TRACE((TRACE_DEBUG,_F_,"bstrId4Name=%S",bstrId4Name));
@@ -727,7 +727,7 @@ int SSOWeb(HWND w,int *piAction,HWND w2)
 	{
 		tSuivi.iNbActions++;
 		// bstrisation du nom du champ PWD et valeur
-		bstrPwdName=GetBSTRFromSZ(gptActions[*piAction].szPwdName); if (bstrPwdName==NULL) goto end;
+		bstrPwdName=GetBSTRFromSZ(gptActions[*piAction].szPwdName,CP_ACP); if (bstrPwdName==NULL) goto end;
 		lenPwdName= SysStringByteLen(bstrPwdName);
 
 		TRACE((TRACE_DEBUG,_F_,"bstrPwdName=%S",bstrPwdName));

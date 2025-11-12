@@ -428,7 +428,7 @@ void PutAccValue(HWND w,IAccessible *pAccessible,VARIANT index,const char *szVal
 	TRACE((TRACE_DEBUG,_F_,"pAccessible->accSelect(%d) : hr=0x%08lx",index.lVal,hr));
 
 	// 1.09B2 : tente de faire put_accValue : si non implémenté, retour à la simulation de frappe clavier
-	bstrValue=GetBSTRFromSZ(GetComputedValue(szValue));
+	bstrValue=GetBSTRFromSZ(GetComputedValue(szValue),CP_ACP);
 	hr=S_OK;
 	if (bstrValue!=NULL)
 	{
@@ -467,7 +467,7 @@ int PutAccValueWeb(HWND w,IAccessible *pAccessible,VARIANT index,const char *szV
 	TRACE((TRACE_DEBUG,_F_,"pAccessible->accSelect(%d) : hr=0x%08lx",index.lVal,hr));
 
 	// 1.09B2 : tente de faire put_accValue : si non implémenté, retour à la simulation de frappe clavier
-	bstrValue=GetBSTRFromSZ(GetComputedValue(szValue));
+	bstrValue=GetBSTRFromSZ(GetComputedValue(szValue),CP_ACP);
 	hr=S_OK;
 	if (bstrValue!=NULL)
 	{

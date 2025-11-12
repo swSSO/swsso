@@ -3310,7 +3310,7 @@ static BSTR LookForConfig(const char *szTitle, const char *szURL, const char *sz
 	}
 	else
 	{
-		bstrXML=GetBSTRFromSZ(pszResult);
+		bstrXML=GetBSTRFromSZ(pszResult,CP_UTF8);
 		if (bstrXML==NULL) goto end;
 	}
 
@@ -3653,7 +3653,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 			if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pChild->get_nodeName()")); goto end; }
 			TRACE((TRACE_DEBUG,_F_,"<%S>",bstrNodeName));
 
-			if (CompareBSTRtoSZ(bstrNodeName,"configId")) 
+			if (CompareBSTRtoSZ(bstrNodeName,"configId",CP_ACP))
 			{
 				char tmp[10+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
@@ -3739,7 +3739,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"active")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"active",CP_ACP))
 			{
 				char tmp[1+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement); 
@@ -3764,7 +3764,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"lastModified")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"lastModified",CP_ACP))
 			{
 				// vérifie la date locale de la config : ne l'update que si date différente.
 				// (si la date est identique, c'est que c'est l'uploader qui vient de récupérer
@@ -3806,7 +3806,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"type")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"type",CP_ACP))
 			{
 				// 0.92B3 : correction du bug signalé par SB (#) 
 				// <type> est le premier champ retourné par webservice2.php
@@ -3841,7 +3841,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"title"))
+			else if (CompareBSTRtoSZ(bstrNodeName,"title",CP_ACP))
 			{
 				// ISSUE#399 : décodage du titre qui peut contenir 
 				pszEncodedTitle=(char*)malloc(LEN_TITLE+1);
@@ -3857,7 +3857,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				free(pszEncodedTitle); pszEncodedTitle=NULL;
 				free(pszDecodedTitle); pszDecodedTitle=NULL;
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"url")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"url",CP_ACP))
 			{
 				// 0.87 : décodage du paramètre URL (BUG#60)
 				// NON, finalement c'est inutile car l'URL remontée est décodée par PHP
@@ -3899,7 +3899,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id1Name"))
+			else if (CompareBSTRtoSZ(bstrNodeName,"id1Name",CP_ACP))
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
@@ -3907,7 +3907,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				}
 				if (rc>0) { gbDontAskId=FALSE; }
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"pwdName")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"pwdName",CP_ACP))
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
@@ -3915,7 +3915,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				}
 				if (rc>0) { gbDontAskPwd=FALSE; }
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id2Name")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"id2Name",CP_ACP))
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
@@ -3925,7 +3925,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				if (rc>0) { gbDontAskId2=FALSE; }
 				
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id2Type")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"id2Type",CP_ACP))
 			{
 				char tmp[5+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement); 
@@ -3940,7 +3940,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id3Name")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"id3Name",CP_ACP))
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
@@ -3949,7 +3949,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				}
 				if (rc>0) { gbDontAskId3=FALSE; }
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id3Type")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"id3Type",CP_ACP)) 
 			{
 				char tmp[5+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement); 
@@ -3964,7 +3964,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id4Name")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"id4Name",CP_ACP))
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
@@ -3974,7 +3974,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				if (rc>0) { gbDontAskId4=FALSE; }
 				
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id4Type")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"id4Type",CP_ACP)) 
 			{
 				char tmp[5+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement); 
@@ -3991,14 +3991,14 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"validateName")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"validateName",CP_ACP))
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
 					rc=StoreNodeValue(gptActions[ptiActions[i]].szValidateName,sizeof(gptActions[ptiActions[i]].szValidateName),pChildElement);
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"szName")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"szName",CP_ACP)) 
 			{
 				// si on remplace une configuration existante et qu'il n'y en a qu'une, on utilise le nom fourni par le serveur
 				// sinon, comme c'est l'utilisateur lui-même qui a dupliqué les configs, on ne casse pas son nommage.
@@ -4026,14 +4026,14 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}*/
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"szKBSim")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"szKBSim",CP_ACP)) 
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
 					rc=StoreNodeValue(gptActions[ptiActions[i]].szKBSim,sizeof(gptActions[ptiActions[i]].szKBSim),pChildElement);
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"bKBSim")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"bKBSim",CP_ACP)) 
 			{
 				char tmp[1+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement); 
@@ -4042,14 +4042,14 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					for (i=0;i<iReplaceExistingConfig;i++) gptActions[ptiActions[i]].bKBSim=(tmp[0]=='1');
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"szFullPathName")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"szFullPathName",CP_ACP)) 
 			{
 				for (i=0;i<iReplaceExistingConfig;i++)
 				{
 					rc=StoreNodeValue(gptActions[ptiActions[i]].szFullPathName,sizeof(gptActions[ptiActions[i]].szFullPathName),pChildElement);
 				}
 			}
-			else if (gbCategoryManagement && CompareBSTRtoSZ(bstrNodeName,"categId")) 
+			else if (gbCategoryManagement && CompareBSTRtoSZ(bstrNodeName,"categId",CP_ACP)) 
 			{
 				char tmp[10+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
@@ -4062,7 +4062,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (gbCategoryManagement && CompareBSTRtoSZ(bstrNodeName,"categLabel")) 
+			else if (gbCategoryManagement && CompareBSTRtoSZ(bstrNodeName,"categLabel",CP_ACP)) 
 			{
 				char tmpLabel[LEN_CATEGORY_LABEL+1];
 				rc=StoreNodeValue(tmpLabel,sizeof(tmpLabel),pChildElement);
@@ -4089,7 +4089,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					SaveCategories();
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"withIdPwd")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"withIdPwd",CP_ACP)) 
 			{
 				char tmp[10+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
@@ -4099,7 +4099,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					TRACE((TRACE_DEBUG,_F_,"iCurWithIdPwd=%d",iCurWithIdPwd));
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id1Value")) // nouveau v1.03
+			else if (CompareBSTRtoSZ(bstrNodeName,"id1Value",CP_ACP)) // nouveau v1.03
 			{
 				if (iCurWithIdPwd & CONFIG_WITH_ID1) // identifiant imposé par l'admin
 				{
@@ -4114,7 +4114,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				}
 				TRACE((TRACE_DEBUG,_F_, "id1Value=%s",gptActions[ptiActions[0]].szId1Value));
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id2Value")) // nouveau v1.03
+			else if (CompareBSTRtoSZ(bstrNodeName,"id2Value",CP_ACP)) // nouveau v1.03
 			{
 				if (iCurWithIdPwd & CONFIG_WITH_ID2) // identifiant imposé par l'admin
 				{
@@ -4129,7 +4129,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				}
 				TRACE((TRACE_DEBUG,_F_, "id2Value=%s",gptActions[ptiActions[0]].szId2Value));
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id3Value")) // nouveau v1.03
+			else if (CompareBSTRtoSZ(bstrNodeName,"id3Value",CP_ACP)) // nouveau v1.03
 			{
 				if (iCurWithIdPwd & CONFIG_WITH_ID3) // identifiant imposé par l'admin
 				{
@@ -4144,7 +4144,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				}
 				TRACE((TRACE_DEBUG,_F_, "id3Value=%s",gptActions[ptiActions[0]].szId3Value));
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"id4Value")) // nouveau v1.03
+			else if (CompareBSTRtoSZ(bstrNodeName,"id4Value",CP_ACP)) // nouveau v1.03
 			{
 				if (iCurWithIdPwd & CONFIG_WITH_ID4) // identifiant imposé par l'admin
 				{
@@ -4159,7 +4159,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				}
 				TRACE((TRACE_DEBUG,_F_, "id4Value=%s",gptActions[ptiActions[0]].szId4Value));
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"pwdValue")) // nouveau v1.03
+			else if (CompareBSTRtoSZ(bstrNodeName,"pwdValue",CP_ACP)) // nouveau v1.03
 			{
 				char tmpPwd[LEN_PWD+1]="";
 				rc=StoreNodeValue(tmpPwd,sizeof(tmpPwd),pChildElement);
@@ -4183,7 +4183,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 				gptActions[ptiActions[0]].iWithIdPwd=iCurWithIdPwd;
 				TRACE((TRACE_DEBUG,_F_,"gptActions[%d].iWithIdPwd=%d",ptiActions[0],gptActions[ptiActions[0]].iWithIdPwd));
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"pwdGroup")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"pwdGroup",CP_ACP)) 
 			{
 				char tmp[10+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
@@ -4196,7 +4196,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			else if (CompareBSTRtoSZ(bstrNodeName,"autoLock")) 
+			else if (CompareBSTRtoSZ(bstrNodeName,"autoLock",CP_ACP)) 
 			{
 				char tmp[10+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
@@ -4209,7 +4209,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					}
 				}
 			}
-			/*else if (CompareBSTRtoSZ(bstrNodeName,"autoPublish")) 
+			/*else if (CompareBSTRtoSZ(bstrNodeName,"autoPublish",CP_ACP)) // note : partie déjà commentée en 1.25 (??)
 			{
 				char tmp[10+1];
 				rc=StoreNodeValue(tmp,sizeof(tmp),pChildElement);
@@ -4327,7 +4327,7 @@ int GetAllConfigsFromServer(void)
 		if (gbDisplayConfigsNotifications) MessageBox(NULL,gszErrorServerNotAvailable,"swSSO",MB_OK | MB_ICONEXCLAMATION);
 		goto end;
 	}
-	if (CompareBSTRtoSZ(bstrXML,"<app>NOT FOUND</app>")) // rien trouvé, pas grave la base est vide, il faut bien commencer un jour ;-)
+	if (CompareBSTRtoSZ(bstrXML,"<app>NOT FOUND</app>",CP_ACP)) // rien trouvé, pas grave la base est vide, il faut bien commencer un jour ;-)
 	{
 		// 0.92 / ISSUE#26 : n'affiche pas les messages d'erreur si gbDisplayConfigsNotifications=FALSE
 		// if (gbDisplayConfigsNotifications) MessageBox(NULL,GetString(IDS_GET_ALL_CONFIGS_ERROR),"swSSO",MB_OK | MB_ICONEXCLAMATION);
@@ -4399,7 +4399,7 @@ int GetAutoPublishConfigsFromServer(void)
 		// if (gbDisplayConfigsNotifications) MessageBox(NULL,gszErrorServerNotAvailable,"swSSO",MB_OK | MB_ICONEXCLAMATION);
 		goto end;
 	}
-	if (CompareBSTRtoSZ(bstrXML,"<app>NOT FOUND</app>")) // rien trouvé
+	if (CompareBSTRtoSZ(bstrXML,"<app>NOT FOUND</app>",CP_ACP)) // rien trouvé
 	{
 		goto end;
 	}
@@ -4486,7 +4486,7 @@ int GetNewOrModifiedConfigsFromServer(BOOL bForced)
 		if (gbDisplayConfigsNotifications) MessageBox(NULL,gszErrorServerNotAvailable,"swSSO",MB_OK | MB_ICONEXCLAMATION);
 		goto end;
 	}
-	if (CompareBSTRtoSZ(bstrXML,"<app>NOT FOUND</app>")) // rien trouvé, rien à faire !
+	if (CompareBSTRtoSZ(bstrXML,"<app>NOT FOUND</app>",CP_ACP)) // rien trouvé, rien à faire !
 	{
 		rc=0;
 		goto end;
