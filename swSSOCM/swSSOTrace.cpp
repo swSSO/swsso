@@ -4,7 +4,7 @@
 //
 //       SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
 //
-//                C²opyright (C) 2004-2025 - Sylvain WERDEFROY
+//                C²opyright (C) 2004-2026 - Sylvain WERDEFROY
 //
 //
 //                   

@@ -512,7 +512,7 @@ BEGIN
     PUSHBUTTON      "&Open",PB_OUVRIR,280,147,50,14
     EDITTEXT        TX_PORTAL,99,120,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT        TX_CONFIGFILE,99,151,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Copyright © 2004-2025 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Copyright © 2004-2026 - Sylvain Werdefroy",-1,47,24,155,10
     LTEXT           "Statistics",TX_STATISTIQUES,7,196,31,10
     LTEXT           "Number of connections:",-1,17,210,77,8
     LTEXT           "0",TX_NBSSO,101,210,230,8
@@ -1517,7 +1517,7 @@ BEGIN
     PUSHBUTTON      "&Ouvrir",PB_OUVRIR,280,147,50,14
     EDITTEXT        TX_PORTAL,99,120,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT        TX_CONFIGFILE,99,151,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
-    LTEXT           "Copyright © 2004-2025 - Sylvain Werdefroy",-1,47,24,155,10
+    LTEXT           "Copyright © 2004-2026 - Sylvain Werdefroy",-1,47,24,155,10
     LTEXT           "Statistiques",TX_STATISTIQUES,7,196,41,10
     LTEXT           "Nombre de SSO réalisés :",-1,17,210,82,8
     LTEXT           "0",TX_NBSSO,99,210,230,8

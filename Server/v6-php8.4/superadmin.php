@@ -1,7 +1,7 @@
 <?php
 //-----------------------------------------------------------------------------
 //                                  swSSO
-//                Copyright (C) 2004-2018 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2026 - Sylvain WERDEFROY
 //                https://www.swsso.fr | https://www.swsso.com
 //                             sylvain@swsso.fr
 //-----------------------------------------------------------------------------

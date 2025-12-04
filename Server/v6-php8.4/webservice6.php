@@ -1,7 +1,7 @@
 <?php
 //-----------------------------------------------------------------------------
 //                                  swSSO
-//                Copyright (C) 2004-2018 - Sylvain WERDEFROY
+//                Copyright (C) 2004-2026 - Sylvain WERDEFROY
 //                https://www.swsso.fr | https://www.swsso.com
 //                             sylvain@swsso.fr
 //-----------------------------------------------------------------------------
@@ -23,6 +23,7 @@
 //------------------------------------------------------------------------------
 // VERSION INTERNE : 6.7.0 (PHP7)
 // VERSION INTERNE : 6.7.1 -- ISSUE#396
+// VERSION INTERNE : 6.8.0 -- ISSUE#415 (PHP8.4)
 //------------------------------------------------------------------------------
 include('variables.php');
 include('util.php');
