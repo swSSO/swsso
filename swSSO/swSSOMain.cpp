@@ -2424,8 +2424,10 @@ askpwd:
 				{
 					// ISSUE#165
 					rc=CheckWindowsPwd(&bMigrationWindowsSSO);
-					if (rc==-1) // erreur ou pas de recovery ou annulation de l'utilisateur dans le recovery
-						goto end;
+					if (rc == -1) // erreur ou pas de recovery ou annulation de l'utilisateur dans le recovery
+					{
+						if (GetADPassword()!=0) goto end;
+					}
 					else if(rc==-3) // l'utilisateur a cliqué sur continuer dans le recovery
 						goto askpwd;
 				}

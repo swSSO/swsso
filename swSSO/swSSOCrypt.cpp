@@ -684,3 +684,142 @@ end:
 	if (pBuf!=NULL) free(pBuf);
 	TRACE((TRACE_LEAVE,_F_,""));
 }
+
+// ---------------------------------------------------------------------------- -
+// swGenAESKey()
+//-----------------------------------------------------------------------------
+// Génère deux sels aléatoires pour gbufPBKDF2PwdSalt et gbufPBKDF2KeySalt
+//-----------------------------------------------------------------------------
+int swGenAESKey(BYTE *pAESKeyData,DWORD dwAESKeyLen)
+{
+	TRACE((TRACE_ENTER, _F_, ""));
+	int rc = -1;
+	BOOL brc;
+	BYTE* pBuffer128Ko = NULL;
+
+	// Pour être sûr d'avoir un aléa non attaquable, je suis la préco du §8.1.2 du document 
+	// "Cryptanalysis of the Windows Random Number Generator" de Leo Dorrendorf :
+	// 1. Request and discard 128 kilobytes of WRNG output.
+	// 2. Request as many bytes as needed to generate the secure token.
+	// 3. Request and discard 128 kilobytes of WRNG output.
+	// Remarque : c'est vraiment du luxe dans notre cas !
+
+	// 1. Request and discard 128 kilobytes of WRNG output.
+	pBuffer128Ko = (BYTE*)malloc(DRAIN_BUFFER_SIZE);
+	if (pBuffer128Ko == NULL) { TRACE((TRACE_ERROR, _F_, "malloc(%d)", 128 * 1024)); goto end; }
+	brc = CryptGenRandom(ghProv, DRAIN_BUFFER_SIZE, pBuffer128Ko);
+	if (!brc) { TRACE((TRACE_ERROR, _F_, "CryptGenRandom(DRAIN_BUFFER_SIZE)=0x%08lx", GetLastError())); goto end; }
+	TRACE((TRACE_DEBUG, _F_, "CryptGenRandom(DRAIN_BUFFER_SIZE) 1/2"));
+	SecureZeroMemory(pBuffer128Ko, DRAIN_BUFFER_SIZE);
+
+	// 2. Request as many bytes as needed to generate the secure token.
+	brc = CryptGenRandom(ghProv, dwAESKeyLen, pAESKeyData);
+	if (!brc) { TRACE((TRACE_ERROR, _F_, "CryptGenRandom(pAESKeyData)=0x%08lx", GetLastError())); goto end; }
+
+	// 3. Request and discard 128 kilobytes of WRNG output.
+	brc = CryptGenRandom(ghProv, DRAIN_BUFFER_SIZE, pBuffer128Ko);
+	if (!brc) { TRACE((TRACE_ERROR, _F_, "CryptGenRandom(DRAIN_BUFFER_SIZE)=0x%08lx", GetLastError())); goto end; }
+	SecureZeroMemory(pBuffer128Ko, DRAIN_BUFFER_SIZE);
+	TRACE((TRACE_DEBUG, _F_, "CryptGenRandom(DRAIN_BUFFER_SIZE) 2/2"));
+
+	TRACE_BUFFER((TRACE_DEBUG, _F_, pAESKeyData, dwAESKeyLen, "pAESKeyData"));
+
+	rc = 0;
+end:
+	if (pBuffer128Ko != NULL) free(pBuffer128Ko);
+	TRACE((TRACE_LEAVE, _F_, "rc=%d", rc));
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// DPAPIStoreAESKey()
+// ----------------------------------------------------------------------------------
+// Stockage de KeyData dans le .ini (pour le mode mdp Windows quand Windows ne donne pas le mdp cf. ISSUE#416)
+// ----------------------------------------------------------------------------------
+int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
+{
+	TRACE((TRACE_ENTER, _F_, ""));
+
+	BOOL brc;
+	int rc = -1;
+	DATA_BLOB DataIn;
+	DATA_BLOB DataOut;
+	DATA_BLOB DataSalt;
+	char* pszBase64 = NULL;
+	char szKey[MAX_COMPUTERNAME_LENGTH + UNLEN + 56 + 1] = "";
+
+	DataIn.pbData = pAESKeyData;
+	DataIn.cbData = dwAESKeyLen;
+	DataOut.pbData = NULL;
+	DataOut.cbData = 0;
+
+	sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-1-%s@%s", gszUserName, gszComputerName);
+	DataSalt.pbData = (BYTE*)szKey;
+	DataSalt.cbData = strlen(szKey);
+
+	brc = CryptProtectData(&DataIn, L"swSSO", &DataSalt, NULL, NULL, 0, &DataOut);
+	if (!brc)
+	{
+		TRACE((TRACE_ERROR, _F_, "CryptProtectData()"));
+		goto end;
+	}
+
+	// encodage base64 et écriture dans swsso.ini
+	pszBase64 = (char*)malloc(DataOut.cbData * 2 + 1);
+	if (pszBase64 == NULL) goto end;
+	swCryptEncodeBase64(DataOut.pbData, DataOut.cbData, pszBase64, DataOut.cbData * 2 + 1);
+
+	WritePrivateProfileString("swSSO", szKey, pszBase64, gszCfgFile);
+	StoreIniEncryptedHash(); // ISSUE#164
+	rc = 0;
+end:
+	if (pszBase64 != NULL) free(pszBase64);
+	if (DataOut.pbData != NULL) LocalFree(DataOut.pbData);
+	TRACE((TRACE_LEAVE, _F_, "rc=%d", rc));
+	return rc;
+}
+
+// ----------------------------------------------------------------------------------
+// DPAPIGetAESKey()
+// ----------------------------------------------------------------------------------
+// Lecture de KeyData dans le .ini (pour le mode mdp Windows quand Windows ne donne pas le mdp cf. ISSUE#416)
+// ----------------------------------------------------------------------------------
+int DPAPIGetAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
+{
+	TRACE((TRACE_ENTER, _F_, ""));
+	int rc = -1;
+	char szBase64[1024 + 1];
+	char DAPIData[512];
+	char szKey[20 + MAX_COMPUTERNAME_LENGTH + UNLEN + 1] = "";
+
+	BOOL brc;
+	DATA_BLOB DataIn;
+	DATA_BLOB DataOut;
+	DATA_BLOB DataSalt;
+
+	DataOut.pbData = NULL;
+	DataOut.cbData = 0;
+
+	// lecture dans swsso.ini et décodage base64 
+	sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-1-%s@%s", gszUserName, gszComputerName);
+	DataSalt.pbData = (BYTE*)szKey;
+	DataSalt.cbData = strlen(szKey);
+	GetPrivateProfileString("swSSO", szKey, "", szBase64, sizeof(szBase64), gszCfgFile);
+	if (*szBase64 == 0) goto end;
+	swCryptDecodeBase64(szBase64, DAPIData, sizeof(DAPIData));
+	DataIn.pbData = (BYTE*)DAPIData;
+	DataIn.cbData = strlen(szBase64) / 2;
+
+	brc = CryptUnprotectData(&DataIn, NULL, &DataSalt, NULL, NULL, 0, &DataOut);
+	if (!brc)
+	{
+		TRACE((TRACE_ERROR, _F_, "CryptUnprotectData()"));
+		goto end;
+	}
+	memcpy_s(pAESKeyData, dwAESKeyLen, DataOut.pbData, DataOut.cbData);
+	rc = 0;
+end:
+	if (DataOut.pbData != NULL) LocalFree(DataOut.pbData);
+	TRACE((TRACE_LEAVE, _F_, "rc=%d", rc));
+	return rc;
+}

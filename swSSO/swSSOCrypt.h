@@ -76,3 +76,8 @@ char *swCryptEncryptString(const char *pszSource,int iKeyId);
 char *swCryptDecryptString(const char *pszSource,int iKeyId);
 
 void swGenerateRandomPwd(char *pszPwd,int iPwdLen,int iPwdType);
+
+int swGenAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen);
+int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen);
+int DPAPIGetAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen);
+

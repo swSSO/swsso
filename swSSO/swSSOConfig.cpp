@@ -1952,6 +1952,7 @@ int InitWindowsSSO(void)
 	char bufResponse[1024];
 	DWORD dwLenResponse;
 	char szPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
+	BOOL bAskADPwd=FALSE;
 	
 	// Génère les sels PSKS
 	if (swGenPBKDF2Salt()!=0) goto end;
@@ -1986,17 +1987,34 @@ int InitWindowsSSO(void)
 	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
-	}
-	if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
+	} 
+	TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld (attendu=%d)",dwLenResponse,PBKDF2_PWD_LEN+AES256_KEY_LEN));
+	if (dwLenResponse==PBKDF2_PWD_LEN+AES256_KEY_LEN)
 	{
-		TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld (attendu=%d)",dwLenResponse,PBKDF2_PWD_LEN+AES256_KEY_LEN)); goto end;
+		// Crée la clé de chiffrement des mots de passe secondaires
+		memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
 	}
-	// Crée la clé de chiffrement des mots de passe secondaires
-	memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
+	else // ISSUE#416 : traitement du cas où le mot de passe windows n'a pas pu être récupéré
+	{
+		// Génère une clé de chiffrement aléatoire
+		if (swGenAESKey(AESKeyData, AES256_KEY_LEN) != 0) goto end;
+		if (DPAPIStoreAESKey(AESKeyData, AES256_KEY_LEN) != 0) goto end;
+		bAskADPwd=TRUE;
+	}
 	swStoreAESKey(AESKeyData,ghKey1);
 	if (GenWriteCheckSynchroValue()!=0) goto end;
 	StoreIniEncryptedHash(); // ISSUE#164
 	RecoveryFirstUse(NULL,ghKey1); // ISSUE#194
+
+	if (bAskADPwd) // ISSUE#416 : traitement du cas où le mot de passe windows n'a pas pu être récupéré
+	{
+		if (AskADPwd(TRUE) == 0)
+		{
+			// Ecrit dans le .ini
+			WritePrivateProfileString("swSSO", "wpwdValue", gszEncryptedADPwd, gszCfgFile);
+			StoreIniEncryptedHash();
+		}
+	}
 	rc=0;
 end:
 	if (rc!=0) MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_MIGRATION),"swSSO",MB_OK | MB_ICONSTOP);
@@ -2170,14 +2188,18 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 			bMustReboot=TRUE;
 			TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
 		}
-		if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
+		TRACE((TRACE_INFO, _F_, "dwLenResponse=%ld", dwLenResponse));
+		if (dwLenResponse == PBKDF2_PWD_LEN + AES256_KEY_LEN)
+		{
+			// Crée la clé de chiffrement des mots de passe secondaires
+			memcpy(AESKeyData, bufResponse + PBKDF2_PWD_LEN, AES256_KEY_LEN);
+		}
+		else if (DPAPIGetAESKey(AESKeyData, AES256_KEY_LEN) != 0)
 		{
 			bMustReopenSession=TRUE;
-			TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld",dwLenResponse)); goto end;
+			goto end;
 		}
-		// Crée la clé de chiffrement des mots de passe secondaires
-		memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-		if (swStoreAESKey(AESKeyData,ghKey1)) goto end;
+		if (swStoreAESKey(AESKeyData, ghKey1)) goto end;
 	}
 
 	// Teste que la clé est OK, sinon essaie avec la précédente clé si existante et 

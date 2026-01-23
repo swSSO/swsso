@@ -473,15 +473,25 @@ int GetADPassword(void)
 	{
 		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
 	}
-	// en retour, on a reçu le mot de passe chiffré par la clé dérivée du mot de passe (si, si)
-	if (dwLenResponse!=LEN_ENCRYPTED_AES256)
+	TRACE((TRACE_INFO, _F_, "Longueur reponse attendue=LEN_ENCRYPTED_AES256=%d, recue=%d", LEN_ENCRYPTED_AES256, dwLenResponse));
+	if (dwLenResponse==LEN_ENCRYPTED_AES256)
 	{
-		TRACE((TRACE_ERROR,_F_,"Longueur reponse attendue=LEN_ENCRYPTED_AES256=%d, recue=%d",LEN_ENCRYPTED_AES256,dwLenResponse)); goto end;
+		// en retour, on a reçu le mot de passe chiffré par la clé dérivée du mot de passe (si, si)
+		bufResponse[dwLenResponse] = 0;
+		// stocke le mot de passe chiffré, pour répondre aux demandes ultérieures traitées par GetDecryptedPwd() dans swSSOAD.cpp
+		strcpy_s(gszEncryptedADPwd, sizeof(gszEncryptedADPwd), bufResponse);
 	}
-	bufResponse[dwLenResponse]=0;
-	// stocke le mot de passe chiffré, pour répondre aux demandes ultérieures traitées par GetDecryptedPwd() dans swSSOAD.cpp
-	strcpy_s(gszEncryptedADPwd,sizeof(gszEncryptedADPwd),bufResponse);	
-
+	else // ISSUE#416 : traitement du cas où le mot de passe windows n'a pas pu être récupéré
+	{
+		// normalement ici on a un mot de passe AD déjà stocké dans gszEncryptedADPwd, sinon on va voir dans le .ini ! 
+		if (*gszEncryptedADPwd == 0)
+		{
+			if (GetPrivateProfileString("swSSO", "wpwdValue", "", gszEncryptedADPwd, sizeof(gszEncryptedADPwd), gszCfgFile)==0)
+			{
+				TRACE((TRACE_ERROR, _F_, "Pas de mot de passe windows recupere aupres de swSSOSVC et gszEncryptedADPwd vide")); goto end;
+			}
+		}
+	}
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
