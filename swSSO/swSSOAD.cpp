@@ -461,7 +461,7 @@ int GetADPassword(void)
 	int rc=-1;
 	char bufRequest[1024];
 	char bufResponse[1024];
-	DWORD dwLenResponse;
+	DWORD dwLenResponse=0;
 
 	// Demande le mot de passe à swSSOSVC
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPASS:domain(256octets)username(256octets)
@@ -471,10 +471,14 @@ int GetADPassword(void)
 	memcpy(bufRequest+12+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
-		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+		TRACE((TRACE_INFO,_F_,"Erreur swPipeWrite()"));
+		dwLenResponse = 0;
 	}
-	TRACE((TRACE_INFO, _F_, "Longueur reponse attendue=LEN_ENCRYPTED_AES256=%d, recue=%d", LEN_ENCRYPTED_AES256, dwLenResponse));
-	if (dwLenResponse==LEN_ENCRYPTED_AES256)
+	else
+	{
+		TRACE((TRACE_INFO, _F_, "Longueur reponse attendue=LEN_ENCRYPTED_AES256=%d, recue=%d", LEN_ENCRYPTED_AES256, dwLenResponse));
+	}
+	if (dwLenResponse == LEN_ENCRYPTED_AES256)
 	{
 		// en retour, on a reçu le mot de passe chiffré par la clé dérivée du mot de passe (si, si)
 		bufResponse[dwLenResponse] = 0;
@@ -486,7 +490,7 @@ int GetADPassword(void)
 		// normalement ici on a un mot de passe AD déjà stocké dans gszEncryptedADPwd, sinon on va voir dans le .ini ! 
 		if (*gszEncryptedADPwd == 0)
 		{
-			if (GetPrivateProfileString("swSSO", "wpwdValue", "", gszEncryptedADPwd, sizeof(gszEncryptedADPwd), gszCfgFile)==0)
+			if (GetPrivateProfileString("swSSO", "wpValue", "", gszEncryptedADPwd, sizeof(gszEncryptedADPwd), gszCfgFile)==0)
 			{
 				TRACE((TRACE_ERROR, _F_, "Pas de mot de passe windows recupere aupres de swSSOSVC et gszEncryptedADPwd vide")); goto end;
 			}

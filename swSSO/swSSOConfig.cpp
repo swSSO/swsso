@@ -1950,12 +1950,18 @@ int InitWindowsSSO(void)
 	BYTE AESKeyData[AES256_KEY_LEN];
 	char bufRequest[1280];
 	char bufResponse[1024];
-	DWORD dwLenResponse;
+	DWORD dwLenResponse=0;
 	char szPBKDF2Salt[PBKDF2_SALT_LEN*2+1];
 	BOOL bAskADPwd=FALSE;
 	
 	// Génère les sels PSKS
 	if (swGenPBKDF2Salt()!=0) goto end;
+
+	// Ecrit les sels dans le .ini
+	swCryptEncodeBase64(gSalts.bufPBKDF2PwdSalt, PBKDF2_SALT_LEN, szPBKDF2Salt, sizeof(szPBKDF2Salt));
+	WritePrivateProfileString("swSSO", "pwdSalt", szPBKDF2Salt, gszCfgFile);
+	swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt, PBKDF2_SALT_LEN, szPBKDF2Salt, sizeof(szPBKDF2Salt));
+	WritePrivateProfileString("swSSO", "keySalt", szPBKDF2Salt, gszCfgFile);
 
 	// Envoie les sels à swSSOSVC : V03:PUTPSKS:domain(256octets)username(256octets)UPN(256octets)PwdSalt(64octets)KeySalt(64octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
@@ -1968,27 +1974,30 @@ int InitWindowsSSO(void)
 	memcpy(bufRequest+12+DOMAIN_LEN+USER_LEN*2+PBKDF2_SALT_LEN,gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN);
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN*2+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
-		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+		TRACE((TRACE_INFO,_F_,"Erreur swPipeWrite()"));
+		dwLenResponse = 0;
 	}
-	// TODO un jour : analyser la réponse
-	// Ecrit les sels dans le .ini
-	swCryptEncodeBase64(gSalts.bufPBKDF2PwdSalt,PBKDF2_SALT_LEN,szPBKDF2Salt,sizeof(szPBKDF2Salt));
-	WritePrivateProfileString("swSSO","pwdSalt",szPBKDF2Salt,gszCfgFile);
-	swCryptEncodeBase64(gSalts.bufPBKDF2KeySalt,PBKDF2_SALT_LEN,szPBKDF2Salt,sizeof(szPBKDF2Salt));
-	WritePrivateProfileString("swSSO","keySalt",szPBKDF2Salt,gszCfgFile);
-
-	// Demande le keydata à swssosvc
-	// Construit la requête à envoyer à swSSOSVC : V03:GETPHKD:CUR:domain(256octets)username(256octets)
-	// ISSUE#156 : pour y voir plus clair dans les traces
-	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
-	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
-	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+	else
 	{
-		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
-	} 
-	TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld (attendu=%d)",dwLenResponse,PBKDF2_PWD_LEN+AES256_KEY_LEN));
+		// TODO un jour : analyser la réponse
+
+		// Demande le keydata à swssosvc
+		// Construit la requête à envoyer à swSSOSVC : V03:GETPHKD:CUR:domain(256octets)username(256octets)
+		// ISSUE#156 : pour y voir plus clair dans les traces
+		SecureZeroMemory(bufRequest, sizeof(bufRequest));
+		memcpy(bufRequest, "V03:GETPHKD:CUR:", 16);
+		memcpy(bufRequest + 16, gpszRDN, strlen(gpszRDN) + 1);
+		memcpy(bufRequest + 16 + DOMAIN_LEN, gszUserName, strlen(gszUserName) + 1);
+		if (swPipeWrite(bufRequest, 16 + DOMAIN_LEN + USER_LEN, bufResponse, sizeof(bufResponse), &dwLenResponse) != 0)
+		{
+			TRACE((TRACE_INFO, _F_, "Erreur swPipeWrite()"));
+			dwLenResponse = 0;
+		}
+		else
+		{
+			TRACE((TRACE_INFO, _F_, "dwLenResponse=%ld (attendu=%d)", dwLenResponse, PBKDF2_PWD_LEN + AES256_KEY_LEN));
+		}
+	}
 	if (dwLenResponse==PBKDF2_PWD_LEN+AES256_KEY_LEN)
 	{
 		// Crée la clé de chiffrement des mots de passe secondaires
@@ -2011,7 +2020,7 @@ int InitWindowsSSO(void)
 		if (AskADPwd(TRUE) == 0)
 		{
 			// Ecrit dans le .ini
-			WritePrivateProfileString("swSSO", "wpwdValue", gszEncryptedADPwd, gszCfgFile);
+			WritePrivateProfileString("swSSO", "wpValue", gszEncryptedADPwd, gszCfgFile);
 			StoreIniEncryptedHash();
 		}
 	}
@@ -2115,7 +2124,7 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	BYTE AESKeyData[AES256_KEY_LEN];
 	char bufRequest[1280];
 	char bufResponse[1024];
-	DWORD dwLenResponse;
+	DWORD dwLenResponse=0;
 	int rc=-1;
 	BOOL bMustReopenSession=FALSE;
 	BOOL bMustReboot=FALSE;
@@ -2135,71 +2144,80 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 	if (swPipeWrite(bufRequest,12+DOMAIN_LEN+USER_LEN*2+PBKDF2_SALT_LEN*2,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
 		bMustReboot=TRUE;
-		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+		dwLenResponse = 0;
+		TRACE((TRACE_INFO,_F_,"Erreur swPipeWrite()"));
+		if (atoi(gszCfgVersion) < 125) // ancienne version, il faut que le service soit là pour faire la migration PBKDF sinon trop compliqué
+			goto end;
+		else
+			goto suite;
 	}
 	// TODO un jour : analyser la réponse
-
 	// Demande le keydata à swssosvc
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
 	// ISSUE#156 : pour y voir plus clair dans les traces
-	SecureZeroMemory(bufRequest,sizeof(bufRequest));
-	if (atoi(gszCfgVersion)<125) // ancienne version, dérive ghKey1 avec 10000 itérations HMAC-SHA1 et ghKey2 avec 600000 itérations
+	SecureZeroMemory(bufRequest, sizeof(bufRequest));
+	if (atoi(gszCfgVersion) < 125) // ancienne version, dérive ghKey1 avec 10000 itérations HMAC-SHA1 et ghKey2 avec 600000 itérations
 	{
 		// dérive ghKey1
-		memcpy(bufRequest,"V02:GETPHKD:CUR:",16);
-		memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
-		memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-		if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+		memcpy(bufRequest, "V02:GETPHKD:CUR:", 16);
+		memcpy(bufRequest + 16, gpszRDN, strlen(gpszRDN) + 1);
+		memcpy(bufRequest + 16 + DOMAIN_LEN, gszUserName, strlen(gszUserName) + 1);
+		if (swPipeWrite(bufRequest, 16 + DOMAIN_LEN + USER_LEN, bufResponse, sizeof(bufResponse), &dwLenResponse) != 0)
 		{
-			bMustReboot=TRUE;
-			TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+			bMustReboot = TRUE;
+			TRACE((TRACE_ERROR, _F_, "Erreur swPipeWrite()")); goto end;
 		}
-		if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
+		if (dwLenResponse != PBKDF2_PWD_LEN + AES256_KEY_LEN)
 		{
-			bMustReopenSession=TRUE;
-			TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld",dwLenResponse)); goto end;
+			bMustReopenSession = TRUE;
+			TRACE((TRACE_ERROR, _F_, "dwLenResponse=%ld", dwLenResponse)); goto end;
 		}
-		memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-		if (swStoreAESKey(AESKeyData,ghKey1)) goto end;
+		memcpy(AESKeyData, bufResponse + PBKDF2_PWD_LEN, AES256_KEY_LEN);
+		if (swStoreAESKey(AESKeyData, ghKey1)) goto end;
 		// dérive ghKey2 (servira plus tard pour le transchiffrement = changement d'algo de dérivation PBKDF2)
-		memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
-		memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
-		memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-		if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+		memcpy(bufRequest, "V03:GETPHKD:CUR:", 16);
+		memcpy(bufRequest + 16, gpszRDN, strlen(gpszRDN) + 1);
+		memcpy(bufRequest + 16 + DOMAIN_LEN, gszUserName, strlen(gszUserName) + 1);
+		if (swPipeWrite(bufRequest, 16 + DOMAIN_LEN + USER_LEN, bufResponse, sizeof(bufResponse), &dwLenResponse) != 0)
 		{
-			bMustReboot=TRUE;
-			TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+			bMustReboot = TRUE;
+			TRACE((TRACE_ERROR, _F_, "Erreur swPipeWrite()")); goto end;
 		}
-		if (dwLenResponse!=PBKDF2_PWD_LEN+AES256_KEY_LEN)
+		if (dwLenResponse != PBKDF2_PWD_LEN + AES256_KEY_LEN)
 		{
-			bMustReopenSession=TRUE;
-			TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld",dwLenResponse)); goto end;
+			bMustReopenSession = TRUE;
+			TRACE((TRACE_ERROR, _F_, "dwLenResponse=%ld", dwLenResponse)); goto end;
 		}
-		memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-		if (swStoreAESKey(AESKeyData,ghKey2)) goto end;
+		memcpy(AESKeyData, bufResponse + PBKDF2_PWD_LEN, AES256_KEY_LEN);
+		if (swStoreAESKey(AESKeyData, ghKey2)) goto end;
 	}
 	else // new : dérive ghKey1 avec 600 000 itérations HMAC-SHA256
 	{
-		memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
-		memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
-		memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-		if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
+		memcpy(bufRequest, "V03:GETPHKD:CUR:", 16);
+		memcpy(bufRequest + 16, gpszRDN, strlen(gpszRDN) + 1);
+		memcpy(bufRequest + 16 + DOMAIN_LEN, gszUserName, strlen(gszUserName) + 1);
+		if (swPipeWrite(bufRequest, 16 + DOMAIN_LEN + USER_LEN, bufResponse, sizeof(bufResponse), &dwLenResponse) != 0)
 		{
-			bMustReboot=TRUE;
-			TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()")); goto end;
+			bMustReboot = TRUE;
+			TRACE((TRACE_ERROR, _F_, "Erreur swPipeWrite()")); goto suite;
 		}
-		TRACE((TRACE_INFO, _F_, "dwLenResponse=%ld", dwLenResponse));
-		if (dwLenResponse == PBKDF2_PWD_LEN + AES256_KEY_LEN)
+		if (dwLenResponse != PBKDF2_PWD_LEN + AES256_KEY_LEN)
 		{
-			// Crée la clé de chiffrement des mots de passe secondaires
-			memcpy(AESKeyData, bufResponse + PBKDF2_PWD_LEN, AES256_KEY_LEN);
+			bMustReopenSession = TRUE;
+			TRACE((TRACE_ERROR, _F_, "dwLenResponse=%ld", dwLenResponse)); goto suite;
 		}
-		else if (DPAPIGetAESKey(AESKeyData, AES256_KEY_LEN) != 0)
+		memcpy(AESKeyData, bufResponse + PBKDF2_PWD_LEN, AES256_KEY_LEN);
+		if (swStoreAESKey(AESKeyData, ghKey2)) goto end;
+	}
+suite:
+	if (bMustReboot || bMustReopenSession) // ISSUE#416
+	{
+		if (DPAPIGetAESKey(AESKeyData, AES256_KEY_LEN) == 0)
 		{
-			bMustReopenSession=TRUE;
-			goto end;
+			if (swStoreAESKey(AESKeyData, ghKey1)) goto end;
+			bMustReopenSession = FALSE;
+			bMustReboot = FALSE;
 		}
-		if (swStoreAESKey(AESKeyData, ghKey1)) goto end;
 	}
 
 	// Teste que la clé est OK, sinon essaie avec la précédente clé si existante et 

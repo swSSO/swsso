@@ -37,7 +37,6 @@
 #define TRACE_LEAVE		3 // sortie de fonction
 #define TRACE_INFO		4 // infos
 #define TRACE_DEBUG     5 // pour debug 
-#define TRACE_PWD		6 // pour dev seulement !
 
 #ifdef TRACES_ACTIVEES
 #define TRACE_OPEN() swTraceOpen();
