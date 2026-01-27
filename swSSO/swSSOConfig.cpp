@@ -2015,7 +2015,7 @@ int InitWindowsSSO(void)
 	StoreIniEncryptedHash(); // ISSUE#164
 	RecoveryFirstUse(NULL,ghKey1); // ISSUE#194
 
-	if (bAskADPwd) // ISSUE#416 : traitement du cas où le mot de passe windows n'a pas pu être récupéré
+	/*if (bAskADPwd) // ISSUE#416 : traitement du cas où le mot de passe windows n'a pas pu être récupéré -- PAS UTILE, FAIT DANS CheckADPwdChange()
 	{
 		if (AskADPwd(TRUE) == 0)
 		{
@@ -2023,7 +2023,7 @@ int InitWindowsSSO(void)
 			WritePrivateProfileString("swSSO", "ADPwd", gszEncryptedADPwd, gszCfgFile);
 			StoreIniEncryptedHash();
 		}
-	}
+	}*/
 	rc=0;
 end:
 	if (rc!=0) MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_MIGRATION),"swSSO",MB_OK | MB_ICONSTOP);
@@ -2165,12 +2165,12 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 		if (swPipeWrite(bufRequest, 16 + DOMAIN_LEN + USER_LEN, bufResponse, sizeof(bufResponse), &dwLenResponse) != 0)
 		{
 			bMustReboot = TRUE;
-			TRACE((TRACE_ERROR, _F_, "Erreur swPipeWrite()")); goto end;
+			TRACE((TRACE_ERROR, _F_, "Erreur swPipeWrite()")); goto suite;
 		}
 		if (dwLenResponse != PBKDF2_PWD_LEN + AES256_KEY_LEN)
 		{
 			bMustReopenSession = TRUE;
-			TRACE((TRACE_ERROR, _F_, "dwLenResponse=%ld", dwLenResponse)); goto end;
+			TRACE((TRACE_ERROR, _F_, "dwLenResponse=%ld", dwLenResponse)); goto suite;
 		}
 		memcpy(AESKeyData, bufResponse + PBKDF2_PWD_LEN, AES256_KEY_LEN);
 		if (swStoreAESKey(AESKeyData, ghKey1)) goto end;
@@ -2207,7 +2207,7 @@ int CheckWindowsPwd(BOOL *pbMigrationWindowsSSO)
 			TRACE((TRACE_ERROR, _F_, "dwLenResponse=%ld", dwLenResponse)); goto suite;
 		}
 		memcpy(AESKeyData, bufResponse + PBKDF2_PWD_LEN, AES256_KEY_LEN);
-		if (swStoreAESKey(AESKeyData, ghKey2)) goto end;
+		if (swStoreAESKey(AESKeyData, ghKey1)) goto end;
 	}
 suite:
 	if (bMustReboot || bMustReopenSession) // ISSUE#416
@@ -2780,6 +2780,7 @@ int ChangeWindowsPwd(void)
 		// Fait le transchiffrement du fichier .ini de ghKey1 vers ghKey2
 		if (swTranscrypt()!=0) goto end;
 		// Copie la clé dans ghKey1 qui est utilisée pour chiffrer les mots de passe secondaires
+		memcpy(AESKeyData, bufResponse + PBKDF2_PWD_LEN, AES256_KEY_LEN); // AESKeyData a été cassé par le swStore juste au dessus
 		swStoreAESKey(AESKeyData,ghKey1);
 		// Enregistrement des infos de recouvrement dans swSSO.ini (AESKeyData+UserId)Kpub
 		if (RecoveryChangeAESKeyData(ghKey1)!=0) goto end;
@@ -2801,7 +2802,7 @@ int ChangeWindowsPwd(void)
 		// Met à jour la valeur de checksynchro
 		if (GenWriteCheckSynchroValue()!=0) goto end;
 	}
-	else // ISSUE#416 : traitement du cas où le mot de passe windows n'a pas pu être récupéré
+	/*else // ISSUE#416 : traitement du cas où le mot de passe windows n'a pas pu être récupéré -- PAS UTILE, FAIT DANS CheckADPwdChange()
 	{
 		// lit le mot de passe dans le .nini
 		if (GetPrivateProfileString("swSSO", "ADPwd", "", gszEncryptedADPwd, sizeof(gszEncryptedADPwd), gszCfgFile) == 0)
@@ -2816,7 +2817,7 @@ int ChangeWindowsPwd(void)
 		}
 		// Met à jour la valeur de checksynchro
 		if (GenWriteCheckSynchroValue() != 0) goto end;
-	}
+	}*/
 
 	// 1.08 ISSUE#248 : si configuré, synchronise un groupe de mot de passe secondaires avec le mot de passe AD
 	if (!gbAdmin && gbSyncSecondaryPasswordActive)
@@ -5647,13 +5648,19 @@ int SyncAllConfigsLoginAndPwd(void)
 // En 125 : dérivation de clé PBKDF2 HMAC-SHA256 600.000 itérations
 // ATTENTION : avant d'appeler cette fonction, il faut avoir dérivé les 2 clés :
 // - ghKey1 : clé dérivée avec ancien algo
-// - hgKey2 : clé dérivée avec nouvel algo
+// - ghKey2 : clé dérivée avec nouvel algo
 //-----------------------------------------------------------------------------
 int MigrateFrom093To125(void)
 {
-	TRACE((TRACE_ENTER,_F_,""));
-	int rc=-1;
+	TRACE((TRACE_ENTER, _F_, ""));
+	int rc = -1;
 
+	// Vérifie que les clés sont initialisées, sinon ne tente pas la migration
+	if (!gAESKeyInitialized[0] || (!gAESKeyInitialized[1]))
+	{
+		TRACE((TRACE_ERROR, _F_, "AESKey not initialized (ghKey1:%d ghKey2:%d)", gAESKeyInitialized[0], gAESKeyInitialized[1])); 
+		goto end;
+	}
 	// Fait le transchiffrement du fichier .ini de ghKey1 vers ghKey2
 	if (swTranscrypt()!=0) goto end; 
 	// Copie ghKey2 dans ghKey1

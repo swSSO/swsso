@@ -322,8 +322,6 @@ int CheckADPwdChange(void)
 	int rc=-1;
 	char szLastADPwdChange2[50+1]; // ISSUE#281 : changement de format
 	BOOL bAskADPwd=FALSE;
-	//long lLoADPwdChange,lHiADPwdChange;
-	//long lLoIniPwdChange,lHiIniPwdChange;
 	
 	*szLastADPwdChange2=0;
 	

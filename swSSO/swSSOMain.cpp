@@ -2743,7 +2743,8 @@ askpwd:
 			goto end;
 		}
 		// ISSUE#169 : Demande le mot de passe à swSSOSVC et le stocke pour répondre aux demandes ultérieures traitées par GetDecryptedPwd() dans swSSOAD.cpp
-		if (GetADPassword()!=0) { iError=-1; goto end; }
+		// if (GetADPassword()!=0) { iError=-1; goto end; }
+		GetADPassword(); // ISSUE#416 : ne quitte plus swSSO pour permettre de lancer swSSO sans définir le mdp windows si l'utilisateur veut...
 		// ISSUE#342 Si mode admin, login de l'admin sur le serveur (non bloquant + message d'erreur dans la fonction ServerAdminLogin)
 		if (gbAdmin && !gbNoMasterPwd) ServerAdminLogin(NULL,gszUserName,NULL);
 
