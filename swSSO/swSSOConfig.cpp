@@ -1923,10 +1923,10 @@ int ReadVerifyCheckSynchroValue(int iKeyId)
 	}
 	// Décode le faux base 64
 	swCryptDecodeBase64(szSynchroValue,(char*)bufSynchroValue,sizeof(bufSynchroValue));
-	// Chiffre  avec la clé ghKey1
+	// Déchiffre avec la clé ghKey1
 	if (swCryptDecryptDataAES256(bufSynchroValue,bufSynchroValue+16,80,iKeyId)!=0) 
 	{
-		TRACE((TRACE_ERROR,_F_,"Erreur de déchiffrement, cas de désynchro !"));
+		TRACE((TRACE_ERROR,_F_,"Erreur de dechiffrement, cas de desynchro !"));
 		giBadPwdCount++;
 		goto end;
 	}
@@ -2006,8 +2006,8 @@ int InitWindowsSSO(void)
 	else // ISSUE#416 : traitement du cas où le mot de passe windows n'a pas pu être récupéré
 	{
 		// Génère une clé de chiffrement aléatoire
-		if (swGenAESKey(AESKeyData, AES256_KEY_LEN) != 0) goto end;
-		if (DPAPIStoreAESKey(AESKeyData, AES256_KEY_LEN) != 0) goto end;
+		if (swGenAESKey(AESKeyData, AES256_KEY_LEN) != 0) goto end; 
+		if (DPAPIStoreAESKey(AESKeyData, AES256_KEY_LEN) != 0) goto end; // à bien faire avant le swStoreAESKey qui protège la clé
 		bAskADPwd=TRUE;
 	}
 	swStoreAESKey(AESKeyData,ghKey1);
@@ -2020,7 +2020,7 @@ int InitWindowsSSO(void)
 		if (AskADPwd(TRUE) == 0)
 		{
 			// Ecrit dans le .ini
-			WritePrivateProfileString("swSSO", "wpValue", gszEncryptedADPwd, gszCfgFile);
+			WritePrivateProfileString("swSSO", "ADPwd", gszEncryptedADPwd, gszCfgFile);
 			StoreIniEncryptedHash();
 		}
 	}
@@ -2264,19 +2264,18 @@ suite:
 end:
 	if (rc!=0) 
 	{
-		if (bMustReboot) // ISSUE#186
+		if (gpRecoveryKeyValue==NULL || *gszRecoveryInfos==0) // pas de recouvrement possible
 		{
-			MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_LOGON),"swSSO",MB_OK | MB_ICONSTOP);
+			if (bMustReboot) // ISSUE#186
+			{
+				MessageBox(NULL, GetString(IDS_ERROR_WINDOWS_SSO_LOGON), "swSSO", MB_OK | MB_ICONSTOP);
+			}
+			else if (bMustReopenSession) // ISSUE#186
+			{
+				MessageBox(NULL, GetString(IDS_ERROR_WINDOWS_SSO_LOGON3), "swSSO", MB_OK | MB_ICONSTOP);
+			}
 		}
-		else if (bMustReopenSession) // ISSUE#186
-		{
-			MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_LOGON3),"swSSO",MB_OK | MB_ICONSTOP);
-		}
-		else if (gpRecoveryKeyValue==NULL || *gszRecoveryInfos==0)
-		{
-			MessageBox(NULL,GetString(IDS_ERROR_WINDOWS_SSO_LOGON),"swSSO",MB_OK | MB_ICONSTOP);
-		}
-		else // une clé de recouvrement existe et que les recoveryInfos ont déjà été stockées
+		else // une clé de recouvrement existe et les recoveryInfos ont déjà été stockées
 		{
 			// nouveau en 1.08, un web service permet de faire la resynchro de manière transparente.
 			// donc si le webservice est activé et qu'on est en mode synchro mdp, n'affiche pas le message
@@ -2760,7 +2759,7 @@ int ChangeWindowsPwd(void)
 	BYTE AESKeyData[AES256_KEY_LEN];
 	char bufRequest[1024];
 	char bufResponse[1024];
-	DWORD dwLenResponse;
+	DWORD dwLenResponse=0;
 	
 	// Demande le nouveau keydata à swssosvc
 	// Construit la requête à envoyer à swSSOSVC : V02:GETPHKD:CUR:domain(256octets)username(256octets)
@@ -2769,47 +2768,54 @@ int ChangeWindowsPwd(void)
 	memcpy(bufRequest,"V03:GETPHKD:CUR:",16);
 	memcpy(bufRequest+16,gpszRDN,strlen(gpszRDN)+1);
 	memcpy(bufRequest+16+DOMAIN_LEN,gszUserName,strlen(gszUserName)+1);
-	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)==0) 
+	if (swPipeWrite(bufRequest,16+DOMAIN_LEN+USER_LEN,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0) 
 	{
-		if (dwLenResponse==PBKDF2_PWD_LEN+AES256_KEY_LEN)
-		{
-			// Crée la clé de chiffrement des mots de passe secondaires
-			memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
-			swStoreAESKey(AESKeyData,ghKey2);
-			// Fait le transchiffrement du fichier .ini de ghKey1 vers ghKey2
-			if (swTranscrypt()!=0) goto end;
-			// Copie la clé dans ghKey1 qui est utilisée pour chiffrer les mots de passe secondaires
-			swStoreAESKey(AESKeyData,ghKey1);
-			// Enregistrement des infos de recouvrement dans swSSO.ini (AESKeyData+UserId)Kpub
-			if (RecoveryChangeAESKeyData(ghKey1)!=0) goto end;
-			// enregistrement des actions, comme ça les identifiants sont rechiffrés automatiquement avec la nouvelle clé
-			if(SaveApplications()!=0) goto end;
-			// Récupère le nouveau mot de passe AD chiffré
-			if (GetADPassword()!=0) goto end;
-			// ISSUE#342 : répercute le changement de mot de passe sur le serveur
-			if (gbAdmin)
-			{
-				char *pszADPassword=GetDecryptedPwd(gszEncryptedADPwd,TRUE);
-				if (pszADPassword!=NULL) 
-				{
-					ServerAdminSetPassword(NULL,pszADPassword);
-					SecureZeroMemory(pszADPassword,strlen(pszADPassword));
-					free(pszADPassword);
-				}
-			}
-			// Met à jour la valeur de checksynchro
-			if (GenWriteCheckSynchroValue()!=0) goto end;
-		}
-		else
-		{
-			TRACE((TRACE_ERROR,_F_,"dwLenResponse=%ld",dwLenResponse));
-			goto end;
-		}
+		dwLenResponse = 0;
 	}
-	else
-	{ 
-		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite()"));
-		goto end;
+	if (dwLenResponse==PBKDF2_PWD_LEN+AES256_KEY_LEN)
+	{
+		// Crée la clé de chiffrement des mots de passe secondaires
+		memcpy(AESKeyData,bufResponse+PBKDF2_PWD_LEN,AES256_KEY_LEN);
+		swStoreAESKey(AESKeyData,ghKey2);
+		// Fait le transchiffrement du fichier .ini de ghKey1 vers ghKey2
+		if (swTranscrypt()!=0) goto end;
+		// Copie la clé dans ghKey1 qui est utilisée pour chiffrer les mots de passe secondaires
+		swStoreAESKey(AESKeyData,ghKey1);
+		// Enregistrement des infos de recouvrement dans swSSO.ini (AESKeyData+UserId)Kpub
+		if (RecoveryChangeAESKeyData(ghKey1)!=0) goto end;
+		// enregistrement des actions, comme ça les identifiants sont rechiffrés automatiquement avec la nouvelle clé
+		if(SaveApplications()!=0) goto end;
+		// Récupère le nouveau mot de passe AD chiffré
+		if (GetADPassword()!=0) goto end;
+		// ISSUE#342 : répercute le changement de mot de passe sur le serveur
+		if (gbAdmin)
+		{
+			char *pszADPassword=GetDecryptedPwd(gszEncryptedADPwd,TRUE);
+			if (pszADPassword!=NULL) 
+			{
+				ServerAdminSetPassword(NULL,pszADPassword);
+				SecureZeroMemory(pszADPassword,strlen(pszADPassword));
+				free(pszADPassword);
+			}
+		}
+		// Met à jour la valeur de checksynchro
+		if (GenWriteCheckSynchroValue()!=0) goto end;
+	}
+	else // ISSUE#416 : traitement du cas où le mot de passe windows n'a pas pu être récupéré
+	{
+		// lit le mot de passe dans le .nini
+		if (GetPrivateProfileString("swSSO", "ADPwd", "", gszEncryptedADPwd, sizeof(gszEncryptedADPwd), gszCfgFile) == 0)
+		{
+			// si non présent dans le .ini, demande le mot de passe à l'utilisateur
+			if (AskADPwd(TRUE) == 0)
+			{
+				// Ecrit dans le .ini
+				WritePrivateProfileString("swSSO", "ADPwd", gszEncryptedADPwd, gszCfgFile);
+				StoreIniEncryptedHash();
+			}
+		}
+		// Met à jour la valeur de checksynchro
+		if (GenWriteCheckSynchroValue() != 0) goto end;
 	}
 
 	// 1.08 ISSUE#248 : si configuré, synchronise un groupe de mot de passe secondaires avec le mot de passe AD

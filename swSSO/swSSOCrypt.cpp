@@ -763,7 +763,7 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 		TRACE((TRACE_ERROR, _F_, "CryptProtectData()"));
 		goto end;
 	}
-
+	TRACE_BUFFER((TRACE_DEBUG, _F_, (BYTE*)pAESKeyData, dwAESKeyLen, "pAESKey (iAESKeySize=%d)", dwAESKeyLen));
 	// encodage base64 et écriture dans swsso.ini
 	pszBase64 = (char*)malloc(DataOut.cbData * 2 + 1);
 	if (pszBase64 == NULL) goto end;
@@ -817,6 +817,7 @@ int DPAPIGetAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 		goto end;
 	}
 	memcpy_s(pAESKeyData, dwAESKeyLen, DataOut.pbData, DataOut.cbData);
+	TRACE_BUFFER((TRACE_DEBUG, _F_, (BYTE*)pAESKeyData, dwAESKeyLen, "pAESKey (iAESKeySize=%d)", dwAESKeyLen));
 	rc = 0;
 end:
 	if (DataOut.pbData != NULL) LocalFree(DataOut.pbData);

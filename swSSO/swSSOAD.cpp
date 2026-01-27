@@ -393,7 +393,7 @@ char *GetDecryptedPwd(char *szPwdEncryptedValue,BOOL bDecryptADPassword)
 		{
 			TRACE((TRACE_DEBUG,_F_,"%%ADPASSWORD%% giPwdProtection=%d",giPwdProtection));
 			pszADPassword=swCryptDecryptString(gszEncryptedADPwd,ghKey1);
-			free(pszPassword); pszPassword=NULL;
+			free(pszPassword); pszPassword=NULL;	
 			ret=pszADPassword;
 		}
 		else
@@ -490,7 +490,7 @@ int GetADPassword(void)
 		// normalement ici on a un mot de passe AD déjà stocké dans gszEncryptedADPwd, sinon on va voir dans le .ini ! 
 		if (*gszEncryptedADPwd == 0)
 		{
-			if (GetPrivateProfileString("swSSO", "wpValue", "", gszEncryptedADPwd, sizeof(gszEncryptedADPwd), gszCfgFile)==0)
+			if (GetPrivateProfileString("swSSO", "ADPwd", "", gszEncryptedADPwd, sizeof(gszEncryptedADPwd), gszCfgFile)==0)
 			{
 				TRACE((TRACE_ERROR, _F_, "Pas de mot de passe windows recupere aupres de swSSOSVC et gszEncryptedADPwd vide")); goto end;
 			}

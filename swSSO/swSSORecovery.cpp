@@ -771,9 +771,13 @@ int RecoveryResponse(HWND w)
 	brc = CryptDecrypt(hKs,0,true,0,Response+16,&lDataToDecrypt);
 	if (!brc) { TRACE((TRACE_ERROR,_F_,"CryptDecrypt()=0x%08lx",GetLastError())); goto end; }
 	TRACE_BUFFER((TRACE_DEBUG,_F_,Response+16,AES256_KEY_LEN,"AESKeyData ****"));
-		
+
+	// ISSUE#416
+	if (DPAPIStoreAESKey(Response + 16, AES256_KEY_LEN) != 0) goto end; // à bien faire avant le swStoreAESKey qui protège la clé
+
 	if (swStoreAESKey(Response+16,ghKey1)) goto end;
 
+	
 	rc=0;
 end:
 	if (rc==0)

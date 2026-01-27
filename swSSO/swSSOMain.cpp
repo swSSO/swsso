@@ -1671,13 +1671,29 @@ static int CALLBACK PwdDialogProc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
 					{
 						if (gAESKeyInitialized[ghKey1]!=NULL) // Cas de la demande de mot de passe "loupe" (TogglePasswordField) ou du déverrouillage
 						{
+							BOOL bADPwdOK = FALSE;
 							swCryptDeriveKey(szPwd,ghKey2);
-							SecureZeroMemory(szPwd,strlen(szPwd));
 							if (ReadVerifyCheckSynchroValue(ghKey2)==0)
 							{
+								bADPwdOK = TRUE;
 								EndDialog(w,IDOK);
 							}
-							else
+							else // ISSUE#416 : la vérification doit se faire sur ADPwd si échec sur CheckSynchro
+							{
+								char* p = NULL;
+								p=swCryptDecryptString(gszEncryptedADPwd, ghKey1);
+								if (p != NULL)
+								{
+									if (strcmp(szPwd, p) == 0)
+									{
+										bADPwdOK = TRUE;
+										EndDialog(w, IDOK);
+									}
+									free(p);
+								}
+							}
+							SecureZeroMemory(szPwd, strlen(szPwd));
+							if (!bADPwdOK)
 							{
 								MessageBox(w,GetString(IDS_BADPWD),"swSSO",MB_OK | MB_ICONEXCLAMATION);
 								if (giBadPwdCount>5) PostQuitMessage(-1);
