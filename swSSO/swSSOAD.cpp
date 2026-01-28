@@ -358,12 +358,18 @@ int CheckADPwdChange(void)
 			}
 		}
 	}
-	
 	if (bAskADPwd) // demande le mot de passe AD à l'utilisateur et le stocke dans le .ini
 	{
-		if (AskADPwd(TRUE)!=0) goto end;
-		strcpy_s(gszLastADPwdChange2,sizeof(gszLastADPwdChange2),szLastADPwdChange2);
-		SaveConfigHeader();
+		if (GetADPassword() == 0) // ISSUE#416 essaie d'abord récupérer le mot de passe auprès de swSSOSVC
+		{
+			SaveConfigHeader();
+		}
+		else
+		{
+			if (AskADPwd(TRUE) != 0) goto end;
+			strcpy_s(gszLastADPwdChange2, sizeof(gszLastADPwdChange2), szLastADPwdChange2);
+			SaveConfigHeader();
+		}
 	}
 
 	rc=0;
@@ -451,7 +457,6 @@ end:
 // GetADPassword()
 //-----------------------------------------------------------------------------
 // Demande le mot de passe à swSSOSVC et le stocke 
-// Remarque : swSSO le chiffre par la clé dérivée de lui même ;-)
 //-----------------------------------------------------------------------------
 int GetADPassword(void)
 {
