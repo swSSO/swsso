@@ -45,6 +45,8 @@ const char gcszAlpha[]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char gcszNum[]="1234567890";
 const char gcszSpecialChars[]="&'(-_)=+}]{[,?;.:/!*$";
 
+#define MAX_COMPUTERS 5 // stockage des kdValues
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -747,13 +749,18 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	DATA_BLOB DataSalt;
 	char* pszBase64 = NULL;
 	char szKey[MAX_COMPUTERNAME_LENGTH + UNLEN + 56 + 1] = "";
+	int index;
+	char szIndex[2];
 
 	DataIn.pbData = pAESKeyData;
 	DataIn.cbData = dwAESKeyLen;
 	DataOut.pbData = NULL;
 	DataOut.cbData = 0;
 
-	sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-1-%s@%s", gszUserName, gszComputerName);
+	index=GetPrivateProfileInt("swSSO", "kdDPAPIValue-Next",0, gszCfgFile);
+	TRACE((TRACE_DEBUG, _F_, "kdDPAPIValue-Next=%d",index));
+	
+	sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-%d-%s@%s", index,gszUserName, gszComputerName);
 	DataSalt.pbData = (BYTE*)szKey;
 	DataSalt.cbData = strlen(szKey);
 
@@ -770,6 +777,10 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	swCryptEncodeBase64(DataOut.pbData, DataOut.cbData, pszBase64, DataOut.cbData * 2 + 1);
 
 	WritePrivateProfileString("swSSO", szKey, pszBase64, gszCfgFile);
+	index++;
+	if (index >= MAX_COMPUTERS) index = 0;
+	sprintf_s(szIndex, sizeof(szIndex), "%d", index);
+	WritePrivateProfileString("swSSO", "kdDPAPIValue-Next", szIndex, gszCfgFile);
 	StoreIniEncryptedHash(); // ISSUE#164
 	rc = 0;
 end:
@@ -791,6 +802,7 @@ int DPAPIGetAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	char szBase64[1024 + 1];
 	char DAPIData[512];
 	char szKey[20 + MAX_COMPUTERNAME_LENGTH + UNLEN + 1] = "";
+	int index;
 
 	BOOL brc;
 	DATA_BLOB DataIn;
@@ -801,11 +813,16 @@ int DPAPIGetAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	DataOut.cbData = 0;
 
 	// lecture dans swsso.ini et décodage base64 
-	sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-1-%s@%s", gszUserName, gszComputerName);
+	for (index = 0; index < MAX_COMPUTERS; index++)
+	{
+		sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-%d-%s@%s", index, gszUserName, gszComputerName);
+		TRACE((TRACE_DEBUG, _F_, "Lecture kdDPAPIValue-%d-%s@%s", index, gszUserName, gszComputerName));
+		if (GetPrivateProfileString("swSSO", szKey, "", szBase64, sizeof(szBase64), gszCfgFile) != 0) break;
+	}
+	if (*szBase64 == 0) goto end;
+	TRACE((TRACE_INFO, _F_, "kdDPAPIValue-%d-%s@%s=%s", index, gszUserName, gszComputerName, szBase64));
 	DataSalt.pbData = (BYTE*)szKey;
 	DataSalt.cbData = strlen(szKey);
-	GetPrivateProfileString("swSSO", szKey, "", szBase64, sizeof(szBase64), gszCfgFile);
-	if (*szBase64 == 0) goto end;
 	swCryptDecodeBase64(szBase64, DAPIData, sizeof(DAPIData));
 	DataIn.pbData = (BYTE*)DAPIData;
 	DataIn.cbData = strlen(szBase64) / 2;
