@@ -344,8 +344,7 @@ end:
 //-----------------------------------------------------------------------------
 BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 {
-	UNREFERENCED_PARAMETER(ulClientProcessId);
-/*
+	//UNREFERENCED_PARAMETER(ulClientProcessId);
 	TRACE((TRACE_ENTER,_F_, ""));
 	BOOL rc=FALSE;
 	HANDLE hCallingProcess=NULL;
@@ -387,14 +386,11 @@ BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 		TRACE((TRACE_ERROR,_F_,"Invalid calling process (hash : %s)",szBufHashValue)); 
 		goto end; 
 	}
-
 	rc=TRUE;
 end:
 	if (hCallingProcess!=NULL) CloseHandle(hCallingProcess);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
-	*/
-	return TRUE;
 }
 
 //-----------------------------------------------------------------------------
