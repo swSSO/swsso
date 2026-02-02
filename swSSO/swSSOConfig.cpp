@@ -1669,11 +1669,15 @@ int SaveConfigHeader()
 	// 0.80B7 : sauvegarde de la config proxy liée au computername
 	sprintf_s(szItem,sizeof(szItem),"internetUseProxy-%s",gszComputerName);
 	WritePrivateProfileString("swSSO",szItem,gbInternetUseProxy?"YES":"NO",gszCfgFile);
-	sprintf_s(szItem,sizeof(szItem),"ProxyURL-%s",gszComputerName);
-	WritePrivateProfileString("swSSO",szItem,gszProxyURL,gszCfgFile);
-	sprintf_s(szItem,sizeof(szItem),"ProxyUser-%s",gszComputerName);
-	WritePrivateProfileString("swSSO",szItem,gszProxyUser,gszCfgFile);
-	sprintf_s(szItem,sizeof(szItem),"ProxyPwd-%s",gszComputerName);
+	// 1.26 : pour éviter d'encombrer le .ini, n'enregistre la config que si YES
+	if (gbInternetUseProxy)
+	{
+		sprintf_s(szItem, sizeof(szItem), "ProxyURL-%s", gszComputerName);
+		WritePrivateProfileString("swSSO", szItem, gszProxyURL, gszCfgFile);
+		sprintf_s(szItem, sizeof(szItem), "ProxyUser-%s", gszComputerName);
+		WritePrivateProfileString("swSSO", szItem, gszProxyUser, gszCfgFile);
+		sprintf_s(szItem, sizeof(szItem), "ProxyPwd-%s", gszComputerName);
+	}
 	// chiffrement du mot de passe proxy
 	if (*gszProxyPwd==0) // pas de mot de passe
 	{

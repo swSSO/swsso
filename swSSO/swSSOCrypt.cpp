@@ -750,7 +750,9 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	char* pszBase64 = NULL;
 	char szKey[MAX_COMPUTERNAME_LENGTH + UNLEN + 56 + 1] = "";
 	int index;
-	char szIndex[2];
+	char szIndex[2+1]; // stockage sur 2 chiffres %02d
+	char szIniKeys[2048];
+	char* p;
 
 	DataIn.pbData = pAESKeyData;
 	DataIn.cbData = dwAESKeyLen;
@@ -758,9 +760,9 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	DataOut.cbData = 0;
 
 	index=GetPrivateProfileInt("swSSO", "kdDPAPIValue-Next",0, gszCfgFile);
-	TRACE((TRACE_DEBUG, _F_, "kdDPAPIValue-Next=%d",index));
+	TRACE((TRACE_DEBUG, _F_, "kdDPAPIValue-Next=%02d",index));
 	
-	sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-%d-%s@%s", index,gszUserName, gszComputerName);
+	sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-%02d-%s@%s", index,gszUserName, gszComputerName);
 	DataSalt.pbData = (BYTE*)szKey;
 	DataSalt.cbData = strlen(szKey);
 
@@ -776,10 +778,28 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	if (pszBase64 == NULL) goto end;
 	swCryptEncodeBase64(DataOut.pbData, DataOut.cbData, pszBase64, DataOut.cbData * 2 + 1);
 
+	// si une clé existe déjà avec cet index, on la supprime
+	// récupère toutes les entrées présentes dans swSSO
+	GetPrivateProfileString("swSSO", NULL, "", szIniKeys,sizeof(szIniKeys),gszCfgFile);
+	p = szIniKeys;
+	while (*p != 0)
+	{
+		TRACE((TRACE_DEBUG, _F_, "%s", p));
+		if (strncmp(p, szKey, 15) == 0) // 15=longueur de kdDPAPIValue-00
+		{
+			TRACE((TRACE_INFO, _F_, "%s existe deja -> suppr !", szKey));
+			WritePrivateProfileString("swSSO", p, NULL, gszCfgFile);
+		}
+		while (*p != 0) p++;
+		p++;
+	}
+
+	// stocke la clé sur cet index
 	WritePrivateProfileString("swSSO", szKey, pszBase64, gszCfgFile);
+	// incrémente l'index pour la prochaine fois, revient à 0 si a fait le tour puis stocke la valeur Next dans le .ini
 	index++;
 	if (index >= MAX_COMPUTERS) index = 0;
-	sprintf_s(szIndex, sizeof(szIndex), "%d", index);
+	sprintf_s(szIndex, sizeof(szIndex), "%02d", index);
 	WritePrivateProfileString("swSSO", "kdDPAPIValue-Next", szIndex, gszCfgFile);
 	StoreIniEncryptedHash(); // ISSUE#164
 	rc = 0;
@@ -815,12 +835,12 @@ int DPAPIGetAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	// lecture dans swsso.ini et décodage base64 
 	for (index = 0; index < MAX_COMPUTERS; index++)
 	{
-		sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-%d-%s@%s", index, gszUserName, gszComputerName);
-		TRACE((TRACE_DEBUG, _F_, "Lecture kdDPAPIValue-%d-%s@%s", index, gszUserName, gszComputerName));
+		sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-%02d-%s@%s", index, gszUserName, gszComputerName);
+		TRACE((TRACE_DEBUG, _F_, "Lecture kdDPAPIValue-%02d-%s@%s", index, gszUserName, gszComputerName));
 		if (GetPrivateProfileString("swSSO", szKey, "", szBase64, sizeof(szBase64), gszCfgFile) != 0) break;
 	}
 	if (*szBase64 == 0) goto end;
-	TRACE((TRACE_INFO, _F_, "kdDPAPIValue-%d-%s@%s=%s", index, gszUserName, gszComputerName, szBase64));
+	TRACE((TRACE_INFO, _F_, "kdDPAPIValue-%02d-%s@%s=%s", index, gszUserName, gszComputerName, szBase64));
 	DataSalt.pbData = (BYTE*)szKey;
 	DataSalt.cbData = strlen(szKey);
 	swCryptDecodeBase64(szBase64, DAPIData, sizeof(DAPIData));
