@@ -1210,6 +1210,34 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 						time(&gptActions[i].tLastSSO);
 						gptActions[i].wLastSSO=w;
 						LastDetect_AddOrUpdateWindow(w,iPopupType);
+						
+						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
+						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
+						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
+						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
+						// le SSO a été fait
+						// regarde si la fenêtre est toujours là
+						// si oui, regarde si elle contient le message attendu
+						//		si oui, demande à l'utilisateur de fournir le nouveau mdp
+						//		si non, attend un peu elle va peut-être partir
+						// si non, c'est que le SSO a fonctionné
+						if (CheckID4(w, i))
+						{
+							TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la avec message erreur login"));
+							if (AskADPwd(TRUE) == 0)
+							{
+								LastDetect_RemoveWindow(w);
+								gptActions[i].tLastSSO = -1;
+								gptActions[i].wLastSSO = NULL;
+								gptActions[i].iWaitFor = giWaitBeforeNewSSO;
+								gptActions[i].bWaitForUserAction = FALSE;
+								SaveConfigHeader();
+							}
+						}
+						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
+						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
+						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
+						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
 					}
 					break;
 				case WEBSSO: 

@@ -32,5 +32,7 @@
 //-----------------------------------------------------------------------------
 
 int SSOWindows(HWND w,int iAction,int iPopupType);
-int CheckURL(HWND w,int iAction);
+BOOL CheckURL(HWND w,int iAction);
+BOOL CheckID4(HWND w, int iAction);
+
 

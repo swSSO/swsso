@@ -51,6 +51,13 @@ typedef struct
 	char *pszURL;
 } T_CHECK_URL;
 
+typedef struct
+{
+	int iAction;
+	BOOL bFound;
+	int iErreur;
+} T_CHECK_ID4;
+
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
 //*****************************************************************************
@@ -926,148 +933,153 @@ end:
 	return rc; 
 }
 
-
-#if 0
-//-----------------------------------------------------------------------------
-// FillW7PopupFields() - revu ISSUE#81 pour W7 et W8
-//-----------------------------------------------------------------------------
-// Architecture de la popup IE sous W7 (basic auth)
-// La fenêtre a 4 childs
-// Identifiant et mot de passe se trouvent dans le 2nd child, qui a lui-même 5 childs de niveau 2
-// Identifiant = 3ème child de niveau 2
-// Mot de passe = 4ème child de niveau 2
-//-----------------------------------------------------------------------------
-// Architecture de la popup de partage réseau sous W7
-// La fenêtre a 5 childs de niveau 1
-// Identifiant et mot de passe se trouvent dans le 3ème child, qui a lui-même 6 childs de niveau 2
-// Identifiant = 3ème child de niveau 2
-// Mot de passe = 4ème child de niveau 2
-//-----------------------------------------------------------------------------
-// Architecture de la popup W8
-// La fenêtre a 5 childs
-// Identifiant et mot de passe se trouvent dans le 3ème child, qui lui-même 1 child
-// qui a lui-même 4 childs :
-// Identifiant = 2ème child du 3ème niveau 
-// Mot de passe = 3ème child du 3ème niveau
-// Bouton OK = 4ème child du 1er niveau
-//-----------------------------------------------------------------------------
-int FillW7PopupFields(HWND w,int iAction,IAccessible *pAccessible)
+// ----------------------------------------------------------------------------------
+// RecurseCheckID4() [attention, fonction récursive]
+// ----------------------------------------------------------------------------------
+// Parcours récursif de la fenêtre et de ses objets "accessibles"
+// ----------------------------------------------------------------------------------
+static void RecurseCheckID4(char* paramszTab, HWND w, IAccessible* pAccessible, T_CHECK_ID4* ptCheckID4)
 {
-	TRACE((TRACE_ENTER,_F_, "w=0x%08lx iAction=%d",w,iAction));
+	TRACE((TRACE_ENTER, _F_, ""));
+
+	UNREFERENCED_PARAMETER(w);
 
 	HRESULT hr;
-	IAccessible *pLevel1Child=NULL;
-	IAccessible *pLevel2Child=NULL;
-	IDispatch *pIDispatch=NULL;
-	long lFirstLevelChildCount, lSecondLevelChildCount;
-	VARIANT index;
-	int rc=-1;
-	VARIANT vtSelf;
-	vtSelf.vt=VT_I4;
-	vtSelf.lVal=CHILDID_SELF;
+	IAccessible* pChild = NULL;
+	VARIANT vtChild;
+	VARIANT vtState, vtRole;
+	long l, lCount;
+	long returnCount;
+	VARIANT* pArray = NULL;
+	BSTR bstrName = NULL;
+	char* pszName = NULL;
+	IDispatch* pTempIDispatch = NULL; // correction memory leak en 1.19b7
 
-	// comptage des childs de 1er niveau
-	hr=pAccessible->get_accChildCount(&lFirstLevelChildCount);
-	if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"get_accChildCount()=0x%08lx",hr)); goto end; }
-	TRACE((TRACE_INFO,_F_,"get_accChildCount()=%ld",lFirstLevelChildCount));
-	if (lFirstLevelChildCount!=4 && lFirstLevelChildCount!=5) { TRACE((TRACE_ERROR,_F_,"Problème : on attendait 4 ou 5 childs de 1er niveau, il y en a %d !",lFirstLevelChildCount)); goto end; }
+	char szTab[200];
+	strcpy_s(szTab, sizeof(szTab), paramszTab);
+	if (strlen(szTab) < sizeof(szTab) - 5) strcat_s(szTab, sizeof(szTab), "  ");
 
-	// récupération du 2nd ou 3ème child de 1er niveau en fonction du nb de child au total (resp. 4 ou 5)
-	index.vt=VT_I4;
-	
-	if (giOSVersion < OS_WINDOWS_8)
+	// si fini ou erreur, on termine la récursivité
+	if (ptCheckID4->iErreur != 0) goto end;
+
+	// parcours tous les fils
+	hr = pAccessible->get_accChildCount(&lCount);
+	if (FAILED(hr)) goto end;
+	TRACE((TRACE_DEBUG, _F_, "%sget_accChildCount()==%ld", szTab, lCount));
+	// plus de fils, on termine !
+	if (lCount == 0) { TRACE((TRACE_INFO, _F_, "%sPas de fils", szTab)); goto end; }
+	pArray = new VARIANT[lCount];
+	hr = AccessibleChildren(pAccessible, 0L, lCount, pArray, &returnCount);
+	if (FAILED(hr))
 	{
-		index.lVal=lFirstLevelChildCount-2; // 2eme child si nb total=4, 3ème child si nb total=5
-		hr=pAccessible->get_accChild(index,&pIDispatch);
-		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",index.lVal,hr));
-		if (FAILED(hr)) goto end;
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pLevel1Child);
-		pIDispatch->Release(); pIDispatch=NULL;
-		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
-		if (FAILED(hr)) goto end;
-		hr=pLevel1Child->get_accChildCount(&lSecondLevelChildCount);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pLevel1Child->get_accChildCount()=0x%08lx",hr)); goto end; }
-		TRACE((TRACE_DEBUG,_F_,"get_accChildCount()=%ld",lSecondLevelChildCount));
-		if (lSecondLevelChildCount!=5 && lSecondLevelChildCount!=6) { TRACE((TRACE_ERROR,_F_,"Problème : on attendait 5 ou 6 childs de 2nd niveau, il y en a %d !",lSecondLevelChildCount)); goto end; }
-
-		SetForegroundWindow(w); 
-		
-		// Identifiant = child de 2nd niveau n°3 
-		rc=W7PopupSetTabOnField(w,pLevel1Child,3);
-		TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
-		KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
-		
-		// Mot de passe = child de 2nd niveau n°4
-		rc=W7PopupSetTabOnField(w,pLevel1Child,4);
-		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
-		{
-			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
-			if (pszPassword!=NULL) 
-			{
-				//TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
-				KBSim(FALSE,100,pszPassword,TRUE);
-				// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
-				SecureZeroMemory(pszPassword,strlen(pszPassword));
-				free(pszPassword);
-			}
-		}
+		TRACE((TRACE_DEBUG, _F_, "%sAccessibleChildren()=0x%08lx", szTab, hr));
 	}
-	else // W8 
+	else
 	{
-		index.lVal=3; 
-		hr=pAccessible->get_accChild(index,&pIDispatch);
-		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",index.lVal,hr));
-		if (FAILED(hr)) goto end;
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pLevel1Child);
-		pIDispatch->Release(); pIDispatch=NULL;
-		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
-		if (FAILED(hr)) goto end;
-		hr=pLevel1Child->get_accChildCount(&lSecondLevelChildCount);
-		if (FAILED(hr)) { TRACE((TRACE_ERROR,_F_,"pLevel1Child->get_accChildCount()=0x%08lx",hr)); goto end; }
-		TRACE((TRACE_DEBUG,_F_,"get_accChildCount()=%ld",lSecondLevelChildCount));
-		
-		index.lVal=1; 
-		pLevel1Child->get_accChild(index,&pIDispatch);
-		TRACE((TRACE_DEBUG,_F_,"pAccessible->get_accChild(%ld)=0x%08lx",index.lVal,hr));
-		if (FAILED(hr)) goto end;
-		hr=pIDispatch->QueryInterface(IID_IAccessible, (void**)&pLevel2Child);
-		pIDispatch->Release(); pIDispatch=NULL;
-		TRACE((TRACE_DEBUG,_F_,"QueryInterface(IID_IAccessible)=0x%08lx",hr));
-		if (FAILED(hr)) goto end;
-		
-		SetForegroundWindow(w); 
-		
-		// Identifiant = child n°2 
-		rc=W7PopupSetTabOnField(w,pLevel2Child,2);
-		TRACE((TRACE_DEBUG,_F_,"Saisie id  : '%s'",GetComputedValue(gptActions[iAction].szId1Value)));
-		KBSim(FALSE,100,GetComputedValue(gptActions[iAction].szId1Value),FALSE);
-		
-		// Mot de passe = child n°2
-		rc=W7PopupSetTabOnField(w,pLevel2Child,3);
-		if ((*gptActions[iAction].szPwdEncryptedValue!=0))
+		TRACE((TRACE_DEBUG, _F_, "%sAccessibleChildren() returnCount=%d", szTab, returnCount));
+		// parcours tous les children
+		for (l = 0; l < lCount; l++)
 		{
-			// char *pszPassword=swCryptDecryptString(gptActions[iAction].szPwdEncryptedValue,ghKey1);
-			char *pszPassword=GetDecryptedPwd(gptActions[iAction].szPwdEncryptedValue);
-			if (pszPassword!=NULL) 
+			VARIANT* pVarCurrent = &pArray[l];
+			VariantInit(&vtRole);
+			VariantInit(&vtState);
+			pChild = NULL;
+
+			TRACE((TRACE_DEBUG, _F_, "%s --------------------------------- l=%ld vt=%d lVal=0x%08lx", szTab, l, pVarCurrent->vt, pVarCurrent->lVal));
+						
+			if (pVarCurrent->vt != VT_DISPATCH) goto suivant;
+			if (pVarCurrent->lVal == NULL) goto suivant;
+			pTempIDispatch = ((IDispatch*)(pVarCurrent->lVal));
+			pTempIDispatch->QueryInterface(IID_IAccessible, (void**)&pChild);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR, _F_, "%sQueryInterface(IID_IAccessible)=0x%08lx", szTab, hr)); goto suivant; }
+			TRACE((TRACE_DEBUG, _F_, "%sQueryInterface(IID_IAccessible)=0x%08lx -> pChild=0x%08lx", szTab, hr, pChild));
+
+			vtChild.vt = VT_I4;
+			vtChild.lVal = CHILDID_SELF;
+			hr = pChild->get_accState(vtChild, &vtState);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR, _F_, "get_accState()=0x%08lx", hr)); goto suivant; }
+			TRACE((TRACE_DEBUG, _F_, "%sget_accState() vtState.lVal=0x%08lx", szTab, vtState.lVal));
+
+			hr = pChild->get_accRole(vtChild, &vtRole);
+			if (FAILED(hr)) { TRACE((TRACE_ERROR, _F_, "get_accRole()=0x%08lx", hr)); goto suivant; }
+			TRACE((TRACE_DEBUG, _F_, "%sget_accRole() vtRole.lVal=0x%08lx", szTab, vtRole.lVal));
+
+			if (vtRole.lVal & ROLE_SYSTEM_TEXT)
 			{
-				//TRACE((TRACE_PWD,_F_,"Saisie pwd : '%s'",pszPassword));
-				KBSim(FALSE,100,pszPassword,TRUE);
-				// 0.85B9 : remplacement de memset(pszPassword,0,strlen(pszPassword));
-				SecureZeroMemory(pszPassword,strlen(pszPassword));
-				free(pszPassword);
+				hr = pChild->get_accName(vtChild, &bstrName);
+				if (hr == S_OK)
+				{
+					pszName = GetSZFromBSTR(bstrName);
+					TRACE((TRACE_DEBUG, _F_, "%sget_accName() name=%s", szTab, pszName));
+					if (pszName != NULL)
+					{
+						if (swStringMatch(pszName, gptActions[ptCheckID4->iAction].szId4Name))
+						{
+							ptCheckID4->bFound = TRUE;
+							TRACE((TRACE_DEBUG, _F_, "Texte trouvé dans la page : %s", gptActions[ptCheckID4->iAction].szId4Name));
+						}
+						free(pszName); pszName = NULL;
+					}
+					SysFreeString(bstrName); bstrName = NULL;
+				}
 			}
-		}
+			else
+			{
+				RecurseCheckID4(szTab, NULL, pChild, ptCheckID4);
+			}
+suivant:
+			if (pTempIDispatch != NULL) { pTempIDispatch->Release(); pTempIDispatch = NULL; } // correction memory leak en 1.19b7
+			if (pChild != NULL) { pChild->Release(); pChild = NULL; }
+		} // for
 	}
 
-	Sleep(20);
-	KBSimEx(w,"[ENTER]","","","","","");
-	rc=0;
 end:
-	if (pIDispatch!=NULL) pIDispatch->Release(); 
-	if (pLevel1Child!=NULL) pLevel1Child->Release();
-	if (pLevel2Child!=NULL) pLevel2Child->Release();
-	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
-	return rc; // ISSUE#188
+	if (pTempIDispatch != NULL) { pTempIDispatch->Release(); pTempIDispatch = NULL; } // correction memory leak en 1.19b7
+	if (pChild != NULL) { pChild->Release(); pChild = NULL; } // ajouté en 1.19b7
+	SysFreeString(bstrName);
+	if (pszName != NULL) free(pszName);
+	if (pArray != NULL) delete[] pArray;
+	TRACE((TRACE_LEAVE, _F_, ""));
 }
-#endif
+
+//-----------------------------------------------------------------------------
+// CheckID4()
+//-----------------------------------------------------------------------------
+// ISSUE#417 : pour permettre la détection des erreurs de mots de passe,
+// recherche un libellé configuré dans ID4 dans la fenêtre 
+//-----------------------------------------------------------------------------
+// [out] TRUE si libellé trouvé
+//-----------------------------------------------------------------------------
+BOOL CheckID4(HWND w, int iAction)
+{
+	TRACE((TRACE_ENTER, _F_, ""));
+	BOOL rc = FALSE;
+	IAccessible* pAccessible = NULL;
+	T_CHECK_ID4 tCheckID4;
+	HRESULT hr;
+	long lCount;
+
+	TRACE((TRACE_INFO, _F_, "Recherche szId4Name=%s dans la page", gptActions[iAction].szId4Name));
+	
+	ZeroMemory(&tCheckID4, sizeof(T_CHECK_ID4));
+	
+	// Obtient un IAccessible
+	hr = AccessibleObjectFromWindow(w, (DWORD)OBJID_CLIENT, IID_IAccessible, (void**)&pAccessible);
+	if (FAILED(hr)) { TRACE((TRACE_ERROR, _F_, "AccessibleObjectFromWindow(IID_IAccessible)=0x%08lx", hr)); goto end; }
+	
+	lCount = 0;
+	hr = pAccessible->get_accChildCount(&lCount);
+	TRACE((TRACE_DEBUG, _F_, "get_accChildCount() hr=0x%08lx lCount=%ld", hr, lCount));
+	if (FAILED(hr)) { TRACE((TRACE_ERROR, _F_, "get_accChildCount() hr=0x%08lx", hr)); goto end; }
+	
+	tCheckID4.bFound = FALSE;
+	tCheckID4.iAction = iAction;
+
+	RecurseCheckID4("", w, pAccessible, &tCheckID4);
+	
+	rc = tCheckID4.bFound;
+end:
+	if (pAccessible != NULL) pAccessible->Release();
+	TRACE((TRACE_LEAVE, _F_, "rc=%d", rc));
+	return rc;
+}

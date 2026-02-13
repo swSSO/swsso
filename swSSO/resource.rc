@@ -127,7 +127,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,189,88,50,14
     LTEXT           "&Confirm password:",IDC_STATIC,12,68,64,10
     LTEXT           "&Password:",IDC_STATIC,12,48,41,8
-    LTEXT           "Please enter your Windows password below:",TX_FRAME,47,12,191,11
+    LTEXT           "Please enter your new Windows password below:",TX_FRAME,47,12,191,11
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,238,1
 END
 
@@ -1624,7 +1624,7 @@ BEGIN
     PUSHBUTTON      "Annuler",IDCANCEL,212,88,50,14
     LTEXT           "&Confirmation :",IDC_STATIC,12,68,50,10
     LTEXT           "&Mot de passe :",IDC_STATIC,12,48,53,8
-    LTEXT           "Merci de saisir votre mot de passe d'ouverture de session Windows ci-dessous.",TX_FRAME,47,7,211,19
+    LTEXT           "Merci de fournir votre nouveau mot de passe Windows ci-dessous.",TX_FRAME,47,7,211,19
     CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,31,256,1
 END
 
