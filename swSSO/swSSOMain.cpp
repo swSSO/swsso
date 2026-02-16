@@ -1227,19 +1227,25 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 						{
 							Sleep(1000);
 							if (!IsWindow(w)) break; // la fenêtre n'est plus là, on sort
+							TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la"));
 							if (CheckID4(w, i)) // la fenêtre contient le message d'erreur
 							{
 								TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la avec message erreur login"));
 								if (AskADPwd(TRUE) == 0) // demande le nouveau mdp Windows à l'utilisateur
 								{
+									TRACE((TRACE_INFO, _F_, "L'utilisateur a fourni son nouveau mot de passe")); 
+									SaveConfigHeader();
 									LastDetect_RemoveWindow(w);
 									gptActions[i].tLastSSO = -1;
 									gptActions[i].wLastSSO = NULL;
 									gptActions[i].iWaitFor = giWaitBeforeNewSSO;
 									gptActions[i].bWaitForUserAction = FALSE;
-									SaveConfigHeader();
-									break;
 								}
+								else
+								{
+									TRACE((TRACE_INFO, _F_, "L'utilisateur n'a pas fourni son nouveau mot de passe"));
+								}
+								break;
 							}
 						}
 						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
