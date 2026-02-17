@@ -1052,7 +1052,7 @@ end:
 //-----------------------------------------------------------------------------
 BOOL CheckID4(HWND w, int iAction)
 {
-	TRACE((TRACE_ENTER, _F_, ""));
+	TRACE((TRACE_ENTER, _F_, "w=0x%08lx iAction=%d", w, iAction));
 	BOOL rc = FALSE;
 	IAccessible* pAccessible = NULL;
 	T_CHECK_ID4 tCheckID4;
@@ -1082,4 +1082,58 @@ end:
 	if (pAccessible != NULL) pAccessible->Release();
 	TRACE((TRACE_LEAVE, _F_, "rc=%d", rc));
 	return rc;
+}
+
+//-----------------------------------------------------------------------------
+// DetectXINSSOError()
+//-----------------------------------------------------------------------------
+// ISSUE#417
+// Surveille pendant 10 secondes : la fenêtre est-elle toujours là ?
+// Oui : contient-elle le label attendu ?
+//		Oui : demande à l'utilisateur de fournir le nouveau mdp Windows
+//		Non : on continue d'attendre
+// Non : le SSO a fonctionné, on peut sortir
+//-----------------------------------------------------------------------------
+void DetectXINSSOError(HWND w, int iAction)
+{
+	TRACE((TRACE_ENTER, _F_, "w=0x%08lx iAction=%d", w, iAction));
+	int iWaitForLogin;
+
+	// ne fait la surveillance que si elle est configurée
+	TRACE((TRACE_DEBUG, _F_, "id4Type=%d szId4Name=%s szId4Value=%s", gptActions[iAction].id4Type, gptActions[iAction].szId4Name, gptActions[iAction].szId4Value));
+	if (gptActions[iAction].id4Type != CHECK_LABEL ||
+		*(gptActions[iAction].szId4Name) == 0 ||
+		*(gptActions[iAction].szId4Value) == 0)
+	{
+		TRACE((TRACE_INFO, _F_, "Surveillance non configuree"));
+		goto end;
+	}
+	TRACE((TRACE_INFO, _F_, "Surveillance configuree"));
+	for (iWaitForLogin = 0; iWaitForLogin < 10; iWaitForLogin++)
+	{
+		Sleep(1000);
+		if (!IsWindow(w)) break; // la fenêtre n'est plus là, on sort
+		TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la"));
+		if (CheckID4(w, iAction)) // la fenêtre contient le message d'erreur
+		{
+			TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la avec message erreur login"));
+			if (AskADPwd(TRUE) == 0) // demande le nouveau mdp Windows à l'utilisateur
+			{
+				TRACE((TRACE_INFO, _F_, "L'utilisateur a fourni son nouveau mot de passe"));
+				SaveConfigHeader();
+				LastDetect_RemoveWindow(w);
+				gptActions[iAction].tLastSSO = -1;
+				gptActions[iAction].wLastSSO = NULL;
+				gptActions[iAction].iWaitFor = giWaitBeforeNewSSO;
+				gptActions[iAction].bWaitForUserAction = FALSE;
+			}
+			else
+			{
+				TRACE((TRACE_INFO, _F_, "L'utilisateur n'a pas fourni son nouveau mot de passe"));
+			}
+			break;
+		}
+	}
+end:
+	TRACE((TRACE_LEAVE, _F_, ""));
 }

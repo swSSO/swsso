@@ -1207,51 +1207,11 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				case XINSSO: 
 					if (SSOWebAccessible(w,&i,BROWSER_XIN)==0)
 					{
-						int iWaitForLogin;
 						time(&gptActions[i].tLastSSO);
 						gptActions[i].wLastSSO=w;
 						LastDetect_AddOrUpdateWindow(w,iPopupType);
-						
-						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
-						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
-						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
-						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
-						// Le SSO a été fait. Surveille pendant 10 secondes :
-						// regarde si la fenêtre est toujours là
-						// si oui, regarde si elle contient le message attendu
-						//		si oui, demande à l'utilisateur de fournir le nouveau mdp
-						//		si non, on continue d'attendre
-						// si non, c'est que le SSO a fonctionné, on peut sortir
-						
-						for (iWaitForLogin = 0; iWaitForLogin < 10; iWaitForLogin++)
-						{
-							Sleep(1000);
-							if (!IsWindow(w)) break; // la fenêtre n'est plus là, on sort
-							TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la"));
-							if (CheckID4(w, i)) // la fenêtre contient le message d'erreur
-							{
-								TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la avec message erreur login"));
-								if (AskADPwd(TRUE) == 0) // demande le nouveau mdp Windows à l'utilisateur
-								{
-									TRACE((TRACE_INFO, _F_, "L'utilisateur a fourni son nouveau mot de passe")); 
-									SaveConfigHeader();
-									LastDetect_RemoveWindow(w);
-									gptActions[i].tLastSSO = -1;
-									gptActions[i].wLastSSO = NULL;
-									gptActions[i].iWaitFor = giWaitBeforeNewSSO;
-									gptActions[i].bWaitForUserAction = FALSE;
-								}
-								else
-								{
-									TRACE((TRACE_INFO, _F_, "L'utilisateur n'a pas fourni son nouveau mot de passe"));
-								}
-								break;
-							}
-						}
-						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
-						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
-						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
-						// ISSUE#417 -- TEST EN COURS, CODE A FINALISER
+						// ISSUE#417 : Le SSO a été fait -> détecte les erreurs de connexion via un label dans la fenêtre
+						DetectXINSSOError(w, i);
 					}
 					break;
 				case WEBSSO: 

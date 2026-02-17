@@ -34,5 +34,4 @@
 int SSOWindows(HWND w,int iAction,int iPopupType);
 BOOL CheckURL(HWND w,int iAction);
 BOOL CheckID4(HWND w, int iAction);
-
-
+void DetectXINSSOError(HWND w, int iAction);

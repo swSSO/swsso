@@ -635,7 +635,7 @@ int SSOWebAccessible(HWND w,int *piAction,int iBrowser)
 		if (gptActions[ptSuivi->iAction].id4Type==CHECK_LABEL && *(gptActions[ptSuivi->iAction].szId4Name)!=0 && !(ptSuivi->bLabelFound))
 		{
 			TRACE((TRACE_DEBUG, _F_, "szId4Name=%s", gptActions[ptSuivi->iAction].szId4Name));
-			if (*(gptActions[ptSuivi->iAction].szId4Name) == 0) // ISSUE#417 : ne recherche pas le libellé si c'est un libellé de détection d'erreur 
+			if (*(gptActions[ptSuivi->iAction].szId4Value) == 0) // ISSUE#417 : ne recherche pas le libellé si c'est un libellé de détection d'erreur 
 			{
 				TRACE((TRACE_ERROR,_F_,"Texte non trouvé dans la page : %s",gptActions[ptSuivi->iAction].szId4Name));
 				rc=-3;
