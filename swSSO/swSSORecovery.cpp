@@ -774,6 +774,7 @@ int RecoveryResponse(HWND w)
 
 	// ISSUE#416
 	if (DPAPIStoreAESKey(Response + 16, AES256_KEY_LEN) != 0) goto end; // à bien faire avant le swStoreAESKey qui protège la clé
+	if (GenWriteCheckSynchroValue()!=0) goto end;
 
 	if (swStoreAESKey(Response+16,ghKey1)) goto end;
 
