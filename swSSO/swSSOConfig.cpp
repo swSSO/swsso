@@ -3444,6 +3444,7 @@ int PutConfigOnServer(int iAction,int *piNewCategoryId,char *pszDomainIds,char *
 		{
 			case EDIT:		  strcpy_s(szId3Type,sizeof(szId3Type),"EDIT"); break;
 			case COMBO:		  strcpy_s(szId3Type,sizeof(szId3Type),"COMBO"); break;
+			case CHECK_LABEL: strcpy_s(szId3Type,sizeof(szId3Type),"CHECK"); break; // ISSUE#417
 			default:		  strcpy_s(szId3Type,sizeof(szId3Type),"UNK");
 		}
 	}
@@ -4010,6 +4011,7 @@ static int AddApplicationFromXML(HWND w,BSTR bstrXML,BOOL bGetAll)
 					{
 						if (strcmp(tmp,"EDIT")==0) gptActions[ptiActions[i]].id3Type=EDIT;
 						else if (strcmp(tmp,"COMBO")==0) gptActions[ptiActions[i]].id3Type=COMBO;
+						else if (strcmp(tmp,"CHECK")==0) gptActions[ptiActions[i]].id3Type=CHECK_LABEL;
 						else gptActions[ptiActions[i]].id3Type=0;
 						TRACE((TRACE_DEBUG,_F_, "id3Type=%d",gptActions[ptiActions[i]].id3Type));
 					}

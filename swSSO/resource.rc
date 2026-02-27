@@ -22,7 +22,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutre resources
+// Neutral resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -85,12 +85,12 @@ IDI_SYSTRAY_INACTIVE    ICON                    "SystrayInactive.ico"
 
 1                       RT_MANIFEST             ".\\manifest.xml"
 
-#endif    // Neutre resources
+#endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Anglais (neutre) resources
+// English (Neutral) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
@@ -1038,6 +1038,7 @@ BEGIN
     IDS_CLOSE_APPNSITES_FIRST 
                             "Please close 'Web sites and applications management' window first."
     IDS_COMBOIDTYPE3        "Text label to find in the authentication form"
+    IDS_COMBOIDTYPE4        "Text label to find for SSO error detection"
 END
 
 STRINGTABLE
@@ -1118,12 +1119,12 @@ BEGIN
     IDS_PP_NOMASTERPWD_600000 "AES-256 PBKDF2*600000 (no master password)"
 END
 
-#endif    // Anglais (neutre) resources
+#endif    // English (Neutral) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Français (neutre) resources
+// French (Neutral) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
@@ -2057,6 +2058,7 @@ BEGIN
     IDS_CLOSE_APPNSITES_FIRST 
                             "Veuillez fermer la fenêtre de gestion des sites et applications puis réessayez."
     IDS_COMBOIDTYPE3        "Label à vérifier dans la page"
+    IDS_COMBOIDTYPE4        "Label pour détecter une erreur de SSO"
 END
 
 STRINGTABLE
@@ -2144,12 +2146,12 @@ BEGIN
                             "AES-256 PBKDF2*600000 (sans mot de passe maître)"
 END
 
-#endif    // Français (neutre) resources
+#endif    // French (Neutral) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Français (France) resources
+// French (France) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
@@ -2188,7 +2190,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Français (France) resources
+#endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

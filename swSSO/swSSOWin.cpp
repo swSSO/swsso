@@ -56,7 +56,7 @@ typedef struct
 	int iAction;
 	BOOL bFound;
 	int iErreur;
-} T_CHECK_ID4;
+} T_CHECK_ID3;
 
 //*****************************************************************************
 //                             FONCTIONS PRIVEES
@@ -934,11 +934,11 @@ end:
 }
 
 // ----------------------------------------------------------------------------------
-// RecurseCheckID4() [attention, fonction récursive]
+// RecurseCheckID3() [attention, fonction récursive]
 // ----------------------------------------------------------------------------------
 // Parcours récursif de la fenêtre et de ses objets "accessibles"
 // ----------------------------------------------------------------------------------
-static void RecurseCheckID4(char* paramszTab, HWND w, IAccessible* pAccessible, T_CHECK_ID4* ptCheckID4)
+static void RecurseCheckID3(char* paramszTab, HWND w, IAccessible* pAccessible, T_CHECK_ID3* ptCheckID3)
 {
 	TRACE((TRACE_ENTER, _F_, ""));
 
@@ -960,7 +960,7 @@ static void RecurseCheckID4(char* paramszTab, HWND w, IAccessible* pAccessible, 
 	if (strlen(szTab) < sizeof(szTab) - 5) strcat_s(szTab, sizeof(szTab), "  ");
 
 	// si fini ou erreur, on termine la récursivité
-	if (ptCheckID4->iErreur != 0) goto end;
+	if (ptCheckID3->iErreur != 0) goto end;
 
 	// parcours tous les fils
 	hr = pAccessible->get_accChildCount(&lCount);
@@ -1013,10 +1013,10 @@ static void RecurseCheckID4(char* paramszTab, HWND w, IAccessible* pAccessible, 
 					TRACE((TRACE_DEBUG, _F_, "%sget_accName() name=%s", szTab, pszName));
 					if (pszName != NULL)
 					{
-						if (swStringMatch(pszName, gptActions[ptCheckID4->iAction].szId4Name))
+						if (swStringMatch(pszName, gptActions[ptCheckID3->iAction].szId3Name))
 						{
-							ptCheckID4->bFound = TRUE;
-							TRACE((TRACE_DEBUG, _F_, "Texte trouvé dans la page : %s", gptActions[ptCheckID4->iAction].szId4Name));
+							ptCheckID3->bFound = TRUE;
+							TRACE((TRACE_DEBUG, _F_, "Texte trouvé dans la page : %s", gptActions[ptCheckID3->iAction].szId3Name));
 						}
 						free(pszName); pszName = NULL;
 					}
@@ -1025,7 +1025,7 @@ static void RecurseCheckID4(char* paramszTab, HWND w, IAccessible* pAccessible, 
 			}
 			else
 			{
-				RecurseCheckID4(szTab, NULL, pChild, ptCheckID4);
+				RecurseCheckID3(szTab, NULL, pChild, ptCheckID3);
 			}
 suivant:
 			if (pTempIDispatch != NULL) { pTempIDispatch->Release(); pTempIDispatch = NULL; } // correction memory leak en 1.19b7
@@ -1043,25 +1043,25 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// CheckID4()
+// CheckID3()
 //-----------------------------------------------------------------------------
 // ISSUE#417 : pour permettre la détection des erreurs de mots de passe,
-// recherche un libellé configuré dans ID4 dans la fenêtre 
+// recherche un libellé configuré dans ID3 dans la fenêtre 
 //-----------------------------------------------------------------------------
 // [out] TRUE si libellé trouvé
 //-----------------------------------------------------------------------------
-BOOL CheckID4(HWND w, int iAction)
+BOOL CheckID3(HWND w, int iAction)
 {
 	TRACE((TRACE_ENTER, _F_, "w=0x%08lx iAction=%d", w, iAction));
 	BOOL rc = FALSE;
 	IAccessible* pAccessible = NULL;
-	T_CHECK_ID4 tCheckID4;
+	T_CHECK_ID3 tCheckID3;
 	HRESULT hr;
 	long lCount;
 
-	TRACE((TRACE_INFO, _F_, "Recherche szId4Name=%s dans la page", gptActions[iAction].szId4Name));
+	TRACE((TRACE_INFO, _F_, "Recherche szId3Name=%s dans la page", gptActions[iAction].szId3Name));
 	
-	ZeroMemory(&tCheckID4, sizeof(T_CHECK_ID4));
+	ZeroMemory(&tCheckID3, sizeof(T_CHECK_ID3));
 	
 	// Obtient un IAccessible
 	hr = AccessibleObjectFromWindow(w, (DWORD)OBJID_CLIENT, IID_IAccessible, (void**)&pAccessible);
@@ -1072,12 +1072,12 @@ BOOL CheckID4(HWND w, int iAction)
 	TRACE((TRACE_DEBUG, _F_, "get_accChildCount() hr=0x%08lx lCount=%ld", hr, lCount));
 	if (FAILED(hr)) { TRACE((TRACE_ERROR, _F_, "get_accChildCount() hr=0x%08lx", hr)); goto end; }
 	
-	tCheckID4.bFound = FALSE;
-	tCheckID4.iAction = iAction;
+	tCheckID3.bFound = FALSE;
+	tCheckID3.iAction = iAction;
 
-	RecurseCheckID4("", w, pAccessible, &tCheckID4);
+	RecurseCheckID3("", w, pAccessible, &tCheckID3);
 	
-	rc = tCheckID4.bFound;
+	rc = tCheckID3.bFound;
 end:
 	if (pAccessible != NULL) pAccessible->Release();
 	TRACE((TRACE_LEAVE, _F_, "rc=%d", rc));
@@ -1100,10 +1100,9 @@ void DetectXINSSOError(HWND w, int iAction)
 	int iWaitForLogin;
 
 	// ne fait la surveillance que si elle est configurée
-	TRACE((TRACE_DEBUG, _F_, "id4Type=%d szId4Name=%s szId4Value=%s", gptActions[iAction].id4Type, gptActions[iAction].szId4Name, gptActions[iAction].szId4Value));
-	if (gptActions[iAction].id4Type != CHECK_LABEL ||
-		*(gptActions[iAction].szId4Name) == 0 ||
-		*(gptActions[iAction].szId4Value) == 0)
+	TRACE((TRACE_DEBUG, _F_, "id3Type=%d szId3Name=%s", gptActions[iAction].id3Type, gptActions[iAction].szId3Name));
+	if (gptActions[iAction].id3Type != CHECK_LABEL ||
+		*(gptActions[iAction].szId3Name) == 0)
 	{
 		TRACE((TRACE_INFO, _F_, "Surveillance non configuree"));
 		goto end;
@@ -1114,7 +1113,7 @@ void DetectXINSSOError(HWND w, int iAction)
 		Sleep(1000);
 		if (!IsWindow(w)) break; // la fenêtre n'est plus là, on sort
 		TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la"));
-		if (CheckID4(w, iAction)) // la fenêtre contient le message d'erreur
+		if (CheckID3(w, iAction)) // la fenêtre contient le message d'erreur
 		{
 			TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la avec message erreur login"));
 			if (AskADPwd(TRUE) == 0) // demande le nouveau mdp Windows à l'utilisateur

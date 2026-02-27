@@ -664,7 +664,7 @@ int AskMissingValues(HWND w,int i,int iPopupType)
 	{
 		if (*gptActions[i].szId1Name!=0 && *gptActions[i].szId1Value==0) gbDontAskId=FALSE;
 		if (*gptActions[i].szId2Name!=0 && *gptActions[i].szId2Value==0) gbDontAskId2=FALSE;
-		if (*gptActions[i].szId3Name!=0 && *gptActions[i].szId3Value==0) gbDontAskId3=FALSE;
+		if (*gptActions[i].szId3Name!=0 && gptActions[i].id3Type!=CHECK_LABEL && *gptActions[i].szId3Value==0) gbDontAskId3=FALSE; // ISSUE#417
 		if (*gptActions[i].szId4Name!=0 && gptActions[i].id4Type!=CHECK_LABEL && *gptActions[i].szId4Value==0) gbDontAskId4=FALSE;
 		if (*gptActions[i].szPwdName!=0 && *gptActions[i].szPwdEncryptedValue==0) gbDontAskPwd=FALSE;
 	}

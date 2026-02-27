@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// fichier Include Microsoft Visual C++.
-// Utilisé par resource.rc
+// Microsoft Visual C++ generated include file.
+// Used by resource.rc
 //
 #define IDM_PWD_MENU1                   1
 #define IDM_ID_MENU                     1
@@ -382,6 +382,7 @@
 #define IDM_SWUNDO                      40154
 #define IDS_COMBOIDTYPE3                40154
 #define IDM_SWCUT                       40155
+#define IDS_COMBOIDTYPE4                40155
 #define IDM_SWCOPY                      40156
 #define IDM_SWPASTE                     40157
 #define IDM_SWCLEARSELECTION            40158
