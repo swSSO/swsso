@@ -2,8 +2,7 @@
 //-----------------------------------------------------------------------------
 //                                  swSSO
 //                Copyright (C) 2004-2026 - Sylvain WERDEFROY
-//                https://www.swsso.fr | https://www.swsso.com
-//                             sylvain@swsso.fr
+//                         https://github.com/swSSO
 //-----------------------------------------------------------------------------
 //  This file is part of swSSO.
 //  swSSO is free software: you can redistribute it and/or modify
@@ -18,6 +17,7 @@
 //  along with swSSO.  If not, see <http://www.gnu.org/licenses/>.
 //-----------------------------------------------------------------------------
 // VERSION INTERNE : 6.7.0 (PHP7)
+// VERSION INTERNE : 6.8.0 -- ISSUE#415 (PHP8.4)
 //------------------------------------------------------------------------------
 include('variables.php');
 include('util.php');

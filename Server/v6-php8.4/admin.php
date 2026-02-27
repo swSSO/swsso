@@ -2,8 +2,7 @@
 //-----------------------------------------------------------------------------
 //                                  swSSO
 //                Copyright (C) 2004-2026 - Sylvain WERDEFROY
-//                https://www.swsso.fr | https://www.swsso.com
-//                             sylvain@swsso.fr
+//                         https://github.com/swSSO
 //-----------------------------------------------------------------------------
 //  This file is part of swSSO.
 //  swSSO is free software: you can redistribute it and/or modify

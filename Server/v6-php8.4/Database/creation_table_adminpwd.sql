@@ -1,15 +1,7 @@
 -- -----------------------------------------------------------------------------
--- 
 --                                   swSSO
--- 
---        SSO Windows et Web avec Internet Explorer, Firefox, Mozilla...
--- 
---                 Copyright (C) 2004-2013 - Sylvain WERDEFROY
--- 
--- 							 http://www.swsso.fr
---                    
---                              sylvain@swsso.fr
--- 
+--                 Copyright (C) 2004-2026 - Sylvain WERDEFROY
+--                          https://github.com/swSSO
 -- -----------------------------------------------------------------------------
 --  
 --   This file is part of swSSO.
