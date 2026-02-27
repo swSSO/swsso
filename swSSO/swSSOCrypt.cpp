@@ -749,58 +749,73 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	DATA_BLOB DataSalt;
 	char* pszBase64 = NULL;
 	char szKey[MAX_COMPUTERNAME_LENGTH + UNLEN + 56 + 1] = "";
-	int index;
-	char szIndex[2+1]; // stockage sur 2 chiffres %02d
+	int index=-1;
+	int nextIndex=0;
+	char szNextIndex[2+1]; // stockage sur 2 chiffres %02d
 	char szIniKeys[2048];
 	char* p;
+	int i;
+	char szBase64[1024 + 1];
 
+	// cherche si on a déjà une clé stockée pour ce user sur ce computer, si oui on écrit à cet index
+	for (i = 0; i < MAX_COMPUTERS; i++)
+	{
+		sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-%02d-%s@%s", i, gszUserName, gszComputerName);
+		TRACE((TRACE_DEBUG, _F_, "Lecture kdDPAPIValue-%02d-%s@%s", i, gszUserName, gszComputerName));
+		if (GetPrivateProfileString("swSSO", szKey, "", szBase64, sizeof(szBase64), gszCfgFile) != 0)
+		{
+			TRACE((TRACE_DEBUG, _F_, "Clé existante, on réécrit à cet index : %02d", i));
+			index = i;
+			break;
+		}
+		// dans ce cas, pas besoin de toucher à au nextindex puisqu'on a écrasé une clé existante
+	}
+	// si l'index n'a pas été déterminé par la recherche précédente, lit le prochain index dans le .ini
+	// et supprime la clé éventuellement déjà présente à cet index
+	if (index == -1)
+	{
+		index = GetPrivateProfileInt("swSSO", "kdDPAPIValue-Next", 0, gszCfgFile);
+		TRACE((TRACE_DEBUG, _F_, "kdDPAPIValue-Next=%02d", index));
+		sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-%02d-%s@%s", index, gszUserName, gszComputerName);
+		// cherche si une clé existe déjà avec cet index, on la supprime
+		GetPrivateProfileString("swSSO", NULL, "", szIniKeys, sizeof(szIniKeys), gszCfgFile); // récupère toutes les entrées dans [swSSO]
+		p = szIniKeys;
+		while (*p != 0)
+		{
+			TRACE((TRACE_DEBUG, _F_, "%s", p));
+			if (strncmp(p, szKey, 15) == 0) // 15=longueur de kdDPAPIValue-00
+			{
+				TRACE((TRACE_INFO, _F_, "%s existe deja -> suppr !", szKey));
+				WritePrivateProfileString("swSSO", p, NULL, gszCfgFile);
+			}
+			while (*p != 0) p++;
+			p++;
+		}
+		// incrémente l'index pour la prochaine fois, revient à 0 si a fait le tour puis stocke la valeur Next dans le .ini
+		nextIndex=index+1;
+		if (nextIndex >= MAX_COMPUTERS) nextIndex = 0;
+		sprintf_s(szNextIndex, sizeof(szNextIndex), "%02d", nextIndex);
+		WritePrivateProfileString("swSSO", "kdDPAPIValue-Next", szNextIndex, gszCfgFile);
+
+	}
+	// chiffre AESKeyData avec DPAPI
 	DataIn.pbData = pAESKeyData;
 	DataIn.cbData = dwAESKeyLen;
 	DataOut.pbData = NULL;
 	DataOut.cbData = 0;
-
-	index=GetPrivateProfileInt("swSSO", "kdDPAPIValue-Next",0, gszCfgFile);
-	TRACE((TRACE_DEBUG, _F_, "kdDPAPIValue-Next=%02d",index));
-	
-	sprintf_s(szKey, sizeof(szKey), "kdDPAPIValue-%02d-%s@%s", index,gszUserName, gszComputerName);
 	DataSalt.pbData = (BYTE*)szKey;
 	DataSalt.cbData = strlen(szKey);
-
 	brc = CryptProtectData(&DataIn, L"swSSO", &DataSalt, NULL, NULL, 0, &DataOut);
-	if (!brc)
-	{
-		TRACE((TRACE_ERROR, _F_, "CryptProtectData()"));
-		goto end;
-	}
+	if (!brc) { TRACE((TRACE_ERROR, _F_, "CryptProtectData()")); goto end; }
 	TRACE_BUFFER((TRACE_DEBUG, _F_, (BYTE*)pAESKeyData, dwAESKeyLen, "pAESKey (iAESKeySize=%d)", dwAESKeyLen));
-	// encodage base64 et écriture dans swsso.ini
+
+	// encodage base64
 	pszBase64 = (char*)malloc(DataOut.cbData * 2 + 1);
 	if (pszBase64 == NULL) goto end;
 	swCryptEncodeBase64(DataOut.pbData, DataOut.cbData, pszBase64, DataOut.cbData * 2 + 1);
 
-	// si une clé existe déjà avec cet index, on la supprime
-	// récupère toutes les entrées présentes dans swSSO
-	GetPrivateProfileString("swSSO", NULL, "", szIniKeys,sizeof(szIniKeys),gszCfgFile);
-	p = szIniKeys;
-	while (*p != 0)
-	{
-		TRACE((TRACE_DEBUG, _F_, "%s", p));
-		if (strncmp(p, szKey, 15) == 0) // 15=longueur de kdDPAPIValue-00
-		{
-			TRACE((TRACE_INFO, _F_, "%s existe deja -> suppr !", szKey));
-			WritePrivateProfileString("swSSO", p, NULL, gszCfgFile);
-		}
-		while (*p != 0) p++;
-		p++;
-	}
-
 	// stocke la clé sur cet index
 	WritePrivateProfileString("swSSO", szKey, pszBase64, gszCfgFile);
-	// incrémente l'index pour la prochaine fois, revient à 0 si a fait le tour puis stocke la valeur Next dans le .ini
-	index++;
-	if (index >= MAX_COMPUTERS) index = 0;
-	sprintf_s(szIndex, sizeof(szIndex), "%02d", index);
-	WritePrivateProfileString("swSSO", "kdDPAPIValue-Next", szIndex, gszCfgFile);
 	StoreIniEncryptedHash(); // ISSUE#164
 	rc = 0;
 end:
