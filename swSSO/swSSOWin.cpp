@@ -1116,6 +1116,8 @@ void DetectXINSSOError(HWND w, int iAction)
 		if (CheckID3(w, iAction)) // la fenêtre contient le message d'erreur
 		{
 			TRACE((TRACE_INFO, _F_, "SSO realise mais fenetre toujours la avec message erreur login"));
+			// ISSUE#418 : ajout du log SSO erreur
+			swLogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SECONDARY_LOGIN_BAD_PWD, gptActions[iAction].szApplication, gptActions[iAction].szId1Value, NULL, NULL, iAction);
 			if (AskADPwd(TRUE) == 0) // demande le nouveau mdp Windows à l'utilisateur
 			{
 				TRACE((TRACE_INFO, _F_, "L'utilisateur a fourni son nouveau mot de passe"));

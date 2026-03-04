@@ -1199,6 +1199,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 
 					if (SSOWindows(w,i,iPopupType)==0) // ISSUE#188
 					{
+						// ISSUE#418 : ajout du log SSO réussi
+						swLogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SECONDARY_LOGIN_SUCCESS, gptActions[i].szApplication, gptActions[i].szId1Value, NULL, NULL, i);
 						time(&gptActions[i].tLastSSO);
 						gptActions[i].wLastSSO=w;
 						LastDetect_AddOrUpdateWindow(w,iPopupType);
@@ -1207,6 +1209,8 @@ static int CALLBACK EnumWindowsProc(HWND w, LPARAM lp)
 				case XINSSO: 
 					if (SSOWebAccessible(w,&i,BROWSER_XIN)==0)
 					{
+						// ISSUE#418 : ajout du log SSO réussi
+						swLogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SECONDARY_LOGIN_SUCCESS, gptActions[i].szApplication, gptActions[i].szId1Value, NULL, NULL, i);
 						time(&gptActions[i].tLastSSO);
 						gptActions[i].wLastSSO=w;
 						LastDetect_AddOrUpdateWindow(w,iPopupType);
