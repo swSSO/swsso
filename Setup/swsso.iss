@@ -35,11 +35,11 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Name: "startupicon"; Description: "{cm:CreateStartupIcon}"
 
 [Files]
-Source: "c:\dev\swSSO\Release\swSSO.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
-Source: "c:\dev\swSSO\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: not IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
-Source: "c:\dev\swSSO\Release\swSSOSVC.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
-Source: "c:\dev\swSSO\x64\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
-Source: "c:\dev\swSSO\Release\swSSOHotKey.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "c:\dev\Release\swSSO.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "c:\dev\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: not IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
+Source: "c:\dev\Release\swSSOSVC.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "c:\dev\x64\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
+Source: "c:\dev\Release\swSSOHotKey.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "%appdata%\swSSO\swSSO.ini"
