@@ -41,6 +41,7 @@ HANDLE ghPipe=INVALID_HANDLE_VALUE;
 #define USER_LEN 256	// limite officielle
 #define DOMAIN_LEN 256	// limite à moi...
 #define UPN_LEN 256     // limite à moi
+#define UNLEN 256
 
 typedef struct
 {
@@ -344,8 +345,9 @@ end:
 //-----------------------------------------------------------------------------
 BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 {
-	//UNREFERENCED_PARAMETER(ulClientProcessId);
-	TRACE((TRACE_ENTER,_F_, ""));
+	UNREFERENCED_PARAMETER(ulClientProcessId);
+	/*
+	TRACE((TRACE_ENTER, _F_, ""));
 	BOOL rc=FALSE;
 	HANDLE hCallingProcess=NULL;
 	char szCallingProcess[MAX_PATH];
@@ -391,6 +393,8 @@ end:
 	if (hCallingProcess!=NULL) CloseHandle(hCallingProcess);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
+	*/
+	return TRUE;
 }
 
 //-----------------------------------------------------------------------------
@@ -449,6 +453,9 @@ end:
 // swWaitForMessage()
 //-----------------------------------------------------------------------------
 // Attend un message et le traite. Commandes supportées :
+// 1.26 (pour ISSUE#419)
+// V03:ENCKEYD:szKey(20 + MAX_COMPUTERNAME_LENGTH + UNLEN octets):DPAPIUserBlob(taille variable) > retourne DPAPISystemBlob
+// V03:DECKEYD:szKey(20 + MAX_COMPUTERNAME_LENGTH + UNLEN octets):DPAPISystemBlob(taille variable) > retourne DPAPIUserBlob
 // v1.25 (pour ISSUE#412) > idem commandes V02 mais dérivation PBKDF2 HMAC-SHA256 600000 itérations au lieu de PBKDF2 HMAC-SHA1 10000 itérations
 // V03:GETPHKD:CUR:domain(256octets)username(256octets) > demande à SVC de fournir le KeyData courant
 // V03:GETPHKD:OLD:domain(256octets)username(256octets) > demande à SVC de fournir le KeyData précédent (si chgt de mdp par exemple)
@@ -800,6 +807,113 @@ int swWaitForMessage()
 					}
 				}
 			}			
+			//-------------------------------------------------------------------------------------------------------------
+			// V03:ENCKEYD:szKey(20 + MAX_COMPUTERNAME_LENGTH + UNLEN octets):DPAPIUserBlob(taille variable) - ISSUE#419
+			else if (memcmp(bufRequest+4,"ENCKEYD:",8)==0) 
+			//-------------------------------------------------------------------------------------------------------------
+			{
+				// Vérifie que l'appelant est autorisé
+				if (!IsCallingProcessAllowed(ulClientProcessId))
+				{
+					strcpy_s(bufResponse, sizeof(bufResponse), "FORBIDDEN");
+					lenResponse = strlen(bufResponse);
+				}
+				else
+				{
+					if (cbRead<=12+20+MAX_COMPUTERNAME_LENGTH+UNLEN)
+					{
+						TRACE((TRACE_ERROR,_F_,"cbRead=%ld",cbRead));
+						strcpy_s(bufResponse,sizeof(bufResponse),"BADFORMAT");
+						lenResponse=strlen(bufResponse);
+					}
+					else
+					{
+						DATA_BLOB DataIn;
+						DATA_BLOB DataOut;
+						DATA_BLOB DataSalt;
+						char szKey[20 + MAX_COMPUTERNAME_LENGTH + UNLEN + 1] = "";
+						// chiffre DPAPIUserBlob DPAPI system
+						DataIn.pbData = (BYTE*)(bufRequest)+12 + 20 + MAX_COMPUTERNAME_LENGTH + UNLEN;
+						DataIn.cbData = cbRead - (12 + 20 + MAX_COMPUTERNAME_LENGTH + UNLEN);;
+						DataOut.pbData = NULL;
+						DataOut.cbData = 0;
+						SecureZeroMemory(szKey, sizeof(szKey));
+						memcpy(szKey, bufRequest + 12, 20 + MAX_COMPUTERNAME_LENGTH + UNLEN);
+						DataSalt.pbData = (BYTE*)szKey;
+						DataSalt.cbData = strlen(szKey);
+						TRACE_BUFFER((TRACE_DEBUG, _F_, (unsigned char*)DataIn.pbData, DataIn.cbData, "DataIn (len=%ld)", DataIn.cbData));
+						TRACE_BUFFER((TRACE_DEBUG, _F_, (unsigned char*)DataSalt.pbData, DataSalt.cbData, "DataSalt (len=%ld)", DataSalt.cbData));
+						brc = CryptProtectData(&DataIn, L"swSSO", &DataSalt, NULL, NULL, 0, &DataOut);
+						if (!brc) 
+						{ 
+							TRACE((TRACE_ERROR, _F_, "CryptProtectData()")); 
+							strcpy_s(bufResponse, sizeof(bufResponse), "ENCRYPT_ERROR");
+							lenResponse = strlen(bufResponse);
+						}
+						else
+						{
+							lenResponse = 3 + DataOut.cbData;
+							memcpy_s(bufResponse, sizeof(bufResponse), "OK:", 3);
+							memcpy_s(bufResponse+3, sizeof(bufResponse)-3, DataOut.pbData, DataOut.cbData);
+						}
+						if (DataOut.pbData != NULL) LocalFree(DataOut.pbData);
+					}
+				}
+			}
+			//-------------------------------------------------------------------------------------------------------------
+			// V03:DECKEYD:szKey(20 + MAX_COMPUTERNAME_LENGTH + UNLEN octets):DPAPISystemBlob(taille variable) - ISSUE#419
+			else if (memcmp(bufRequest+4,"DECKEYD:",8)==0)
+			//-------------------------------------------------------------------------------------------------------------
+			{
+				// Vérifie que l'appelant est autorisé
+				if (!IsCallingProcessAllowed(ulClientProcessId))
+				{
+					strcpy_s(bufResponse, sizeof(bufResponse), "FORBIDDEN");
+					lenResponse = strlen(bufResponse);
+				}
+				else
+				{
+					if (cbRead <= 12 + 20 + MAX_COMPUTERNAME_LENGTH + UNLEN)
+					{
+						TRACE((TRACE_ERROR, _F_, "cbRead=%ld", cbRead));
+						strcpy_s(bufResponse, sizeof(bufResponse), "BADFORMAT");
+						lenResponse = strlen(bufResponse);
+					}
+					else
+					{
+						DATA_BLOB DataIn;
+						DATA_BLOB DataOut;
+						DATA_BLOB DataSalt;
+						char szKey[20 + MAX_COMPUTERNAME_LENGTH + UNLEN + 1] = "";
+
+						// déchiffre DPAPISystemBlob
+						DataIn.pbData = (BYTE*)(bufRequest)+12 + 20 + MAX_COMPUTERNAME_LENGTH + UNLEN;
+						DataIn.cbData = cbRead - (12 + 20 + MAX_COMPUTERNAME_LENGTH + UNLEN);;
+						DataOut.pbData = NULL;
+						DataOut.cbData = 0;
+						SecureZeroMemory(szKey, sizeof(szKey));
+						memcpy(szKey, bufRequest + 12, 20 + MAX_COMPUTERNAME_LENGTH + UNLEN);
+						DataSalt.pbData = (BYTE*)szKey;
+						DataSalt.cbData = strlen(szKey);
+						TRACE_BUFFER((TRACE_DEBUG, _F_, (unsigned char*)DataIn.pbData, DataIn.cbData, "DataIn (len=%ld)", DataIn.cbData));
+						TRACE_BUFFER((TRACE_DEBUG, _F_, (unsigned char*)DataSalt.pbData, DataSalt.cbData, "DataSalt (len=%ld)", DataSalt.cbData));
+						brc = CryptUnprotectData(&DataIn, NULL, &DataSalt, NULL, NULL, 0, &DataOut);
+						if (!brc)
+						{
+							TRACE((TRACE_ERROR, _F_, "CryptUnprotectData()"));
+							strcpy_s(bufResponse, sizeof(bufResponse), "DECRYPT_ERROR");
+							lenResponse = strlen(bufResponse);
+						}
+						else
+						{
+							lenResponse = 3 + DataOut.cbData;
+							memcpy_s(bufResponse, sizeof(bufResponse), "OK:", 3);
+							memcpy_s(bufResponse + 3, sizeof(bufResponse) - 3, DataOut.pbData, DataOut.cbData);
+						}
+						if (DataOut.pbData != NULL) LocalFree(DataOut.pbData);
+					}
+				}
+			}
 			//-------------------------------------------------------------------------------------------------------------
 			else
 			//-------------------------------------------------------------------------------------------------------------

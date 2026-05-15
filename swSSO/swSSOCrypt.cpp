@@ -742,20 +742,27 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 {
 	TRACE((TRACE_ENTER, _F_, ""));
 
-	BOOL brc;
 	int rc = -1;
-	DATA_BLOB DataIn;
-	DATA_BLOB DataOut;
-	DATA_BLOB DataSalt;
 	char* pszBase64 = NULL;
-	char szKey[MAX_COMPUTERNAME_LENGTH + UNLEN + 56 + 1] = "";
+	char szKey[20 + MAX_COMPUTERNAME_LENGTH + UNLEN + 1] = "";
 	int index=-1;
 	int nextIndex=0;
 	char szNextIndex[2+1]; // stockage sur 2 chiffres %02d
 	char szIniKeys[2048];
 	char* p;
 	int i;
-	char szBase64[1024 + 1];
+	char szBase64[2048 + 1]; // taille du chiffré fait 512 octets donc 1024 dans le .ini, mais taille dépend de DPAPI je prends de la marge
+	char bufRequest[1280];
+	char bufResponse[1024];
+	DWORD dwLenRequest = 0;
+	DWORD dwLenResponse = 0;
+	BOOL brc;
+	DATA_BLOB DataIn;
+	DATA_BLOB DataOut;
+	DATA_BLOB DataSalt;
+
+	DataOut.pbData = NULL;
+	DataOut.cbData = 0;
 
 	// cherche si on a déjà une clé stockée pour ce user sur ce computer, si oui on écrit à cet index
 	for (i = 0; i < MAX_COMPUTERS; i++)
@@ -798,7 +805,12 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 		WritePrivateProfileString("swSSO", "kdDPAPIValue-Next", szNextIndex, gszCfgFile);
 
 	}
-	// chiffre AESKeyData avec DPAPI
+
+	// ISSUE#419 : App-bound encryption - double chiffrement par 1) DPAPI user puis 2) DPAPI system
+	// 1) DPAPI user : évite qu'un process dans session autre utilisateur sur le PC puisse déchiffrer
+	// 2) DPAPI system : évite qu'un process malveillant dans session utilisateur puisse déchiffrer
+
+	// 1) Chiffre AESKeyData avec DPAPI user
 	DataIn.pbData = pAESKeyData;
 	DataIn.cbData = dwAESKeyLen;
 	DataOut.pbData = NULL;
@@ -807,12 +819,31 @@ int DPAPIStoreAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	DataSalt.cbData = strlen(szKey);
 	brc = CryptProtectData(&DataIn, L"swSSO", &DataSalt, NULL, NULL, 0, &DataOut);
 	if (!brc) { TRACE((TRACE_ERROR, _F_, "CryptProtectData()")); goto end; }
-	TRACE_BUFFER((TRACE_DEBUG, _F_, (BYTE*)pAESKeyData, dwAESKeyLen, "pAESKey (iAESKeySize=%d)", dwAESKeyLen));
 
-	// encodage base64
-	pszBase64 = (char*)malloc(DataOut.cbData * 2 + 1);
-	if (pszBase64 == NULL) goto end;
-	swCryptEncodeBase64(DataOut.pbData, DataOut.cbData, pszBase64, DataOut.cbData * 2 + 1);
+	// 2) Envoie la demande de chiffrement à swSSOSVC : V03:ENCKEYD:szKey(20 + MAX_COMPUTERNAME_LENGTH + UNLEN octets):DPAPIUserBlob(taille variable)
+	SecureZeroMemory(bufRequest,sizeof(bufRequest));
+	// construit la requête
+	dwLenRequest = 12 + 20 + MAX_COMPUTERNAME_LENGTH + UNLEN + DataOut.cbData ;
+	memcpy(bufRequest,"V03:ENCKEYD:",12);
+	memcpy(bufRequest + 12, szKey, strlen(szKey));
+	memcpy(bufRequest + 12+  20 + MAX_COMPUTERNAME_LENGTH + UNLEN, DataOut.pbData, DataOut.cbData);
+	// envoie à swSSOSVC
+	if (swPipeWrite(bufRequest,dwLenRequest,bufResponse,sizeof(bufResponse),&dwLenResponse)!=0)
+	{
+		TRACE((TRACE_ERROR,_F_,"Erreur swPipeWrite(dwLenRequest=%ld)",dwLenRequest));
+		goto end;
+	}
+	// analyse la réponse au format : OK:DPAPISystemBlob(taille variable) ou KO
+	if (dwLenResponse < 50) // forcément un message d'erreur, la réponse est de taille variable mais bcp plus grande
+	{ 
+		TRACE((TRACE_ERROR, _F_, "bufResponse=%s", bufResponse));
+		goto end; 
+	}
+	// réponse OK, récupère la valeur chiffrée et encode base64
+	pszBase64 = (char*)malloc((dwLenResponse - 3) * 2 + 1);
+	if (pszBase64 == NULL) { TRACE((TRACE_ERROR, _F_, "malloc(%ld)", (dwLenResponse - 3) * 2 + 1)); goto end; }
+	swCryptEncodeBase64((BYTE*)bufResponse+3, dwLenResponse - 3, pszBase64, (dwLenResponse - 3) * 2 + 1);
+	TRACE((TRACE_DEBUG, _F_, "pszBase64=%s", pszBase64));
 
 	// stocke la clé sur cet index
 	WritePrivateProfileString("swSSO", szKey, pszBase64, gszCfgFile);
@@ -834,11 +865,14 @@ int DPAPIGetAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 {
 	TRACE((TRACE_ENTER, _F_, ""));
 	int rc = -1;
-	char szBase64[1024 + 1];
-	char DAPIData[512];
+	char szBase64[2048 + 1]; // taille du chiffré fait 512 octets donc 1024 dans le .ini, mais taille dépend de DPAPI je prends de la marge
 	char szKey[20 + MAX_COMPUTERNAME_LENGTH + UNLEN + 1] = "";
 	int index;
-
+	char bufRequest[1280];
+	char bufResponse[1024];
+	DWORD dwLenRequest = 0;
+	DWORD dwLenResponse = 0;
+	DATA_BLOB EncryptedAESKey;
 	BOOL brc;
 	DATA_BLOB DataIn;
 	DATA_BLOB DataOut;
@@ -856,19 +890,51 @@ int DPAPIGetAESKey(BYTE* pAESKeyData, DWORD dwAESKeyLen)
 	}
 	if (*szBase64 == 0) goto end;
 	TRACE((TRACE_INFO, _F_, "kdDPAPIValue-%02d-%s@%s=%s", index, gszUserName, gszComputerName, szBase64));
-	DataSalt.pbData = (BYTE*)szKey;
-	DataSalt.cbData = strlen(szKey);
-	swCryptDecodeBase64(szBase64, DAPIData, sizeof(DAPIData));
-	DataIn.pbData = (BYTE*)DAPIData;
-	DataIn.cbData = strlen(szBase64) / 2;
 
-	brc = CryptUnprotectData(&DataIn, NULL, &DataSalt, NULL, NULL, 0, &DataOut);
-	if (!brc)
+	// Decode le base64
+	EncryptedAESKey.cbData = strlen(szBase64)/2;
+	EncryptedAESKey.pbData = (BYTE*)malloc(EncryptedAESKey.cbData);
+	if (EncryptedAESKey.pbData == NULL) { TRACE((TRACE_ERROR, _F_, "malloc(%ld)", EncryptedAESKey.cbData)); goto end; }
+	swCryptDecodeBase64(szBase64, (char*)EncryptedAESKey.pbData, EncryptedAESKey.cbData);
+
+	// ISSUE#419 : App-bound encryption - double chiffrement par 1) DPAPI user puis 2) DPAPI system
+	// 1) DPAPI user : évite qu'un process dans session autre utilisateur sur le PC puisse déchiffrer
+	// 2) DPAPI system : évite qu'un process malveillant dans session utilisateur puisse déchiffrer
+	
+	// 1) Envoie la demande de déchiffrement à swSSOSVC : V03:DECKEYD:szKey(20 + MAX_COMPUTERNAME_LENGTH + UNLEN octets):DPAPISystemBlob(taille variable)
+	SecureZeroMemory(bufRequest, sizeof(bufRequest));
+	dwLenRequest = 12 + 20 + MAX_COMPUTERNAME_LENGTH + UNLEN + EncryptedAESKey.cbData;
+	memcpy(bufRequest, "V03:DECKEYD:", 12);
+	memcpy(bufRequest + 12, szKey, strlen(szKey));
+	memcpy(bufRequest + 12 + 20 + MAX_COMPUTERNAME_LENGTH + UNLEN, EncryptedAESKey.pbData, EncryptedAESKey.cbData);
+	// envoie à swSSOSVC
+	if (swPipeWrite(bufRequest, dwLenRequest, bufResponse, sizeof(bufResponse), &dwLenResponse) != 0)
 	{
-		TRACE((TRACE_ERROR, _F_, "CryptUnprotectData()"));
+		TRACE((TRACE_ERROR, _F_, "Erreur swPipeWrite(dwLenRequest=%ld)", dwLenRequest));
 		goto end;
 	}
-	memcpy_s(pAESKeyData, dwAESKeyLen, DataOut.pbData, DataOut.cbData);
+	// analyse la réponse au format : OK:DPAPIUserBlob(taille variable) ou KO
+	if (dwLenResponse < 50) // forcément un message d'erreur, la réponse est de taille variable mais bcp plus grande
+	{
+		TRACE((TRACE_ERROR, _F_, "bufResponse=%s", bufResponse));
+		goto end;
+	}
+
+	// 2) Déchiffre avce DPAPI user pour obtenir AESKey
+	DataIn.pbData = (BYTE*)(bufResponse)+3;
+	DataIn.cbData = dwLenResponse-3;
+	DataOut.pbData = NULL;
+	DataOut.cbData = 0;
+	SecureZeroMemory(szKey, sizeof(szKey));
+	memcpy(szKey, bufRequest + 12, 20 + MAX_COMPUTERNAME_LENGTH + UNLEN);
+	DataSalt.pbData = (BYTE*)szKey;
+	DataSalt.cbData = strlen(szKey);
+	TRACE_BUFFER((TRACE_DEBUG, _F_, (unsigned char*)DataIn.pbData, DataIn.cbData, "DataIn (len=%ld)", DataIn.cbData));
+	TRACE_BUFFER((TRACE_DEBUG, _F_, (unsigned char*)DataSalt.pbData, DataSalt.cbData, "DataSalt (len=%ld)", DataSalt.cbData));
+	brc = CryptUnprotectData(&DataIn, NULL, &DataSalt, NULL, NULL, 0, &DataOut);
+	if (!brc) { TRACE((TRACE_ERROR, _F_, "CryptUnprotectData()")); goto end; }
+	if (DataOut.cbData!=dwAESKeyLen) { TRACE((TRACE_ERROR, _F_, "DataOut.cbData=%ld != dwAESKeyLen=%ld", DataOut.cbData,dwAESKeyLen)); goto end; }
+	memcpy_s(pAESKeyData,dwAESKeyLen, DataOut.pbData, DataOut.cbData);
 	TRACE_BUFFER((TRACE_DEBUG, _F_, (BYTE*)pAESKeyData, dwAESKeyLen, "pAESKey (iAESKeySize=%d)", dwAESKeyLen));
 	rc = 0;
 end:

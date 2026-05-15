@@ -1882,7 +1882,7 @@ int GenWriteCheckSynchroValue(void)
 	char szSynchroValue[192+1]; // (16+64+16)*2+1 = 193
 	
 	// Génère un aléa pour l'iv et les données à chiffrer
-	brc=CryptGenRandom(ghProv,16+64,bufSynchroValue);
+	brc=CryptGenRandom(ghProv,16+64,bufSynchroValue); // warning compil volontaire, comme ça il traine des choses dans le buffer pour alimenter l'aléa
 	if (!brc) {	TRACE((TRACE_ERROR,_F_,"CryptGenRandom()=%ld",GetLastError())); goto end; }
 	// Chiffre  avec la clé ghKey1
 	if (swCryptEncryptData(bufSynchroValue,bufSynchroValue+16,64,ghKey1)!=0) goto end;

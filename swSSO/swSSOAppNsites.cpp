@@ -4407,10 +4407,10 @@ int SaveApplications(void)
 	{
 		TRACE((TRACE_ERROR,_F_,"CreateFile(OPEN_ALWAYS,%s)",gszCfgFile)); goto end;
 	}
-	pszHeader=(char*)malloc(16384); // 16Ko, ça devrait suffire...
-	if (pszHeader==NULL) { TRACE((TRACE_ERROR,_F_,"malloc (16384)")); goto end; }
+	pszHeader=(char*)malloc(65536); // 64Ko, ça devrait suffire...
+	if (pszHeader==NULL) { TRACE((TRACE_ERROR,_F_,"malloc (65536)")); goto end; }
 
-	if (!ReadFile(hf,pszHeader,16383,&dw,NULL))
+	if (!ReadFile(hf,pszHeader, 65535,&dw,NULL))
 	{
 		TRACE((TRACE_ERROR,_F_,"ReadFile(%s)",gszCfgFile)); goto end;
 	}
