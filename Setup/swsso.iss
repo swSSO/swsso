@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "swSSO"
-#define MyAppVersion "1.26.1"
+#define MyAppVersion "1.26.2"
 #define MyAppURL "www.swsso.fr"
 #define MyAppExeName "swSSO.exe"
 
@@ -35,11 +35,10 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Name: "startupicon"; Description: "{cm:CreateStartupIcon}"
 
 [Files]
-Source: "c:\dev\Release\swSSO.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
-Source: "c:\dev\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: not IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
-Source: "c:\dev\Release\swSSOSVC.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
-Source: "c:\dev\x64\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
-Source: "c:\dev\Release\swSSOHotKey.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "c:\dev\swsso\Release\swSSO.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "c:\dev\swsso\Release\swSSOSVC.exe"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "c:\dev\swsso\x64\Release\swSSOCM.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete; Check: IsWin64; AfterInstall: RegisterCM('{app}\swSSOCM.dll')
+Source: "c:\dev\swsso\Release\swSSOHotKey.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "%appdata%\swSSO\swSSO.ini"
@@ -63,7 +62,7 @@ Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\services\swSSOCM\NetworkProvider
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; Flags: uninsdeletekey
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\GlobalPolicy"; ValueType: dword; ValueName: "PasswordChoiceLevel"; ValueData: "4"; Flags: uninsdeletevalue
 Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: none; Flags: uninsdeletekey
-Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "BB5BCC53589D3782CD29FFE51C99E30F3A5535302A1F775EF957A5A6D4469365"; Flags: uninsdeletevalue
+Root: "HKLM32"; Subkey: "SOFTWARE\swSSO\SVC"; ValueType: string; ValueName: "swSSOClient"; ValueData: "D1453B74A32B95EDA489B159DB6263901AEAA9FB697963CCD84939EC237C5C3A"; Flags: uninsdeletevalue
 
 [CustomMessages]
 french.CreateStartupIcon=Lancer swSSO au démarrage de Windows
