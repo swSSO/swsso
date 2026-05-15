@@ -52,6 +52,9 @@ int GetUserDomainAndComputer(void)
 	DWORD lenUserName;
 	DWORD lenUPN;
 	int rc=-1;
+	char szDomainBackslashUser[256 + 1];
+	DWORD lenDomainBackslashUser;
+	char* p;
 
 	// ComputerName
 	lenComputerName=sizeof(gszComputerName); 
@@ -92,6 +95,24 @@ int GetUserDomainAndComputer(void)
 	}
 	TRACE((TRACE_INFO,_F_,"LookupAccountName(%s) pszRDN=%s",gszUserName,gpszRDN));
 
+	// ISSUE#420 : méthode plus fiable pour récupérer le domaine de l'utilisateur
+	lenDomainBackslashUser = sizeof(szDomainBackslashUser);
+	if (!GetUserNameEx(NameSamCompatible, szDomainBackslashUser, &lenDomainBackslashUser))
+	{
+		TRACE((TRACE_INFO, _F_, "GetUserNameEx(NameSamCompatible)=%d", GetLastError()));
+		*szDomainBackslashUser = 0;
+	}
+	TRACE((TRACE_INFO, _F_, "szDomainBackslashUser=%s", szDomainBackslashUser));
+	p=strchr(szDomainBackslashUser,'\\');
+	if (p != NULL) {
+		*p = 0;
+		cbRDN = strlen(szDomainBackslashUser) + 1;
+		if (gpszRDN != NULL) free(gpszRDN);
+		gpszRDN = (char*)malloc(cbRDN); 
+		if (gpszRDN == NULL) { TRACE((TRACE_ERROR, _F_, "malloc(%d)", cbRDN)); goto end; }
+		strcpy_s(gpszRDN, cbRDN, szDomainBackslashUser);
+		TRACE((TRACE_INFO, _F_, "gpszRDN=%s", gpszRDN));
+	}
 	rc=0;
 end:
 	TRACE((TRACE_LEAVE,_F_,"rc=%d",rc));
