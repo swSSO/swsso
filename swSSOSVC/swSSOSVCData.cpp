@@ -345,8 +345,8 @@ end:
 //-----------------------------------------------------------------------------
 BOOL IsCallingProcessAllowed(unsigned long ulClientProcessId)
 {
-	UNREFERENCED_PARAMETER(ulClientProcessId);
-	/*
+	//UNREFERENCED_PARAMETER(ulClientProcessId);
+	
 	TRACE((TRACE_ENTER, _F_, ""));
 	BOOL rc=FALSE;
 	HANDLE hCallingProcess=NULL;
@@ -393,8 +393,6 @@ end:
 	if (hCallingProcess!=NULL) CloseHandle(hCallingProcess);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
-	*/
-	return TRUE;
 }
 
 //-----------------------------------------------------------------------------
