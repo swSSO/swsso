@@ -1775,48 +1775,12 @@ end:
 // DPAPIStoreMasterPwd()
 // ----------------------------------------------------------------------------------
 // Nouveau en v0.76 -> stockage du mdp maitre sécurisé par DPAPI
+// ISSUE#421 : ne stocke plus, en attendant l'évolution éventuelle en app-bound encryption
 // ----------------------------------------------------------------------------------
 int DPAPIStoreMasterPwd(const char *szPwd)
 {
+	int rc=0; 
 	TRACE((TRACE_ENTER,_F_, ""));
-	
-	BOOL brc;
-	int rc=-1;
-	DATA_BLOB DataIn;
-	DATA_BLOB DataOut;
-	DATA_BLOB DataSalt;
-	char *pszBase64=NULL;
-	char szKey[MAX_COMPUTERNAME_LENGTH+UNLEN+56+1]="";
-
-	DataIn.pbData=(BYTE*)szPwd;
-	DataIn.cbData=strlen(szPwd)+1;
-	DataOut.pbData=NULL;
-	DataOut.cbData=0;
-
-	sprintf_s(szKey,sizeof(szKey),"pwdDAPIValue-%s@%s",gszUserName,gszComputerName);
-	DataSalt.pbData=(BYTE*)szKey;
-	DataSalt.cbData=strlen(szKey);
-
-	// chiffrement du mot de passe (pour cette machine seulement)
-	//brc = CryptProtectData(&DataIn,L"swSSO",&DataSalt,NULL,NULL,CRYPTPROTECT_LOCAL_MACHINE,&DataOut); 0.90B1 
-	brc = CryptProtectData(&DataIn,L"swSSO",&DataSalt,NULL,NULL,0,&DataOut);
-	if (!brc) 
-	{
-		TRACE((TRACE_ERROR,_F_, "CryptProtectData()"));
-		goto end;
-	}
-	
-	// encodage base64 et écriture dans swsso.ini
-	pszBase64=(char*)malloc(DataOut.cbData*2+1);
-	if (pszBase64==NULL) goto end;
-	swCryptEncodeBase64(DataOut.pbData,DataOut.cbData,pszBase64,DataOut.cbData*2+1);
-
-	WritePrivateProfileString("swSSO",szKey,pszBase64,gszCfgFile);
-	StoreIniEncryptedHash(); // ISSUE#164
-	rc=0;
-end:
-	if (pszBase64!=NULL) free (pszBase64);
-	if (DataOut.pbData!=NULL) LocalFree(DataOut.pbData);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
@@ -1825,45 +1789,22 @@ end:
 // DPAPIGetMasterPwd()
 // ----------------------------------------------------------------------------------
 // Nouveau en v0.76 -> lecture du mdp maitre sécurisé par DPAPI
+// ISSUE#421 : ne prend plus en compte la valeur lue, la supprime du .ini et sort
 // ----------------------------------------------------------------------------------
 int DPAPIGetMasterPwd(char *pszPwd)
 {
 	TRACE((TRACE_ENTER,_F_, ""));
 	int rc=-1;
+
 	char szBase64[1024+1];
-	char DAPIData[512];
 	char szKey[20+MAX_COMPUTERNAME_LENGTH+UNLEN+1]="";
 	
-	BOOL brc;
-	DATA_BLOB DataIn;
-	DATA_BLOB DataOut;
-	DATA_BLOB DataSalt;
-
-	DataOut.pbData=NULL;
-	DataOut.cbData=0;
-
-	// lecture dans swsso.ini et décodage base64 
+	// lecture dans swsso.ini 
 	sprintf_s(szKey,sizeof(szKey),"pwdDAPIValue-%s@%s",gszUserName,gszComputerName);
-	DataSalt.pbData=(BYTE*)szKey;
-	DataSalt.cbData=strlen(szKey);
 	GetPrivateProfileString("swSSO",szKey,"",szBase64,sizeof(szBase64),gszCfgFile);
-	if (*szBase64==0) goto end;
-	swCryptDecodeBase64(szBase64,DAPIData,sizeof(DAPIData));
-	DataIn.pbData=(BYTE*)DAPIData;
-	DataIn.cbData=strlen(szBase64)/2;
+	// si présente, efface
+	if (*szBase64!=0) WritePrivateProfileString("swSSO",szKey,NULL,gszCfgFile);
 
-	// déchiffrement du mot de passe 
-	brc = CryptUnprotectData(&DataIn,NULL,&DataSalt,NULL,NULL,0,&DataOut);
-	if (!brc) 
-	{
-		TRACE((TRACE_ERROR,_F_, "CryptUnprotectData()"));
-		goto end;
-	}
-
-	strcpy_s(pszPwd,LEN_PWD+1,(char*)DataOut.pbData);
-	rc=0;
-end:
-	if (DataOut.pbData!=NULL) LocalFree(DataOut.pbData);
 	TRACE((TRACE_LEAVE,_F_, "rc=%d",rc));
 	return rc;
 }
