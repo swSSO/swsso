@@ -1279,9 +1279,11 @@ void LoadGlobalOrDomainPolicies(char *pcszDomain)
 		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_PROXY,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		if (rc==ERROR_SUCCESS) gbEnableOption_Proxy=(BOOL)dwValue; 
 
-		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
-		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SAVEPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
-		if (rc==ERROR_SUCCESS) gbEnableOption_SavePassword=(BOOL)dwValue; 
+		// ISSUE#421 : case à cochée masquée quelle que soit la configuration
+		// dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
+		// rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SAVEPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
+		// if (rc==ERROR_SUCCESS) gbEnableOption_SavePassword=(BOOL)dwValue; 
+		gbEnableOption_SavePassword=FALSE;
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
