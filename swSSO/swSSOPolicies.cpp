@@ -46,7 +46,7 @@ BOOL gbEnableOption_GetConfig=TRUE;
 //BOOL gbEnableOption_PutConfig=TRUE;
 BOOL gbEnableOption_ManualPutConfig=TRUE;
 BOOL gbEnableOption_Proxy=TRUE;
-BOOL gbEnableOption_SavePassword=TRUE;
+BOOL gbEnableOption_SavePassword=FALSE; // ISSUE#421 : case à cochée masquée quelle que soit la configuration
 BOOL gbEnableOption_ShowPassword=TRUE;
 int gbPasswordChoiceLevel=PP_ENCRYPTED;
 BOOL gbEnableOption_ViewAppConfig=TRUE;
@@ -1283,7 +1283,6 @@ void LoadGlobalOrDomainPolicies(char *pcszDomain)
 		// dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		// rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SAVEPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
 		// if (rc==ERROR_SUCCESS) gbEnableOption_SavePassword=(BOOL)dwValue; 
-		gbEnableOption_SavePassword=FALSE;
 
 		dwValueType=REG_DWORD; dwValueSize=sizeof(dwValue);
 		rc=RegQueryValueEx(hKey,REGVALUE_ENABLEOPTION_SHOWPASSWORD,NULL,&dwValueType,(LPBYTE)&dwValue,&dwValueSize);
